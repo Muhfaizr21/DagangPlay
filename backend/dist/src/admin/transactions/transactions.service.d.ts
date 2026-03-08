@@ -3,76 +3,84 @@ import { OrderPaymentStatus, OrderFulfillmentStatus } from '@prisma/client';
 export declare class TransactionsService {
     private prisma;
     constructor(prisma: PrismaService);
-    getAllTransactions(filters: any): Promise<({
-        merchant: {
+    getAllTransactions(filters: any): Promise<{
+        data: ({
+            merchant: {
+                id: string;
+                name: string;
+            };
+            customer: {
+                id: string;
+                email: string | null;
+                name: string;
+            };
+            reseller: {
+                id: string;
+                name: string;
+            } | null;
+            payment: {
+                id: string;
+                status: import("@prisma/client").$Enums.PaymentStatus;
+                merchantId: string;
+                createdAt: Date;
+                updatedAt: Date;
+                paidAt: Date | null;
+                expiredAt: Date | null;
+                userId: string;
+                method: import("@prisma/client").$Enums.PaymentMethod;
+                orderId: string;
+                amount: import("@prisma/client-runtime-utils").Decimal;
+                provider: import("@prisma/client").$Enums.PaymentProvider;
+                fee: import("@prisma/client-runtime-utils").Decimal;
+                totalAmount: import("@prisma/client-runtime-utils").Decimal;
+                providerTransactionId: string | null;
+                providerResponse: import("@prisma/client/runtime/client").JsonValue | null;
+                snapToken: string | null;
+                paymentUrl: string | null;
+            } | null;
+        } & {
             id: string;
-            name: string;
-        };
-        customer: {
-            id: string;
-            email: string | null;
-            name: string;
-        };
-        reseller: {
-            id: string;
-            name: string;
-        } | null;
-        payment: {
-            id: string;
-            status: import("@prisma/client").$Enums.PaymentStatus;
             merchantId: string;
             createdAt: Date;
             updatedAt: Date;
+            productId: string;
+            supplierId: string | null;
+            basePrice: import("@prisma/client-runtime-utils").Decimal;
+            sellingPrice: import("@prisma/client-runtime-utils").Decimal;
+            orderNumber: string;
+            productName: string;
+            productSkuName: string;
+            gameUserId: string | null;
+            gameUserServerId: string | null;
+            gameUserName: string | null;
+            quantity: number;
+            totalPrice: import("@prisma/client-runtime-utils").Decimal;
+            paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
+            paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
+            fulfillmentStatus: import("@prisma/client").$Enums.OrderFulfillmentStatus;
+            supplierRefId: string | null;
+            supplierResponse: import("@prisma/client/runtime/client").JsonValue | null;
+            serialNumber: string | null;
+            discountAmount: import("@prisma/client-runtime-utils").Decimal;
+            note: string | null;
+            failReason: string | null;
             paidAt: Date | null;
+            processedAt: Date | null;
+            completedAt: Date | null;
+            failedAt: Date | null;
             expiredAt: Date | null;
             userId: string;
-            method: import("@prisma/client").$Enums.PaymentMethod;
-            orderId: string;
-            amount: import("@prisma/client-runtime-utils").Decimal;
-            provider: import("@prisma/client").$Enums.PaymentProvider;
-            fee: import("@prisma/client-runtime-utils").Decimal;
-            totalAmount: import("@prisma/client-runtime-utils").Decimal;
-            providerTransactionId: string | null;
-            providerResponse: import("@prisma/client/runtime/client").JsonValue | null;
-            snapToken: string | null;
-            paymentUrl: string | null;
-        } | null;
-    } & {
-        id: string;
-        merchantId: string;
-        createdAt: Date;
-        updatedAt: Date;
-        productId: string;
-        supplierId: string | null;
-        basePrice: import("@prisma/client-runtime-utils").Decimal;
-        sellingPrice: import("@prisma/client-runtime-utils").Decimal;
-        orderNumber: string;
-        productName: string;
-        productSkuName: string;
-        gameUserId: string | null;
-        gameUserServerId: string | null;
-        gameUserName: string | null;
-        quantity: number;
-        totalPrice: import("@prisma/client-runtime-utils").Decimal;
-        paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
-        paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
-        fulfillmentStatus: import("@prisma/client").$Enums.OrderFulfillmentStatus;
-        supplierRefId: string | null;
-        supplierResponse: import("@prisma/client/runtime/client").JsonValue | null;
-        serialNumber: string | null;
-        discountAmount: import("@prisma/client-runtime-utils").Decimal;
-        note: string | null;
-        failReason: string | null;
-        paidAt: Date | null;
-        processedAt: Date | null;
-        completedAt: Date | null;
-        failedAt: Date | null;
-        expiredAt: Date | null;
-        userId: string;
-        resellerId: string | null;
-        productSkuId: string;
-        promoCodeId: string | null;
-    })[]>;
+            resellerId: string | null;
+            productSkuId: string;
+            promoCodeId: string | null;
+        })[];
+        meta: {
+            totalItems: number;
+            totalPages: number;
+            currentPage: number;
+            itemsPerPage: number;
+        };
+    }>;
     getTransactionDetail(id: string): Promise<{
         fraudDetections: {
             id: string;

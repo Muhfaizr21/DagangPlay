@@ -18,7 +18,7 @@ let TransactionsService = class TransactionsService {
         this.prisma = prisma;
     }
     async getAllTransactions(filters) {
-        const { search, paymentStatus, fulfillmentStatus, merchantId, resellerId, productId, startDate, endDate } = filters;
+        const { search, paymentStatus, fulfillmentStatus, merchantId, resellerId, productId, startDate, endDate, page = 1, limit = 50 } = filters;
         const where = {};
         if (search) {
             where.OR = [
@@ -43,17 +43,32 @@ let TransactionsService = class TransactionsService {
                 lte: new Date(endDate)
             };
         }
-        return this.prisma.order.findMany({
-            where,
-            orderBy: { createdAt: 'desc' },
-            include: {
-                customer: { select: { id: true, name: true, email: true } },
-                merchant: { select: { id: true, name: true } },
-                reseller: { select: { id: true, name: true } },
-                payment: true,
-            },
-            take: 100
-        });
+        const skip = (Number(page) - 1) * Number(limit);
+        const take = Number(limit);
+        const [data, total] = await Promise.all([
+            this.prisma.order.findMany({
+                where,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    customer: { select: { id: true, name: true, email: true } },
+                    merchant: { select: { id: true, name: true } },
+                    reseller: { select: { id: true, name: true } },
+                    payment: true,
+                },
+                skip,
+                take
+            }),
+            this.prisma.order.count({ where })
+        ]);
+        return {
+            data,
+            meta: {
+                totalItems: total,
+                totalPages: Math.ceil(total / take),
+                currentPage: Number(page),
+                itemsPerPage: take
+            }
+        };
     }
     async getTransactionDetail(id) {
         const order = await this.prisma.order.findUnique({

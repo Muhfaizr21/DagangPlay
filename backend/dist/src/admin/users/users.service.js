@@ -18,7 +18,7 @@ let UsersService = class UsersService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async getAllUsers(search, role, status) {
+    async getAllUsers(search, role, status, page = 1, limit = 50) {
         const where = {};
         if (search) {
             where.OR = [
@@ -30,24 +30,40 @@ let UsersService = class UsersService {
             where.role = role;
         if (status && status !== 'ALL')
             where.status = status;
-        return this.prisma.user.findMany({
-            where,
-            orderBy: { createdAt: 'desc' },
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                role: true,
-                status: true,
-                balance: true,
-                bonusBalance: true,
-                isVerified: true,
-                createdAt: true,
-                _count: {
-                    select: { ordersAsCustomer: true, ordersAsReseller: true }
+        const skip = (Number(page) - 1) * Number(limit);
+        const take = Number(limit);
+        const [data, total] = await Promise.all([
+            this.prisma.user.findMany({
+                where,
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take,
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                    status: true,
+                    balance: true,
+                    bonusBalance: true,
+                    isVerified: true,
+                    createdAt: true,
+                    _count: {
+                        select: { ordersAsCustomer: true, ordersAsReseller: true }
+                    }
                 }
+            }),
+            this.prisma.user.count({ where })
+        ]);
+        return {
+            data,
+            meta: {
+                totalItems: total,
+                totalPages: Math.ceil(total / take),
+                currentPage: Number(page),
+                itemsPerPage: take
             }
-        });
+        };
     }
     async getUserDetail(id) {
         const user = await this.prisma.user.findUnique({

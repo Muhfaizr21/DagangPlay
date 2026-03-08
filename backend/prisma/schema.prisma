@@ -17,6 +17,7 @@ datasource db {
 
 enum Role {
   SUPER_ADMIN
+  ADMIN_STAFF
   MERCHANT
   RESELLER
   CUSTOMER
@@ -271,6 +272,7 @@ enum FraudRiskLevel {
 
 enum InvoiceStatus {
   UNPAID
+  PENDING
   PAID
   OVERDUE
   CANCELLED
@@ -320,6 +322,7 @@ model User {
   username         String?    @unique
   avatar           String?
   role             Role       @default(CUSTOMER)
+  adminPermissions Json?
   status           UserStatus @default(ACTIVE)
   isVerified       Boolean    @default(false)
   verifiedAt       DateTime?
@@ -1283,6 +1286,8 @@ model Invoice {
   status      InvoiceStatus @default(UNPAID)
   dueDate     DateTime
   paidAt      DateTime?
+  proofUrl    String?       // Bukti transfer manual
+  confirmedBy String?       // Admin yang konfirmasi
   notes       String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt

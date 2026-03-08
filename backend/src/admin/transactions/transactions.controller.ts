@@ -1,7 +1,14 @@
-import { Controller, Get, Patch, Post, Param, Body, Query, HttpCode } from '@nestjs/common';
+import { UseGuards,  Controller, Get, Patch, Post, Param, Body, Query, HttpCode  } from "@nestjs/common";
 import { TransactionsService } from './transactions.service';
 import { OrderPaymentStatus, OrderFulfillmentStatus } from '@prisma/client';
 
+import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
+import { RolesGuard } from "../../auth/guards/roles.guard";
+import { Roles } from "../../auth/decorators/roles.decorator";
+import { Role } from "@prisma/client";
+
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.SUPER_ADMIN, Role.ADMIN_STAFF)
 @Controller('admin/transactions')
 export class TransactionsController {
     constructor(private readonly transactionsService: TransactionsService) { }

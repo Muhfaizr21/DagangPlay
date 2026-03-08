@@ -20,6 +20,24 @@ export declare class PrismaService implements OnModuleInit, OnModuleDestroy {
     get withdrawal(): import("@prisma/client").Prisma.WithdrawalDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get orderStatusHistory(): import("@prisma/client").Prisma.OrderStatusHistoryDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get fraudDetection(): import("@prisma/client").Prisma.FraudDetectionDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get commission(): import("@prisma/client").Prisma.CommissionDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get mLMCommission(): import("@prisma/client").Prisma.MLMCommissionDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get resellerLevel(): import("@prisma/client").Prisma.ResellerLevelDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get downlineTree(): import("@prisma/client").Prisma.DownlineTreeDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get promoCode(): import("@prisma/client").Prisma.PromoCodeDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get promoUsage(): import("@prisma/client").Prisma.PromoUsageDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get invoice(): import("@prisma/client").Prisma.InvoiceDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get subscriptionHistory(): import("@prisma/client").Prisma.SubscriptionHistoryDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get systemSetting(): import("@prisma/client").Prisma.SystemSettingDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get banner(): import("@prisma/client").Prisma.BannerDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get announcement(): import("@prisma/client").Prisma.AnnouncementDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get emailCampaign(): import("@prisma/client").Prisma.EmailCampaignDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get iPBlacklist(): import("@prisma/client").Prisma.IPBlacklistDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get supportTicket(): import("@prisma/client").Prisma.SupportTicketDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get supportTicketReply(): import("@prisma/client").Prisma.SupportTicketReplyDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get loginAttempt(): import("@prisma/client").Prisma.LoginAttemptDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get jobQueue(): import("@prisma/client").Prisma.JobQueueDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get notificationTemplate(): import("@prisma/client").Prisma.NotificationTemplateDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     onModuleInit(): Promise<void>;
     onModuleDestroy(): Promise<void>;
 }

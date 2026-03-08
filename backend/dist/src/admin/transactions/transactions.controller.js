@@ -15,6 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TransactionsController = void 0;
 const common_1 = require("@nestjs/common");
 const transactions_service_1 = require("./transactions.service");
+const jwt_auth_guard_1 = require("../../auth/guards/jwt-auth.guard");
+const roles_guard_1 = require("../../auth/guards/roles.guard");
+const roles_decorator_1 = require("../../auth/decorators/roles.decorator");
+const client_1 = require("@prisma/client");
 let TransactionsController = class TransactionsController {
     transactionsService;
     constructor(transactionsService) {
@@ -98,6 +102,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], TransactionsController.prototype, "overrideStatus", null);
 exports.TransactionsController = TransactionsController = __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN_STAFF),
     (0, common_1.Controller)('admin/transactions'),
     __metadata("design:paramtypes", [transactions_service_1.TransactionsService])
 ], TransactionsController);

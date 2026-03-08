@@ -1,0 +1,244 @@
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { PrismaService } from '../../prisma.service';
+import { DepositStatus, WithdrawalStatus } from '@prisma/client';
+
+@Injectable()
+export class FinanceService {
+    constructor(private prisma: PrismaService) { }
+
+    // =====================
+    // DEPOSIT (USER TOP-UP)
+    // =====================
+    async getDeposits(filters: any) {
+        const { status, search } = filters;
+        const where: any = {};
+        if (status && status !== 'ALL') where.status = status;
+
+        // For now we don't mock complex search as it requires joins sometimes
+        // But we can join relation
+        return this.prisma.deposit.findMany({
+            where,
+            orderBy: { createdAt: 'desc' },
+            include: {
+                user: { select: { id: true, name: true, email: true, role: true } },
+                merchant: { select: { id: true, name: true, domain: true } },
+                confirmedBy: { select: { id: true, name: true } }
+            },
+            take: 100
+        });
+    }
+
+    async confirmDeposit(id: string, operatorId: string) {
+        const deposit = await this.prisma.deposit.findUnique({ where: { id } });
+        if (!deposit) throw new NotFoundException('Deposit tidak ditemukan');
+        if (deposit.status !== 'PENDING') throw new BadRequestException(`Status tidak bisa dikonfirmasi (${deposit.status})`);
+
+        return this.prisma.$transaction(async (tx) => {
+            // 1. Mark status
+            const updated = await tx.deposit.update({
+                where: { id },
+                data: {
+                    status: 'CONFIRMED',
+                    confirmedById: operatorId,
+                    confirmedAt: new Date()
+                }
+            });
+
+            // 2. Add balance to user
+            const user = await tx.user.findUnique({ where: { id: deposit.userId } });
+            if (!user) throw new NotFoundException('User for deposit not found');
+
+            const balanceBefore = user.balance;
+            const amount = Number(deposit.amount);
+            const balanceAfter = Number(balanceBefore) + amount;
+
+            await tx.user.update({
+                where: { id: deposit.userId },
+                data: { balance: balanceAfter }
+            });
+
+            // 3. Create balance transaction ledger
+            await tx.balanceTransaction.create({
+                data: {
+                    userId: user.id,
+                    type: 'DEPOSIT',
+                    amount,
+                    balanceBefore,
+                    balanceAfter,
+                    depositId: id,
+                    note: `Manual confirmation of deposit #${id}`
+                }
+            });
+
+            // 4. Audit
+            await tx.auditLog.create({
+                data: {
+                    action: 'CONFIRM_DEPOSIT',
+                    entity: 'Deposit',
+                    entityId: id,
+                    newData: { status: 'CONFIRMED' },
+                    oldData: { status: 'PENDING' }
+                }
+            });
+
+            return updated;
+        });
+    }
+
+    async rejectDeposit(id: string, reason: string, operatorId: string) {
+        const deposit = await this.prisma.deposit.findUnique({ where: { id } });
+        if (!deposit) throw new NotFoundException('Deposit tidak ditemukan');
+        if (deposit.status !== 'PENDING') throw new BadRequestException(`Status tidak bisa ditolak (${deposit.status})`);
+
+        return this.prisma.$transaction(async (tx) => {
+            const updated = await tx.deposit.update({
+                where: { id },
+                data: {
+                    status: 'REJECTED',
+                    rejectedAt: new Date(),
+                    note: reason,
+                    confirmedById: operatorId
+                }
+            });
+
+            await tx.auditLog.create({
+                data: { action: 'REJECT_DEPOSIT', entity: 'Deposit', entityId: id, newData: { status: 'REJECTED', reason }, oldData: { status: 'PENDING' } }
+            });
+
+            return updated;
+        });
+    }
+
+    // ==========================
+    // WITHDRAWAL (TARIK SALDO)
+    // ==========================
+    async getWithdrawals(filters: any) {
+        const { status } = filters;
+        const where: any = {};
+        if (status && status !== 'ALL') where.status = status;
+
+        return this.prisma.withdrawal.findMany({
+            where,
+            orderBy: { createdAt: 'desc' },
+            include: {
+                user: { select: { id: true, name: true, email: true, role: true } },
+                processedBy: { select: { id: true, name: true } }
+            },
+            take: 100
+        });
+    }
+
+    async processWithdrawal(id: string, operatorId: string) {
+        const wd = await this.prisma.withdrawal.findUnique({ where: { id } });
+        if (!wd) throw new NotFoundException('Data tidak ditemukan');
+        if (wd.status !== 'PENDING') throw new BadRequestException('Status tidak PENDING');
+
+        return this.prisma.$transaction(async (tx) => {
+            const updated = await tx.withdrawal.update({
+                where: { id },
+                data: {
+                    status: 'COMPLETED',
+                    processedById: operatorId,
+                    processedAt: new Date(),
+                    note: 'Proses manual sukses'
+                }
+            });
+
+            await tx.auditLog.create({
+                data: { action: 'PROCESS_WITHDRAWAL', entity: 'Withdrawal', entityId: id, newData: { status: 'COMPLETED' }, oldData: { status: 'PENDING' } }
+            });
+
+            return updated;
+        });
+    }
+
+    async rejectWithdrawal(id: string, reason: string, operatorId: string) {
+        const wd = await this.prisma.withdrawal.findUnique({ where: { id } });
+        if (!wd) throw new NotFoundException('Data tidak ditemukan');
+        if (wd.status !== 'PENDING') throw new BadRequestException('Status tidak PENDING');
+
+        return this.prisma.$transaction(async (tx) => {
+            const updated = await tx.withdrawal.update({
+                where: { id },
+                data: {
+                    status: 'REJECTED',
+                    rejectedAt: new Date(),
+                    processedById: operatorId,
+                    note: reason
+                }
+            });
+
+            // Kembalikan uang yang sempat di-"freeze" ke user saat request WD
+            const user = await tx.user.findUnique({ where: { id: wd.userId } });
+            if (user) {
+                const amount = Number(wd.amount);
+                const currentBalance = Number(user.balance);
+                await tx.user.update({
+                    where: { id: user.id },
+                    data: { balance: currentBalance + amount }
+                });
+                await tx.balanceTransaction.create({
+                    data: {
+                        userId: user.id,
+                        type: 'REFUND', // Or maybe WD_REJECT
+                        amount,
+                        balanceBefore: currentBalance,
+                        balanceAfter: currentBalance + amount,
+                        withdrawalId: id,
+                        note: `Refund for rejected WD #${id} - ${reason}`
+                    }
+                });
+            }
+
+            await tx.auditLog.create({
+                data: { action: 'REJECT_WITHDRAWAL', entity: 'Withdrawal', entityId: id, newData: { status: 'REJECTED', reason }, oldData: { status: 'PENDING' } }
+            });
+
+            return updated;
+        });
+    }
+
+    // ==========================
+    // REPORTER KEUANGAN PUSAT
+    // ==========================
+    async getFinanceSummary() {
+        // Very naive aggregations for Dashboard UI
+        const totalDepositConfirmedAgg = await this.prisma.deposit.aggregate({
+            where: { status: 'CONFIRMED' },
+            _sum: { amount: true }
+        });
+
+        const totalWDAgg = await this.prisma.withdrawal.aggregate({
+            where: { status: 'COMPLETED' },
+            _sum: { amount: true, fee: true }
+        });
+
+        const orderSalesAgg = await this.prisma.order.aggregate({
+            where: { paymentStatus: 'PAID' },
+            _sum: { totalPrice: true, basePrice: true }
+        });
+
+        const revenueFromMargin = Number(orderSalesAgg._sum.totalPrice || 0) - Number(orderSalesAgg._sum.basePrice || 0);
+
+        // (Mock) Revenue from SaaS
+        const saasRevenue = 0; // If you charge SaaS plan via external tables, sum it here
+
+        // Today's Sales
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todaySalesAgg = await this.prisma.order.aggregate({
+            where: { paymentStatus: 'PAID', createdAt: { gte: today } },
+            _sum: { totalPrice: true }
+        });
+
+        return {
+            totalDepositIn: Number(totalDepositConfirmedAgg._sum.amount || 0),
+            totalWithdrawalOut: Number(totalWDAgg._sum.amount || 0),
+            wdFeesCollected: Number(totalWDAgg._sum.fee || 0),
+            grossSales: Number(orderSalesAgg._sum.totalPrice || 0),
+            netMarginProfit: revenueFromMargin,
+            todaySales: Number(todaySalesAgg._sum.totalPrice || 0),
+            saasRevenue
+        };
+    }
+}

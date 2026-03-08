@@ -15,13 +15,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
 const users_service_1 = require("./users.service");
+const jwt_auth_guard_1 = require("../../auth/guards/jwt-auth.guard");
+const roles_guard_1 = require("../../auth/guards/roles.guard");
+const roles_decorator_1 = require("../../auth/decorators/roles.decorator");
+const client_1 = require("@prisma/client");
 let UsersController = class UsersController {
     usersService;
     constructor(usersService) {
         this.usersService = usersService;
     }
-    async getAllUsers(search, role, status) {
-        return this.usersService.getAllUsers(search, role, status);
+    async getAllUsers(search, role, status, page, limit) {
+        return this.usersService.getAllUsers(search, role, status, page, limit);
     }
     async getUserDetail(id) {
         return this.usersService.getUserDetail(id);
@@ -48,8 +52,10 @@ __decorate([
     __param(0, (0, common_1.Query)('search')),
     __param(1, (0, common_1.Query)('role')),
     __param(2, (0, common_1.Query)('status')),
+    __param(3, (0, common_1.Query)('page')),
+    __param(4, (0, common_1.Query)('limit')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:paramtypes", [String, String, String, Number, Number]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "getAllUsers", null);
 __decorate([
@@ -99,6 +105,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "forceLogoutAll", null);
 exports.UsersController = UsersController = __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN_STAFF),
     (0, common_1.Controller)('admin/users'),
     __metadata("design:paramtypes", [users_service_1.UsersService])
 ], UsersController);

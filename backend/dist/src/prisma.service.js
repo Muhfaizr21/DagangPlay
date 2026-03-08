@@ -50,6 +50,24 @@ let PrismaService = class PrismaService {
     get withdrawal() { return this.client.withdrawal; }
     get orderStatusHistory() { return this.client.orderStatusHistory; }
     get fraudDetection() { return this.client.fraudDetection; }
+    get commission() { return this.client.commission; }
+    get mLMCommission() { return this.client.mLMCommission; }
+    get resellerLevel() { return this.client.resellerLevel; }
+    get downlineTree() { return this.client.downlineTree; }
+    get promoCode() { return this.client.promoCode; }
+    get promoUsage() { return this.client.promoUsage; }
+    get invoice() { return this.client.invoice; }
+    get subscriptionHistory() { return this.client.subscriptionHistory; }
+    get systemSetting() { return this.client.systemSetting; }
+    get banner() { return this.client.banner; }
+    get announcement() { return this.client.announcement; }
+    get emailCampaign() { return this.client.emailCampaign; }
+    get iPBlacklist() { return this.client.iPBlacklist; }
+    get supportTicket() { return this.client.supportTicket; }
+    get supportTicketReply() { return this.client.supportTicketReply; }
+    get loginAttempt() { return this.client.loginAttempt; }
+    get jobQueue() { return this.client.jobQueue; }
+    get notificationTemplate() { return this.client.notificationTemplate; }
     async onModuleInit() {
         await this.client.$connect();
     }

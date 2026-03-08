@@ -1,7 +1,14 @@
-import { Controller, Get, Query, Patch, Param, Body, BadRequestException, Post } from '@nestjs/common';
+import { UseGuards,  Controller, Get, Query, Patch, Param, Body, BadRequestException, Post  } from "@nestjs/common";
 import { MerchantsService } from './merchants.service';
 import { MerchantStatus } from '@prisma/client';
 
+import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
+import { RolesGuard } from "../../auth/guards/roles.guard";
+import { Roles } from "../../auth/decorators/roles.decorator";
+import { Role } from "@prisma/client";
+
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.SUPER_ADMIN, Role.ADMIN_STAFF)
 @Controller('admin/merchants')
 export class MerchantsController {
     constructor(private readonly merchantsService: MerchantsService) { }

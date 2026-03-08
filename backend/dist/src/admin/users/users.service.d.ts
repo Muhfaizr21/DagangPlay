@@ -3,21 +3,29 @@ import { UserStatus } from '@prisma/client';
 export declare class UsersService {
     private prisma;
     constructor(prisma: PrismaService);
-    getAllUsers(search?: string, role?: string, status?: string): Promise<{
-        id: string;
-        email: string | null;
-        name: string;
-        role: import("@prisma/client").$Enums.Role;
-        status: import("@prisma/client").$Enums.UserStatus;
-        isVerified: boolean;
-        balance: import("@prisma/client-runtime-utils").Decimal;
-        bonusBalance: import("@prisma/client-runtime-utils").Decimal;
-        createdAt: Date;
-        _count: {
-            ordersAsCustomer: number;
-            ordersAsReseller: number;
+    getAllUsers(search?: string, role?: string, status?: string, page?: number, limit?: number): Promise<{
+        data: {
+            id: string;
+            email: string | null;
+            name: string;
+            role: import("@prisma/client").$Enums.Role;
+            status: import("@prisma/client").$Enums.UserStatus;
+            isVerified: boolean;
+            balance: import("@prisma/client-runtime-utils").Decimal;
+            bonusBalance: import("@prisma/client-runtime-utils").Decimal;
+            createdAt: Date;
+            _count: {
+                ordersAsCustomer: number;
+                ordersAsReseller: number;
+            };
+        }[];
+        meta: {
+            totalItems: number;
+            totalPages: number;
+            currentPage: number;
+            itemsPerPage: number;
         };
-    }[]>;
+    }>;
     getUserDetail(id: string): Promise<{
         profile: {
             id: string;
@@ -27,14 +35,14 @@ export declare class UsersService {
             city: string | null;
             province: string | null;
             userId: string;
+            bankName: string | null;
+            bankAccountNumber: string | null;
+            bankAccountName: string | null;
             fullName: string | null;
             birthDate: Date | null;
             gender: import("@prisma/client").$Enums.Gender | null;
             postalCode: string | null;
             idCardNumber: string | null;
-            bankName: string | null;
-            bankAccountNumber: string | null;
-            bankAccountName: string | null;
         } | null;
         merchantMembers: ({
             merchant: {
@@ -82,6 +90,7 @@ export declare class UsersService {
         name: string;
         avatar: string | null;
         role: import("@prisma/client").$Enums.Role;
+        adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
         status: import("@prisma/client").$Enums.UserStatus;
         isVerified: boolean;
         verifiedAt: Date | null;
@@ -105,6 +114,7 @@ export declare class UsersService {
         name: string;
         avatar: string | null;
         role: import("@prisma/client").$Enums.Role;
+        adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
         status: import("@prisma/client").$Enums.UserStatus;
         isVerified: boolean;
         verifiedAt: Date | null;

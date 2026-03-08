@@ -1,7 +1,14 @@
-import { Controller, Get, Patch, Post, Param, Body, Query, HttpCode } from '@nestjs/common';
+import { UseGuards, Controller, Get, Patch, Post, Param, Body, Query, HttpCode } from "@nestjs/common";
 import { UsersService } from './users.service';
 import { UserStatus } from '@prisma/client';
 
+import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
+import { RolesGuard } from "../../auth/guards/roles.guard";
+import { Roles } from "../../auth/decorators/roles.decorator";
+import { Role } from "@prisma/client";
+
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.SUPER_ADMIN, Role.ADMIN_STAFF)
 @Controller('admin/users')
 export class UsersController {
     constructor(private readonly usersService: UsersService) { }
@@ -10,9 +17,11 @@ export class UsersController {
     async getAllUsers(
         @Query('search') search?: string,
         @Query('role') role?: string,
-        @Query('status') status?: string
+        @Query('status') status?: string,
+        @Query('page') page?: number,
+        @Query('limit') limit?: number
     ) {
-        return this.usersService.getAllUsers(search, role, status);
+        return this.usersService.getAllUsers(search, role, status, page, limit);
     }
 
     @Get(':id')
