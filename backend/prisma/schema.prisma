@@ -1,0 +1,1726 @@
+// ================================================================
+// DagangPlay – Prisma Schema
+// Platform SaaS Voucher & Top Up Games
+// ================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ================================================================
+// ENUMS
+// ================================================================
+
+enum Role {
+  SUPER_ADMIN
+  MERCHANT
+  RESELLER
+  CUSTOMER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum OtpType {
+  EMAIL_VERIFY
+  PHONE_VERIFY
+  RESET_PASSWORD
+  LOGIN_2FA
+}
+
+enum MerchantStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_REVIEW
+}
+
+enum MerchantPlan {
+  FREE
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum MerchantMemberRole {
+  OWNER
+  ADMIN
+  STAFF
+}
+
+enum SupplierCode {
+  DIGIFLAZZ
+  VOUCHERKU
+  POTATOBOY
+  APIGAMES
+}
+
+enum SupplierStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+enum SkuStatus {
+  ACTIVE
+  INACTIVE
+  EMPTY
+}
+
+enum OrderPaymentStatus {
+  PENDING
+  PAID
+  EXPIRED
+  REFUNDED
+}
+
+enum OrderFulfillmentStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  BALANCE
+  BANK_TRANSFER
+  QRIS
+  GOPAY
+  OVO
+  DANA
+  SHOPEEPAY
+  CREDIT_CARD
+  ALFAMART
+  INDOMARET
+}
+
+enum PaymentProvider {
+  MIDTRANS
+  XENDIT
+  MANUAL
+  BALANCE
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  EXPIRED
+  FAILED
+  REFUNDED
+}
+
+enum FeeType {
+  FLAT
+  PERCENTAGE
+}
+
+enum DepositStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  EXPIRED
+}
+
+enum BalanceTrxType {
+  DEPOSIT
+  WITHDRAWAL
+  PURCHASE
+  REFUND
+  COMMISSION
+  BONUS
+  ADJUSTMENT
+  MLM_COMMISSION
+}
+
+enum WithdrawalStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+enum CommissionType {
+  FLAT
+  PERCENTAGE
+}
+
+enum CommissionAppliesTo {
+  ALL
+  CATEGORY
+  PRODUCT
+}
+
+enum CommissionForRole {
+  RESELLER
+  MERCHANT
+}
+
+enum CommissionStatus {
+  PENDING
+  SETTLED
+  CANCELLED
+}
+
+enum PromoType {
+  DISCOUNT_FLAT
+  DISCOUNT_PERCENTAGE
+  CASHBACK
+}
+
+enum PromoAppliesTo {
+  ALL
+  CATEGORY
+  PRODUCT
+}
+
+enum PromoForRole {
+  ALL
+  CUSTOMER
+  RESELLER
+}
+
+enum NotificationType {
+  ORDER
+  PAYMENT
+  DEPOSIT
+  WITHDRAWAL
+  PROMO
+  SYSTEM
+  ANNOUNCEMENT
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  WHATSAPP
+  SMS
+}
+
+enum TicketCategory {
+  PAYMENT
+  ORDER
+  ACCOUNT
+  REFUND
+  OTHER
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_REPLY
+  RESOLVED
+  CLOSED
+}
+
+enum SettingType {
+  STRING
+  NUMBER
+  BOOLEAN
+  JSON
+}
+
+enum WebhookEvent {
+  ORDER_CREATED
+  ORDER_SUCCESS
+  ORDER_FAILED
+  PAYMENT_PAID
+  DEPOSIT_CONFIRMED
+  BALANCE_UPDATED
+}
+
+enum WebhookStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  RETRYING
+}
+
+enum FraudRiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum DisputeStatus {
+  OPEN
+  INVESTIGATING
+  RESOLVED
+  REJECTED
+}
+
+enum ResellerLevelName {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+  DIAMOND
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+  RETRYING
+}
+
+enum BannerPosition {
+  HERO
+  SIDEBAR
+  POPUP
+  FOOTER
+}
+
+// ================================================================
+// USERS & AUTH
+// ================================================================
+
+// Tabel utama user untuk semua role: SUPER_ADMIN, MERCHANT, RESELLER, CUSTOMER
+model User {
+  id               String     @id @default(cuid())
+  email            String?    @unique
+  phone            String?    @unique
+  password         String
+  name             String
+  username         String?    @unique
+  avatar           String?
+  role             Role       @default(CUSTOMER)
+  status           UserStatus @default(ACTIVE)
+  isVerified       Boolean    @default(false)
+  verifiedAt       DateTime?
+  referralCode     String     @unique @default(cuid())
+  referredById     String?
+  merchantId       String?    // Merchant tempat user ini terdaftar (untuk Reseller & Customer)
+  balance          Decimal    @default(0) @db.Decimal(18, 2)
+  bonusBalance     Decimal    @default(0) @db.Decimal(18, 2)
+  resellerLevelId  String?
+  isOfficial       Boolean    @default(false) // true = akun resmi DagangPlay
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  deletedAt        DateTime?
+
+  // Self-relation referral
+  referredBy       User?      @relation("UserReferral", fields: [referredById], references: [id])
+  referrals        User[]     @relation("UserReferral")
+
+  // Profile & sesi
+  profile          UserProfile?
+  sessions         UserSession[]
+  otpVerifications OtpVerification[]
+
+  // Merchant
+  ownedMerchant    Merchant?  @relation("MerchantOwner")
+  merchantMembers  MerchantMember[]
+
+  // Orders
+  ordersAsCustomer Order[]    @relation("OrderCustomer")
+  ordersAsReseller Order[]    @relation("OrderReseller")
+
+  // Keuangan
+  balanceTransactions BalanceTransaction[]
+  deposits         Deposit[]  @relation("DepositUser")
+  depositsConfirmed Deposit[] @relation("DepositConfirmedBy")
+  withdrawals      Withdrawal[] @relation("WithdrawalUser")
+  withdrawalsProcessed Withdrawal[] @relation("WithdrawalProcessedBy")
+
+  // Komisi & referral
+  commissions      Commission[]
+  referralRewardsAsReferrer ReferralReward[] @relation("ReferrerRewards")
+  referralRewardsAsReferred ReferralReward[] @relation("ReferredRewards")
+
+  // Promo
+  promoUsages      PromoUsage[]
+
+  // Notifikasi & support
+  notifications    Notification[]
+  ticketsCreated   SupportTicket[] @relation("TicketUser")
+  ticketsAssigned  SupportTicket[] @relation("TicketAssigned")
+  ticketReplies    SupportTicketReply[]
+
+  // Lainnya
+  reviews          ProductReview[]
+  auditLogs        AuditLog[]
+  apiKeys          ApiKey[]
+  trustedDevices   DeviceTrusted[]
+  loginAttempts    LoginAttempt[]
+  fraudDetections  FraudDetection[]
+  resellerLevel    ResellerLevel?   @relation(fields: [resellerLevelId], references: [id])
+  levelHistory     ResellerLevelHistory[]
+  downlineAsParent DownlineTree[]   @relation("DownlineParent")
+  downlineAsChild  DownlineTree[]   @relation("DownlineChild")
+  mlmCommissions   MLMCommission[]
+  favorites        UserFavorite[]
+  activityLogs     UserActivityLog[]
+  merchantPrices   MerchantProductPrice[]
+  resellerPrices   ResellerProductPrice[]
+  emailCampaignLogs EmailCampaignLog[]
+  pushNotificationLogs PushNotificationLog[]
+
+  @@index([email, phone, role, status, merchantId, referredById, deletedAt])
+}
+
+// Profil lengkap user, terpisah agar tabel User tetap ringan
+model UserProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  fullName          String?
+  birthDate         DateTime?
+  gender            Gender?
+  address           String?
+  city              String?
+  province          String?
+  postalCode        String?
+  idCardNumber      String?
+  bankName          String?
+  bankAccountNumber String?
+  bankAccountName   String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Sesi login user (JWT / refresh token)
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       String
+  token        String   @unique
+  refreshToken String   @unique
+  ipAddress    String?
+  userAgent    String?
+  device       String?
+  expiresAt    DateTime
+  lastActiveAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, token])
+}
+
+// OTP untuk verifikasi email, phone, 2FA, reset password
+model OtpVerification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      OtpType
+  code      String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, token, type])
+}
+
+// ================================================================
+// KEAMANAN & ANTI-FRAUD
+// ================================================================
+
+// Daftar IP yang diblokir dari sistem
+model IPBlacklist {
+  id         String    @id @default(cuid())
+  ipAddress  String    @unique
+  reason     String?
+  blockedBy  String?
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([ipAddress])
+}
+
+// Deteksi aktivitas mencurigakan per user / order
+model FraudDetection {
+  id         String         @id @default(cuid())
+  userId     String
+  orderId    String?
+  riskLevel  FraudRiskLevel
+  reason     String
+  metadata   Json
+  isResolved Boolean        @default(false)
+  resolvedBy String?
+  resolvedAt DateTime?
+  createdAt  DateTime       @default(now())
+
+  user       User           @relation(fields: [userId], references: [id])
+  order      Order?         @relation(fields: [orderId], references: [id])
+
+  @@index([userId, riskLevel, isResolved])
+}
+
+// Rekam percobaan login (sukses & gagal)
+model LoginAttempt {
+  id         String   @id @default(cuid())
+  userId     String?
+  ipAddress  String
+  userAgent  String?
+  email      String?
+  isSuccess  Boolean
+  failReason String?
+  createdAt  DateTime @default(now())
+
+  user       User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId, ipAddress, isSuccess, createdAt])
+}
+
+// Device yang sudah dipercaya untuk skip 2FA
+model DeviceTrusted {
+  id         String   @id @default(cuid())
+  userId     String
+  deviceId   String
+  deviceName String?
+  userAgent  String?
+  ipAddress  String?
+  trustedAt  DateTime @default(now())
+  expiresAt  DateTime
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceId])
+}
+
+// ================================================================
+// MERCHANT / TENANT
+// ================================================================
+
+// Merchant = Tenant yang berlangganan DagangPlay untuk punya toko sendiri
+// isOfficial: true = toko resmi DagangPlay sendiri
+model Merchant {
+  id               String         @id @default(cuid())
+  name             String
+  slug             String         @unique
+  logo             String?
+  favicon          String?
+  bannerImage      String?
+  domain           String?        @unique
+  description      String?
+  tagline          String?
+  contactEmail     String?
+  contactPhone     String?
+  contactWhatsapp  String?
+  address          String?
+  city             String?
+  province         String?
+  status           MerchantStatus @default(PENDING_REVIEW)
+  plan             MerchantPlan   @default(FREE)
+  planExpiredAt    DateTime?      // null = tidak ada expiry (untuk isOfficial)
+  settings         Json?          @default("{}")
+  isOfficial       Boolean        @default(false) // true = toko resmi DagangPlay
+  ownerId          String         @unique
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  deletedAt        DateTime?
+
+  owner            User           @relation("MerchantOwner", fields: [ownerId], references: [id])
+  members          MerchantMember[]
+  orders           Order[]
+  payments         Payment[]
+  deposits         Deposit[]
+  notifications    Notification[]
+  tickets          SupportTicket[]
+  auditLogs        AuditLog[]
+  apiKeys          ApiKey[]
+  webhookEndpoints WebhookEndpoint[]
+  productPrices    MerchantProductPrice[]
+  promoCodes       PromoCode[]
+  paymentChannels  PaymentChannel[]
+  banners          Banner[]
+  announcements    Announcement[]
+  popupPromos      PopupPromo[]
+  emailCampaigns   EmailCampaign[]
+  settings_        MerchantSetting[]
+  invoices         Invoice[]
+  subscriptions    SubscriptionHistory[]
+  dailySnapshots   DailySalesSnapshot[]
+
+  @@index([slug, domain, status, plan, isOfficial])
+}
+
+// Tim internal Merchant (owner, admin, staff)
+model MerchantMember {
+  id          String             @id @default(cuid())
+  merchantId  String
+  userId      String
+  role        MerchantMemberRole @default(STAFF)
+  permissions Json               @default("{}")
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  merchant    Merchant           @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  user        User               @relation(fields: [userId], references: [id])
+
+  @@unique([merchantId, userId])
+}
+
+// ================================================================
+// SUPPLIER & PRODUK
+// ================================================================
+
+// Supplier API penyedia voucher (Digiflazz, dll)
+model Supplier {
+  id           String               @id @default(cuid())
+  name         String
+  code         SupplierCode         @unique
+  apiUrl       String?
+  apiKey       String?
+  apiSecret    String?
+  status       SupplierStatus       @default(ACTIVE)
+  balance      Decimal              @default(0) @db.Decimal(18, 2)
+  lastSyncAt   DateTime?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  skus         ProductSku[]
+  logs         SupplierLog[]
+  balanceHistories SupplierBalanceHistory[]
+  maintenances MaintenanceSchedule[]
+}
+
+// Log setiap request ke API supplier
+model SupplierLog {
+  id           String   @id @default(cuid())
+  supplierId   String
+  orderId      String?
+  method       String
+  endpoint     String?
+  requestBody  Json?
+  responseBody Json?
+  httpStatus   Int?
+  duration     Int?     // ms
+  isSuccess    Boolean
+  createdAt    DateTime @default(now())
+
+  supplier     Supplier @relation(fields: [supplierId], references: [id])
+  order        Order?   @relation(fields: [orderId], references: [id])
+
+  @@index([supplierId, orderId, isSuccess, createdAt])
+}
+
+// Riwayat perubahan saldo supplier
+model SupplierBalanceHistory {
+  id            String   @id @default(cuid())
+  supplierId    String
+  type          String
+  amount        Decimal  @db.Decimal(18, 2)
+  balanceBefore Decimal  @db.Decimal(18, 2)
+  balanceAfter  Decimal  @db.Decimal(18, 2)
+  note          String?
+  createdAt     DateTime @default(now())
+
+  supplier      Supplier @relation(fields: [supplierId], references: [id])
+
+  @@index([supplierId, createdAt])
+}
+
+// Kategori produk (bisa nested: Mobile Games > Mobile Legends)
+model Category {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  icon        String?
+  image       String?
+  description String?
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+  parentId    String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+  products    Product[]
+  commissionRules CommissionRule[]
+  promoCodes  PromoCode[]
+  salesStats  ProductSalesStats[]
+}
+
+// Produk (game / layanan)
+model Product {
+  id          String        @id @default(cuid())
+  name        String
+  slug        String        @unique
+  categoryId  String
+  description String?
+  thumbnail   String?
+  banner      String?
+  gameId      String?       // ID game di sistem supplier
+  instruction String?
+  status      ProductStatus @default(ACTIVE)
+  sortOrder   Int           @default(0)
+  isFeatured  Boolean       @default(false)
+  isPopular   Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  category    Category      @relation(fields: [categoryId], references: [id])
+  skus        ProductSku[]
+  reviews     ProductReview[]
+  commissionRules CommissionRule[]
+  servers     GameServer[]
+  favorites   UserFavorite[]
+  salesStats  ProductSalesStats[]
+  maintenances MaintenanceSchedule[]
+  refundPolicy RefundPolicy?
+}
+
+// SKU / Varian produk (Diamonds 86 ML, Diamonds 172 ML, dll)
+model ProductSku {
+  id            String     @id @default(cuid())
+  productId     String
+  supplierId    String
+  name          String
+  supplierCode  String     // Kode produk di sistem supplier
+  basePrice     Decimal    @db.Decimal(18, 2)
+  sellingPrice  Decimal    @db.Decimal(18, 2)
+  stock         Int        @default(-1) // -1 = unlimited
+  status        SkuStatus  @default(ACTIVE)
+  metadata      Json?      @default("{}")
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  product       Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplier      Supplier   @relation(fields: [supplierId], references: [id])
+  orders        Order[]
+  merchantPrices MerchantProductPrice[]
+  resellerPrices ResellerProductPrice[]
+  promoCodes    PromoCode[]
+  priceHistories PriceHistory[]
+
+  @@index([productId, supplierId, status])
+}
+
+// Harga jual custom per Merchant (tenant bisa set harga sendiri)
+model MerchantProductPrice {
+  id           String     @id @default(cuid())
+  merchantId   String
+  userId       String     // Admin yang set harga
+  productSkuId String
+  sellingPrice Decimal    @db.Decimal(18, 2)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  merchant     Merchant   @relation(fields: [merchantId], references: [id])
+  user         User       @relation(fields: [userId], references: [id])
+  productSku   ProductSku @relation(fields: [productSkuId], references: [id])
+
+  @@unique([merchantId, productSkuId])
+}
+
+// Harga jual custom per Reseller
+model ResellerProductPrice {
+  id           String     @id @default(cuid())
+  userId       String
+  productSkuId String
+  sellingPrice Decimal    @db.Decimal(18, 2)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productSku   ProductSku @relation(fields: [productSkuId], references: [id])
+
+  @@unique([userId, productSkuId])
+}
+
+// Rekam perubahan harga SKU
+model PriceHistory {
+  id            String     @id @default(cuid())
+  productSkuId  String
+  oldBasePrice  Decimal    @db.Decimal(18, 2)
+  newBasePrice  Decimal    @db.Decimal(18, 2)
+  oldSellPrice  Decimal    @db.Decimal(18, 2)
+  newSellPrice  Decimal    @db.Decimal(18, 2)
+  changedBy     String?
+  reason        String?
+  createdAt     DateTime   @default(now())
+
+  productSku    ProductSku @relation(fields: [productSkuId], references: [id])
+
+  @@index([productSkuId, createdAt])
+}
+
+// Server game (untuk game yang perlu pilih server, misal: ML Server SEA)
+model GameServer {
+  id        String  @id @default(cuid())
+  productId String
+  serverId  String
+  name      String
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, serverId])
+}
+
+// Validasi ID game (cek nickname user sebelum beli)
+model GameValidation {
+  id         String   @id @default(cuid())
+  productId  String
+  gameUserId String
+  serverId   String?
+  nickname   String?
+  isValid    Boolean
+  checkedAt  DateTime @default(now())
+  ipAddress  String?
+
+  @@index([productId, gameUserId])
+}
+
+// Cache nickname yang sudah divalidasi
+model GameNickname {
+  id         String   @id @default(cuid())
+  productId  String
+  gameUserId String
+  serverId   String?
+  nickname   String
+  cachedAt   DateTime @default(now())
+  expiresAt  DateTime
+
+  @@unique([productId, gameUserId, serverId])
+}
+
+// ================================================================
+// ORDER & TRANSAKSI
+// ================================================================
+
+// Order = setiap transaksi pembelian voucher / top up
+model Order {
+  id                    String                 @id @default(cuid())
+  orderNumber           String                 @unique
+  userId                String                 // Customer
+  merchantId            String
+  resellerId            String?                // Jika beli lewat reseller
+  productId             String
+  productSkuId          String
+  productName           String                 // Snapshot nama produk saat order
+  productSkuName        String                 // Snapshot nama SKU saat order
+  gameUserId            String?
+  gameUserServerId      String?
+  gameUserName          String?
+  quantity              Int                    @default(1)
+  basePrice             Decimal                @db.Decimal(18, 2)
+  sellingPrice          Decimal                @db.Decimal(18, 2)
+  totalPrice            Decimal                @db.Decimal(18, 2)
+  paymentMethod         PaymentMethod?
+  paymentStatus         OrderPaymentStatus     @default(PENDING)
+  fulfillmentStatus     OrderFulfillmentStatus @default(PENDING)
+  supplierId            String?
+  supplierRefId         String?
+  supplierResponse      Json?
+  serialNumber          String?                // SN / kode voucher hasil dari supplier
+  promoCodeId           String?
+  discountAmount        Decimal                @default(0) @db.Decimal(18, 2)
+  note                  String?
+  failReason            String?
+  paidAt                DateTime?
+  processedAt           DateTime?
+  completedAt           DateTime?
+  failedAt              DateTime?
+  expiredAt             DateTime?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  customer              User                   @relation("OrderCustomer", fields: [userId], references: [id])
+  reseller              User?                  @relation("OrderReseller", fields: [resellerId], references: [id])
+  merchant              Merchant               @relation(fields: [merchantId], references: [id])
+  productSku            ProductSku             @relation(fields: [productSkuId], references: [id])
+  promoCode             PromoCode?             @relation(fields: [promoCodeId], references: [id])
+  payment               Payment?
+  statusHistories       OrderStatusHistory[]
+  commissions           Commission[]
+  fraudDetections       FraudDetection[]
+  supplierLogs          SupplierLog[]
+  balanceTransactions   BalanceTransaction[]
+  disputes              DisputeCase[]
+  mlmCommissions        MLMCommission[]
+
+  @@index([userId, merchantId, resellerId, paymentStatus, fulfillmentStatus, createdAt])
+}
+
+// Histori perubahan status order
+model OrderStatusHistory {
+  id        String   @id @default(cuid())
+  orderId   String
+  status    String
+  note      String?
+  changedBy String?
+  createdAt DateTime @default(now())
+
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+}
+
+// ================================================================
+// PEMBAYARAN
+// ================================================================
+
+// Satu order punya satu payment record
+model Payment {
+  id                    String          @id @default(cuid())
+  orderId               String          @unique
+  userId                String
+  merchantId            String
+  method                PaymentMethod
+  provider              PaymentProvider
+  amount                Decimal         @db.Decimal(18, 2)
+  fee                   Decimal         @default(0) @db.Decimal(18, 2)
+  totalAmount           Decimal         @db.Decimal(18, 2)
+  status                PaymentStatus   @default(PENDING)
+  providerTransactionId String?
+  providerResponse      Json?
+  snapToken             String?
+  paymentUrl            String?
+  paidAt                DateTime?
+  expiredAt             DateTime?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  order                 Order           @relation(fields: [orderId], references: [id])
+  merchant              Merchant        @relation(fields: [merchantId], references: [id])
+
+  @@index([orderId, userId, merchantId, status])
+}
+
+// Konfigurasi metode pembayaran per Merchant
+model PaymentChannel {
+  id         String          @id @default(cuid())
+  merchantId String?
+  provider   PaymentProvider
+  method     PaymentMethod
+  name       String
+  icon       String?
+  fee        Decimal         @default(0) @db.Decimal(18, 2)
+  feeType    FeeType         @default(FLAT)
+  minAmount  Decimal?        @db.Decimal(18, 2)
+  maxAmount  Decimal?        @db.Decimal(18, 2)
+  isActive   Boolean         @default(true)
+  sortOrder  Int             @default(0)
+  config     Json?           @default("{}")
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  merchant   Merchant?       @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId, provider, method, isActive])
+}
+
+// ================================================================
+// SALDO & DEPOSIT
+// ================================================================
+
+// Deposit saldo ke platform (untuk reseller & merchant)
+model Deposit {
+  id              String        @id @default(cuid())
+  userId          String
+  merchantId      String
+  amount          Decimal       @db.Decimal(18, 2)
+  method          PaymentMethod
+  provider        PaymentProvider
+  status          DepositStatus @default(PENDING)
+  paymentId       String?
+  confirmedById   String?
+  confirmedAt     DateTime?
+  rejectedAt      DateTime?
+  note            String?
+  receipt         String?       // Bukti transfer
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user            User          @relation("DepositUser", fields: [userId], references: [id])
+  merchant        Merchant      @relation(fields: [merchantId], references: [id])
+  confirmedBy     User?         @relation("DepositConfirmedBy", fields: [confirmedById], references: [id])
+  balanceTransaction BalanceTransaction?
+
+  @@index([userId, merchantId, status, createdAt])
+}
+
+// Semua mutasi saldo user (debit/kredit)
+model BalanceTransaction {
+  id             String         @id @default(cuid())
+  userId         String
+  type           BalanceTrxType
+  amount         Decimal        @db.Decimal(18, 2)
+  balanceBefore  Decimal        @db.Decimal(18, 2)
+  balanceAfter   Decimal        @db.Decimal(18, 2)
+  orderId        String?
+  depositId      String?        @unique
+  withdrawalId   String?        @unique
+  description    String?
+  note           String?
+  createdAt      DateTime       @default(now())
+
+  user           User           @relation(fields: [userId], references: [id])
+  order          Order?         @relation(fields: [orderId], references: [id])
+  deposit        Deposit?       @relation(fields: [depositId], references: [id])
+  withdrawal     Withdrawal?    @relation(fields: [withdrawalId], references: [id])
+
+  @@index([userId, type, createdAt])
+}
+
+// Penarikan saldo ke rekening bank
+model Withdrawal {
+  id                String           @id @default(cuid())
+  userId            String
+  amount            Decimal          @db.Decimal(18, 2)
+  fee               Decimal          @default(0) @db.Decimal(18, 2)
+  netAmount         Decimal          @db.Decimal(18, 2)
+  bankName          String
+  bankAccountNumber String
+  bankAccountName   String
+  status            WithdrawalStatus @default(PENDING)
+  processedById     String?
+  processedAt       DateTime?
+  rejectedAt        DateTime?
+  note              String?
+  receiptImage      String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  user              User             @relation("WithdrawalUser", fields: [userId], references: [id])
+  processedBy       User?            @relation("WithdrawalProcessedBy", fields: [processedById], references: [id])
+  balanceTransaction BalanceTransaction?
+
+  @@index([userId, status, createdAt])
+}
+
+// ================================================================
+// KOMISI & REFERRAL
+// ================================================================
+
+// Aturan komisi yang bisa dikonfigurasi per Merchant / kategori / produk
+model CommissionRule {
+  id          String              @id @default(cuid())
+  merchantId  String?
+  name        String
+  description String?
+  type        CommissionType
+  value       Decimal             @db.Decimal(10, 4)
+  appliesTo   CommissionAppliesTo @default(ALL)
+  categoryId  String?
+  productId   String?
+  forRole     CommissionForRole
+  isActive    Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  category    Category?           @relation(fields: [categoryId], references: [id])
+  product     Product?            @relation(fields: [productId], references: [id])
+
+  @@index([merchantId, forRole, isActive])
+}
+
+// Komisi yang diterima reseller / merchant per order
+model Commission {
+  id         String           @id @default(cuid())
+  orderId    String
+  userId     String
+  type       CommissionType
+  amount     Decimal          @db.Decimal(18, 2)
+  status     CommissionStatus @default(PENDING)
+  settledAt  DateTime?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  order      Order            @relation(fields: [orderId], references: [id])
+  user       User             @relation(fields: [userId], references: [id])
+
+  @@index([orderId, userId, status])
+}
+
+// Reward program referral antar user
+model ReferralReward {
+  id          String   @id @default(cuid())
+  referrerId  String
+  referredId  String
+  orderId     String?
+  amount      Decimal  @db.Decimal(18, 2)
+  type        String
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  referrer    User     @relation("ReferrerRewards", fields: [referrerId], references: [id])
+  referred    User     @relation("ReferredRewards", fields: [referredId], references: [id])
+
+  @@index([referrerId, referredId, status])
+}
+
+// ================================================================
+// MULTI-LEVEL RESELLER
+// ================================================================
+
+// Level / tier reseller (Bronze, Silver, Gold, dll)
+model ResellerLevel {
+  id              String            @id @default(cuid())
+  name            ResellerLevelName @unique
+  minTransaction  Int               @default(0)
+  minRevenue      Decimal           @default(0) @db.Decimal(18, 2)
+  commissionBonus Decimal           @default(0) @db.Decimal(10, 4)
+  badge           String?
+  benefits        Json?             @default("[]")
+  isActive        Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  users           User[]
+  levelHistories  ResellerLevelHistory[]
+}
+
+// Rekam perubahan level reseller
+model ResellerLevelHistory {
+  id        String        @id @default(cuid())
+  userId    String
+  levelId   String
+  oldLevel  String?
+  newLevel  String
+  reason    String?
+  createdAt DateTime      @default(now())
+
+  user      User          @relation(fields: [userId], references: [id])
+  level     ResellerLevel @relation(fields: [levelId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+// Struktur pohon downline untuk MLM multi-level
+model DownlineTree {
+  id       String @id @default(cuid())
+  parentId String
+  childId  String
+  level    Int    @default(1)
+  createdAt DateTime @default(now())
+
+  parent   User   @relation("DownlineParent", fields: [parentId], references: [id])
+  child    User   @relation("DownlineChild", fields: [childId], references: [id])
+
+  @@unique([parentId, childId])
+  @@index([parentId, childId, level])
+}
+
+// Komisi MLM yang dihitung dari tiap level downline
+model MLMCommission {
+  id         String   @id @default(cuid())
+  orderId    String
+  userId     String
+  level      Int      // Level ke berapa dari buyer (1=langsung, 2=level 2, dst)
+  percentage Decimal  @db.Decimal(10, 4)
+  amount     Decimal  @db.Decimal(18, 2)
+  status     String   @default("PENDING")
+  settledAt  DateTime?
+  createdAt  DateTime @default(now())
+
+  order      Order    @relation(fields: [orderId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@index([orderId, userId, level, status])
+}
+
+// ================================================================
+// PROMO & DISKON
+// ================================================================
+
+// Kode promo / voucher diskon
+model PromoCode {
+  id           String         @id @default(cuid())
+  merchantId   String?
+  code         String         @unique
+  name         String
+  description  String?
+  type         PromoType
+  value        Decimal        @db.Decimal(18, 2)
+  maxDiscount  Decimal?       @db.Decimal(18, 2)
+  minPurchase  Decimal?       @db.Decimal(18, 2)
+  quota        Int?           // null = unlimited
+  usedCount    Int            @default(0)
+  startDate    DateTime?
+  endDate      DateTime?
+  isActive     Boolean        @default(true)
+  appliesTo    PromoAppliesTo @default(ALL)
+  categoryId   String?
+  productSkuId String?
+  forRole      PromoForRole   @default(ALL)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  merchant     Merchant?      @relation(fields: [merchantId], references: [id])
+  category     Category?      @relation(fields: [categoryId], references: [id])
+  productSku   ProductSku?    @relation(fields: [productSkuId], references: [id])
+  usages       PromoUsage[]
+  orders       Order[]
+
+  @@index([code, merchantId, isActive])
+}
+
+// Rekam siapa yang pakai promo apa
+model PromoUsage {
+  id             String    @id @default(cuid())
+  promoCodeId    String
+  userId         String
+  orderId        String
+  discountAmount Decimal   @db.Decimal(18, 2)
+  createdAt      DateTime  @default(now())
+
+  promoCode      PromoCode @relation(fields: [promoCodeId], references: [id])
+  user           User      @relation(fields: [userId], references: [id])
+
+  @@unique([promoCodeId, orderId])
+}
+
+// ================================================================
+// API KEY & WEBHOOK
+// ================================================================
+
+// API Key untuk integrasi pihak ketiga
+model ApiKey {
+  id          String    @id @default(cuid())
+  userId      String
+  merchantId  String?
+  name        String
+  key         String    @unique
+  secret      String
+  permissions Json      @default("[]")
+  isActive    Boolean   @default(true)
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  merchant    Merchant? @relation(fields: [merchantId], references: [id])
+
+  @@index([userId, merchantId, key])
+}
+
+// Endpoint webhook yang didaftarkan Merchant
+model WebhookEndpoint {
+  id         String        @id @default(cuid())
+  merchantId String
+  url        String
+  secret     String?
+  events     Json          @default("[]")
+  isActive   Boolean       @default(true)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  merchant   Merchant      @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  logs       WebhookLog[]
+
+  @@index([merchantId])
+}
+
+// Log pengiriman webhook (beserta retry jika gagal)
+model WebhookLog {
+  id                String          @id @default(cuid())
+  webhookEndpointId String
+  event             WebhookEvent
+  payload           Json
+  responseStatus    Int?
+  responseBody      String?
+  status            WebhookStatus   @default(PENDING)
+  retryCount        Int             @default(0)
+  nextRetryAt       DateTime?
+  sentAt            DateTime?
+  createdAt         DateTime        @default(now())
+
+  webhookEndpoint   WebhookEndpoint @relation(fields: [webhookEndpointId], references: [id])
+
+  @@index([webhookEndpointId, status, event])
+}
+
+// ================================================================
+// KEUANGAN LANJUT
+// ================================================================
+
+// Invoice tagihan langganan Merchant
+model Invoice {
+  id          String        @id @default(cuid())
+  merchantId  String
+  invoiceNo   String        @unique
+  plan        MerchantPlan
+  amount      Decimal       @db.Decimal(18, 2)
+  tax         Decimal       @default(0) @db.Decimal(18, 2)
+  totalAmount Decimal       @db.Decimal(18, 2)
+  status      InvoiceStatus @default(UNPAID)
+  dueDate     DateTime
+  paidAt      DateTime?
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  merchant    Merchant      @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId, status, dueDate])
+}
+
+// Rekam riwayat perubahan paket langganan Merchant
+model SubscriptionHistory {
+  id         String       @id @default(cuid())
+  merchantId String
+  oldPlan    MerchantPlan?
+  newPlan    MerchantPlan
+  startDate  DateTime
+  endDate    DateTime?
+  amount     Decimal      @db.Decimal(18, 2)
+  note       String?
+  createdAt  DateTime     @default(now())
+
+  merchant   Merchant     @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId, createdAt])
+}
+
+// ================================================================
+// ANALYTICS & REPORTING
+// ================================================================
+
+// Snapshot penjualan harian per Merchant (untuk dashboard cepat)
+model DailySalesSnapshot {
+  id            String   @id @default(cuid())
+  merchantId    String
+  date          DateTime @db.Date
+  totalOrders   Int      @default(0)
+  successOrders Int      @default(0)
+  failedOrders  Int      @default(0)
+  totalRevenue  Decimal  @default(0) @db.Decimal(18, 2)
+  totalProfit   Decimal  @default(0) @db.Decimal(18, 2)
+  newCustomers  Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  merchant      Merchant @relation(fields: [merchantId], references: [id])
+
+  @@unique([merchantId, date])
+  @@index([merchantId, date])
+}
+
+// Statistik penjualan per produk per hari
+model ProductSalesStats {
+  id           String   @id @default(cuid())
+  productId    String
+  categoryId   String
+  date         DateTime @db.Date
+  totalSold    Int      @default(0)
+  totalRevenue Decimal  @default(0) @db.Decimal(18, 2)
+  createdAt    DateTime @default(now())
+
+  product      Product  @relation(fields: [productId], references: [id])
+  category     Category @relation(fields: [categoryId], references: [id])
+
+  @@unique([productId, date])
+  @@index([productId, categoryId, date])
+}
+
+// Log aktivitas user untuk analytics behaviour
+model UserActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  page      String?
+  metadata  Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, action, createdAt])
+}
+
+// ================================================================
+// NOTIFIKASI
+// ================================================================
+
+// Notifikasi in-app per user
+model Notification {
+  id         String           @id @default(cuid())
+  userId     String
+  merchantId String?
+  type       NotificationType
+  title      String
+  message    String
+  imageUrl   String?
+  isRead     Boolean          @default(false)
+  readAt     DateTime?
+  data       Json?
+  createdAt  DateTime         @default(now())
+
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  merchant   Merchant?        @relation(fields: [merchantId], references: [id])
+
+  @@index([userId, merchantId, isRead, type, createdAt])
+}
+
+// Template notifikasi (email / WA / SMS) per Merchant
+model NotificationTemplate {
+  id         String              @id @default(cuid())
+  merchantId String?
+  type       NotificationType
+  channel    NotificationChannel
+  subject    String?
+  body       String
+  isActive   Boolean             @default(true)
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  @@unique([merchantId, type, channel])
+}
+
+// Log pengiriman push notification
+model PushNotificationLog {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  data      Json?
+  isSuccess Boolean
+  errorMsg  String?
+  sentAt    DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, isSuccess, sentAt])
+}
+
+// Log pengiriman email campaign (setiap penerima)
+model EmailCampaignLog {
+  id         String        @id @default(cuid())
+  campaignId String
+  userId     String
+  isSuccess  Boolean
+  errorMsg   String?
+  sentAt     DateTime      @default(now())
+
+  campaign   EmailCampaign @relation(fields: [campaignId], references: [id])
+  user       User          @relation(fields: [userId], references: [id])
+
+  @@index([campaignId, userId])
+}
+
+// ================================================================
+// MARKETING & ENGAGEMENT
+// ================================================================
+
+// Banner promosi yang tampil di halaman toko
+model Banner {
+  id         String         @id @default(cuid())
+  merchantId String?
+  title      String
+  image      String
+  linkUrl    String?
+  position   BannerPosition @default(HERO)
+  sortOrder  Int            @default(0)
+  startDate  DateTime?
+  endDate    DateTime?
+  isActive   Boolean        @default(true)
+  clickCount Int            @default(0)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  merchant   Merchant?      @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId, position, isActive])
+}
+
+// Pengumuman / berita untuk user toko
+model Announcement {
+  id         String    @id @default(cuid())
+  merchantId String?
+  title      String
+  content    String
+  imageUrl   String?
+  isActive   Boolean   @default(true)
+  startDate  DateTime?
+  endDate    DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  merchant   Merchant? @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId, isActive])
+}
+
+// Popup promosi yang muncul saat user buka toko
+model PopupPromo {
+  id         String    @id @default(cuid())
+  merchantId String?
+  title      String
+  image      String?
+  content    String?
+  linkUrl    String?
+  startDate  DateTime?
+  endDate    DateTime?
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  merchant   Merchant? @relation(fields: [merchantId], references: [id])
+}
+
+// Kampanye email blast ke user
+model EmailCampaign {
+  id          String             @id @default(cuid())
+  merchantId  String?
+  name        String
+  subject     String
+  body        String
+  targetRole  Role?
+  sentCount   Int                @default(0)
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  merchant    Merchant?          @relation(fields: [merchantId], references: [id])
+  logs        EmailCampaignLog[]
+
+  @@index([merchantId, isActive])
+}
+
+// Produk favorit user
+model UserFavorite {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+// ================================================================
+// SUPPORT TICKET
+// ================================================================
+
+// Tiket dukungan dari user ke Merchant / DagangPlay
+model SupportTicket {
+  id           String         @id @default(cuid())
+  userId       String
+  merchantId   String
+  orderId      String?
+  subject      String
+  description  String
+  category     TicketCategory
+  priority     TicketPriority @default(MEDIUM)
+  status       TicketStatus   @default(OPEN)
+  assignedToId String?
+  resolvedAt   DateTime?
+  closedAt     DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  user         User           @relation("TicketUser", fields: [userId], references: [id])
+  merchant     Merchant       @relation(fields: [merchantId], references: [id])
+  assignedTo   User?          @relation("TicketAssigned", fields: [assignedToId], references: [id])
+  replies      SupportTicketReply[]
+
+  @@index([userId, merchantId, status, priority, createdAt])
+}
+
+// Balasan tiket support (thread diskusi)
+model SupportTicketReply {
+  id          String         @id @default(cuid())
+  ticketId    String
+  userId      String
+  message     String
+  attachments Json?          @default("[]")
+  isFromStaff Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+
+  ticket      SupportTicket  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user        User           @relation(fields: [userId], references: [id])
+
+  @@index([ticketId, userId])
+}
+
+// ================================================================
+// REVIEW & RATING
+// ================================================================
+
+// Review produk dari customer setelah transaksi sukses
+model ProductReview {
+  id          String   @id @default(cuid())
+  productId   String
+  userId      String
+  orderId     String   @unique
+  rating      Int      // 1–5
+  comment     String?
+  images      Json?    @default("[]")
+  isVerified  Boolean  @default(false)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  product     Product  @relation(fields: [productId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([productId, userId, rating, isPublished])
+}
+
+// ================================================================
+// OPERASIONAL
+// ================================================================
+
+// Jadwal maintenance supplier / produk
+model MaintenanceSchedule {
+  id          String    @id @default(cuid())
+  supplierId  String?
+  productId   String?
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  supplier    Supplier? @relation(fields: [supplierId], references: [id])
+  product     Product?  @relation(fields: [productId], references: [id])
+
+  @@index([supplierId, productId, startTime, endTime])
+}
+
+// Kebijakan refund per produk
+model RefundPolicy {
+  id           String   @id @default(cuid())
+  productId    String   @unique
+  isRefundable Boolean  @default(false)
+  maxHours     Int?     // Batas waktu klaim refund dalam jam
+  conditions   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  product      Product  @relation(fields: [productId], references: [id])
+}
+
+// Kasus sengketa / dispute order
+model DisputeCase {
+  id          String        @id @default(cuid())
+  orderId     String
+  userId      String
+  reason      String
+  evidence    Json?         @default("[]")
+  status      DisputeStatus @default(OPEN)
+  resolution  String?
+  resolvedBy  String?
+  resolvedAt  DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  order       Order         @relation(fields: [orderId], references: [id])
+
+  @@index([orderId, userId, status])
+}
+
+// Antrian job background (retry order, kirim notif, sinkronisasi, dll)
+model JobQueue {
+  id          String    @id @default(cuid())
+  type        String
+  payload     Json
+  status      JobStatus @default(PENDING)
+  retryCount  Int       @default(0)
+  maxRetry    Int       @default(3)
+  error       String?
+  scheduledAt DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([type, status, scheduledAt])
+}
+
+// ================================================================
+// PENGATURAN
+// ================================================================
+
+// Pengaturan global sistem DagangPlay
+model SystemSetting {
+  id          String      @id @default(cuid())
+  key         String      @unique
+  value       String
+  type        SettingType @default(STRING)
+  description String?
+  group       String?
+  updatedBy   String?
+  updatedAt   DateTime    @updatedAt
+}
+
+// Pengaturan spesifik per Merchant (isolated per tenant)
+model MerchantSetting {
+  id         String      @id @default(cuid())
+  merchantId String
+  key        String
+  value      String
+  type       SettingType @default(STRING)
+  updatedAt  DateTime    @updatedAt
+
+  merchant   Merchant    @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@unique([merchantId, key])
+  @@index([merchantId])
+}
+
+// ================================================================
+// AUDIT LOG
+// ================================================================
+
+// Semua perubahan data penting dicatat di sini
+model AuditLog {
+  id         String    @id @default(cuid())
+  userId     String?
+  merchantId String?
+  action     String    // CREATE, UPDATE, DELETE, LOGIN, dll
+  entity     String    // Nama model yang diubah
+  entityId   String?
+  oldData    Json?
+  newData    Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+
+  user       User?     @relation(fields: [userId], references: [id])
+  merchant   Merchant? @relation(fields: [merchantId], references: [id])
+
+  @@index([userId, merchantId, action, entity, createdAt])
+}
