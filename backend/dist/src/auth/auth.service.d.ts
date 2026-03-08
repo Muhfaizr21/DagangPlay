@@ -7,13 +7,13 @@ export declare class AuthService {
     adminLogin(data: any): Promise<{
         statusCode: number;
         message: string;
-        token: string;
+        access_token: string;
         user: {
             id: string;
             name: string;
             email: string | null;
-            role: import("@prisma/client").$Enums.Role;
-            adminPermissions: string | number | true | import("@prisma/client/runtime/client").JsonObject | import("@prisma/client/runtime/client").JsonArray;
+            role: "SUPER_ADMIN" | "ADMIN_STAFF";
+            adminPermissions: any;
         };
     }>;
 }

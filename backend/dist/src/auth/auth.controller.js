@@ -21,6 +21,8 @@ let AuthController = class AuthController {
         this.authService = authService;
     }
     async adminLogin(body, req) {
+        console.log('--- Incoming Login Request ---');
+        console.log('Body:', JSON.stringify(body));
         const loginData = {
             email: body.email,
             password: body.password,

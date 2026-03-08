@@ -1,13 +1,36 @@
 "use client";
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
 
 export default function AdminLoginPage() {
     const router = useRouter();
+    const [email, setEmail] = React.useState('superadmin@dagangplay.com');
+    const [password, setPassword] = React.useState('dagangplayadmin2026');
+    const [loading, setLoading] = React.useState(false);
+    const [error, setError] = React.useState('');
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        router.push('/admin');
+        setLoading(true);
+        setError('');
+
+        try {
+            const res = await axios.post('http://localhost:3001/api/auth/admin/login', {
+                email,
+                password
+            });
+
+            // Save token and user info
+            localStorage.setItem('admin_token', res.data.access_token);
+            localStorage.setItem('admin_user', JSON.stringify(res.data.user));
+
+            router.push('/admin');
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Gagal login. Cek kredensial Anda.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -26,12 +49,19 @@ export default function AdminLoginPage() {
                     <p className="font-body text-cyan-600 text-xs uppercase tracking-widest mt-2 font-bold select-none">Super Admin Authentication</p>
                 </div>
 
+                {error && (
+                    <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-[13px] font-medium animate-in fade-in slide-in-from-top-2">
+                        {error}
+                    </div>
+                )}
+
                 <form className="space-y-6" onSubmit={handleLogin}>
                     <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email Address</label>
                         <input
                             type="email"
-                            defaultValue="superadmin@dagangplay.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             className="w-full px-5 py-4 rounded-xl bg-white border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-body text-sm"
                             placeholder="admin@dagangplay.com"
                             required
@@ -41,7 +71,8 @@ export default function AdminLoginPage() {
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Password</label>
                         <input
                             type="password"
-                            defaultValue="dagangplayadmin2026"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
                             className="w-full px-5 py-4 rounded-xl bg-white border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-body text-sm"
                             placeholder="••••••••"
                             required
@@ -58,10 +89,11 @@ export default function AdminLoginPage() {
 
                     <button
                         type="submit"
-                        className="w-full py-4 mt-4 rounded-xl font-body font-bold text-sm tracking-widest text-white uppercase transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/30"
+                        disabled={loading}
+                        className="w-full py-4 mt-4 rounded-xl font-body font-bold text-sm tracking-widest text-white uppercase transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/30 disabled:opacity-50 disabled:translate-y-0"
                         style={{ background: 'linear-gradient(90deg, #0ea5e9, #06b6d4)' }}
                     >
-                        Login ke Dashboard
+                        {loading ? 'Authenticating...' : 'Login ke Dashboard'}
                     </button>
                 </form>
 

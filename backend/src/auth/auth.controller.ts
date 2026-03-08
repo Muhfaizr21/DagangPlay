@@ -7,6 +7,8 @@ export class AuthController {
 
     @Post('admin/login')
     async adminLogin(@Body() body: any, @Req() req: any) {
+        console.log('--- Incoming Login Request ---');
+        console.log('Body:', JSON.stringify(body));
         const loginData = {
             email: body.email,
             password: body.password,

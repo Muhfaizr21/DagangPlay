@@ -10,28 +10,39 @@ export class AuthService {
     ) { }
 
     async adminLogin(data: any) {
-        // Very basic login flow for demonstration
-        // Ensure we hit the database to find SUPER_ADMIN or ADMIN_STAFF
-        const adminParams = {
-            email: data.email,
-            role: { in: ['SUPER_ADMIN', 'ADMIN_STAFF'] } as any,
-            status: 'ACTIVE' as any
-        };
+        console.log('--- Auth Audit: Admin Login Attempt ---');
+        console.log('Email:', data.email);
 
-        const user = await this.prisma.user.findFirst({
-            where: adminParams
+        const user = await this.prisma.user.findUnique({
+            where: { email: data.email }
         });
 
         if (!user) {
-            throw new UnauthorizedException('Email admin tidak terdaftar atau telah disuspend.');
+            console.log('Result: FAILED - Email not found');
+            throw new UnauthorizedException('Email administrator tidak terdaftar.');
         }
 
-        // Check password (In real app, compare hashed password using bcrypt)
+        // Verify Role
+        if (user.role !== 'SUPER_ADMIN' && user.role !== 'ADMIN_STAFF') {
+            console.log('Result: FAILED - Invalid Role:', user.role);
+            throw new UnauthorizedException('Anda tidak memiliki akses ke area ini.');
+        }
+
+        // Verify Status
+        if (user.status !== 'ACTIVE') {
+            console.log('Result: FAILED - Status:', user.status);
+            throw new UnauthorizedException('Akun admin Anda sedang dinonaktifkan.');
+        }
+
+        // Verify Password (Plain text check for now per requirement)
         if (user.password !== data.password) {
-            throw new UnauthorizedException('Password administrator yang Anda masukkan salah.');
+            console.log('Result: FAILED - Wrong Password');
+            throw new UnauthorizedException('Password yang Anda masukkan salah.');
         }
 
-        // Record login attempt for Security Audit
+        console.log('Result: SUCCESS - User authenticated');
+
+        // Record login attempt
         await this.prisma.loginAttempt.create({
             data: {
                 userId: user.id,
@@ -47,13 +58,13 @@ export class AuthService {
         return {
             statusCode: 200,
             message: 'Berhasil login ke Admin Panel',
-            token,
+            access_token: token,
             user: {
                 id: user.id,
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                adminPermissions: user.adminPermissions || []
+                adminPermissions: (user as any).adminPermissions || []
             }
         };
     }

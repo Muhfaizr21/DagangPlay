@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { PrismaService } from './prisma.service';
 import { DashboardModule } from './admin/dashboard/dashboard.module';
 import { MerchantsModule } from './admin/merchants/merchants.module';
@@ -23,7 +21,7 @@ import { WorkersModule } from './admin/workers/workers.module';
 
 @Module({
   imports: [ScheduleModule.forRoot(), DashboardModule, MerchantsModule, ProductsModule, SuppliersModule, UsersModule, TransactionsModule, FinanceModule, CommissionsModule, PromosModule, SubscriptionsModule, ContentModule, SecurityModule, TicketsModule, SettingsModule, AuthModule, UploadModule, WorkersModule],
-  controllers: [AppController],
-  providers: [AppService, PrismaService],
+  controllers: [],
+  providers: [PrismaService],
 })
 export class AppModule { }

@@ -21,20 +21,28 @@ let AuthService = class AuthService {
         this.jwtService = jwtService;
     }
     async adminLogin(data) {
-        const adminParams = {
-            email: data.email,
-            role: { in: ['SUPER_ADMIN', 'ADMIN_STAFF'] },
-            status: 'ACTIVE'
-        };
-        const user = await this.prisma.user.findFirst({
-            where: adminParams
+        console.log('--- Auth Audit: Admin Login Attempt ---');
+        console.log('Email:', data.email);
+        const user = await this.prisma.user.findUnique({
+            where: { email: data.email }
         });
         if (!user) {
-            throw new common_1.UnauthorizedException('Email admin tidak terdaftar atau telah disuspend.');
+            console.log('Result: FAILED - Email not found');
+            throw new common_1.UnauthorizedException('Email administrator tidak terdaftar.');
+        }
+        if (user.role !== 'SUPER_ADMIN' && user.role !== 'ADMIN_STAFF') {
+            console.log('Result: FAILED - Invalid Role:', user.role);
+            throw new common_1.UnauthorizedException('Anda tidak memiliki akses ke area ini.');
+        }
+        if (user.status !== 'ACTIVE') {
+            console.log('Result: FAILED - Status:', user.status);
+            throw new common_1.UnauthorizedException('Akun admin Anda sedang dinonaktifkan.');
         }
         if (user.password !== data.password) {
-            throw new common_1.UnauthorizedException('Password administrator yang Anda masukkan salah.');
+            console.log('Result: FAILED - Wrong Password');
+            throw new common_1.UnauthorizedException('Password yang Anda masukkan salah.');
         }
+        console.log('Result: SUCCESS - User authenticated');
         await this.prisma.loginAttempt.create({
             data: {
                 userId: user.id,
@@ -48,7 +56,7 @@ let AuthService = class AuthService {
         return {
             statusCode: 200,
             message: 'Berhasil login ke Admin Panel',
-            token,
+            access_token: token,
             user: {
                 id: user.id,
                 name: user.name,
