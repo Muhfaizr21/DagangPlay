@@ -15,16 +15,13 @@ export declare class MerchantsService {
         isOfficial: boolean;
     }[]>;
     setMerchantStatus(id: string, status: MerchantStatus, reason?: string): Promise<{
-        status: import("@prisma/client").$Enums.MerchantStatus;
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         name: string;
-        domain: string | null;
         slug: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
+        domain: string | null;
         description: string | null;
         tagline: string | null;
         contactEmail: string | null;
@@ -33,11 +30,100 @@ export declare class MerchantsService {
         address: string | null;
         city: string | null;
         province: string | null;
+        status: import("@prisma/client").$Enums.MerchantStatus;
         plan: import("@prisma/client").$Enums.MerchantPlan;
         planExpiredAt: Date | null;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         isOfficial: boolean;
         ownerId: string;
+        createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
+    }>;
+    getMerchantDetail(id: string): Promise<{
+        resellersCount: number;
+        omset: number;
+        owner: {
+            id: string;
+            name: string;
+            status: import("@prisma/client").$Enums.UserStatus;
+            email: string | null;
+            isVerified: boolean;
+        };
+        members: ({
+            user: {
+                id: string;
+                name: string;
+                role: import("@prisma/client").$Enums.Role;
+                email: string | null;
+            };
+        } & {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            merchantId: string;
+            role: import("@prisma/client").$Enums.MerchantMemberRole;
+            userId: string;
+            permissions: import("@prisma/client/runtime/client").JsonValue;
+        })[];
+        _count: {
+            orders: number;
+            deposits: number;
+            tickets: number;
+        };
+        id: string;
+        name: string;
+        slug: string;
+        logo: string | null;
+        favicon: string | null;
+        bannerImage: string | null;
+        domain: string | null;
+        description: string | null;
+        tagline: string | null;
+        contactEmail: string | null;
+        contactPhone: string | null;
+        contactWhatsapp: string | null;
+        address: string | null;
+        city: string | null;
+        province: string | null;
+        status: import("@prisma/client").$Enums.MerchantStatus;
+        plan: import("@prisma/client").$Enums.MerchantPlan;
+        planExpiredAt: Date | null;
+        settings: import("@prisma/client/runtime/client").JsonValue | null;
+        isOfficial: boolean;
+        ownerId: string;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+    }>;
+    updateMerchantSettings(id: string, settingsUpdate: any): Promise<{
+        id: string;
+        name: string;
+        slug: string;
+        logo: string | null;
+        favicon: string | null;
+        bannerImage: string | null;
+        domain: string | null;
+        description: string | null;
+        tagline: string | null;
+        contactEmail: string | null;
+        contactPhone: string | null;
+        contactWhatsapp: string | null;
+        address: string | null;
+        city: string | null;
+        province: string | null;
+        status: import("@prisma/client").$Enums.MerchantStatus;
+        plan: import("@prisma/client").$Enums.MerchantPlan;
+        planExpiredAt: Date | null;
+        settings: import("@prisma/client/runtime/client").JsonValue | null;
+        isOfficial: boolean;
+        ownerId: string;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+    }>;
+    resetOwnerPassword(merchantId: string): Promise<{
+        success: boolean;
+        message: string;
     }>;
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Patch, Param, Body, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Query, Patch, Param, Body, BadRequestException, Post } from '@nestjs/common';
 import { MerchantsService } from './merchants.service';
 import { MerchantStatus } from '@prisma/client';
 
@@ -15,5 +15,20 @@ export class MerchantsController {
     async updateStatus(@Param('id') id: string, @Body('status') status: MerchantStatus, @Body('reason') reason?: string) {
         if (!status) throw new BadRequestException('Status is required');
         return this.merchantsService.setMerchantStatus(id, status, reason);
+    }
+
+    @Get(':id')
+    async getMerchantDetail(@Param('id') id: string) {
+        return this.merchantsService.getMerchantDetail(id);
+    }
+
+    @Patch(':id/settings')
+    async updateSettings(@Param('id') id: string, @Body() body: any) {
+        return this.merchantsService.updateMerchantSettings(id, body);
+    }
+
+    @Post(':id/reset-password')
+    async resetOwnerPassword(@Param('id') id: string) {
+        return this.merchantsService.resetOwnerPassword(id);
     }
 }

@@ -29,6 +29,15 @@ let MerchantsController = class MerchantsController {
             throw new common_1.BadRequestException('Status is required');
         return this.merchantsService.setMerchantStatus(id, status, reason);
     }
+    async getMerchantDetail(id) {
+        return this.merchantsService.getMerchantDetail(id);
+    }
+    async updateSettings(id, body) {
+        return this.merchantsService.updateMerchantSettings(id, body);
+    }
+    async resetOwnerPassword(id) {
+        return this.merchantsService.resetOwnerPassword(id);
+    }
 };
 exports.MerchantsController = MerchantsController;
 __decorate([
@@ -48,6 +57,28 @@ __decorate([
     __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", Promise)
 ], MerchantsController.prototype, "updateStatus", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], MerchantsController.prototype, "getMerchantDetail", null);
+__decorate([
+    (0, common_1.Patch)(':id/settings'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], MerchantsController.prototype, "updateSettings", null);
+__decorate([
+    (0, common_1.Post)(':id/reset-password'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], MerchantsController.prototype, "resetOwnerPassword", null);
 exports.MerchantsController = MerchantsController = __decorate([
     (0, common_1.Controller)('admin/merchants'),
     __metadata("design:paramtypes", [merchants_service_1.MerchantsService])

@@ -86,6 +86,64 @@ let MerchantsService = class MerchantsService {
         });
         return updated;
     }
+    async getMerchantDetail(id) {
+        const merchant = await this.prisma.merchant.findUnique({
+            where: { id },
+            include: {
+                owner: { select: { id: true, name: true, email: true, status: true, isVerified: true } },
+                members: { include: { user: { select: { id: true, name: true, email: true, role: true } } } },
+                _count: { select: { orders: true, deposits: true, tickets: true } }
+            }
+        });
+        if (!merchant)
+            throw new common_1.NotFoundException('Merchant tidak ditemukan');
+        const resellersCount = await this.prisma.user.count({
+            where: { merchantId: merchant.id, role: 'RESELLER' }
+        });
+        const omsetAgg = await this.prisma.order.aggregate({
+            where: { merchantId: merchant.id, paymentStatus: 'PAID' },
+            _sum: { totalPrice: true }
+        });
+        return {
+            ...merchant,
+            resellersCount,
+            omset: Number(omsetAgg._sum.totalPrice || 0)
+        };
+    }
+    async updateMerchantSettings(id, settingsUpdate) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { id } });
+        if (!merchant)
+            throw new common_1.NotFoundException('Merchant tidak ditemukan');
+        const currentSettings = typeof merchant.settings === 'object' && merchant.settings !== null ? merchant.settings : {};
+        const newSettings = { ...currentSettings, ...settingsUpdate };
+        const updated = await this.prisma.merchant.update({
+            where: { id },
+            data: { settings: newSettings }
+        });
+        await this.prisma.auditLog.create({
+            data: {
+                action: 'UPDATE_MERCHANT_SETTINGS',
+                entity: 'Merchant',
+                entityId: id,
+                newData: settingsUpdate,
+                oldData: {}
+            }
+        });
+        return updated;
+    }
+    async resetOwnerPassword(merchantId) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { id: merchantId }, include: { owner: true } });
+        if (!merchant || !merchant.owner)
+            throw new common_1.NotFoundException('Merchant/Owner tidak ditemukan');
+        await this.prisma.user.update({
+            where: { id: merchant.owner.id },
+            data: { password: 'NEW_HASHED_PASSWORD_DAGANGPLAY123!' }
+        });
+        await this.prisma.auditLog.create({
+            data: { action: 'RESET_OWNER_PASSWORD', entity: 'Merchant', entityId: merchantId, newData: {}, oldData: {} }
+        });
+        return { success: true, message: 'Password Owner direset menjadi DagangPlay123!' };
+    }
 };
 exports.MerchantsService = MerchantsService;
 exports.MerchantsService = MerchantsService = __decorate([

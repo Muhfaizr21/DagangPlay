@@ -38,6 +38,18 @@ let PrismaService = class PrismaService {
     get order() { return this.client.order; }
     get merchant() { return this.client.merchant; }
     get auditLog() { return this.client.auditLog; }
+    get category() { return this.client.category; }
+    get product() { return this.client.product; }
+    get productSku() { return this.client.productSku; }
+    get supplier() { return this.client.supplier; }
+    get supplierLog() { return this.client.supplierLog; }
+    get supplierBalanceHistory() { return this.client.supplierBalanceHistory; }
+    get userSession() { return this.client.userSession; }
+    get balanceTransaction() { return this.client.balanceTransaction; }
+    get deposit() { return this.client.deposit; }
+    get withdrawal() { return this.client.withdrawal; }
+    get orderStatusHistory() { return this.client.orderStatusHistory; }
+    get fraudDetection() { return this.client.fraudDetection; }
     async onModuleInit() {
         await this.client.$connect();
     }
