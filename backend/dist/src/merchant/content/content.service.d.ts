@@ -4,12 +4,12 @@ export declare class ContentService {
     constructor(prisma: PrismaService);
     getBanners(merchantId: string): Promise<{
         id: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         image: string;
         sortOrder: number;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -19,12 +19,12 @@ export declare class ContentService {
     }[]>;
     createBanner(merchantId: string, data: any): Promise<{
         id: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         image: string;
         sortOrder: number;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -34,12 +34,12 @@ export declare class ContentService {
     }>;
     toggleBanner(merchantId: string, id: string, isActive: boolean): Promise<{
         id: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         image: string;
         sortOrder: number;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -49,12 +49,12 @@ export declare class ContentService {
     }>;
     deleteBanner(merchantId: string, id: string): Promise<{
         id: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         image: string;
         sortOrder: number;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -64,10 +64,10 @@ export declare class ContentService {
     }>;
     getAnnouncements(merchantId: string): Promise<{
         id: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -76,10 +76,10 @@ export declare class ContentService {
     }[]>;
     createAnnouncement(merchantId: string, data: any): Promise<{
         id: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -88,10 +88,10 @@ export declare class ContentService {
     }>;
     toggleAnnouncement(merchantId: string, id: string, isActive: boolean): Promise<{
         id: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -100,10 +100,10 @@ export declare class ContentService {
     }>;
     deleteAnnouncement(merchantId: string, id: string): Promise<{
         id: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -113,17 +113,17 @@ export declare class ContentService {
     updateStoreDesign(merchantId: string, data: any): Promise<{
         id: string;
         name: string;
-        status: import("@prisma/client").$Enums.MerchantStatus;
+        slug: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.MerchantStatus;
         deletedAt: Date | null;
-        slug: string;
         domain: string | null;
         ownerId: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
-        description: string | null;
         tagline: string | null;
         contactEmail: string | null;
         contactPhone: string | null;
@@ -139,17 +139,17 @@ export declare class ContentService {
     updateThemeSettings(merchantId: string, data: any): Promise<{
         id: string;
         name: string;
-        status: import("@prisma/client").$Enums.MerchantStatus;
+        slug: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.MerchantStatus;
         deletedAt: Date | null;
-        slug: string;
         domain: string | null;
         ownerId: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
-        description: string | null;
         tagline: string | null;
         contactEmail: string | null;
         contactPhone: string | null;

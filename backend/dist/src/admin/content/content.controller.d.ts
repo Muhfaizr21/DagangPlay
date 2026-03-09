@@ -4,12 +4,12 @@ export declare class ContentController {
     constructor(contentService: ContentService);
     getBanners(): Promise<{
         id: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         image: string;
         sortOrder: number;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -19,12 +19,12 @@ export declare class ContentController {
     }[]>;
     createBanner(data: any): Promise<{
         id: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         image: string;
         sortOrder: number;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -34,12 +34,12 @@ export declare class ContentController {
     }>;
     updateBanner(id: string, data: any): Promise<{
         id: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         image: string;
         sortOrder: number;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -49,12 +49,12 @@ export declare class ContentController {
     }>;
     deleteBanner(id: string): Promise<{
         id: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         image: string;
         sortOrder: number;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -64,12 +64,12 @@ export declare class ContentController {
     }>;
     toggleBanner(id: string): Promise<{
         id: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         image: string;
         sortOrder: number;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -79,10 +79,10 @@ export declare class ContentController {
     }>;
     getAnnouncements(): Promise<{
         id: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -91,10 +91,10 @@ export declare class ContentController {
     }[]>;
     createAnnouncement(data: any): Promise<{
         id: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -103,10 +103,10 @@ export declare class ContentController {
     }>;
     updateAnnouncement(id: string, data: any): Promise<{
         id: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -115,10 +115,10 @@ export declare class ContentController {
     }>;
     deleteAnnouncement(id: string): Promise<{
         id: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -127,10 +127,10 @@ export declare class ContentController {
     }>;
     toggleAnnouncement(id: string): Promise<{
         id: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -139,10 +139,10 @@ export declare class ContentController {
     }>;
     getTemplates(): Promise<{
         id: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         type: import("@prisma/client").$Enums.NotificationType;
         subject: string | null;
         body: string;
@@ -150,10 +150,10 @@ export declare class ContentController {
     }[]>;
     saveTemplate(type: string, channel: string, data: any): Promise<{
         id: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         type: import("@prisma/client").$Enums.NotificationType;
         subject: string | null;
         body: string;
@@ -162,10 +162,10 @@ export declare class ContentController {
     getBroadcasts(): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         subject: string;
         body: string;
         targetRole: import("@prisma/client").$Enums.Role | null;
@@ -176,10 +176,10 @@ export declare class ContentController {
     createBroadcast(data: any): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         subject: string;
         body: string;
         targetRole: import("@prisma/client").$Enums.Role | null;

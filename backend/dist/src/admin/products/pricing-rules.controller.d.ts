@@ -8,22 +8,22 @@ export declare class PricingRulesController {
         category: {
             id: string;
             name: string;
-            createdAt: Date;
-            updatedAt: Date;
             slug: string;
-            description: string | null;
             icon: string | null;
             image: string | null;
+            description: string | null;
             sortOrder: number;
             isActive: boolean;
             parentId: string | null;
             digiflazzCategory: string | null;
+            createdAt: Date;
+            updatedAt: Date;
         } | null;
     } & {
         id: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
         categoryId: string | null;
         marginNormal: number;
         marginPro: number;
@@ -37,9 +37,9 @@ export declare class PricingRulesController {
     })[]>;
     createCategoryRule(dto: any): Promise<{
         id: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
         categoryId: string | null;
         marginNormal: number;
         marginPro: number;
@@ -53,9 +53,9 @@ export declare class PricingRulesController {
     }>;
     updateCategoryRule(id: string, dto: any): Promise<{
         id: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
         categoryId: string | null;
         marginNormal: number;
         marginPro: number;
@@ -69,9 +69,9 @@ export declare class PricingRulesController {
     }>;
     deleteCategoryRule(id: string): Promise<{
         id: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
         categoryId: string | null;
         marginNormal: number;
         marginPro: number;

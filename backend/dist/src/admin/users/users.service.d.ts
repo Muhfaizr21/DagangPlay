@@ -6,17 +6,17 @@ export declare class UsersService {
     getAllUsers(search?: string, role?: string, status?: string, page?: number, limit?: number): Promise<{
         data: {
             id: string;
-            email: string | null;
             name: string;
+            createdAt: Date;
+            _count: {
+                ordersAsCustomer: number;
+            };
+            email: string | null;
             role: import("@prisma/client").$Enums.Role;
             status: import("@prisma/client").$Enums.UserStatus;
             isVerified: boolean;
             balance: number;
             bonusBalance: number;
-            createdAt: Date;
-            _count: {
-                ordersAsCustomer: number;
-            };
         }[];
         meta: {
             totalItems: number;
@@ -47,17 +47,17 @@ export declare class UsersService {
             merchant: {
                 id: string;
                 name: string;
-                status: import("@prisma/client").$Enums.MerchantStatus;
+                slug: string;
+                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                status: import("@prisma/client").$Enums.MerchantStatus;
                 deletedAt: Date | null;
-                slug: string;
                 domain: string | null;
                 ownerId: string;
                 logo: string | null;
                 favicon: string | null;
                 bannerImage: string | null;
-                description: string | null;
                 tagline: string | null;
                 contactEmail: string | null;
                 contactPhone: string | null;
@@ -72,21 +72,23 @@ export declare class UsersService {
             };
         } & {
             id: string;
-            role: import("@prisma/client").$Enums.MerchantMemberRole;
-            merchantId: string;
             createdAt: Date;
             updatedAt: Date;
+            role: import("@prisma/client").$Enums.MerchantMemberRole;
+            merchantId: string;
             userId: string;
             permissions: import("@prisma/client/runtime/client").JsonValue | null;
         })[];
     } & {
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
         email: string | null;
         phone: string | null;
         username: string | null;
         referralCode: string;
         password: string;
-        name: string;
         avatar: string | null;
         role: import("@prisma/client").$Enums.Role;
         status: import("@prisma/client").$Enums.UserStatus;
@@ -97,18 +99,18 @@ export declare class UsersService {
         merchantId: string | null;
         balance: number;
         bonusBalance: number;
-        createdAt: Date;
-        updatedAt: Date;
         deletedAt: Date | null;
     }>;
     updateUserStatus(id: string, status: UserStatus, reason?: string): Promise<{
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
         email: string | null;
         phone: string | null;
         username: string | null;
         referralCode: string;
         password: string;
-        name: string;
         avatar: string | null;
         role: import("@prisma/client").$Enums.Role;
         status: import("@prisma/client").$Enums.UserStatus;
@@ -119,20 +121,18 @@ export declare class UsersService {
         merchantId: string | null;
         balance: number;
         bonusBalance: number;
-        createdAt: Date;
-        updatedAt: Date;
         deletedAt: Date | null;
     }>;
     adjustBalance(id: string, operatorId: string, type: 'ADD' | 'DEDUCT', amount: number, note: string): Promise<any>;
     getBalanceHistories(id: string, limit?: number): Promise<{
         id: string;
-        createdAt: Date;
         description: string | null;
+        createdAt: Date;
         note: string | null;
         userId: string;
+        amount: number;
         orderId: string | null;
         type: import("@prisma/client").$Enums.BalanceTrxType;
-        amount: number;
         balanceBefore: number;
         balanceAfter: number;
         depositId: string | null;

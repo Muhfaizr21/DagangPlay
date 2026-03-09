@@ -7,8 +7,8 @@ export declare class TransactionsService {
         data: ({
             user: {
                 id: string;
-                email: string | null;
                 name: string;
+                email: string | null;
             };
             merchant: {
                 id: string;
@@ -16,15 +16,14 @@ export declare class TransactionsService {
             };
             payment: {
                 id: string;
-                status: import("@prisma/client").$Enums.PaymentStatus;
-                merchantId: string;
                 createdAt: Date;
                 updatedAt: Date;
+                status: import("@prisma/client").$Enums.PaymentStatus;
+                merchantId: string;
                 paidAt: Date | null;
                 expiredAt: Date | null;
                 userId: string;
                 method: import("@prisma/client").$Enums.PaymentMethod;
-                orderId: string;
                 amount: number;
                 fee: number;
                 totalAmount: number;
@@ -35,12 +34,13 @@ export declare class TransactionsService {
                 tripayVaNumber: string | null;
                 tripayExpiredTime: Date | null;
                 tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
+                orderId: string;
             } | null;
         } & {
             id: string;
-            merchantId: string;
             createdAt: Date;
             updatedAt: Date;
+            merchantId: string;
             productId: string;
             supplierId: string | null;
             basePrice: number;
@@ -85,8 +85,8 @@ export declare class TransactionsService {
             createdAt: Date;
             metadata: import("@prisma/client/runtime/client").JsonValue | null;
             userId: string;
-            reason: string;
             orderId: string | null;
+            reason: string;
             riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
             isResolved: boolean;
             resolvedBy: string | null;
@@ -94,8 +94,8 @@ export declare class TransactionsService {
         }[];
         user: {
             id: string;
-            email: string | null;
             name: string;
+            email: string | null;
         };
         merchant: {
             id: string;
@@ -106,25 +106,24 @@ export declare class TransactionsService {
             createdAt: Date;
             supplierId: string;
             method: string;
+            orderId: string | null;
             endpoint: string;
             requestBody: import("@prisma/client/runtime/client").JsonValue | null;
             responseBody: import("@prisma/client/runtime/client").JsonValue | null;
             httpStatus: number | null;
             duration: number | null;
             isSuccess: boolean;
-            orderId: string | null;
         }[];
         payment: {
             id: string;
-            status: import("@prisma/client").$Enums.PaymentStatus;
-            merchantId: string;
             createdAt: Date;
             updatedAt: Date;
+            status: import("@prisma/client").$Enums.PaymentStatus;
+            merchantId: string;
             paidAt: Date | null;
             expiredAt: Date | null;
             userId: string;
             method: import("@prisma/client").$Enums.PaymentMethod;
-            orderId: string;
             amount: number;
             fee: number;
             totalAmount: number;
@@ -135,20 +134,21 @@ export declare class TransactionsService {
             tripayVaNumber: string | null;
             tripayExpiredTime: Date | null;
             tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
+            orderId: string;
         } | null;
         statusHistories: {
             id: string;
-            status: string;
             createdAt: Date;
+            status: string;
             note: string | null;
-            changedBy: string;
             orderId: string;
+            changedBy: string;
         }[];
     } & {
         id: string;
-        merchantId: string;
         createdAt: Date;
         updatedAt: Date;
+        merchantId: string;
         productId: string;
         supplierId: string | null;
         basePrice: number;

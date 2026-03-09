@@ -7,17 +7,17 @@ export declare class SettingsController {
     getSettings(req: any): Promise<{
         id: string;
         name: string;
-        status: import("@prisma/client").$Enums.MerchantStatus;
+        slug: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.MerchantStatus;
         deletedAt: Date | null;
-        slug: string;
         domain: string | null;
         ownerId: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
-        description: string | null;
         tagline: string | null;
         contactEmail: string | null;
         contactPhone: string | null;
@@ -33,17 +33,17 @@ export declare class SettingsController {
     updateProfile(req: any, body: any): Promise<{
         id: string;
         name: string;
-        status: import("@prisma/client").$Enums.MerchantStatus;
+        slug: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.MerchantStatus;
         deletedAt: Date | null;
-        slug: string;
         domain: string | null;
         ownerId: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
-        description: string | null;
         tagline: string | null;
         contactEmail: string | null;
         contactPhone: string | null;
@@ -59,17 +59,17 @@ export declare class SettingsController {
     updateDomain(req: any, domain: string): Promise<{
         id: string;
         name: string;
-        status: import("@prisma/client").$Enums.MerchantStatus;
+        slug: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.MerchantStatus;
         deletedAt: Date | null;
-        slug: string;
         domain: string | null;
         ownerId: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
-        description: string | null;
         tagline: string | null;
         contactEmail: string | null;
         contactPhone: string | null;
@@ -85,12 +85,12 @@ export declare class SettingsController {
     getPaymentChannels(req: any): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         icon: string | null;
         sortOrder: number;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         method: import("@prisma/client").$Enums.PaymentMethod;
         fee: number;
         feeType: import("@prisma/client").$Enums.FeeType;
@@ -101,12 +101,12 @@ export declare class SettingsController {
     togglePaymentChannel(req: any, id: string, isActive: boolean): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         icon: string | null;
         sortOrder: number;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         method: import("@prisma/client").$Enums.PaymentMethod;
         fee: number;
         feeType: import("@prisma/client").$Enums.FeeType;
@@ -117,20 +117,20 @@ export declare class SettingsController {
     getWebhooks(req: any): Promise<{
         url: string;
         id: string;
-        merchantId: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string;
         secret: string;
         events: import("@prisma/client/runtime/client").JsonValue;
     }[]>;
     updateWebhook(req: any, body: any): Promise<{
         url: string;
         id: string;
-        merchantId: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string;
         secret: string;
         events: import("@prisma/client/runtime/client").JsonValue;
     }>;

@@ -6,8 +6,8 @@ export declare class TicketsService {
     getTickets(filter?: any): Promise<({
         user: {
             id: string;
-            email: string | null;
             name: string;
+            email: string | null;
             role: import("@prisma/client").$Enums.Role;
         };
         merchant: {
@@ -17,13 +17,13 @@ export declare class TicketsService {
             name: string;
         } | null;
     } & {
+        category: import("@prisma/client").$Enums.TicketCategory;
         id: string;
-        status: import("@prisma/client").$Enums.TicketStatus;
-        merchantId: string;
+        description: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string;
-        category: import("@prisma/client").$Enums.TicketCategory;
+        status: import("@prisma/client").$Enums.TicketStatus;
+        merchantId: string;
         userId: string;
         orderId: string | null;
         subject: string;
@@ -34,8 +34,8 @@ export declare class TicketsService {
     })[]>;
     getTicketDetails(id: string): Promise<{
         user: {
-            email: string | null;
             name: string;
+            email: string | null;
             role: import("@prisma/client").$Enums.Role;
         };
         merchant: {
@@ -59,13 +59,13 @@ export declare class TicketsService {
             ticketId: string;
         })[];
     } & {
+        category: import("@prisma/client").$Enums.TicketCategory;
         id: string;
-        status: import("@prisma/client").$Enums.TicketStatus;
-        merchantId: string;
+        description: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string;
-        category: import("@prisma/client").$Enums.TicketCategory;
+        status: import("@prisma/client").$Enums.TicketStatus;
+        merchantId: string;
         userId: string;
         orderId: string | null;
         subject: string;
@@ -79,13 +79,13 @@ export declare class TicketsService {
         priority?: TicketPriority;
         assignedToId?: string;
     }): Promise<{
+        category: import("@prisma/client").$Enums.TicketCategory;
         id: string;
-        status: import("@prisma/client").$Enums.TicketStatus;
-        merchantId: string;
+        description: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string;
-        category: import("@prisma/client").$Enums.TicketCategory;
+        status: import("@prisma/client").$Enums.TicketStatus;
+        merchantId: string;
         userId: string;
         orderId: string | null;
         subject: string;

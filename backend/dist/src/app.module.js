@@ -9,6 +9,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("./prisma.service");
+const tripay_module_1 = require("./tripay/tripay.module");
+const public_orders_module_1 = require("./public/orders/public-orders.module");
 const dashboard_module_1 = require("./admin/dashboard/dashboard.module");
 const merchants_module_1 = require("./admin/merchants/merchants.module");
 const products_module_1 = require("./admin/products/products.module");
@@ -34,7 +36,7 @@ let AppModule = class AppModule {
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [schedule_1.ScheduleModule.forRoot(), dashboard_module_1.DashboardModule, merchants_module_1.MerchantsModule, products_module_1.ProductsModule, suppliers_module_1.SuppliersModule, users_module_1.UsersModule, transactions_module_1.TransactionsModule, finance_module_1.FinanceModule, commissions_module_1.CommissionsModule, promos_module_1.PromosModule, subscriptions_module_1.SubscriptionsModule, content_module_1.ContentModule, security_module_1.SecurityModule, tickets_module_1.TicketsModule, settings_module_1.SettingsModule, auth_module_1.AuthModule, upload_module_1.UploadModule, workers_module_1.WorkersModule, merchant_module_1.MerchantModule, digiflazz_module_1.DigiflazzModule],
+        imports: [schedule_1.ScheduleModule.forRoot(), dashboard_module_1.DashboardModule, merchants_module_1.MerchantsModule, products_module_1.ProductsModule, suppliers_module_1.SuppliersModule, users_module_1.UsersModule, transactions_module_1.TransactionsModule, finance_module_1.FinanceModule, commissions_module_1.CommissionsModule, promos_module_1.PromosModule, subscriptions_module_1.SubscriptionsModule, content_module_1.ContentModule, security_module_1.SecurityModule, tickets_module_1.TicketsModule, settings_module_1.SettingsModule, auth_module_1.AuthModule, upload_module_1.UploadModule, workers_module_1.WorkersModule, merchant_module_1.MerchantModule, digiflazz_module_1.DigiflazzModule, tripay_module_1.TripayModule, public_orders_module_1.PublicOrdersModule],
         controllers: [],
         providers: [prisma_service_1.PrismaService],
     })

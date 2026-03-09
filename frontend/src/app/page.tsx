@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState, memo } from "react";
+import useSWR from 'swr';
+import axios from 'axios';
 import Stats from "@/components/Stats";
 import { useReveal } from "@/hooks/useReveal";
 import {
@@ -151,8 +153,12 @@ const Features = () => {
 };
 
 // ─── Products ──────────────────────────────────────────────────────
-const Products = () => {
+const fetcher = (url: string) => axios.get(url).then(res => res.data);
+
+const ProductsList = () => {
   const { ref, v } = useReveal();
+  const { data: categories, error } = useSWR('http://localhost:3001/public/products/categories', fetcher);
+
   return (
     <section id="produk" className="py-24 relative bg-navy-deep">
       <div className="container mx-auto px-6 relative z-10">
@@ -163,19 +169,28 @@ const Products = () => {
           </h2>
           <p className="font-body text-slate-500 text-sm">Top up langsung, proses instan</p>
         </div>
-        <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 reveal ${v ? "visible" : ""}`}>
-          {PRODUCTS.map((g, i) => (
-            <div key={i} className="group rounded-2xl overflow-hidden cursor-pointer border border-white/5 hover:border-cyan/40 hover:-translate-y-1 transition-all duration-300" style={{ transitionDelay: `${i * 60}ms` }}>
-              <div className="h-36 flex items-center justify-center relative overflow-hidden" style={{ background: `linear-gradient(135deg,${g.from},${g.to})` }}>
-                <span className="font-heading text-5xl opacity-80 group-hover:scale-110 transition-transform duration-300" style={{ color: g.accent }}>{g.abbr}</span>
+        <div className={`grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 reveal ${v ? "visible" : ""}`}>
+          {!categories ? (
+            <div className="col-span-full text-center py-20 text-slate-500">Memuat game...</div>
+          ) : categories.map((c: any, i: number) => (
+            <a href={`/produk/${c.slug}`} key={c.id} className="group rounded-2xl overflow-hidden cursor-pointer border border-white/5 hover:border-cyan/40 hover:-translate-y-1 transition-all duration-300 block" style={{ transitionDelay: `${i * 30}ms` }}>
+              <div className="h-36 flex items-center justify-center relative overflow-hidden bg-slate-800">
+                {c.image ? (
+                  <img src={c.image} alt={c.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-transform duration-300" />
+                ) : (
+                  <span className="font-heading text-4xl opacity-80 group-hover:scale-110 transition-transform duration-300 text-slate-300">{c.name.substring(0, 2)}</span>
+                )}
               </div>
               <div className="p-3" style={{ background: "#0d1c3d" }}>
-                <p className="font-body text-white text-sm font-semibold">{g.name}</p>
-                <span className="font-body inline-flex items-center gap-1 text-[10px] text-mint mt-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-mint inline-block" /> Top Up Tersedia
-                </span>
+                <p className="font-body text-white text-sm font-semibold truncate">{c.name}</p>
+                <div className="flex justify-between items-center mt-1">
+                  <span className="font-body inline-flex items-center gap-1 text-[10px] text-mint">
+                    <span className="w-1.5 h-1.5 rounded-full bg-mint inline-block" /> Tersedia
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-bold">{c.skuCount || 0} Item</span>
+                </div>
               </div>
-            </div>
+            </a>
           ))}
         </div>
       </div>
@@ -298,7 +313,7 @@ export default function Home() {
       <Hero />
       <Stats />
       <Features />
-      <Products />
+      <ProductsList />
       <HowItWorks />
       <Testimonials />
 

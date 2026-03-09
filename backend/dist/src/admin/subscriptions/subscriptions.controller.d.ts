@@ -10,10 +10,10 @@ export declare class SubscriptionsController {
         };
     } & {
         id: string;
-        status: import("@prisma/client").$Enums.InvoiceStatus;
-        merchantId: string;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.InvoiceStatus;
+        merchantId: string;
         plan: import("@prisma/client").$Enums.MerchantPlan;
         paidAt: Date | null;
         amount: number;
@@ -30,10 +30,10 @@ export declare class SubscriptionsController {
     confirmInvoice(id: string): Promise<any>;
     rejectInvoice(id: string, notes: string): Promise<{
         id: string;
-        status: import("@prisma/client").$Enums.InvoiceStatus;
-        merchantId: string;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.InvoiceStatus;
+        merchantId: string;
         plan: import("@prisma/client").$Enums.MerchantPlan;
         paidAt: Date | null;
         amount: number;
@@ -51,8 +51,8 @@ export declare class SubscriptionsController {
     getFeatures(): Promise<any>;
     updateFeatures(features: any): Promise<{
         id: string;
-        updatedAt: Date;
         description: string | null;
+        updatedAt: Date;
         type: import("@prisma/client").$Enums.SettingType;
         value: string;
         key: string;
@@ -67,10 +67,10 @@ export declare class SubscriptionsController {
     }>;
     createManualInvoice(merchantId: string, plan: any, amount: number, dueDate: Date): Promise<{
         id: string;
-        status: import("@prisma/client").$Enums.InvoiceStatus;
-        merchantId: string;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.InvoiceStatus;
+        merchantId: string;
         plan: import("@prisma/client").$Enums.MerchantPlan;
         paidAt: Date | null;
         amount: number;

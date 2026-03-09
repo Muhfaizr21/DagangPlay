@@ -5,11 +5,11 @@ export declare class PromosService {
     getPromos(merchantId: string): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -27,11 +27,11 @@ export declare class PromosService {
     createPromo(merchantId: string, data: any): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -49,11 +49,11 @@ export declare class PromosService {
     togglePromo(merchantId: string, id: string, isActive: boolean): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -71,11 +71,11 @@ export declare class PromosService {
     deletePromo(merchantId: string, id: string): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;

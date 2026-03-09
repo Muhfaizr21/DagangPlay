@@ -3,20 +3,20 @@ export declare class PromosController {
     private readonly promosService;
     constructor(promosService: PromosService);
     getAll(search?: string): Promise<({
-        merchant: {
+        category: {
             name: string;
         } | null;
-        category: {
+        merchant: {
             name: string;
         } | null;
     } & {
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -45,11 +45,11 @@ export declare class PromosController {
     getOne(id: string): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -67,11 +67,11 @@ export declare class PromosController {
     create(body: any): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -89,11 +89,11 @@ export declare class PromosController {
     update(id: string, body: any): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -111,11 +111,11 @@ export declare class PromosController {
     toggle(id: string): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -133,11 +133,11 @@ export declare class PromosController {
     delete(id: string): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;

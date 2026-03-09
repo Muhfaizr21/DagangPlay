@@ -26,10 +26,10 @@ export declare class ProductsController {
         isActive: boolean;
     }): Promise<{
         id: string;
-        merchantId: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string;
         expiredAt: Date | null;
         userId: string;
         productSkuId: string;

@@ -13,7 +13,9 @@ import {
     Save,
     Calculator,
     ArrowRight,
-    RefreshCw
+    RefreshCw,
+    ImageIcon,
+    Link as LinkIcon
 } from 'lucide-react';
 
 const fetcher = (url: string) => {
@@ -42,7 +44,36 @@ export default function AdminPricingPage() {
         return matchesSearch && matchesCategory;
     });
 
-    const categories = Array.from(new Set(skus?.map((s: any) => s.product.category.name) || [])) as string[];
+    const categoriesObjMap = new Map();
+    skus?.forEach((s: any) => {
+        if (!categoriesObjMap.has(s.product.category.name)) {
+            categoriesObjMap.set(s.product.category.name, s.product.category);
+        }
+    });
+    const categories = Array.from(categoriesObjMap.values());
+    const activeCategoryItem = categories.find(c => c.name === filterCategory);
+
+    const [editingImage, setEditingImage] = useState(false);
+    const [imgUrlInput, setImgUrlInput] = useState('');
+
+    const handleSaveImage = async () => {
+        if (!activeCategoryItem) return;
+        try {
+            const token = localStorage.getItem('admin_token');
+            // Encode the category name to handle special characters correctly, although NextJS might auto handle
+            await axios.patch(`http://localhost:3001/admin/products/categories/${encodeURIComponent(activeCategoryItem.name)}/image`, {
+                imageUrl: imgUrlInput
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            mutate('http://localhost:3001/admin/products/skus/pricing');
+            setEditingImage(false);
+            setImgUrlInput('');
+            alert('Gambar kategori berhasil disimpan');
+        } catch (err) {
+            alert('Gagal menyimpan gambar kategori');
+        }
+    };
 
     const handleSync = async () => {
         if (!confirm('Singkronkan ulang seluruh produk dari Digiflazz? Ini akan mengupdate harga dasar dan menerapkan margin default jika SKU baru ditemukan.')) return;
@@ -84,6 +115,21 @@ export default function AdminPricingPage() {
             alert('Gagal menyimpan harga');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleToggleStatus = async (sku: any) => {
+        const newStatus = sku.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+        try {
+            const token = localStorage.getItem('admin_token');
+            await axios.patch(`http://localhost:3001/admin/products/skus/${sku.id}/status`, {
+                status: newStatus
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            mutate('http://localhost:3001/admin/products/skus/pricing');
+        } catch (err) {
+            alert('Gagal mengubah status produk');
         }
     };
 
@@ -157,7 +203,7 @@ export default function AdminPricingPage() {
             <div className="mb-6 relative">
                 <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none scroll-smooth pr-10">
                     <button
-                        onClick={() => setFilterCategory('All')}
+                        onClick={() => { setFilterCategory('All'); setEditingImage(false); }}
                         className={`flex-none px-4 py-2 rounded-full text-[13px] font-bold transition-all border flex items-center gap-2
                             ${filterCategory === 'All'
                                 ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100'
@@ -167,23 +213,82 @@ export default function AdminPricingPage() {
                         <Filter className="w-3.5 h-3.5" />
                         Semua Kategori
                     </button>
-                    {categories.map(cat => (
+                    {categories.map((cat: any) => (
                         <button
-                            key={cat}
-                            onClick={() => setFilterCategory(cat)}
+                            key={cat.id}
+                            onClick={() => { setFilterCategory(cat.name); setEditingImage(false); }}
                             className={`flex-none px-4 py-2 rounded-full text-[13px] font-bold transition-all border
-                                ${filterCategory === cat
+                                ${filterCategory === cat.name
                                     ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100'
                                     : 'bg-white border-slate-200 text-slate-500 hover:border-indigo-300 hover:text-indigo-600'
                                 }`}
                         >
-                            {cat}
+                            {cat.name}
                         </button>
                     ))}
                 </div>
                 {/* Fade effect at the end of scroll */}
                 <div className="absolute right-0 top-0 bottom-2 w-16 bg-gradient-to-l from-[#fafafa] to-transparent pointer-events-none"></div>
             </div>
+
+            {/* Category Setting Editor */}
+            {filterCategory !== 'All' && activeCategoryItem && (
+                <div className="mb-6 p-6 bg-white rounded-2xl border border-indigo-100 shadow-sm flex items-start flex-col md:flex-row gap-6">
+                    <div className="w-24 h-24 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
+                        {activeCategoryItem.image ? (
+                            <img src={activeCategoryItem.image} alt={activeCategoryItem.name} className="w-full h-full object-cover" />
+                        ) : (
+                            <ImageIcon className="w-8 h-8 text-slate-300" />
+                        )}
+                    </div>
+                    <div className="flex-1 w-full">
+                        <div className="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 className="font-bold text-slate-800 text-lg uppercase tracking-tight">{activeCategoryItem.name}</h3>
+                                <p className="text-xs text-slate-500">Konfigurasi gambar kategori ini akan digunakan pada halaman Frontend untuk semua produk dalam kategori {activeCategoryItem.name}.</p>
+                            </div>
+                            {!editingImage ? (
+                                <button
+                                    onClick={() => { setImgUrlInput(activeCategoryItem.image || ''); setEditingImage(true); }}
+                                    className="px-4 py-2 bg-indigo-50 text-indigo-700 font-bold text-xs rounded-lg hover:bg-indigo-100 transition"
+                                >
+                                    Ubah Gambar
+                                </button>
+                            ) : null}
+                        </div>
+
+                        {editingImage && (
+                            <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                <label className="block text-xs font-bold text-slate-600 mb-2">URL Gambar Kategori</label>
+                                <div className="flex gap-2">
+                                    <div className="relative flex-1">
+                                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="text"
+                                            className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-300 rounded-lg text-sm focus:border-indigo-500 outline-none"
+                                            placeholder="https://..."
+                                            value={imgUrlInput}
+                                            onChange={(e) => setImgUrlInput(e.target.value)}
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={handleSaveImage}
+                                        className="px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-sm transition"
+                                    >
+                                        Simpan
+                                    </button>
+                                    <button
+                                        onClick={() => setEditingImage(false)}
+                                        className="px-5 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg font-bold text-sm transition"
+                                    >
+                                        Batal
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Pricing Table */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden border-separate">
@@ -210,7 +315,15 @@ export default function AdminPricingPage() {
                                     <td className="px-6 py-5">
                                         <div className="flex items-center gap-3">
                                             <div>
-                                                <p className="text-[13px] font-bold text-slate-900 leading-none">{sku.name}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="text-[13px] font-bold text-slate-900 leading-none">{sku.name}</p>
+                                                    <button
+                                                        onClick={() => handleToggleStatus(sku)}
+                                                        className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter transition-all hover:scale-105 active:scale-95 ${sku.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
+                                                    >
+                                                        {sku.status}
+                                                    </button>
+                                                </div>
                                                 <div className="flex items-center gap-1.5 mt-1.5">
                                                     <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-bold uppercase tracking-wider">{sku.product.category.name}</span>
                                                     <span className="text-slate-300">/</span>

@@ -7,17 +7,17 @@ export declare class SupportController {
     getTickets(req: any, filters: any): Promise<({
         user: {
             id: string;
-            email: string | null;
             name: string;
+            email: string | null;
         };
     } & {
+        category: import("@prisma/client").$Enums.TicketCategory;
         id: string;
-        status: import("@prisma/client").$Enums.TicketStatus;
-        merchantId: string;
+        description: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string;
-        category: import("@prisma/client").$Enums.TicketCategory;
+        status: import("@prisma/client").$Enums.TicketStatus;
+        merchantId: string;
         userId: string;
         orderId: string | null;
         subject: string;
@@ -29,8 +29,8 @@ export declare class SupportController {
     getTicketDetails(req: any, id: string): Promise<{
         user: {
             id: string;
-            email: string | null;
             name: string;
+            email: string | null;
         };
         replies: ({
             user: {
@@ -48,13 +48,13 @@ export declare class SupportController {
             ticketId: string;
         })[];
     } & {
+        category: import("@prisma/client").$Enums.TicketCategory;
         id: string;
-        status: import("@prisma/client").$Enums.TicketStatus;
-        merchantId: string;
+        description: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string;
-        category: import("@prisma/client").$Enums.TicketCategory;
+        status: import("@prisma/client").$Enums.TicketStatus;
+        merchantId: string;
         userId: string;
         orderId: string | null;
         subject: string;
@@ -73,13 +73,13 @@ export declare class SupportController {
         ticketId: string;
     }>;
     updateTicket(req: any, id: string, body: any): Promise<{
+        category: import("@prisma/client").$Enums.TicketCategory;
         id: string;
-        status: import("@prisma/client").$Enums.TicketStatus;
-        merchantId: string;
+        description: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string;
-        category: import("@prisma/client").$Enums.TicketCategory;
+        status: import("@prisma/client").$Enums.TicketStatus;
+        merchantId: string;
         userId: string;
         orderId: string | null;
         subject: string;

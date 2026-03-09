@@ -14,8 +14,8 @@ export declare class FinanceController {
     getDeposits(status?: string, search?: string): Promise<({
         user: {
             id: string;
-            email: string | null;
             name: string;
+            email: string | null;
             role: import("@prisma/client").$Enums.Role;
         };
         merchant: {
@@ -29,10 +29,10 @@ export declare class FinanceController {
         } | null;
     } & {
         id: string;
-        status: import("@prisma/client").$Enums.DepositStatus;
-        merchantId: string;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.DepositStatus;
+        merchantId: string;
         note: string | null;
         expiredAt: Date | null;
         userId: string;
@@ -54,8 +54,8 @@ export declare class FinanceController {
     getWithdrawals(status?: string): Promise<({
         user: {
             id: string;
-            email: string | null;
             name: string;
+            email: string | null;
             role: import("@prisma/client").$Enums.Role;
         };
         processedBy: {
@@ -64,9 +64,9 @@ export declare class FinanceController {
         } | null;
     } & {
         id: string;
-        status: import("@prisma/client").$Enums.WithdrawalStatus;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.WithdrawalStatus;
         note: string | null;
         processedAt: Date | null;
         userId: string;

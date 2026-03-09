@@ -17,6 +17,11 @@ export class ProductsController {
         return this.productsService.getCategories();
     }
 
+    @Patch('categories/:name/image')
+    async updateCategoryImage(@Param('name') name: string, @Body() body: { imageUrl: string }) {
+        return this.productsService.updateCategoryImage(name, body.imageUrl);
+    }
+
     @Get()
     async getProducts() {
         return this.productsService.getProducts();
@@ -45,5 +50,13 @@ export class ProductsController {
         @Body() body: { categoryId: string, margins: { normal: number, pro: number, legend: number, supreme: number } }
     ) {
         return this.productsService.applyCategoryFormula(body.categoryId, body.margins);
+    }
+
+    @Patch('skus/:id/status')
+    async updateSkuStatus(
+        @Param('id') id: string,
+        @Body() body: { status: string }
+    ) {
+        return this.productsService.updateSkuStatus(id, body.status);
     }
 }

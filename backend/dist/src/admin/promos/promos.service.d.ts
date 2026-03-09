@@ -3,20 +3,20 @@ export declare class PromosService {
     private prisma;
     constructor(prisma: PrismaService);
     getAllPromos(search?: string): Promise<({
-        merchant: {
+        category: {
             name: string;
         } | null;
-        category: {
+        merchant: {
             name: string;
         } | null;
     } & {
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -34,11 +34,11 @@ export declare class PromosService {
     getPromoById(id: string): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -56,11 +56,11 @@ export declare class PromosService {
     createPromo(data: any): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -78,11 +78,11 @@ export declare class PromosService {
     updatePromo(id: string, data: any): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -100,11 +100,11 @@ export declare class PromosService {
     togglePromoStatus(id: string): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -122,11 +122,11 @@ export declare class PromosService {
     deletePromo(id: string): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;

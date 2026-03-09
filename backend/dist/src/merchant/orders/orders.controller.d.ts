@@ -8,8 +8,8 @@ export declare class OrdersController {
         orders: ({
             user: {
                 id: string;
-                email: string | null;
                 name: string;
+                email: string | null;
             };
             productSku: {
                 name: string;
@@ -20,9 +20,9 @@ export declare class OrdersController {
             };
         } & {
             id: string;
-            merchantId: string;
             createdAt: Date;
             updatedAt: Date;
+            merchantId: string;
             productId: string;
             supplierId: string | null;
             basePrice: number;
@@ -62,8 +62,8 @@ export declare class OrdersController {
     getOrderDetails(req: any, orderId: string): Promise<{
         user: {
             id: string;
-            email: string | null;
             name: string;
+            email: string | null;
         };
         productSku: {
             name: string;
@@ -75,17 +75,17 @@ export declare class OrdersController {
         };
         statusHistories: {
             id: string;
-            status: string;
             createdAt: Date;
+            status: string;
             note: string | null;
-            changedBy: string;
             orderId: string;
+            changedBy: string;
         }[];
     } & {
         id: string;
-        merchantId: string;
         createdAt: Date;
         updatedAt: Date;
+        merchantId: string;
         productId: string;
         supplierId: string | null;
         basePrice: number;
@@ -121,9 +121,9 @@ export declare class OrdersController {
         message: string;
         order: {
             id: string;
-            merchantId: string;
             createdAt: Date;
             updatedAt: Date;
+            merchantId: string;
             productId: string;
             supplierId: string | null;
             basePrice: number;

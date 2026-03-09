@@ -27,6 +27,9 @@ let ProductsController = class ProductsController {
     async getCategories() {
         return this.productsService.getCategories();
     }
+    async updateCategoryImage(name, body) {
+        return this.productsService.updateCategoryImage(name, body.imageUrl);
+    }
     async getProducts() {
         return this.productsService.getProducts();
     }
@@ -42,6 +45,9 @@ let ProductsController = class ProductsController {
     async applyCategoryFormula(body) {
         return this.productsService.applyCategoryFormula(body.categoryId, body.margins);
     }
+    async updateSkuStatus(id, body) {
+        return this.productsService.updateSkuStatus(id, body.status);
+    }
 };
 exports.ProductsController = ProductsController;
 __decorate([
@@ -50,6 +56,14 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "getCategories", null);
+__decorate([
+    (0, common_1.Patch)('categories/:name/image'),
+    __param(0, (0, common_1.Param)('name')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "updateCategoryImage", null);
 __decorate([
     (0, common_1.Get)(),
     __metadata("design:type", Function),
@@ -83,6 +97,14 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "applyCategoryFormula", null);
+__decorate([
+    (0, common_1.Patch)('skus/:id/status'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "updateSkuStatus", null);
 exports.ProductsController = ProductsController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN_STAFF),

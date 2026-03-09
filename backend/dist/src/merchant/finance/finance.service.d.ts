@@ -7,10 +7,10 @@ export declare class FinanceService {
         balance: number;
         deposits: {
             id: string;
-            status: import("@prisma/client").$Enums.DepositStatus;
-            merchantId: string;
             createdAt: Date;
             updatedAt: Date;
+            status: import("@prisma/client").$Enums.DepositStatus;
+            merchantId: string;
             note: string | null;
             expiredAt: Date | null;
             userId: string;
@@ -29,9 +29,9 @@ export declare class FinanceService {
         }[];
         withdrawals: {
             id: string;
-            status: import("@prisma/client").$Enums.WithdrawalStatus;
             createdAt: Date;
             updatedAt: Date;
+            status: import("@prisma/client").$Enums.WithdrawalStatus;
             note: string | null;
             processedAt: Date | null;
             userId: string;
@@ -48,9 +48,9 @@ export declare class FinanceService {
     }>;
     requestWithdrawal(ownerId: string, amount: number, bankName: string, bankAccountName: string, bankAccountNumber: string): Promise<{
         id: string;
-        status: import("@prisma/client").$Enums.WithdrawalStatus;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.WithdrawalStatus;
         note: string | null;
         processedAt: Date | null;
         userId: string;
@@ -66,10 +66,10 @@ export declare class FinanceService {
     }>;
     requestDeposit(merchantId: string, ownerId: string, amount: number, method: PaymentMethod): Promise<{
         id: string;
-        status: import("@prisma/client").$Enums.DepositStatus;
-        merchantId: string;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.DepositStatus;
+        merchantId: string;
         note: string | null;
         expiredAt: Date | null;
         userId: string;

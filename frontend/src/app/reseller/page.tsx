@@ -65,24 +65,27 @@ export default function ResellerLandingPage() {
         SUPREME: { price: 99917, maxProducts: 99999, customDomain: true, multiUser: true, whiteLabel: true, customFeatures: [] }
     });
 
-    const getPriceDetails = (monthlyPrice: number) => {
-        if (!monthlyPrice) monthlyPrice = 0;
-        const baseYearly = monthlyPrice * 12;
-        const baseQuarterly = monthlyPrice * 3;
+    const getPriceDetails = (yearlyFinalPrice: number) => {
+        if (!yearlyFinalPrice) yearlyFinalPrice = 0;
+
+        // Harga yang diinput di Super Admin sekarang dianggap sebagai HARGA TAHUNAN FINAL
+        const originalPrice = yearlyFinalPrice * 2.5; // Tampilkan mock harga asli yang dicoret (lebih mahal)
 
         if (billingCycle === 'yearly') {
             return {
-                original: baseYearly,
-                discounted: baseYearly * 0.4, // 60% off
+                original: originalPrice,
+                discounted: yearlyFinalPrice,
                 label: '/ tahun',
-                monthlyEquivalent: (baseYearly * 0.4) / 12
+                monthlyEquivalent: yearlyFinalPrice / 12
             };
         } else {
+            // Jika 3 bulan, anggap harganya 30% dari harga tahunan final
+            const quarterlyPrice = Math.round(yearlyFinalPrice * 0.3);
             return {
-                original: baseQuarterly,
-                discounted: baseQuarterly * 0.8, // 20% off
+                original: originalPrice * 0.3,
+                discounted: quarterlyPrice,
                 label: '/ 3 bulan',
-                monthlyEquivalent: (baseQuarterly * 0.8) / 3
+                monthlyEquivalent: quarterlyPrice / 3
             };
         }
     };
@@ -91,7 +94,14 @@ export default function ResellerLandingPage() {
     useEffect(() => {
         setIsMounted(true);
         // Coba fetch plan config dari API, jika gagal akan pakai default di atas
-        fetch('http://localhost:3001/public/subscriptions/plans/features')
+        // Tambahkan query parameter timestamp untuk mematikan cache Next.js / Browser
+        fetch(`http://localhost:3001/public/subscriptions/plans/features?t=${new Date().getTime()}`, {
+            cache: 'no-store',
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
+            }
+        })
             .then(res => res.json())
             .then(data => {
                 if (data && data.PRO) {

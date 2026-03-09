@@ -5,8 +5,8 @@ export declare class SecurityController {
     getFraudDetections(riskLevel?: string): Promise<({
         user: {
             id: string;
-            email: string | null;
             name: string;
+            email: string | null;
         };
         order: {
             id: string;
@@ -18,8 +18,8 @@ export declare class SecurityController {
         createdAt: Date;
         metadata: import("@prisma/client/runtime/client").JsonValue | null;
         userId: string;
-        reason: string;
         orderId: string | null;
+        reason: string;
         riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
         isResolved: boolean;
         resolvedBy: string | null;
@@ -30,8 +30,8 @@ export declare class SecurityController {
         createdAt: Date;
         metadata: import("@prisma/client/runtime/client").JsonValue | null;
         userId: string;
-        reason: string;
         orderId: string | null;
+        reason: string;
         riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
         isResolved: boolean;
         resolvedBy: string | null;
@@ -66,13 +66,13 @@ export declare class SecurityController {
     }>;
     getLoginAttempts(limit?: string): Promise<({
         user: {
-            email: string | null;
             name: string;
+            email: string | null;
         } | null;
     } & {
         id: string;
-        email: string | null;
         createdAt: Date;
+        email: string | null;
         failReason: string | null;
         userId: string | null;
         ipAddress: string;
@@ -81,14 +81,14 @@ export declare class SecurityController {
     })[]>;
     getAuditLogs(startDate?: string, action?: string): Promise<({
         user: {
-            email: string | null;
             name: string;
+            email: string | null;
             role: import("@prisma/client").$Enums.Role;
         } | null;
     } & {
         id: string;
-        merchantId: string | null;
         createdAt: Date;
+        merchantId: string | null;
         userId: string | null;
         action: string;
         entity: string;

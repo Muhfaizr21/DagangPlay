@@ -17,17 +17,17 @@ export declare class MerchantsController {
     updateStatus(id: string, status: MerchantStatus, reason?: string): Promise<{
         id: string;
         name: string;
-        status: import("@prisma/client").$Enums.MerchantStatus;
+        slug: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.MerchantStatus;
         deletedAt: Date | null;
-        slug: string;
         domain: string | null;
         ownerId: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
-        description: string | null;
         tagline: string | null;
         contactEmail: string | null;
         contactPhone: string | null;
@@ -43,47 +43,47 @@ export declare class MerchantsController {
     getMerchantDetail(id: string): Promise<{
         resellersCount: number;
         omset: number;
+        _count: {
+            deposits: number;
+            supportTickets: number;
+            orders: number;
+        };
         owner: {
             id: string;
-            email: string | null;
             name: string;
+            email: string | null;
             status: import("@prisma/client").$Enums.UserStatus;
             isVerified: boolean;
         };
         members: ({
             user: {
                 id: string;
-                email: string | null;
                 name: string;
+                email: string | null;
                 role: import("@prisma/client").$Enums.Role;
             };
         } & {
             id: string;
-            role: import("@prisma/client").$Enums.MerchantMemberRole;
-            merchantId: string;
             createdAt: Date;
             updatedAt: Date;
+            role: import("@prisma/client").$Enums.MerchantMemberRole;
+            merchantId: string;
             userId: string;
             permissions: import("@prisma/client/runtime/client").JsonValue | null;
         })[];
-        _count: {
-            deposits: number;
-            supportTickets: number;
-            orders: number;
-        };
         id: string;
         name: string;
-        status: import("@prisma/client").$Enums.MerchantStatus;
+        slug: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.MerchantStatus;
         deletedAt: Date | null;
-        slug: string;
         domain: string | null;
         ownerId: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
-        description: string | null;
         tagline: string | null;
         contactEmail: string | null;
         contactPhone: string | null;
@@ -99,17 +99,17 @@ export declare class MerchantsController {
     updateSettings(id: string, body: any): Promise<{
         id: string;
         name: string;
-        status: import("@prisma/client").$Enums.MerchantStatus;
+        slug: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.MerchantStatus;
         deletedAt: Date | null;
-        slug: string;
         domain: string | null;
         ownerId: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
-        description: string | null;
         tagline: string | null;
         contactEmail: string | null;
         contactPhone: string | null;

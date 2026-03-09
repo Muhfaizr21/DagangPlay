@@ -45,6 +45,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     get balanceTransaction() { return this.client.balanceTransaction; }
     get deposit() { return this.client.deposit; }
     get withdrawal() { return this.client.withdrawal; }
+    get payment() { return this.client.payment; }
     get orderStatusHistory() { return this.client.orderStatusHistory; }
     get fraudDetection() { return this.client.fraudDetection; }
     get commission() { return this.client.commission; }

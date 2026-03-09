@@ -447,7 +447,7 @@ export default function SaaSManagementPage() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Harga Langganan (Rp / Bln)</label>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Harga Langganan Bulanan/Tahunan Final (Rp)</label>
                                             <input
                                                 type="number"
                                                 value={plansConfig[planKey]?.price || 0}

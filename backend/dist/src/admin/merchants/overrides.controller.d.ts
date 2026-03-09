@@ -16,10 +16,10 @@ export declare class MerchantOverridesController {
         };
     } & {
         id: string;
-        merchantId: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string;
         expiredAt: Date | null;
         userId: string;
         productSkuId: string;
@@ -30,10 +30,10 @@ export declare class MerchantOverridesController {
         productSku: {
             id: string;
             name: string;
-            status: import("@prisma/client").$Enums.SkuStatus;
+            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
-            sortOrder: number;
+            status: import("@prisma/client").$Enums.SkuStatus;
             productId: string;
             supplierId: string;
             supplierCode: string;
@@ -53,10 +53,10 @@ export declare class MerchantOverridesController {
         };
     } & {
         id: string;
-        merchantId: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string;
         expiredAt: Date | null;
         userId: string;
         productSkuId: string;
@@ -65,10 +65,10 @@ export declare class MerchantOverridesController {
     })[]>;
     createOverride(dto: any, req: any): Promise<{
         id: string;
-        merchantId: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string;
         expiredAt: Date | null;
         userId: string;
         productSkuId: string;
@@ -77,10 +77,10 @@ export declare class MerchantOverridesController {
     }>;
     deleteOverride(id: string): Promise<{
         id: string;
-        merchantId: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string;
         expiredAt: Date | null;
         userId: string;
         productSkuId: string;

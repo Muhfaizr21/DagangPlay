@@ -5,12 +5,12 @@ export declare class ContentService {
     constructor(prisma: PrismaService);
     getBanners(merchantId?: string): Promise<{
         id: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         image: string;
         sortOrder: number;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -20,12 +20,12 @@ export declare class ContentService {
     }[]>;
     createBanner(data: any): Promise<{
         id: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         image: string;
         sortOrder: number;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -35,12 +35,12 @@ export declare class ContentService {
     }>;
     updateBanner(id: string, data: any): Promise<{
         id: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         image: string;
         sortOrder: number;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -50,12 +50,12 @@ export declare class ContentService {
     }>;
     turnOffBanner(id: string): Promise<{
         id: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         image: string;
         sortOrder: number;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -65,12 +65,12 @@ export declare class ContentService {
     }>;
     deleteBanner(id: string): Promise<{
         id: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         image: string;
         sortOrder: number;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -80,10 +80,10 @@ export declare class ContentService {
     }>;
     getAnnouncements(): Promise<{
         id: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -92,10 +92,10 @@ export declare class ContentService {
     }[]>;
     createAnnouncement(data: any): Promise<{
         id: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -104,10 +104,10 @@ export declare class ContentService {
     }>;
     updateAnnouncement(id: string, data: any): Promise<{
         id: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -116,10 +116,10 @@ export declare class ContentService {
     }>;
     toggleAnnouncement(id: string): Promise<{
         id: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -128,10 +128,10 @@ export declare class ContentService {
     }>;
     deleteAnnouncement(id: string): Promise<{
         id: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
         title: string;
@@ -141,10 +141,10 @@ export declare class ContentService {
     getCampaigns(): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         subject: string;
         body: string;
         targetRole: import("@prisma/client").$Enums.Role | null;
@@ -155,10 +155,10 @@ export declare class ContentService {
     createCampaign(data: any): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         subject: string;
         body: string;
         targetRole: import("@prisma/client").$Enums.Role | null;
@@ -168,10 +168,10 @@ export declare class ContentService {
     }>;
     getTemplates(): Promise<{
         id: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         type: import("@prisma/client").$Enums.NotificationType;
         subject: string | null;
         body: string;
@@ -179,10 +179,10 @@ export declare class ContentService {
     }[]>;
     saveTemplate(type: NotificationType, channel: NotificationChannel, data: any): Promise<{
         id: string;
-        merchantId: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
+        merchantId: string | null;
         type: import("@prisma/client").$Enums.NotificationType;
         subject: string | null;
         body: string;

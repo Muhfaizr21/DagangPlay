@@ -9,19 +9,21 @@ export declare class SettingsController {
     }>;
     getAdminStaff(): Promise<{
         id: string;
-        email: string | null;
         name: string;
-        adminPermissions: import("@prisma/client/runtime/client").JsonValue;
         createdAt: Date;
+        email: string | null;
+        adminPermissions: import("@prisma/client/runtime/client").JsonValue;
     }[]>;
     createAdminStaff(data: CreateStaffDto): Promise<{
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
         email: string | null;
         phone: string | null;
         username: string | null;
         referralCode: string;
         password: string;
-        name: string;
         avatar: string | null;
         role: import("@prisma/client").$Enums.Role;
         status: import("@prisma/client").$Enums.UserStatus;
@@ -32,18 +34,18 @@ export declare class SettingsController {
         merchantId: string | null;
         balance: number;
         bonusBalance: number;
-        createdAt: Date;
-        updatedAt: Date;
         deletedAt: Date | null;
     }>;
     updateAdminStaff(id: string, data: UpdateStaffDto): Promise<{
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
         email: string | null;
         phone: string | null;
         username: string | null;
         referralCode: string;
         password: string;
-        name: string;
         avatar: string | null;
         role: import("@prisma/client").$Enums.Role;
         status: import("@prisma/client").$Enums.UserStatus;
@@ -54,18 +56,18 @@ export declare class SettingsController {
         merchantId: string | null;
         balance: number;
         bonusBalance: number;
-        createdAt: Date;
-        updatedAt: Date;
         deletedAt: Date | null;
     }>;
     deleteAdminStaff(id: string): Promise<{
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
         email: string | null;
         phone: string | null;
         username: string | null;
         referralCode: string;
         password: string;
-        name: string;
         avatar: string | null;
         role: import("@prisma/client").$Enums.Role;
         status: import("@prisma/client").$Enums.UserStatus;
@@ -76,15 +78,13 @@ export declare class SettingsController {
         merchantId: string | null;
         balance: number;
         bonusBalance: number;
-        createdAt: Date;
-        updatedAt: Date;
         deletedAt: Date | null;
     }>;
     getJobQueues(status?: string): Promise<{
         error: string | null;
         id: string;
-        status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
+        status: import("@prisma/client").$Enums.JobStatus;
         completedAt: Date | null;
         type: string;
         scheduledAt: Date;
@@ -96,8 +96,8 @@ export declare class SettingsController {
     retryFailedJob(id: string): Promise<{
         error: string | null;
         id: string;
-        status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
+        status: import("@prisma/client").$Enums.JobStatus;
         completedAt: Date | null;
         type: string;
         scheduledAt: Date;

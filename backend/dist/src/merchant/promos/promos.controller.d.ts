@@ -7,11 +7,11 @@ export declare class PromosController {
     getPromos(req: any): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -29,11 +29,11 @@ export declare class PromosController {
     createPromo(req: any, body: any): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -51,11 +51,11 @@ export declare class PromosController {
     togglePromo(req: any, id: string, isActive: boolean): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -73,11 +73,11 @@ export declare class PromosController {
     deletePromo(req: any, id: string): Promise<{
         id: string;
         name: string;
-        merchantId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         description: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;

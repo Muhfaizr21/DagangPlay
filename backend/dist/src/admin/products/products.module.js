@@ -10,6 +10,7 @@ exports.ProductsModule = void 0;
 const common_1 = require("@nestjs/common");
 const products_controller_1 = require("./products.controller");
 const pricing_rules_controller_1 = require("./pricing-rules.controller");
+const public_products_controller_1 = require("./public-products.controller");
 const products_service_1 = require("./products.service");
 const prisma_service_1 = require("../../prisma.service");
 let ProductsModule = class ProductsModule {
@@ -17,7 +18,7 @@ let ProductsModule = class ProductsModule {
 exports.ProductsModule = ProductsModule;
 exports.ProductsModule = ProductsModule = __decorate([
     (0, common_1.Module)({
-        controllers: [products_controller_1.ProductsController, pricing_rules_controller_1.PricingRulesController],
+        controllers: [products_controller_1.ProductsController, pricing_rules_controller_1.PricingRulesController, public_products_controller_1.PublicProductsController],
         providers: [products_service_1.ProductsService, prisma_service_1.PrismaService]
     })
 ], ProductsModule);

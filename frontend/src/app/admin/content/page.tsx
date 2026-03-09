@@ -23,7 +23,8 @@ import {
     Bell,
     Smartphone,
     X,
-    Zap
+    Zap,
+    ArrowRight
 } from 'lucide-react';
 
 const fetcher = (url: string) => {

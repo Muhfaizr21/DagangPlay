@@ -72,6 +72,12 @@ let ProductsService = class ProductsService {
             totalSkus: cat.products.reduce((acc, p) => acc + (p._count?.skus || 0), 0)
         }));
     }
+    async updateCategoryImage(name, imageUrl) {
+        return this.prisma.category.updateMany({
+            where: { name },
+            data: { image: imageUrl, icon: imageUrl }
+        });
+    }
     async getProducts() {
         return this.prisma.product.findMany({
             include: {
@@ -210,7 +216,7 @@ let ProductsService = class ProductsService {
                 product: {
                     select: {
                         name: true,
-                        category: { select: { name: true } }
+                        category: { select: { name: true, image: true, id: true } }
                     }
                 }
             },
@@ -302,6 +308,151 @@ let ProductsService = class ProductsService {
         });
         await Promise.all(updates);
         return { success: true, count: skus.length };
+    }
+    async updateSkuStatus(id, status) {
+        return this.prisma.productSku.update({
+            where: { id },
+            data: { status: status }
+        });
+    }
+    async getPublicCategories() {
+        const categories = await this.prisma.category.findMany({
+            where: {
+                isActive: true,
+                products: {
+                    some: {
+                        status: 'ACTIVE',
+                        skus: {
+                            some: { status: 'ACTIVE' }
+                        }
+                    }
+                }
+            },
+            orderBy: { name: 'asc' },
+            select: {
+                id: true,
+                name: true,
+                slug: true,
+                image: true,
+                icon: true,
+                products: {
+                    where: { status: 'ACTIVE' },
+                    select: {
+                        _count: {
+                            select: { skus: { where: { status: 'ACTIVE' } } }
+                        }
+                    }
+                }
+            }
+        });
+        const mergedMap = new Map();
+        for (const cat of categories) {
+            let canonicalSlug = cat.slug;
+            let canonicalName = cat.name;
+            if (cat.slug.startsWith('free-fire')) {
+                canonicalSlug = 'free-fire';
+                canonicalName = 'Free Fire';
+            }
+            else if (cat.slug === 'mlbb' || cat.slug === 'mobile-legend') {
+                canonicalSlug = 'mobile-legends';
+                canonicalName = 'Mobile Legends';
+            }
+            const skuCount = cat.products.reduce((acc, p) => acc + p._count.skus, 0);
+            if (mergedMap.has(canonicalSlug)) {
+                const existing = mergedMap.get(canonicalSlug);
+                existing.skuCount += skuCount;
+                if (!existing.image && cat.image) {
+                    existing.image = cat.image;
+                }
+            }
+            else {
+                mergedMap.set(canonicalSlug, {
+                    ...cat,
+                    slug: canonicalSlug,
+                    name: canonicalName,
+                    skuCount: skuCount
+                });
+            }
+        }
+        return Array.from(mergedMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    }
+    async getPublicCategoryBySlug(slug) {
+        let slugsToFetch = [slug];
+        if (slug === 'free-fire')
+            slugsToFetch = ['free-fire', 'free-fire-max', 'free-fire-garena'];
+        if (slug === 'mobile-legends')
+            slugsToFetch = ['mobile-legend', 'mobile-legends', 'mlbb'];
+        const categories = await this.prisma.category.findMany({
+            where: { slug: { in: slugsToFetch } },
+            select: {
+                id: true,
+                name: true,
+                slug: true,
+                image: true,
+                products: {
+                    where: { status: 'ACTIVE' },
+                    select: {
+                        id: true,
+                        name: true,
+                        gameIdLabel: true,
+                        gameServerId: true,
+                        serverLabel: true,
+                        skus: {
+                            where: { status: 'ACTIVE' },
+                            orderBy: { priceNormal: 'asc' },
+                            select: {
+                                id: true,
+                                name: true,
+                                priceNormal: true,
+                                status: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        if (categories.length === 0)
+            return null;
+        const primary = categories[0];
+        const allProducts = categories.flatMap(c => c.products);
+        const mergedResult = {
+            ...primary,
+            name: slug === 'free-fire' ? 'Free Fire' : (slug === 'mobile-legends' ? 'Mobile Legends' : primary.name),
+            slug: slug,
+            products: allProducts
+        };
+        const canonicalName = mergedResult.name.toLowerCase();
+        if (canonicalName.includes('mobile legend') || canonicalName.includes('mlbb')) {
+            mergedResult.products = mergedResult.products.map(p => ({
+                ...p,
+                gameIdLabel: "User ID",
+                gameServerId: true,
+                serverLabel: "Zone ID"
+            }));
+        }
+        else if (canonicalName.includes('free fire')) {
+            mergedResult.products = mergedResult.products.map(p => ({
+                ...p,
+                gameIdLabel: "Player ID",
+                gameServerId: false
+            }));
+        }
+        else if (canonicalName.includes('genshin') || canonicalName.includes('honkai')) {
+            mergedResult.products = mergedResult.products.map(p => ({
+                ...p,
+                gameIdLabel: "UID",
+                gameServerId: true,
+                serverLabel: "Server"
+            }));
+        }
+        else if (canonicalName.includes('pubg')) {
+            mergedResult.products = mergedResult.products.map(p => ({
+                ...p,
+                gameIdLabel: "Player ID",
+                gameServerId: false
+            }));
+        }
+        return mergedResult;
     }
 };
 exports.ProductsService = ProductsService;

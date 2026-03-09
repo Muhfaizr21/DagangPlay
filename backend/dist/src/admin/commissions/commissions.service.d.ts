@@ -5,8 +5,8 @@ export declare class CommissionsService {
     getPendingCommissions(search?: string): Promise<({
         user: {
             id: string;
-            email: string | null;
             name: string;
+            email: string | null;
             role: import("@prisma/client").$Enums.Role;
         };
         order: {
@@ -17,13 +17,13 @@ export declare class CommissionsService {
         };
     } & {
         id: string;
-        status: import("@prisma/client").$Enums.CommissionStatus;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.CommissionStatus;
         userId: string;
+        amount: number;
         orderId: string;
         type: string;
-        amount: number;
         settledAt: Date | null;
     })[]>;
     settleCommission(id: string, operatorId: string): Promise<any>;
@@ -43,8 +43,8 @@ export declare class CommissionsService {
         };
     } & {
         id: string;
-        createdAt: Date;
         parentId: string;
+        createdAt: Date;
         childId: string;
         level: number;
     })[]>;

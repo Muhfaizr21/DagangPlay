@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
+import { TripayModule } from './tripay/tripay.module';
+import { PublicOrdersModule } from './public/orders/public-orders.module';
 import { DashboardModule } from './admin/dashboard/dashboard.module';
 import { MerchantsModule } from './admin/merchants/merchants.module';
 import { ProductsModule } from './admin/products/products.module';
@@ -22,7 +24,7 @@ import { MerchantModule } from './merchant/merchant.module';
 import { DigiflazzModule } from './admin/digiflazz/digiflazz.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), DashboardModule, MerchantsModule, ProductsModule, SuppliersModule, UsersModule, TransactionsModule, FinanceModule, CommissionsModule, PromosModule, SubscriptionsModule, ContentModule, SecurityModule, TicketsModule, SettingsModule, AuthModule, UploadModule, WorkersModule, MerchantModule, DigiflazzModule],
+  imports: [ScheduleModule.forRoot(), DashboardModule, MerchantsModule, ProductsModule, SuppliersModule, UsersModule, TransactionsModule, FinanceModule, CommissionsModule, PromosModule, SubscriptionsModule, ContentModule, SecurityModule, TicketsModule, SettingsModule, AuthModule, UploadModule, WorkersModule, MerchantModule, DigiflazzModule, TripayModule, PublicOrdersModule],
   controllers: [],
   providers: [PrismaService],
 })
