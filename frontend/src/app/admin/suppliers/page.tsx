@@ -17,7 +17,14 @@ import {
     Plus
 } from 'lucide-react';
 
-const fetcher = (url: string) => axios.get(url).then(res => res.data);
+const fetcher = (url: string) => {
+    const token = localStorage.getItem('admin_token');
+    return axios.get(url, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    }).then(res => res.data);
+};
 
 export default function SupplierManagementPage() {
     const [isPinging, setIsPinging] = useState<string | null>(null);
@@ -34,7 +41,7 @@ export default function SupplierManagementPage() {
     const testConnection = async (id: string, code: string) => {
         setIsPinging(id);
         try {
-            const res = await axios.post(`http://localhost:3001/admin/suppliers/${id}/test-connection`);
+            const res = await axios.post(`http://localhost:3001/admin/suppliers/${id}/test-connection`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
             setToastMsg({
                 title: 'Koneksi API Berhasil',
                 desc: `Saldo API / ${code} saat ini: Rp ${Number(res.data.balance).toLocaleString('id-ID')}`,

@@ -19,7 +19,14 @@ import {
     Loader2
 } from 'lucide-react';
 
-const fetcher = (url: string) => axios.get(url).then(res => res.data);
+const fetcher = (url: string) => {
+    const token = localStorage.getItem('admin_token');
+    return axios.get(url, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    }).then(res => res.data);
+};
 
 export default function SecurityManagementPage() {
     const [activeTab, setActiveTab] = useState<'FRAUD' | 'BLACKLIST' | 'AUDIT' | 'LOGIN'>('FRAUD');
@@ -44,7 +51,7 @@ export default function SecurityManagementPage() {
     const handleResolveFraud = async (id: string) => {
         if (!confirm('Tandai investigasi fraud ini telah selesai/resolved?')) return;
         try {
-            await axios.post(`http://localhost:3001/admin/security/fraud/${id}/resolve`);
+            await axios.post(`http://localhost:3001/admin/security/fraud/${id}/resolve`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
             mutateFrauds();
             showToast('Resolved', 'Kasus fraud berhasil ditutup.');
         } catch (err: any) {

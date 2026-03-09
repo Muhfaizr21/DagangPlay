@@ -5,12 +5,13 @@ import axios from 'axios';
 
 export default function AdminLoginPage() {
     const router = useRouter();
-    const [email, setEmail] = React.useState('superadmin@dagangplay.com');
-    const [password, setPassword] = React.useState('dagangplayadmin2026');
+    const [email, setEmail] = React.useState('');
+    const [password, setPassword] = React.useState('');
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState('');
 
     const handleLogin = async (e: React.FormEvent) => {
+        // ... (unchanged code inside handleLogin) ...
         e.preventDefault();
         setLoading(true);
         setError('');
@@ -25,7 +26,16 @@ export default function AdminLoginPage() {
             localStorage.setItem('admin_token', res.data.access_token);
             localStorage.setItem('admin_user', JSON.stringify(res.data.user));
 
-            router.push('/admin');
+            const role = res.data.user.role;
+            if (role === 'SUPER_ADMIN' || role === 'ADMIN_STAFF') {
+                router.push('/admin');
+            } else if (role === 'MERCHANT') {
+                router.push('/merchant');
+            } else if (role === 'RESELLER') {
+                router.push('/reseller');
+            } else {
+                router.push('/dashboard');
+            }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Gagal login. Cek kredensial Anda.');
         } finally {
@@ -46,7 +56,7 @@ export default function AdminLoginPage() {
                         <span className="text-3xl text-[#C9A84C] drop-shadow-sm">⚡</span>
                     </div>
                     <h1 className="font-heading text-3xl text-slate-800 tracking-widest whitespace-nowrap">DAGANG<span className="text-[#C9A84C]">PLAY</span></h1>
-                    <p className="font-body text-cyan-600 text-xs uppercase tracking-widest mt-2 font-bold select-none">Super Admin Authentication</p>
+                    <p className="font-body text-cyan-600 text-[10px] uppercase tracking-widest mt-2 font-bold select-none">Multi-Role Authentication Area</p>
                 </div>
 
                 {error && (

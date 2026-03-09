@@ -22,8 +22,14 @@ import {
     KeyRound
 } from 'lucide-react';
 
-const fetcher = (url: string) => axios.get(url).then(res => res.data);
-
+const fetcher = (url: string) => {
+    const token = localStorage.getItem('admin_token');
+    return axios.get(url, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    }).then(res => res.data);
+};
 export default function MerchantManagementPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
@@ -91,7 +97,7 @@ export default function MerchantManagementPage() {
     const handleResetPassword = async (id: string) => {
         if (!confirm('Reset password Owner menjadi "DagangPlay123!" ?')) return;
         try {
-            const res = await axios.post(`http://localhost:3001/admin/merchants/${id}/reset-password`);
+            const res = await axios.post(`http://localhost:3001/admin/merchants/${id}/reset-password`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
             showToast('Berhasil', res.data.message);
         } catch (err: any) {
             showToast('Error', err.response?.data?.message || 'Gagal reset password', 'error');

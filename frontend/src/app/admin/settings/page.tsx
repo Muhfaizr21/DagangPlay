@@ -25,7 +25,14 @@ import {
     Lock
 } from 'lucide-react';
 
-const fetcher = (url: string) => axios.get(url).then(res => res.data);
+const fetcher = (url: string) => {
+    const token = localStorage.getItem('admin_token');
+    return axios.get(url, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    }).then(res => res.data);
+};
 
 export default function SettingsManagementPage() {
     const [activeTab, setActiveTab] = useState<'GLOBAL' | 'STAFF' | 'JOBS'>('GLOBAL');
@@ -124,7 +131,7 @@ export default function SettingsManagementPage() {
 
     const handleRetryJob = async (id: string) => {
         try {
-            await axios.post(`http://localhost:3001/admin/settings/jobs/${id}/retry`);
+            await axios.post(`http://localhost:3001/admin/settings/jobs/${id}/retry`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
             mutateJobs();
             showToast('Diproses', 'Job background telah dijadwalkan ulang.');
         } catch (err) {

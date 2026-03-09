@@ -12,7 +12,7 @@ export declare class AuthService {
             id: string;
             name: string;
             email: string | null;
-            role: "SUPER_ADMIN" | "ADMIN_STAFF";
+            role: import("@prisma/client").$Enums.Role;
             adminPermissions: any;
         };
     }>;

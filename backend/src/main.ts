@@ -12,7 +12,18 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, '..', 'public'));
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
+
+  // Request logger
+  app.use((req: any, res: any, next: any) => {
+    console.log(`[REQ] ${req.method} ${req.url}`);
+    if (!req.headers.authorization) {
+      console.log(`      No Authorization header found!`);
+    } else {
+      console.log(`      Auth Header present: ${req.headers.authorization.substring(0, 20)}...`);
+    }
+    next();
+  });
+
   await app.listen(process.env.PORT ?? 3001);
-  console.log(`🚀 Backend running on: http://localhost:${process.env.PORT ?? 3001}`);
 }
 bootstrap();

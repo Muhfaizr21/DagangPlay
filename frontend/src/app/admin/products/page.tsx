@@ -15,7 +15,14 @@ import {
     AlertCircle
 } from 'lucide-react';
 
-const fetcher = (url: string) => axios.get(url).then(res => res.data);
+const fetcher = (url: string) => {
+    const token = localStorage.getItem('admin_token');
+    return axios.get(url, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    }).then(res => res.data);
+};
 
 export default function ProductManagementPage() {
     const [activeTab, setActiveTab] = useState<'products' | 'categories'>('products');

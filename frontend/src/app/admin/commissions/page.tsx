@@ -20,7 +20,14 @@ import {
     Plus
 } from 'lucide-react';
 
-const fetcher = (url: string) => axios.get(url).then(res => res.data);
+const fetcher = (url: string) => {
+    const token = localStorage.getItem('admin_token');
+    return axios.get(url, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    }).then(res => res.data);
+};
 
 export default function CommissionsManagementPage() {
     const [activeTab, setActiveTab] = useState<'PENDING' | 'LEVELS' | 'TREE'>('PENDING');
@@ -54,7 +61,7 @@ export default function CommissionsManagementPage() {
     const handleSettleSingle = async (id: string) => {
         if (!confirm('Pencairan komisi ini ke saldo dompet User?')) return;
         try {
-            await axios.post(`http://localhost:3001/admin/commissions/${id}/settle`);
+            await axios.post(`http://localhost:3001/admin/commissions/${id}/settle`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
             mutatePending();
             showToast('Selesai', 'Komisi telah dicairkan ke dompet User.');
         } catch (err: any) {
@@ -65,7 +72,7 @@ export default function CommissionsManagementPage() {
     const handleBulkSettle = async () => {
         if (!confirm('Proses SEMUA komisi berstatus PENDING sekaligus ke saldo masing-masing user? Pastikan cashflow tersedia.')) return;
         try {
-            const res = await axios.post(`http://localhost:3001/admin/commissions/bulk-settle`);
+            const res = await axios.post(`http://localhost:3001/admin/commissions/bulk-settle`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
             mutatePending();
             showToast('Bulk Settle', res.data.message);
         } catch (err: any) {

@@ -9,8 +9,17 @@ async function bootstrap() {
     app.enableCors();
     app.useStaticAssets((0, path_1.join)(__dirname, '..', 'public'));
     app.useGlobalPipes(new common_1.ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
+    app.use((req, res, next) => {
+        console.log(`[REQ] ${req.method} ${req.url}`);
+        if (!req.headers.authorization) {
+            console.log(`      No Authorization header found!`);
+        }
+        else {
+            console.log(`      Auth Header present: ${req.headers.authorization.substring(0, 20)}...`);
+        }
+        next();
+    });
     await app.listen(process.env.PORT ?? 3001);
-    console.log(`🚀 Backend running on: http://localhost:${process.env.PORT ?? 3001}`);
 }
 bootstrap();
 //# sourceMappingURL=main.js.map

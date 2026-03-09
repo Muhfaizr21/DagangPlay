@@ -67,7 +67,7 @@ export default function UserManagementPage() {
     const handleForceLogout = async (id: string) => {
         try {
             if (!confirm(`Paksa logout semua sesi aktif user ini?`)) return;
-            const res = await axios.post(`http://localhost:3001/admin/users/${id}/sessions/force-logout`);
+            const res = await axios.post(`http://localhost:3001/admin/users/${id}/sessions/force-logout`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
             setToastMsg({ title: 'Berhasil Logout', desc: `${res.data.revoked} Sesi aktif dihapus`, type: 'success' });
         } catch (err: any) {
             setToastMsg({ title: 'Error', desc: err.response?.data?.message || 'Gagal force logout', type: 'error' });

@@ -19,7 +19,14 @@ import {
     CornerDownRight
 } from 'lucide-react';
 
-const fetcher = (url: string) => axios.get(url).then(res => res.data);
+const fetcher = (url: string) => {
+    const token = localStorage.getItem('admin_token');
+    return axios.get(url, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    }).then(res => res.data);
+};
 
 export default function FinanceManagementPage() {
     const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'DEPOSIT' | 'WITHDRAWAL'>('OVERVIEW');
@@ -57,7 +64,7 @@ export default function FinanceManagementPage() {
     const handleConfirmDeposit = async (id: string) => {
         if (!confirm('Pastikan dana sudah benar-benar masuk ke rekening bank instansi. Konfirmasi deposit ini?')) return;
         try {
-            await axios.post(`http://localhost:3001/admin/finance/deposits/${id}/confirm`);
+            await axios.post(`http://localhost:3001/admin/finance/deposits/${id}/confirm`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
             mutateDep();
             showToast('Deposit Selesai', 'Saldo berhasil ditambahkan ke user.');
         } catch (err: any) {
@@ -68,7 +75,7 @@ export default function FinanceManagementPage() {
     const handleProcessWd = async (id: string) => {
         if (!confirm('Tandai penarikan dana (Withdrawal) ini sebagai SUKSES ditransfer?')) return;
         try {
-            await axios.post(`http://localhost:3001/admin/finance/withdrawals/${id}/process`);
+            await axios.post(`http://localhost:3001/admin/finance/withdrawals/${id}/process`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
             mutateWd();
             showToast('Withdrawal Selesai', 'Status penarikan menjadi COMPLETED.');
         } catch (err: any) {

@@ -26,7 +26,14 @@ import {
     Zap
 } from 'lucide-react';
 
-const fetcher = (url: string) => axios.get(url).then(res => res.data);
+const fetcher = (url: string) => {
+    const token = localStorage.getItem('admin_token');
+    return axios.get(url, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    }).then(res => res.data);
+};
 
 export default function ContentManagementPage() {
     const [activeTab, setActiveTab] = useState<'BANNERS' | 'ANNOUNCEMENTS' | 'BROADCASTS' | 'TEMPLATES'>('BANNERS');
@@ -72,7 +79,7 @@ export default function ContentManagementPage() {
     };
     const handleToggleBanner = async (id: string) => {
         try {
-            await axios.post(`http://localhost:3001/admin/content/banners/${id}/toggle`);
+            await axios.post(`http://localhost:3001/admin/content/banners/${id}/toggle`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
             mutateBanners();
             showToast('Sukses', 'Status banner berhasil diubah');
         } catch (err: any) {
@@ -105,7 +112,7 @@ export default function ContentManagementPage() {
     };
     const handleToggleAnnouncement = async (id: string) => {
         try {
-            await axios.post(`http://localhost:3001/admin/content/announcements/${id}/toggle`);
+            await axios.post(`http://localhost:3001/admin/content/announcements/${id}/toggle`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
             mutateAnnouncements();
             showToast('Sukses', 'Status pengumuman berhasil diubah');
         } catch (err: any) {

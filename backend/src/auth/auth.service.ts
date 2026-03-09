@@ -23,9 +23,9 @@ export class AuthService {
         }
 
         // Verify Role
-        if (user.role !== 'SUPER_ADMIN' && user.role !== 'ADMIN_STAFF') {
+        if (!['SUPER_ADMIN', 'ADMIN_STAFF', 'MERCHANT', 'RESELLER'].includes(user.role)) {
             console.log('Result: FAILED - Invalid Role:', user.role);
-            throw new UnauthorizedException('Anda tidak memiliki akses ke area ini.');
+            throw new UnauthorizedException('Anda tidak memiliki akses ke area dashboard ini.');
         }
 
         // Verify Status

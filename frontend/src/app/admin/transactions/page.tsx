@@ -58,7 +58,7 @@ export default function TransactionManagementPage() {
     const handleRetry = async (id: string) => {
         try {
             if (!confirm(`Yakin ingin melakukan RETRY ke Supplier API?`)) return;
-            await axios.post(`http://localhost:3001/admin/transactions/${id}/retry`);
+            await axios.post(`http://localhost:3001/admin/transactions/${id}/retry`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
             mutate();
             if (selectedTrxId === id) mutateDetail();
             setToastMsg({ title: 'Berhasil', desc: `Transaksi dimasukkan antrian retry`, type: 'success' });
@@ -72,7 +72,7 @@ export default function TransactionManagementPage() {
     const handleRefund = async (id: string) => {
         try {
             if (!confirm(`Lakukan REFUND dana kembali ke balance user?`)) return;
-            await axios.post(`http://localhost:3001/admin/transactions/${id}/refund`);
+            await axios.post(`http://localhost:3001/admin/transactions/${id}/refund`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
             mutate();
             if (selectedTrxId === id) mutateDetail();
             setToastMsg({ title: 'Refund Diproses', desc: `Saldo telah dikembalikan ke user`, type: 'success' });
@@ -354,7 +354,7 @@ export default function TransactionManagementPage() {
                                         <td className="px-6 py-4">
                                             <div>
                                                 <p className="text-[12px] font-bold text-slate-800">{trx.gameUserId} {trx.gameUserServerId ? `(${trx.gameUserServerId})` : ''} - <span className="font-semibold text-slate-500 italic">{trx.gameUserName || 'No Name'}</span></p>
-                                                <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5"><div className="w-1.5 h-1.5 rounded-full bg-slate-300" /> By {trx.customer?.name} ({trx.merchant?.name || ''})</p>
+                                                <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5"><span className="w-1.5 h-1.5 rounded-full bg-slate-300" /> By {trx.customer?.name} ({trx.merchant?.name || ''})</p>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-center">

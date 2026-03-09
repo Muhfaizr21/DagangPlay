@@ -30,9 +30,9 @@ let AuthService = class AuthService {
             console.log('Result: FAILED - Email not found');
             throw new common_1.UnauthorizedException('Email administrator tidak terdaftar.');
         }
-        if (user.role !== 'SUPER_ADMIN' && user.role !== 'ADMIN_STAFF') {
+        if (!['SUPER_ADMIN', 'ADMIN_STAFF', 'MERCHANT', 'RESELLER'].includes(user.role)) {
             console.log('Result: FAILED - Invalid Role:', user.role);
-            throw new common_1.UnauthorizedException('Anda tidak memiliki akses ke area ini.');
+            throw new common_1.UnauthorizedException('Anda tidak memiliki akses ke area dashboard ini.');
         }
         if (user.status !== 'ACTIVE') {
             console.log('Result: FAILED - Status:', user.status);
