@@ -1,4 +1,4 @@
-import { UseGuards,  Controller, Get, Post, Body, Param, Query, HttpCode  } from "@nestjs/common";
+import { UseGuards, Controller, Get, Post, Body, Param, Query, HttpCode } from "@nestjs/common";
 import { CommissionsService } from './commissions.service';
 
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
@@ -13,8 +13,9 @@ export class CommissionsController {
     constructor(private readonly commissionsService: CommissionsService) { }
 
     // =====================
-    // LEVELS
+    // LEVELS (Obsolete)
     // =====================
+    /*
     @Get('levels')
     async getLevels() {
         return this.commissionsService.getResellerLevels();
@@ -22,8 +23,9 @@ export class CommissionsController {
 
     @Post('levels')
     async createLevel(@Body() body: any) {
-        return this.commissionsService.createResellerLevel(body);
+        return this.commissionsService.createLevel(body);
     }
+    */
 
     // =====================
     // COMMISSIONS
@@ -47,10 +49,12 @@ export class CommissionsController {
     }
 
     // =====================
-    // MLM TREE
+    // MLM TREE (Obsolete)
     // =====================
+    /*
     @Get('tree')
     async getTree(@Query('userId') userId?: string) {
         return this.commissionsService.getDownlineTree(userId);
     }
+    */
 }

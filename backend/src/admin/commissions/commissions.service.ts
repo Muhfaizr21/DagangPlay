@@ -6,29 +6,6 @@ export class CommissionsService {
     constructor(private prisma: PrismaService) { }
 
     // =====================
-    // RESELLER LEVELS
-    // =====================
-    async getResellerLevels() {
-        return this.prisma.resellerLevel.findMany({
-            orderBy: { commissionBonus: 'asc' }
-        });
-    }
-
-    async createResellerLevel(data: any) {
-        return this.prisma.resellerLevel.create({
-            data: {
-                name: data.name,
-                minTransaction: data.minTransaction,
-                minRevenue: data.minRevenue,
-                commissionBonus: data.commissionBonus,
-                badge: data.badge,
-                benefits: data.benefits,
-                isActive: data.isActive ?? true
-            }
-        });
-    }
-
-    // =====================
     // COMMISSIONS List
     // =====================
     // Used for querying both normal commissions (merchant/reseller basic logic) and MLM commissions if needed

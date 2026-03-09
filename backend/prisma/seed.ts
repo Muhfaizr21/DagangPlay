@@ -32,7 +32,7 @@ async function main() {
             role: Role.SUPER_ADMIN,
             status: UserStatus.ACTIVE,
             isVerified: true,
-            isOfficial: true, // Mark as official DagangPlay account
+            referralCode: 'DP-MASTER-AD'
         },
     });
 

@@ -1,0 +1,84 @@
+import { SubscriptionService } from './subscription.service';
+import { PrismaService } from '../../prisma.service';
+export declare class SubscriptionController {
+    private readonly subscriptionService;
+    private prisma;
+    constructor(subscriptionService: SubscriptionService, prisma: PrismaService);
+    getStatus(req: any): Promise<{
+        plan: import("@prisma/client").$Enums.MerchantPlan;
+        planExpiredAt: Date | null;
+        isActive: boolean;
+        latestInvoice: {
+            id: string;
+            status: import("@prisma/client").$Enums.InvoiceStatus;
+            merchantId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            plan: import("@prisma/client").$Enums.MerchantPlan;
+            paidAt: Date | null;
+            amount: number;
+            tripayReference: string | null;
+            tripayPaymentUrl: string | null;
+            tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
+            invoiceNo: string;
+            tax: number;
+            totalAmount: number;
+            dueDate: Date;
+            notes: string | null;
+        } | null;
+    }>;
+    getInvoices(req: any): Promise<{
+        id: string;
+        status: import("@prisma/client").$Enums.InvoiceStatus;
+        merchantId: string;
+        createdAt: Date;
+        updatedAt: Date;
+        plan: import("@prisma/client").$Enums.MerchantPlan;
+        paidAt: Date | null;
+        amount: number;
+        tripayReference: string | null;
+        tripayPaymentUrl: string | null;
+        tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
+        invoiceNo: string;
+        tax: number;
+        totalAmount: number;
+        dueDate: Date;
+        notes: string | null;
+    }[]>;
+    createInvoice(req: any, body: any): Promise<{
+        id: string;
+        status: import("@prisma/client").$Enums.InvoiceStatus;
+        merchantId: string;
+        createdAt: Date;
+        updatedAt: Date;
+        plan: import("@prisma/client").$Enums.MerchantPlan;
+        paidAt: Date | null;
+        amount: number;
+        tripayReference: string | null;
+        tripayPaymentUrl: string | null;
+        tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
+        invoiceNo: string;
+        tax: number;
+        totalAmount: number;
+        dueDate: Date;
+        notes: string | null;
+    }>;
+    uploadProof(req: any, id: string, proofUrl: string): Promise<{
+        id: string;
+        status: import("@prisma/client").$Enums.InvoiceStatus;
+        merchantId: string;
+        createdAt: Date;
+        updatedAt: Date;
+        plan: import("@prisma/client").$Enums.MerchantPlan;
+        paidAt: Date | null;
+        amount: number;
+        tripayReference: string | null;
+        tripayPaymentUrl: string | null;
+        tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
+        invoiceNo: string;
+        tax: number;
+        totalAmount: number;
+        dueDate: Date;
+        notes: string | null;
+    }>;
+}

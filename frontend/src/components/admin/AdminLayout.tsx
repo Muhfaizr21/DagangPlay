@@ -19,7 +19,8 @@ import {
     CreditCard,
     Megaphone,
     ShieldAlert,
-    LifeBuoy
+    LifeBuoy,
+    Box
 } from 'lucide-react';
 
 const MENU_ITEMS = [
@@ -30,6 +31,7 @@ const MENU_ITEMS = [
     { href: '/admin/resellers', label: 'Resellers', icon: Users },
     { href: '/admin/users', label: 'Manajemen User', icon: Users },
     { href: '/admin/products', label: 'Produk & Kategori', icon: Gamepad2 },
+    { href: '/admin/digiflazz', label: 'Digiflazz Product', icon: Box },
     { href: '/admin/suppliers', label: 'Manajemen Supplier', icon: Server },
     { href: '/admin/transactions', label: 'Transaksi', icon: ReceiptText },
     { href: '/admin/finance', label: 'Deposit & Keuangan', icon: Wallet },

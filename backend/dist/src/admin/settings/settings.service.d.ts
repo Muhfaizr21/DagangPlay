@@ -1,0 +1,108 @@
+import { PrismaService } from '../../prisma.service';
+export declare class SettingsService {
+    private prisma;
+    constructor(prisma: PrismaService);
+    getAllSettings(): Promise<Record<string, string>>;
+    updateSettings(settingsData: Record<string, string>): Promise<{
+        success: boolean;
+    }>;
+    getAdminStaff(): Promise<{
+        id: string;
+        email: string | null;
+        name: string;
+        adminPermissions: import("@prisma/client/runtime/client").JsonValue;
+        createdAt: Date;
+    }[]>;
+    createAdminStaff(data: any): Promise<{
+        id: string;
+        email: string | null;
+        phone: string | null;
+        username: string | null;
+        referralCode: string;
+        password: string;
+        name: string;
+        avatar: string | null;
+        role: import("@prisma/client").$Enums.Role;
+        status: import("@prisma/client").$Enums.UserStatus;
+        adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
+        isVerified: boolean;
+        verifiedAt: Date | null;
+        referredById: string | null;
+        merchantId: string | null;
+        balance: number;
+        bonusBalance: number;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+    }>;
+    updateAdminStaff(id: string, data: any): Promise<{
+        id: string;
+        email: string | null;
+        phone: string | null;
+        username: string | null;
+        referralCode: string;
+        password: string;
+        name: string;
+        avatar: string | null;
+        role: import("@prisma/client").$Enums.Role;
+        status: import("@prisma/client").$Enums.UserStatus;
+        adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
+        isVerified: boolean;
+        verifiedAt: Date | null;
+        referredById: string | null;
+        merchantId: string | null;
+        balance: number;
+        bonusBalance: number;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+    }>;
+    deleteAdminStaff(id: string): Promise<{
+        id: string;
+        email: string | null;
+        phone: string | null;
+        username: string | null;
+        referralCode: string;
+        password: string;
+        name: string;
+        avatar: string | null;
+        role: import("@prisma/client").$Enums.Role;
+        status: import("@prisma/client").$Enums.UserStatus;
+        adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
+        isVerified: boolean;
+        verifiedAt: Date | null;
+        referredById: string | null;
+        merchantId: string | null;
+        balance: number;
+        bonusBalance: number;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+    }>;
+    getJobQueues(status?: string): Promise<{
+        error: string | null;
+        id: string;
+        status: import("@prisma/client").$Enums.JobStatus;
+        createdAt: Date;
+        completedAt: Date | null;
+        type: string;
+        scheduledAt: Date;
+        payload: import("@prisma/client/runtime/client").JsonValue;
+        retryCount: number;
+        maxRetry: number;
+        startedAt: Date | null;
+    }[]>;
+    retryFailedJob(id: string): Promise<{
+        error: string | null;
+        id: string;
+        status: import("@prisma/client").$Enums.JobStatus;
+        createdAt: Date;
+        completedAt: Date | null;
+        type: string;
+        scheduledAt: Date;
+        payload: import("@prisma/client/runtime/client").JsonValue;
+        retryCount: number;
+        maxRetry: number;
+        startedAt: Date | null;
+    }>;
+}

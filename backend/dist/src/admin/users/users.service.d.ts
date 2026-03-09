@@ -1,0 +1,111 @@
+import { PrismaService } from '../../prisma.service';
+import { UserStatus } from '@prisma/client';
+export declare class UsersService {
+    private prisma;
+    constructor(prisma: PrismaService);
+    getAllUsers(search?: string, role?: string, status?: string, page?: number, limit?: number): Promise<{
+        data: {
+            id: string;
+            email: string | null;
+            phone: string | null;
+            username: string | null;
+            referralCode: string;
+            password: string;
+            name: string;
+            avatar: string | null;
+            role: import("@prisma/client").$Enums.Role;
+            status: import("@prisma/client").$Enums.UserStatus;
+            adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
+            isVerified: boolean;
+            verifiedAt: Date | null;
+            referredById: string | null;
+            merchantId: string | null;
+            balance: number;
+            bonusBalance: number;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+        }[];
+        meta: {
+            totalItems: number;
+            totalPages: number;
+            currentPage: number;
+            itemsPerPage: number;
+        };
+    }>;
+    getUserDetail(id: string): Promise<{
+        id: string;
+        email: string | null;
+        phone: string | null;
+        username: string | null;
+        referralCode: string;
+        password: string;
+        name: string;
+        avatar: string | null;
+        role: import("@prisma/client").$Enums.Role;
+        status: import("@prisma/client").$Enums.UserStatus;
+        adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
+        isVerified: boolean;
+        verifiedAt: Date | null;
+        referredById: string | null;
+        merchantId: string | null;
+        balance: number;
+        bonusBalance: number;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+    }>;
+    updateUserStatus(id: string, status: UserStatus, reason?: string): Promise<{
+        id: string;
+        email: string | null;
+        phone: string | null;
+        username: string | null;
+        referralCode: string;
+        password: string;
+        name: string;
+        avatar: string | null;
+        role: import("@prisma/client").$Enums.Role;
+        status: import("@prisma/client").$Enums.UserStatus;
+        adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
+        isVerified: boolean;
+        verifiedAt: Date | null;
+        referredById: string | null;
+        merchantId: string | null;
+        balance: number;
+        bonusBalance: number;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+    }>;
+    adjustBalance(id: string, operatorId: string, type: 'ADD' | 'DEDUCT', amount: number, note: string): Promise<any>;
+    getBalanceHistories(id: string, limit?: number): Promise<{
+        id: string;
+        createdAt: Date;
+        description: string | null;
+        note: string | null;
+        userId: string;
+        orderId: string | null;
+        type: import("@prisma/client").$Enums.BalanceTrxType;
+        amount: number;
+        balanceBefore: number;
+        balanceAfter: number;
+        depositId: string | null;
+        withdrawalId: string | null;
+    }[]>;
+    getLoginSessions(id: string): Promise<{
+        id: string;
+        createdAt: Date;
+        userId: string;
+        ipAddress: string | null;
+        userAgent: string | null;
+        token: string;
+        refreshToken: string;
+        device: string | null;
+        expiresAt: Date;
+        lastActiveAt: Date;
+    }[]>;
+    forceLogoutAllSessions(id: string): Promise<{
+        success: boolean;
+        revoked: number;
+    }>;
+}

@@ -19,9 +19,10 @@ import { AuthModule } from './auth/auth.module';
 import { UploadModule } from './admin/upload/upload.module';
 import { WorkersModule } from './admin/workers/workers.module';
 import { MerchantModule } from './merchant/merchant.module';
+import { DigiflazzModule } from './admin/digiflazz/digiflazz.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), DashboardModule, MerchantsModule, ProductsModule, SuppliersModule, UsersModule, TransactionsModule, FinanceModule, CommissionsModule, PromosModule, SubscriptionsModule, ContentModule, SecurityModule, TicketsModule, SettingsModule, AuthModule, UploadModule, WorkersModule, MerchantModule],
+  imports: [ScheduleModule.forRoot(), DashboardModule, MerchantsModule, ProductsModule, SuppliersModule, UsersModule, TransactionsModule, FinanceModule, CommissionsModule, PromosModule, SubscriptionsModule, ContentModule, SecurityModule, TicketsModule, SettingsModule, AuthModule, UploadModule, WorkersModule, MerchantModule, DigiflazzModule],
   controllers: [],
   providers: [PrismaService],
 })

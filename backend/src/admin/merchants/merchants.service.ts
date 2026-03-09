@@ -29,11 +29,11 @@ export class MerchantsService {
 
         const mappedMerchants = await Promise.all(
             merchants.map(async (m) => {
-                // Reseller Count
+                // Reseller/Customer Count
                 const resellersCount = await this.prisma.user.count({
                     where: {
                         merchantId: m.id,
-                        role: 'RESELLER',
+                        role: 'CUSTOMER',
                         status: 'ACTIVE',
                     },
                 });
@@ -105,7 +105,7 @@ export class MerchantsService {
         if (!merchant) throw new NotFoundException('Merchant tidak ditemukan');
 
         const resellersCount = await this.prisma.user.count({
-            where: { merchantId: merchant.id, role: 'RESELLER' }
+            where: { merchantId: merchant.id, role: 'CUSTOMER' }
         });
 
         const omsetAgg = await this.prisma.order.aggregate({

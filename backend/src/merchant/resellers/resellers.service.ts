@@ -9,7 +9,7 @@ export class ResellersService {
     async getResellers(merchantId: string, search?: string) {
         const whereClause: any = {
             merchantId,
-            role: 'RESELLER'
+            role: 'CUSTOMER'
         };
 
         if (search) {
@@ -45,7 +45,7 @@ export class ResellersService {
 
     async updateStatus(merchantId: string, resellerId: string, status: UserStatus) {
         const reseller = await this.prisma.user.findFirst({
-            where: { id: resellerId, merchantId, role: 'RESELLER' }
+            where: { id: resellerId, merchantId, role: 'CUSTOMER' }
         });
 
         if (!reseller) throw new NotFoundException('Reseller tidak ditemukan');
@@ -58,7 +58,7 @@ export class ResellersService {
 
     async adjustBalance(merchantId: string, userId: string, resellerId: string, type: 'ADD' | 'SUBTRACT', amount: number, notes: string) {
         const reseller = await this.prisma.user.findFirst({
-            where: { id: resellerId, merchantId, role: 'RESELLER' }
+            where: { id: resellerId, merchantId, role: 'CUSTOMER' }
         });
 
         if (!reseller) throw new NotFoundException('Reseller tidak ditemukan');
@@ -116,7 +116,7 @@ export class ResellersService {
                 email: data.email,
                 phone: data.phone,
                 password: hashedPassword,
-                role: 'RESELLER',
+                role: 'CUSTOMER',
                 merchantId,
                 status: 'ACTIVE',
             }

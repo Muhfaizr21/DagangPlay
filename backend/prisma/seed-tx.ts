@@ -1,4 +1,4 @@
-import { PrismaClient, PaymentMethod, OrderPaymentStatus, OrderFulfillmentStatus, PaymentProvider } from '@prisma/client';
+import { PrismaClient, PaymentMethod, OrderPaymentStatus, OrderFulfillmentStatus, PriceTier } from '@prisma/client';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as dotenv from 'dotenv';
@@ -12,7 +12,7 @@ async function main() {
     console.log('🌱 Seeding Mock Transactions...');
 
     // Get Super Admin
-    const sa = await prisma.user.findFirst({ where: { isOfficial: true } });
+    const sa = await prisma.user.findFirst({ where: { role: 'SUPER_ADMIN' } });
     if (!sa) throw new Error("Super Admin not found. Run standard seed first.");
 
     const merchant = await prisma.merchant.findFirst({ where: { isOfficial: true } });
@@ -36,7 +36,13 @@ async function main() {
     let supplier = await prisma.supplier.findFirst({ where: { code: 'DIGIFLAZZ' } });
     if (!supplier) {
         supplier = await prisma.supplier.create({
-            data: { name: 'Digiflazz', code: 'DIGIFLAZZ' }
+            data: {
+                name: 'Digiflazz',
+                code: 'DIGIFLAZZ',
+                apiUrl: 'https://api.digiflazz.com',
+                apiKey: 'dummy',
+                apiSecret: 'dummy'
+            }
         });
     }
 
@@ -49,7 +55,14 @@ async function main() {
                 name: '86 Diamonds',
                 supplierCode: 'ML86',
                 basePrice: 20000,
-                sellingPrice: 25000,
+                priceNormal: 25000,
+                pricePro: 24000,
+                priceLegend: 23000,
+                priceSupreme: 22000,
+                marginNormal: 25,
+                marginPro: 20,
+                marginLegend: 15,
+                marginSupreme: 10
             }
         });
     }
@@ -67,12 +80,16 @@ async function main() {
                 productSkuId: sku.id,
                 productName: product.name,
                 productSkuName: sku.name,
+                priceTierUsed: PriceTier.NORMAL,
                 basePrice: sku.basePrice,
-                sellingPrice: sku.sellingPrice,
-                totalPrice: sku.sellingPrice,
+                sellingPrice: sku.priceNormal,
+                totalPrice: sku.priceNormal,
+                gameUserId: '12345678',
+                gameUserServerId: '1234',
+                gameUserName: 'Player 1',
                 paymentStatus: isSuccess ? OrderPaymentStatus.PAID : OrderPaymentStatus.PENDING,
                 fulfillmentStatus: isSuccess ? OrderFulfillmentStatus.SUCCESS : OrderFulfillmentStatus.FAILED,
-                paymentMethod: PaymentMethod.QRIS,
+                paymentMethod: PaymentMethod.TRIPAY_QRIS,
                 createdAt: new Date(new Date().getTime() - Math.random() * 7 * 24 * 60 * 60 * 1000), // Random within last 7 days
             }
         });

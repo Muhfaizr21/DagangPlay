@@ -64,8 +64,7 @@ export class DashboardService {
         ]);
 
         // Users
-        const [activeResellers, registeredCustomers] = await Promise.all([
-            this.prisma.user.count({ where: { merchantId, role: 'RESELLER', status: 'ACTIVE' } }),
+        const [registeredCustomers] = await Promise.all([
             this.prisma.user.count({ where: { merchantId, role: 'CUSTOMER' } })
         ]);
 
@@ -74,21 +73,21 @@ export class DashboardService {
             where: { merchantId },
             orderBy: { createdAt: 'desc' },
             take: 10,
-            include: { customer: { select: { name: true } }, productSku: { select: { product: { select: { name: true } } } } }
+            include: { user: { select: { name: true } }, productSku: { select: { product: { select: { name: true } } } } }
         });
 
-        // Top Resellers (Limit 10)
-        const topResellersAgg = await this.prisma.order.groupBy({
+        // Top Customers (Limit 10)
+        const topCustomersAgg = await this.prisma.order.groupBy({
             by: ['userId'],
-            where: { merchantId, paymentStatus: 'PAID', resellerId: { not: null } },
+            where: { merchantId, paymentStatus: 'PAID' },
             _sum: { totalPrice: true },
             _count: { id: true },
             orderBy: { _sum: { totalPrice: 'desc' } },
             take: 10
         });
 
-        // get names for top resellers
-        const topResellers = await Promise.all(topResellersAgg.map(async (ag) => {
+        // get names for top customers
+        const topCustomers = await Promise.all(topCustomersAgg.map(async (ag) => {
             const ruser = await this.prisma.user.findUnique({ where: { id: ag.userId }, select: { name: true, email: true } });
             return {
                 id: ag.userId,
@@ -147,18 +146,17 @@ export class DashboardService {
                 total: trxSuccess + trxFailed + trxPending
             },
             users: {
-                activeResellers,
                 registeredCustomers
             },
             recentOrders: recentOrders.map((o: any) => ({
                 id: o.orderNumber || o.id,
                 amount: o.totalPrice,
                 status: o.paymentStatus,
-                customerName: o.customer?.name || 'Unknown',
+                customerName: o.user?.name || 'Unknown',
                 productName: o.productSku?.product?.name || 'Voucher',
                 createdAt: o.createdAt
             })),
-            topResellers: topResellers,
+            topCustomers: topCustomers,
             alerts,
             chartData
         };
