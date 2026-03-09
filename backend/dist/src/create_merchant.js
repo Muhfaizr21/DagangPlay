@@ -53,6 +53,7 @@ async function main() {
                 name: 'Merchant Pertama',
                 role: client_1.Role.MERCHANT,
                 status: 'ACTIVE',
+                referralCode: 'MERCH1',
             }
         });
         await prisma.merchant.create({

@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma.service");
-const client_1 = require("@prisma/client");
 let UsersService = class UsersService {
     prisma;
     constructor(prisma) {
@@ -49,7 +48,7 @@ let UsersService = class UsersService {
                     isVerified: true,
                     createdAt: true,
                     _count: {
-                        select: { ordersAsCustomer: true, ordersAsReseller: true }
+                        select: { ordersAsCustomer: true }
                     }
                 }
             }),
@@ -70,7 +69,7 @@ let UsersService = class UsersService {
             where: { id },
             include: {
                 profile: true,
-                merchantMembers: { include: { merchant: true } },
+                merchantMemberships: { include: { merchant: true } },
             }
         });
         if (!user)
@@ -81,9 +80,6 @@ let UsersService = class UsersService {
         const user = await this.prisma.user.findUnique({ where: { id } });
         if (!user)
             throw new common_1.NotFoundException('User tidak ditemukan');
-        if (user.isOfficial && status === client_1.UserStatus.SUSPENDED) {
-            throw new common_1.BadRequestException('Akun Official tidak dapat disuspend');
-        }
         const updated = await this.prisma.user.update({
             where: { id },
             data: { status }

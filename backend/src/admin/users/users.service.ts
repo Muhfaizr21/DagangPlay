@@ -37,7 +37,7 @@ export class UsersService {
                     isVerified: true,
                     createdAt: true,
                     _count: {
-                        select: { ordersAsCustomer: true, ordersAsReseller: true }
+                        select: { ordersAsCustomer: true }
                     }
                 }
             }),
@@ -60,7 +60,7 @@ export class UsersService {
             where: { id },
             include: {
                 profile: true,
-                merchantMembers: { include: { merchant: true } },
+                merchantMemberships: { include: { merchant: true } },
             }
         });
         if (!user) throw new NotFoundException('User tidak ditemukan');
@@ -71,9 +71,9 @@ export class UsersService {
         const user = await this.prisma.user.findUnique({ where: { id } });
         if (!user) throw new NotFoundException('User tidak ditemukan');
 
-        if (user.isOfficial && status === UserStatus.SUSPENDED) {
-            throw new BadRequestException('Akun Official tidak dapat disuspend');
-        }
+        // if (user.isOfficial && status === UserStatus.SUSPENDED) {
+        //     throw new BadRequestException('Akun Official tidak dapat disuspend');
+        // }
 
         const updated = await this.prisma.user.update({
             where: { id },

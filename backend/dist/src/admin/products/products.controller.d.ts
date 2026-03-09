@@ -2,11 +2,16 @@ import { ProductsService } from './products.service';
 export declare class ProductsController {
     private readonly productsService;
     constructor(productsService: ProductsService);
-    getCategories(): Promise<({
+    getCategories(): Promise<{
+        totalSkus: number;
         _count: {
             products: number;
         };
-    } & {
+        products: {
+            _count: {
+                skus: number;
+            };
+        }[];
         id: string;
         name: string;
         createdAt: Date;
@@ -19,7 +24,7 @@ export declare class ProductsController {
         isActive: boolean;
         parentId: string | null;
         digiflazzCategory: string | null;
-    })[]>;
+    }[]>;
     getProducts(): Promise<({
         category: {
             id: string;
@@ -85,5 +90,77 @@ export declare class ProductsController {
         message: string;
         newCount: number;
         updatedCount: number;
+    }>;
+    getAllSkusPricing(): Promise<({
+        product: {
+            name: string;
+            category: {
+                name: string;
+            };
+        };
+    } & {
+        id: string;
+        name: string;
+        status: import("@prisma/client").$Enums.SkuStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        sortOrder: number;
+        productId: string;
+        supplierId: string;
+        supplierCode: string;
+        backupSupplierId: string | null;
+        backupSupplierCode: string | null;
+        basePrice: number;
+        priceNormal: number;
+        pricePro: number;
+        priceLegend: number;
+        priceSupreme: number;
+        marginNormal: number;
+        marginPro: number;
+        marginLegend: number;
+        marginSupreme: number;
+        stock: number;
+        metadata: import("@prisma/client/runtime/client").JsonValue | null;
+    })[]>;
+    updateSkuPrice(id: string, prices: {
+        normal: number;
+        pro: number;
+        legend: number;
+        supreme: number;
+    }): Promise<{
+        id: string;
+        name: string;
+        status: import("@prisma/client").$Enums.SkuStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        sortOrder: number;
+        productId: string;
+        supplierId: string;
+        supplierCode: string;
+        backupSupplierId: string | null;
+        backupSupplierCode: string | null;
+        basePrice: number;
+        priceNormal: number;
+        pricePro: number;
+        priceLegend: number;
+        priceSupreme: number;
+        marginNormal: number;
+        marginPro: number;
+        marginLegend: number;
+        marginSupreme: number;
+        stock: number;
+        metadata: import("@prisma/client/runtime/client").JsonValue | null;
+    }>;
+    applyCategoryFormula(body: {
+        categoryId: string;
+        margins: {
+            normal: number;
+            pro: number;
+            legend: number;
+            supreme: number;
+        };
+    }): Promise<{
+        success: boolean;
+        count: number;
     }>;
 }

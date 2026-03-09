@@ -401,6 +401,16 @@ export default function SaaSManagementPage() {
 
                                     <div className="space-y-4">
                                         <div>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Deskripsi Singkat</label>
+                                            <input
+                                                type="text"
+                                                value={plansConfig[planKey]?.description || ''}
+                                                onChange={e => updatePlanConfig(planKey, 'description', e.target.value)}
+                                                placeholder="Contoh: Mulai bisnis dengan mudah!"
+                                                className="w-full mt-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:ring-1 focus:ring-indigo-500 transition"
+                                            />
+                                        </div>
+                                        <div>
                                             <label className="text-[10px] font-bold text-slate-400 uppercase">Input Max Products (Limit)</label>
                                             <input
                                                 type="number"

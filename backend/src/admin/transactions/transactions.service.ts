@@ -12,7 +12,6 @@ export class TransactionsService {
             paymentStatus,
             fulfillmentStatus,
             merchantId,
-            resellerId,
             productId,
             startDate,
             endDate,
@@ -32,7 +31,7 @@ export class TransactionsService {
         if (paymentStatus && paymentStatus !== 'ALL') where.paymentStatus = paymentStatus;
         if (fulfillmentStatus && fulfillmentStatus !== 'ALL') where.fulfillmentStatus = fulfillmentStatus;
         if (merchantId && merchantId !== 'ALL') where.merchantId = merchantId;
-        if (resellerId && resellerId !== 'ALL') where.resellerId = resellerId;
+
         if (productId && productId !== 'ALL') where.productId = productId;
 
         if (startDate && endDate) {
@@ -50,9 +49,8 @@ export class TransactionsService {
                 where,
                 orderBy: { createdAt: 'desc' },
                 include: {
-                    customer: { select: { id: true, name: true, email: true } },
+                    user: { select: { id: true, name: true, email: true } },
                     merchant: { select: { id: true, name: true } },
-                    reseller: { select: { id: true, name: true } },
                     payment: true,
                 },
                 skip,
@@ -76,9 +74,8 @@ export class TransactionsService {
         const order = await this.prisma.order.findUnique({
             where: { id },
             include: {
-                customer: { select: { id: true, name: true, email: true } },
+                user: { select: { id: true, name: true, email: true } },
                 merchant: { select: { id: true, name: true } },
-                reseller: { select: { id: true, name: true } },
                 payment: true,
                 statusHistories: { orderBy: { createdAt: 'desc' } },
                 supplierLogs: { orderBy: { createdAt: 'desc' } },

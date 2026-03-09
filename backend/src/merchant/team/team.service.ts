@@ -36,7 +36,8 @@ export class TeamService {
                     password: hashedPassword,
                     role: 'MERCHANT',
                     status: 'ACTIVE',
-                    merchantId // Optional: staff belongs to a merchant
+                    merchantId, // Optional: staff belongs to a merchant
+                    referralCode: `STAF-${Math.random().toString(36).substring(2, 7).toUpperCase()}`
                 }
             });
         }

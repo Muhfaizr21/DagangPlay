@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SettingsModule = void 0;
 const common_1 = require("@nestjs/common");
 const settings_controller_1 = require("./settings.controller");
+const plan_mapping_controller_1 = require("./plan-mapping.controller");
 const settings_service_1 = require("./settings.service");
 const prisma_service_1 = require("../../prisma.service");
 let SettingsModule = class SettingsModule {
@@ -16,7 +17,7 @@ let SettingsModule = class SettingsModule {
 exports.SettingsModule = SettingsModule;
 exports.SettingsModule = SettingsModule = __decorate([
     (0, common_1.Module)({
-        controllers: [settings_controller_1.SettingsController],
+        controllers: [settings_controller_1.SettingsController, plan_mapping_controller_1.PlanMappingController],
         providers: [settings_service_1.SettingsService, prisma_service_1.PrismaService]
     })
 ], SettingsModule);

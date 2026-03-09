@@ -10,12 +10,13 @@ exports.WorkersModule = void 0;
 const common_1 = require("@nestjs/common");
 const workers_service_1 = require("./workers.service");
 const prisma_service_1 = require("../../prisma.service");
+const digiflazz_service_1 = require("../digiflazz/digiflazz.service");
 let WorkersModule = class WorkersModule {
 };
 exports.WorkersModule = WorkersModule;
 exports.WorkersModule = WorkersModule = __decorate([
     (0, common_1.Module)({
-        providers: [workers_service_1.WorkersService, prisma_service_1.PrismaService]
+        providers: [workers_service_1.WorkersService, prisma_service_1.PrismaService, digiflazz_service_1.DigiflazzService]
     })
 ], WorkersModule);
 //# sourceMappingURL=workers.module.js.map

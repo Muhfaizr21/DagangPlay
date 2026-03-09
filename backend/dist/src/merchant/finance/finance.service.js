@@ -55,7 +55,7 @@ let FinanceService = class FinanceService {
             }
         });
     }
-    async requestDeposit(merchantId, ownerId, amount, method, provider) {
+    async requestDeposit(merchantId, ownerId, amount, method) {
         if (amount <= 0)
             throw new common_1.BadRequestException('Amount must be greater than 0');
         return this.prisma.deposit.create({
@@ -64,7 +64,6 @@ let FinanceService = class FinanceService {
                 merchantId,
                 amount,
                 method,
-                provider,
                 status: 'PENDING'
             }
         });

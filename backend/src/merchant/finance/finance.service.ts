@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
-import { PaymentMethod, PaymentProvider } from '@prisma/client';
+import { PaymentMethod } from '@prisma/client';
 
 @Injectable()
 export class FinanceService {
@@ -50,7 +50,7 @@ export class FinanceService {
         });
     }
 
-    async requestDeposit(merchantId: string, ownerId: string, amount: number, method: PaymentMethod, provider: PaymentProvider) {
+    async requestDeposit(merchantId: string, ownerId: string, amount: number, method: PaymentMethod) {
         if (amount <= 0) throw new BadRequestException('Amount must be greater than 0');
 
         return this.prisma.deposit.create({
@@ -59,7 +59,6 @@ export class FinanceService {
                 merchantId,
                 amount,
                 method,
-                provider,
                 status: 'PENDING'
             }
         });

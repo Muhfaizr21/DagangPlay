@@ -41,8 +41,8 @@ export declare class FinanceController {
         tripayReference: string | null;
         tripayMerchantRef: string | null;
         tripayPaymentUrl: string | null;
-        tripayVaNumber: string | null;
         tripayQrUrl: string | null;
+        tripayVaNumber: string | null;
         tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
         receiptImage: string | null;
         confirmedById: string | null;
@@ -71,9 +71,9 @@ export declare class FinanceController {
         processedAt: Date | null;
         userId: string;
         amount: number;
+        fee: number;
         receiptImage: string | null;
         rejectedAt: Date | null;
-        fee: number;
         netAmount: number;
         bankName: string;
         bankAccountNumber: string;

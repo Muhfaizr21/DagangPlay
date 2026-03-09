@@ -18,7 +18,7 @@ let TransactionsService = class TransactionsService {
         this.prisma = prisma;
     }
     async getAllTransactions(filters) {
-        const { search, paymentStatus, fulfillmentStatus, merchantId, resellerId, productId, startDate, endDate, page = 1, limit = 50 } = filters;
+        const { search, paymentStatus, fulfillmentStatus, merchantId, productId, startDate, endDate, page = 1, limit = 50 } = filters;
         const where = {};
         if (search) {
             where.OR = [
@@ -33,8 +33,6 @@ let TransactionsService = class TransactionsService {
             where.fulfillmentStatus = fulfillmentStatus;
         if (merchantId && merchantId !== 'ALL')
             where.merchantId = merchantId;
-        if (resellerId && resellerId !== 'ALL')
-            where.resellerId = resellerId;
         if (productId && productId !== 'ALL')
             where.productId = productId;
         if (startDate && endDate) {
@@ -50,9 +48,8 @@ let TransactionsService = class TransactionsService {
                 where,
                 orderBy: { createdAt: 'desc' },
                 include: {
-                    customer: { select: { id: true, name: true, email: true } },
+                    user: { select: { id: true, name: true, email: true } },
                     merchant: { select: { id: true, name: true } },
-                    reseller: { select: { id: true, name: true } },
                     payment: true,
                 },
                 skip,
@@ -74,9 +71,8 @@ let TransactionsService = class TransactionsService {
         const order = await this.prisma.order.findUnique({
             where: { id },
             include: {
-                customer: { select: { id: true, name: true, email: true } },
+                user: { select: { id: true, name: true, email: true } },
                 merchant: { select: { id: true, name: true } },
-                reseller: { select: { id: true, name: true } },
                 payment: true,
                 statusHistories: { orderBy: { createdAt: 'desc' } },
                 supplierLogs: { orderBy: { createdAt: 'desc' } },

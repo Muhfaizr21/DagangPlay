@@ -19,7 +19,7 @@ export declare class DigiflazzController {
             productName: any;
             categoryId: any;
             categoryName: any;
-            sellingPrice: any;
+            priceNormal: any;
             status: any;
         } | null;
     }[]>;

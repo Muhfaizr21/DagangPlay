@@ -22,7 +22,6 @@ export declare class PrismaService implements OnModuleInit, OnModuleDestroy {
     get fraudDetection(): import("@prisma/client").Prisma.FraudDetectionDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get commission(): import("@prisma/client").Prisma.CommissionDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get mLMCommission(): import("@prisma/client").Prisma.MLMCommissionDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
-    get resellerLevel(): any;
     get downlineTree(): import("@prisma/client").Prisma.DownlineTreeDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get promoCode(): import("@prisma/client").Prisma.PromoCodeDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get promoUsage(): import("@prisma/client").Prisma.PromoUsageDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
@@ -39,8 +38,10 @@ export declare class PrismaService implements OnModuleInit, OnModuleDestroy {
     get jobQueue(): import("@prisma/client").Prisma.JobQueueDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get notificationTemplate(): import("@prisma/client").Prisma.NotificationTemplateDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get merchantProductPrice(): import("@prisma/client").Prisma.MerchantProductPriceDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
-    get resellerProductPrice(): any;
     get merchantMember(): import("@prisma/client").Prisma.MerchantMemberDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get tierPricingRule(): import("@prisma/client").Prisma.TierPricingRuleDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get planTierMapping(): import("@prisma/client").Prisma.PlanTierMappingDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get tierPriceHistory(): import("@prisma/client").Prisma.TierPriceHistoryDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get webhookEndpoint(): import("@prisma/client").Prisma.WebhookEndpointDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get paymentChannel(): import("@prisma/client").Prisma.PaymentChannelDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     onModuleInit(): Promise<void>;

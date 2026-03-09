@@ -21,6 +21,7 @@ async function main() {
                 name: 'Merchant Pertama',
                 role: Role.MERCHANT,
                 status: 'ACTIVE',
+                referralCode: 'MERCH1',
             }
         });
 

@@ -61,7 +61,8 @@ export class SettingsService {
                 role: Role.ADMIN_STAFF,
                 adminPermissions: data.permissions || [],
                 status: 'ACTIVE',
-                isVerified: true
+                isVerified: true,
+                referralCode: `ADM-${Math.random().toString(36).substring(2, 7).toUpperCase()}`
             }
         });
     }

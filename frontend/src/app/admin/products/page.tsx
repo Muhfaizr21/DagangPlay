@@ -12,7 +12,8 @@ import {
     MoreVertical,
     CheckCircle2,
     Loader2,
-    AlertCircle
+    AlertCircle,
+    Filter
 } from 'lucide-react';
 
 const fetcher = (url: string) => {
@@ -27,18 +28,32 @@ const fetcher = (url: string) => {
 export default function ProductManagementPage() {
     const [activeTab, setActiveTab] = useState<'products' | 'categories'>('products');
     const [isSyncing, setIsSyncing] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filterCategory, setFilterCategory] = useState('All');
     const [toastMsg, setToastMsg] = useState<{ title: string; desc: string; type: 'success' | 'error' } | null>(null);
 
     // Fetch Data
     const { data: products, error: prodErr, mutate: mutateProd } = useSWR('http://localhost:3001/admin/products', fetcher);
     const { data: categories, error: catErr, mutate: mutateCat } = useSWR('http://localhost:3001/admin/products/categories', fetcher);
 
+    const filteredProducts = products?.filter((p: any) => {
+        const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            p.slug.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = filterCategory === 'All' || p.category?.name === filterCategory;
+        return matchesSearch && matchesCategory;
+    });
+
+    const categoryList = Array.from(new Set(products?.map((p: any) => p.category?.name).filter(Boolean) || [])) as string[];
+
     const handleSyncDigiflazz = async () => {
         if (!confirm('Apakah Anda yakin ingin melakukan sinkronisasi dengan Digiflazz? Proses ini mungkin memakan waktu.')) return;
 
         setIsSyncing(true);
         try {
-            const res = await axios.post('http://localhost:3001/admin/products/sync');
+            const token = localStorage.getItem('admin_token');
+            const res = await axios.post('http://localhost:3001/admin/products/sync', {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
 
             setToastMsg({
                 title: 'Sinkronisasi Berhasil',
@@ -116,15 +131,49 @@ export default function ProductManagementPage() {
                 </div>
 
                 {/* Table Controls (Search/Filter) */}
-                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-white">
+                <div className="px-6 py-4 border-b border-slate-100 flex flex-col gap-4 bg-white">
                     <div className="relative w-full max-w-sm">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                         <input
                             type="text"
                             placeholder={`Cari ${activeTab === 'products' ? 'Nama Produk/SKU' : 'Nama Kategori'}...`}
                             className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-700 focus:outline-none focus:border-indigo-400 focus:bg-white transition-colors"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
+
+                    {activeTab === 'products' && (
+                        <div className="relative">
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none pr-10">
+                                <button
+                                    onClick={() => setFilterCategory('All')}
+                                    className={`flex-none px-3 py-1.5 rounded-full text-[12px] font-bold transition-all border flex items-center gap-1.5
+                                        ${filterCategory === 'All'
+                                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                                            : 'bg-white border-slate-200 text-slate-500 hover:border-indigo-300 hover:text-indigo-600'
+                                        }`}
+                                >
+                                    <Filter className="w-3 h-3" />
+                                    Semua
+                                </button>
+                                {categoryList.map(cat => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => setFilterCategory(cat)}
+                                        className={`flex-none px-3 py-1.5 rounded-full text-[12px] font-bold transition-all border
+                                            ${filterCategory === cat
+                                                ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                                                : 'bg-white border-slate-200 text-slate-500 hover:border-indigo-300 hover:text-indigo-600'
+                                            }`}
+                                    >
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="absolute right-0 top-0 bottom-1 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none"></div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Loading / Error States */}
@@ -155,7 +204,7 @@ export default function ProductManagementPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {products?.map((prod: any) => (
+                                {filteredProducts?.map((prod: any) => (
                                     <tr key={prod.id} className="hover:bg-slate-50/50 transition-colors group">
                                         <td className="px-6 py-4">
                                             <div>
@@ -172,7 +221,7 @@ export default function ProductManagementPage() {
                                             <p className="text-[13px] font-semibold text-slate-700">{prod.skus?.length || 0} varian</p>
                                             {prod.skus?.length > 0 && (
                                                 <p className="text-[11px] text-slate-400 mt-0.5">
-                                                    Termurah: Rp {Number(prod.skus[0].sellingPrice).toLocaleString('id-ID')}
+                                                    Termurah: Rp {Math.min(...prod.skus.map((s: any) => Number(s.priceNormal) || 0)).toLocaleString('id-ID')}
                                                 </p>
                                             )}
                                         </td>
@@ -208,7 +257,7 @@ export default function ProductManagementPage() {
                                 <tr className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                     <th className="px-6 py-4">Nama Brand / Kategori</th>
                                     <th className="px-6 py-4">Slug</th>
-                                    <th className="px-6 py-4 text-center">Total Produk Terhubung</th>
+                                    <th className="px-6 py-4 text-center">Item / Varian</th>
                                     <th className="px-6 py-4 text-center">Status</th>
                                     <th className="px-6 py-4 text-right">Aksi</th>
                                 </tr>
@@ -223,8 +272,8 @@ export default function ProductManagementPage() {
                                             <p className="text-[12px] text-slate-500 font-mono bg-slate-100 px-2 py-1 rounded inline-flex border border-slate-200/50">{cat.slug}</p>
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            <span className="inline-flex w-7 h-7 bg-indigo-50 text-indigo-700 font-bold items-center justify-center rounded-full text-[12px]">
-                                                {cat._count?.products || 0}
+                                            <span className="inline-flex min-w-[28px] h-7 px-2 bg-indigo-50 text-indigo-700 font-bold items-center justify-center rounded-full text-[12px]">
+                                                {cat.totalSkus ?? 0}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-center">

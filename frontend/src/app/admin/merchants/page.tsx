@@ -254,6 +254,9 @@ export default function MerchantManagementPage() {
                                         </div>
                                     </form>
 
+                                    {/* PRICE OVERRIDES */}
+                                    <MerchantPricingOverrides merchantId={merchantDetail.id} />
+
                                 </div>
                             ) : null}
                         </div>
@@ -407,5 +410,122 @@ export default function MerchantManagementPage() {
                 )}
             </div>
         </AdminLayout>
+    );
+}
+
+// ===========================================
+// SUB-COMPONENT: PRICE OVERRIDES
+// ===========================================
+function MerchantPricingOverrides({ merchantId }: { merchantId: string }) {
+    const { data: overrides, mutate } = useSWR(`http://localhost:3001/admin/merchant-overrides/merchant/${merchantId}`, fetcher);
+    const { data: skus } = useSWR('http://localhost:3001/admin/products/skus/pricing', fetcher);
+
+    const [isAdding, setIsAdding] = useState(false);
+    const [form, setForm] = useState({ skuId: '', price: 0, reason: '', expiredAt: '' });
+
+    const handleAdd = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem('admin_token');
+            await axios.post('http://localhost:3001/admin/merchant-overrides', {
+                merchantId,
+                productSkuId: form.skuId,
+                customPrice: form.price,
+                reason: form.reason || 'Manual Super Admin Override',
+                expiredAt: form.expiredAt || null
+            }, { headers: { Authorization: `Bearer ${token}` } });
+
+            mutate();
+            setIsAdding(false);
+            setForm({ skuId: '', price: 0, reason: '', expiredAt: '' });
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Gagal menyimpan override');
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('Hapus harga khusus ini?')) return;
+        try {
+            await axios.delete(`http://localhost:3001/admin/merchant-overrides/${id}`);
+            mutate();
+        } catch (err) {
+            alert('Gagal menghapus');
+        }
+    };
+
+    return (
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden shadow-sm mt-8">
+            <div className="px-5 py-4 border-b border-slate-200 flex justify-between items-center bg-white">
+                <h3 className="text-sm font-bold text-slate-800">Harga Khusus Merchant (Override)</h3>
+                {!isAdding ? (
+                    <button onClick={() => setIsAdding(true)} className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-[11px] font-bold hover:bg-indigo-700 shadow-sm transition">
+                        + Tambah Override
+                    </button>
+                ) : (
+                    <button onClick={() => setIsAdding(false)} className="text-xs font-bold text-slate-400 hover:text-slate-700">Tutup Form</button>
+                )}
+            </div>
+
+            {isAdding && (
+                <form onSubmit={handleAdd} className="p-5 border-b border-slate-200 bg-white space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="col-span-2">
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Pilih SKU Produk</label>
+                            <select
+                                required
+                                value={form.skuId}
+                                onChange={e => setForm({ ...form, skuId: e.target.value })}
+                                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs font-medium outline-none focus:border-indigo-500"
+                            >
+                                <option value="">-- Pilih Produk SKU --</option>
+                                {skus?.map((sku: any) => (
+                                    <option key={sku.id} value={sku.id}>{sku.product.category.name} - {sku.product.name} - {sku.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Harga Nett Toko (IDR)</label>
+                            <input
+                                type="number" required
+                                value={form.price}
+                                onChange={e => setForm({ ...form, price: parseInt(e.target.value) })}
+                                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono font-bold outline-none focus:border-indigo-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tgl Kadaluarsa (Opsional)</label>
+                            <input
+                                type="date"
+                                value={form.expiredAt}
+                                onChange={e => setForm({ ...form, expiredAt: e.target.value })}
+                                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs font-medium outline-none focus:border-indigo-500"
+                            />
+                        </div>
+                    </div>
+                    <button type="submit" className="w-full py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition active:scale-95">
+                        Simpan Harga Khusus
+                    </button>
+                </form>
+            )}
+
+            <div className="p-4 space-y-2">
+                {overrides?.length === 0 && <p className="text-center py-6 text-xs text-slate-400 font-medium italic">Tidak ada harga khusus aktif untuk merchant ini.</p>}
+                {overrides?.map((o: any) => (
+                    <div key={o.id} className="p-4 bg-white border border-slate-200 rounded-xl flex items-center justify-between shadow-xs hover:border-indigo-100 transition">
+                        <div>
+                            <p className="text-[12.5px] font-bold text-slate-800 leading-none">{o.productSku?.name}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                                <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-[10px] font-bold tracking-tight">Rp {Number(o.customPrice).toLocaleString('id-ID')}</span>
+                                <span className="text-slate-300">•</span>
+                                <span className="text-[10px] text-slate-400 font-medium">Exp: {o.expiredAt ? new Date(o.expiredAt).toLocaleDateString() : 'Tanpa Expired'}</span>
+                            </div>
+                        </div>
+                        <button onClick={() => handleDelete(o.id)} className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition">
+                            <Trash2 className="w-4 h-4" />
+                        </button>
+                    </div>
+                ))}
+            </div>
+        </div>
     );
 }

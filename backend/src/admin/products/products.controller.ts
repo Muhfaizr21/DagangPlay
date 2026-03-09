@@ -1,4 +1,4 @@
-import { UseGuards,  Controller, Get, Post  } from "@nestjs/common";
+import { UseGuards, Controller, Get, Post, Body, Param, Patch } from "@nestjs/common";
 import { ProductsService } from './products.service';
 
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
@@ -25,5 +25,25 @@ export class ProductsController {
     @Post('sync')
     async syncDigiflazz() {
         return this.productsService.syncDigiflazzProducts();
+    }
+
+    @Get('skus/pricing')
+    async getAllSkusPricing() {
+        return this.productsService.getAllSkusPricing();
+    }
+
+    @Patch('skus/:id/price')
+    async updateSkuPrice(
+        @Param('id') id: string,
+        @Body() prices: { normal: number, pro: number, legend: number, supreme: number }
+    ) {
+        return this.productsService.updateSkuPrice(id, prices);
+    }
+
+    @Post('skus/bulk-formula')
+    async applyCategoryFormula(
+        @Body() body: { categoryId: string, margins: { normal: number, pro: number, legend: number, supreme: number } }
+    ) {
+        return this.productsService.applyCategoryFormula(body.categoryId, body.margins);
     }
 }

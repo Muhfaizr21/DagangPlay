@@ -19,13 +19,14 @@ export declare class SubscriptionsService {
         plan: import("@prisma/client").$Enums.MerchantPlan;
         paidAt: Date | null;
         amount: number;
+        totalAmount: number;
         tripayReference: string | null;
         tripayPaymentUrl: string | null;
         tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
         invoiceNo: string;
         tax: number;
-        totalAmount: number;
         dueDate: Date;
+        proofUrl: string | null;
         notes: string | null;
     })[]>;
     confirmInvoice(id: string, operator: string): Promise<any>;
@@ -38,13 +39,14 @@ export declare class SubscriptionsService {
         plan: import("@prisma/client").$Enums.MerchantPlan;
         paidAt: Date | null;
         amount: number;
+        totalAmount: number;
         tripayReference: string | null;
         tripayPaymentUrl: string | null;
         tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
         invoiceNo: string;
         tax: number;
-        totalAmount: number;
         dueDate: Date;
+        proofUrl: string | null;
         notes: string | null;
     }>;
     updateMerchantPlanManual(merchantId: string, plan: string, durationDays: number, operator: string): Promise<any>;
@@ -75,13 +77,14 @@ export declare class SubscriptionsService {
         plan: import("@prisma/client").$Enums.MerchantPlan;
         paidAt: Date | null;
         amount: number;
+        totalAmount: number;
         tripayReference: string | null;
         tripayPaymentUrl: string | null;
         tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
         invoiceNo: string;
         tax: number;
-        totalAmount: number;
         dueDate: Date;
+        proofUrl: string | null;
         notes: string | null;
     }>;
 }

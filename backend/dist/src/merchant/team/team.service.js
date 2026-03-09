@@ -75,7 +75,8 @@ let TeamService = class TeamService {
                     password: hashedPassword,
                     role: 'MERCHANT',
                     status: 'ACTIVE',
-                    merchantId
+                    merchantId,
+                    referralCode: `STAF-${Math.random().toString(36).substring(2, 7).toUpperCase()}`
                 }
             });
         }

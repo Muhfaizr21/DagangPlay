@@ -99,7 +99,7 @@ export class MerchantsService {
             include: {
                 owner: { select: { id: true, name: true, email: true, status: true, isVerified: true } },
                 members: { include: { user: { select: { id: true, name: true, email: true, role: true } } } },
-                _count: { select: { orders: true, deposits: true, tickets: true } }
+                _count: { select: { orders: true, deposits: true, supportTickets: true } }
             }
         });
         if (!merchant) throw new NotFoundException('Merchant tidak ditemukan');

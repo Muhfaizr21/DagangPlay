@@ -125,7 +125,7 @@ export class DigiflazzService {
                         productName: localSku.product.name,
                         categoryId: localSku.product.categoryId,
                         categoryName: localSku.product.category?.name,
-                        sellingPrice: localSku.sellingPrice,
+                        priceNormal: localSku.priceNormal,
                         status: localSku.status,
                     } : null
                 };
@@ -147,7 +147,10 @@ export class DigiflazzService {
         digiflazz_price: number;
         categoryId?: string;    // Our local Category ID
         productId?: string;     // Our local Product ID
-        sellingPrice: number;  // Price we sell to Merchants
+        priceNormal: number;   // Price for NORMAL tier
+        pricePro?: number;      // Price for PRO tier
+        priceLegend?: number;   // Price for LEGEND tier
+        priceSupreme?: number;  // Price for SUPREME tier
         status: string;        // ACTIVE / INACTIVE
     }) {
         try {
@@ -155,7 +158,7 @@ export class DigiflazzService {
             const supplier = await this.prisma.supplier.upsert({
                 where: { code: 'DIGIFLAZZ' },
                 update: {},
-                create: { name: 'Digiflazz', code: 'DIGIFLAZZ', status: 'ACTIVE' }
+                create: { name: 'Digiflazz', code: 'DIGIFLAZZ', status: 'ACTIVE', apiUrl: 'https://api.digiflazz.com/v1', apiKey: 'DUMMY_KEY', apiSecret: 'DUMMY_SECRET' }
             });
 
             // 1. Ensure Category
@@ -196,19 +199,26 @@ export class DigiflazzService {
                         productId: productId,
                         name: dto.product_name,
                         basePrice: dto.digiflazz_price,
-                        sellingPrice: dto.sellingPrice,
+                        priceNormal: dto.priceNormal,
+                        pricePro: dto.pricePro || dto.priceNormal,
+                        priceLegend: dto.priceLegend || dto.priceNormal,
+                        priceSupreme: dto.priceSupreme || dto.priceNormal,
+                        marginNormal: dto.priceNormal - dto.digiflazz_price,
+                        marginPro: (dto.pricePro || dto.priceNormal) - dto.digiflazz_price,
+                        marginLegend: (dto.priceLegend || dto.priceNormal) - dto.digiflazz_price,
+                        marginSupreme: (dto.priceSupreme || dto.priceNormal) - dto.digiflazz_price,
                         status: dto.status as any
                     }
                 });
 
                 // Audit log for price update
-                if (Number(existingSku.sellingPrice) !== Number(dto.sellingPrice) || Number(existingSku.basePrice) !== Number(dto.digiflazz_price)) {
+                if (Number(existingSku.priceNormal) !== Number(dto.priceNormal) || Number(existingSku.basePrice) !== Number(dto.digiflazz_price)) {
                     await this.prisma.auditLog.create({
                         data: {
                             action: 'DIGIFLAZZ_PRICE_UPDATE',
                             entity: 'ProductSku',
-                            newData: { sellingPrice: dto.sellingPrice, basePrice: dto.digiflazz_price },
-                            oldData: { sellingPrice: Number(existingSku.sellingPrice), basePrice: Number(existingSku.basePrice) },
+                            newData: { priceNormal: dto.priceNormal, basePrice: dto.digiflazz_price },
+                            oldData: { priceNormal: Number(existingSku.priceNormal), basePrice: Number(existingSku.basePrice) },
                         }
                     });
                 }
@@ -221,7 +231,14 @@ export class DigiflazzService {
                         name: dto.product_name,
                         supplierCode: dto.buyer_sku_code,
                         basePrice: dto.digiflazz_price,
-                        sellingPrice: dto.sellingPrice,
+                        priceNormal: dto.priceNormal,
+                        pricePro: dto.pricePro || dto.priceNormal,
+                        priceLegend: dto.priceLegend || dto.priceNormal,
+                        priceSupreme: dto.priceSupreme || dto.priceNormal,
+                        marginNormal: dto.priceNormal - dto.digiflazz_price,
+                        marginPro: (dto.pricePro || dto.priceNormal) - dto.digiflazz_price,
+                        marginLegend: (dto.priceLegend || dto.priceNormal) - dto.digiflazz_price,
+                        marginSupreme: (dto.priceSupreme || dto.priceNormal) - dto.digiflazz_price,
                         status: dto.status as any
                     }
                 });
@@ -256,11 +273,60 @@ export class DigiflazzService {
                 digiflazz_price: p.price,
                 categoryId: p.categoryId,
                 productId: p.productId,
-                sellingPrice: p.sellingPrice,
+                priceNormal: p.sellingPrice || p.priceNormal,
                 status: p.status
             });
             successCount++;
         }
         return { success: true, message: `${successCount} produk berhasil di-sync secara massal.` };
+    }
+
+    /**
+     * Check Order Status from Digiflazz
+     */
+    async checkOrderStatus(orderId: string, supplierRefId: string, buyerSkuCode: string, customerNo: string) {
+        const { username, key, url } = this.getDigiflazzConfig();
+        // Sign: md5(username + apikey + ref_id)
+        const sign = crypto.createHash('md5').update(username + key + supplierRefId).digest('hex');
+
+        const response = await fetch(`${url}/transaction`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username,
+                buyer_sku_code: buyerSkuCode,
+                customer_no: customerNo,
+                ref_id: supplierRefId,
+                sign
+            })
+        });
+
+        const resJson = await response.json() as any;
+        return resJson.data;
+    }
+
+    /**
+     * Check Balance from Digiflazz
+     */
+    async checkBalance() {
+        const { username, key, url } = this.getDigiflazzConfig();
+        // Sign: md5(username + apikey + "depo")
+        const sign = crypto.createHash('md5').update(username + key + 'depo').digest('hex');
+
+        const response = await fetch(`${url}/cek-saldo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                cmd: 'deposit',
+                username,
+                sign
+            })
+        });
+
+        const resJson = await response.json() as any;
+        if (resJson.data) {
+            return Number(resJson.data.deposit || 0);
+        }
+        throw new Error('Gagal ambil saldo: ' + JSON.stringify(resJson));
     }
 }

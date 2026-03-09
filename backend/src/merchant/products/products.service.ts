@@ -6,6 +6,18 @@ export class ProductsService {
     constructor(private prisma: PrismaService) { }
 
     async getProducts(merchantId: string, search?: string, categoryId?: string) {
+        // 1. Get merchant's plan and its mapped tier
+        const merchant = await this.prisma.merchant.findUnique({
+            where: { id: merchantId },
+            select: { plan: true }
+        });
+
+        const mapping = await this.prisma.planTierMapping.findUnique({
+            where: { plan: merchant?.plan || 'FREE' }
+        });
+
+        const activeTier = mapping?.tier || 'NORMAL';
+
         const whereClause: any = {
             status: 'ACTIVE',
         };
@@ -27,7 +39,7 @@ export class ProductsService {
                 skus: {
                     where: { status: 'ACTIVE' },
                     include: {
-                        merchantPrices: {
+                        merchantProductPrices: {
                             where: { merchantId }
                         }
                     }
@@ -36,11 +48,18 @@ export class ProductsService {
             orderBy: { name: 'asc' }
         });
 
-        // Map to make it easier for frontend
+        // 2. Map items using tiered pricing
         return products.map(product => {
             const mappedSkus = product.skus.map(sku => {
-                const merchantPriceDetails = sku.merchantPrices.length > 0 ? sku.merchantPrices[0] : null;
-                const finalPrice = merchantPriceDetails ? Number(merchantPriceDetails.sellingPrice) : Number(sku.sellingPrice);
+                const merchantPriceDetails = sku.merchantProductPrices.length > 0 ? sku.merchantProductPrices[0] : null;
+
+                // Determine base tiered price if no override
+                let defaultTierPrice = Number(sku.priceNormal);
+                if (activeTier === 'PRO') defaultTierPrice = Number(sku.pricePro);
+                if (activeTier === 'LEGEND') defaultTierPrice = Number(sku.priceLegend);
+                if (activeTier === 'SUPREME') defaultTierPrice = Number(sku.priceSupreme);
+
+                const finalPrice = merchantPriceDetails ? Number(merchantPriceDetails.customPrice) : defaultTierPrice;
                 const isActive = merchantPriceDetails ? merchantPriceDetails.isActive : true;
                 const margin = finalPrice - Number(sku.basePrice);
 
@@ -48,11 +67,12 @@ export class ProductsService {
                     id: sku.id,
                     name: sku.name,
                     basePrice: Number(sku.basePrice),
-                    defaultSellingPrice: Number(sku.sellingPrice),
+                    defaultSellingPrice: defaultTierPrice, // This is the modal for the merchant based on their plan
                     merchantSellingPrice: finalPrice,
                     margin: margin,
                     isActive: isActive,
                     hasOverride: !!merchantPriceDetails,
+                    tier: activeTier
                 };
             });
             return {
@@ -65,7 +85,7 @@ export class ProductsService {
         });
     }
 
-    async updateSkuPriceOverrides(merchantId: string, userId: string, skuId: string, sellingPrice: number, isActive: boolean) {
+    async updateSkuPriceOverrides(merchantId: string, userId: string, skuId: string, customPrice: number, isActive: boolean) {
         const sku = await this.prisma.productSku.findUnique({ where: { id: skuId } });
         if (!sku) {
             throw new NotFoundException('SKU tidak ditemukan');
@@ -79,14 +99,14 @@ export class ProductsService {
                 }
             },
             update: {
-                sellingPrice,
+                customPrice,
                 isActive,
                 userId
             },
             create: {
                 merchantId,
                 productSkuId: skuId,
-                sellingPrice,
+                customPrice,
                 isActive,
                 userId
             }
@@ -109,18 +129,18 @@ export class ProductsService {
 
         // 2. Upsert each SKU price to base + percentage
         const operations = skus.map(sku => {
-            // we'll calculate margin based on default Super Admin sellingPrice
-            // if markupPercentage = 10, new price = defaultSellingPrice * 1.10
-            const defaultPrice = Number(sku.sellingPrice);
+            // we'll calculate margin based on default Super Admin priceNormal
+            // if markupPercentage = 10, new price = priceNormal * 1.10
+            const defaultPrice = Number(sku.priceNormal);
             const newPrice = defaultPrice + (defaultPrice * (markupPercentage / 100));
 
             return this.prisma.merchantProductPrice.upsert({
                 where: { merchantId_productSkuId: { merchantId, productSkuId: sku.id } },
-                update: { sellingPrice: newPrice, userId },
+                update: { customPrice: newPrice, userId },
                 create: {
                     merchantId,
                     productSkuId: sku.id,
-                    sellingPrice: newPrice,
+                    customPrice: newPrice,
                     isActive: true,
                     userId
                 }

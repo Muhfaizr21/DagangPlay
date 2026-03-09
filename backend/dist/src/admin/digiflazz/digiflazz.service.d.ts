@@ -22,7 +22,7 @@ export declare class DigiflazzService {
             productName: any;
             categoryId: any;
             categoryName: any;
-            sellingPrice: any;
+            priceNormal: any;
             status: any;
         } | null;
     }[]>;
@@ -34,7 +34,10 @@ export declare class DigiflazzService {
         digiflazz_price: number;
         categoryId?: string;
         productId?: string;
-        sellingPrice: number;
+        priceNormal: number;
+        pricePro?: number;
+        priceLegend?: number;
+        priceSupreme?: number;
         status: string;
     }): Promise<{
         success: boolean;
@@ -45,4 +48,6 @@ export declare class DigiflazzService {
         success: boolean;
         message: string;
     }>;
+    checkOrderStatus(orderId: string, supplierRefId: string, buyerSkuCode: string, customerNo: string): Promise<any>;
+    checkBalance(): Promise<number>;
 }

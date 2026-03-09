@@ -4,7 +4,39 @@ export declare class TransactionsController {
     private readonly transactionsService;
     constructor(transactionsService: TransactionsService);
     getAllTransactions(search?: string, paymentStatus?: string, fulfillmentStatus?: string, merchantId?: string, resellerId?: string, productId?: string, startDate?: string, endDate?: string): Promise<{
-        data: {
+        data: ({
+            user: {
+                id: string;
+                email: string | null;
+                name: string;
+            };
+            merchant: {
+                id: string;
+                name: string;
+            };
+            payment: {
+                id: string;
+                status: import("@prisma/client").$Enums.PaymentStatus;
+                merchantId: string;
+                createdAt: Date;
+                updatedAt: Date;
+                paidAt: Date | null;
+                expiredAt: Date | null;
+                userId: string;
+                method: import("@prisma/client").$Enums.PaymentMethod;
+                orderId: string;
+                amount: number;
+                fee: number;
+                totalAmount: number;
+                tripayReference: string | null;
+                tripayMerchantRef: string | null;
+                tripayPaymentUrl: string | null;
+                tripayQrUrl: string | null;
+                tripayVaNumber: string | null;
+                tripayExpiredTime: Date | null;
+                tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
+            } | null;
+        } & {
             id: string;
             merchantId: string;
             createdAt: Date;
@@ -39,7 +71,7 @@ export declare class TransactionsController {
             userId: string;
             productSkuId: string;
             promoCodeId: string | null;
-        }[];
+        })[];
         meta: {
             totalItems: number;
             totalPages: number;
@@ -48,6 +80,71 @@ export declare class TransactionsController {
         };
     }>;
     getTransactionDetail(id: string): Promise<{
+        fraudDetections: {
+            id: string;
+            createdAt: Date;
+            metadata: import("@prisma/client/runtime/client").JsonValue | null;
+            userId: string;
+            reason: string;
+            orderId: string | null;
+            riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
+            isResolved: boolean;
+            resolvedBy: string | null;
+            resolvedAt: Date | null;
+        }[];
+        user: {
+            id: string;
+            email: string | null;
+            name: string;
+        };
+        merchant: {
+            id: string;
+            name: string;
+        };
+        supplierLogs: {
+            id: string;
+            createdAt: Date;
+            supplierId: string;
+            method: string;
+            endpoint: string;
+            requestBody: import("@prisma/client/runtime/client").JsonValue | null;
+            responseBody: import("@prisma/client/runtime/client").JsonValue | null;
+            httpStatus: number | null;
+            duration: number | null;
+            isSuccess: boolean;
+            orderId: string | null;
+        }[];
+        payment: {
+            id: string;
+            status: import("@prisma/client").$Enums.PaymentStatus;
+            merchantId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            paidAt: Date | null;
+            expiredAt: Date | null;
+            userId: string;
+            method: import("@prisma/client").$Enums.PaymentMethod;
+            orderId: string;
+            amount: number;
+            fee: number;
+            totalAmount: number;
+            tripayReference: string | null;
+            tripayMerchantRef: string | null;
+            tripayPaymentUrl: string | null;
+            tripayQrUrl: string | null;
+            tripayVaNumber: string | null;
+            tripayExpiredTime: Date | null;
+            tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
+        } | null;
+        statusHistories: {
+            id: string;
+            status: string;
+            createdAt: Date;
+            note: string | null;
+            changedBy: string;
+            orderId: string;
+        }[];
+    } & {
         id: string;
         merchantId: string;
         createdAt: Date;

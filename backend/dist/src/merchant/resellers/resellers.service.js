@@ -109,6 +109,7 @@ let ResellersService = class ResellersService {
                 role: 'CUSTOMER',
                 merchantId,
                 status: 'ACTIVE',
+                referralCode: `REF-${Math.random().toString(36).substring(2, 7).toUpperCase()}`
             }
         });
     }

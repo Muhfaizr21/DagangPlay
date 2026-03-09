@@ -8,6 +8,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProductsController = void 0;
 const common_1 = require("@nestjs/common");
@@ -30,6 +33,15 @@ let ProductsController = class ProductsController {
     async syncDigiflazz() {
         return this.productsService.syncDigiflazzProducts();
     }
+    async getAllSkusPricing() {
+        return this.productsService.getAllSkusPricing();
+    }
+    async updateSkuPrice(id, prices) {
+        return this.productsService.updateSkuPrice(id, prices);
+    }
+    async applyCategoryFormula(body) {
+        return this.productsService.applyCategoryFormula(body.categoryId, body.margins);
+    }
 };
 exports.ProductsController = ProductsController;
 __decorate([
@@ -50,6 +62,27 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "syncDigiflazz", null);
+__decorate([
+    (0, common_1.Get)('skus/pricing'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "getAllSkusPricing", null);
+__decorate([
+    (0, common_1.Patch)('skus/:id/price'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "updateSkuPrice", null);
+__decorate([
+    (0, common_1.Post)('skus/bulk-formula'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "applyCategoryFormula", null);
 exports.ProductsController = ProductsController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN_STAFF),

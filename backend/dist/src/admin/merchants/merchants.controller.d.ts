@@ -43,6 +43,34 @@ export declare class MerchantsController {
     getMerchantDetail(id: string): Promise<{
         resellersCount: number;
         omset: number;
+        owner: {
+            id: string;
+            email: string | null;
+            name: string;
+            status: import("@prisma/client").$Enums.UserStatus;
+            isVerified: boolean;
+        };
+        members: ({
+            user: {
+                id: string;
+                email: string | null;
+                name: string;
+                role: import("@prisma/client").$Enums.Role;
+            };
+        } & {
+            id: string;
+            role: import("@prisma/client").$Enums.MerchantMemberRole;
+            merchantId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            permissions: import("@prisma/client/runtime/client").JsonValue | null;
+        })[];
+        _count: {
+            deposits: number;
+            supportTickets: number;
+            orders: number;
+        };
         id: string;
         name: string;
         status: import("@prisma/client").$Enums.MerchantStatus;

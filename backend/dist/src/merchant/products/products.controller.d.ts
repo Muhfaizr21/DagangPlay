@@ -7,9 +7,19 @@ export declare class ProductsController {
     getProducts(req: any, search?: string, categoryId?: string): Promise<{
         id: string;
         name: string;
-        category: any;
+        category: string;
         thumbnail: string | null;
-        skus: any;
+        skus: {
+            id: string;
+            name: string;
+            basePrice: number;
+            defaultSellingPrice: number;
+            merchantSellingPrice: number;
+            margin: number;
+            isActive: boolean;
+            hasOverride: boolean;
+            tier: import("@prisma/client").$Enums.PriceTier;
+        }[];
     }[]>;
     updateSkuPrice(req: any, skuId: string, body: {
         sellingPrice: number;

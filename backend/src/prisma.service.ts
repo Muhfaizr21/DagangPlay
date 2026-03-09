@@ -49,7 +49,6 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     get fraudDetection() { return this.client.fraudDetection; }
     get commission() { return this.client.commission; }
     get mLMCommission() { return this.client.mLMCommission; }
-    get resellerLevel() { return this.client.resellerLevel; }
     get downlineTree() { return this.client.downlineTree; }
     get promoCode() { return this.client.promoCode; }
     get promoUsage() { return this.client.promoUsage; }
@@ -66,8 +65,10 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     get jobQueue() { return this.client.jobQueue; }
     get notificationTemplate() { return this.client.notificationTemplate; }
     get merchantProductPrice() { return this.client.merchantProductPrice; }
-    get resellerProductPrice() { return this.client.resellerProductPrice; }
     get merchantMember() { return this.client.merchantMember; }
+    get tierPricingRule() { return this.client.tierPricingRule; }
+    get planTierMapping() { return this.client.planTierMapping; }
+    get tierPriceHistory() { return this.client.tierPriceHistory; }
     get webhookEndpoint() { return this.client.webhookEndpoint; }
     get paymentChannel() { return this.client.paymentChannel; }
 

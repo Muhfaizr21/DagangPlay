@@ -1,5 +1,5 @@
 import { PrismaService } from '../../prisma.service';
-import { PaymentMethod, PaymentProvider } from '@prisma/client';
+import { PaymentMethod } from '@prisma/client';
 export declare class FinanceService {
     private prisma;
     constructor(prisma: PrismaService);
@@ -19,8 +19,8 @@ export declare class FinanceService {
             tripayReference: string | null;
             tripayMerchantRef: string | null;
             tripayPaymentUrl: string | null;
-            tripayVaNumber: string | null;
             tripayQrUrl: string | null;
+            tripayVaNumber: string | null;
             tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
             receiptImage: string | null;
             confirmedById: string | null;
@@ -36,9 +36,9 @@ export declare class FinanceService {
             processedAt: Date | null;
             userId: string;
             amount: number;
+            fee: number;
             receiptImage: string | null;
             rejectedAt: Date | null;
-            fee: number;
             netAmount: number;
             bankName: string;
             bankAccountNumber: string;
@@ -55,16 +55,16 @@ export declare class FinanceService {
         processedAt: Date | null;
         userId: string;
         amount: number;
+        fee: number;
         receiptImage: string | null;
         rejectedAt: Date | null;
-        fee: number;
         netAmount: number;
         bankName: string;
         bankAccountNumber: string;
         bankAccountName: string;
         processedById: string | null;
     }>;
-    requestDeposit(merchantId: string, ownerId: string, amount: number, method: PaymentMethod, provider: PaymentProvider): Promise<{
+    requestDeposit(merchantId: string, ownerId: string, amount: number, method: PaymentMethod): Promise<{
         id: string;
         status: import("@prisma/client").$Enums.DepositStatus;
         merchantId: string;
@@ -78,8 +78,8 @@ export declare class FinanceService {
         tripayReference: string | null;
         tripayMerchantRef: string | null;
         tripayPaymentUrl: string | null;
-        tripayVaNumber: string | null;
         tripayQrUrl: string | null;
+        tripayVaNumber: string | null;
         tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
         receiptImage: string | null;
         confirmedById: string | null;

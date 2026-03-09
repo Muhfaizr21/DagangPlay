@@ -5,11 +5,21 @@ export declare class ProductsService {
     getProducts(merchantId: string, search?: string, categoryId?: string): Promise<{
         id: string;
         name: string;
-        category: any;
+        category: string;
         thumbnail: string | null;
-        skus: any;
+        skus: {
+            id: string;
+            name: string;
+            basePrice: number;
+            defaultSellingPrice: number;
+            merchantSellingPrice: number;
+            margin: number;
+            isActive: boolean;
+            hasOverride: boolean;
+            tier: import("@prisma/client").$Enums.PriceTier;
+        }[];
     }[]>;
-    updateSkuPriceOverrides(merchantId: string, userId: string, skuId: string, sellingPrice: number, isActive: boolean): Promise<{
+    updateSkuPriceOverrides(merchantId: string, userId: string, skuId: string, customPrice: number, isActive: boolean): Promise<{
         id: string;
         merchantId: string;
         createdAt: Date;

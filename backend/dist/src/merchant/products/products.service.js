@@ -18,6 +18,14 @@ let ProductsService = class ProductsService {
         this.prisma = prisma;
     }
     async getProducts(merchantId, search, categoryId) {
+        const merchant = await this.prisma.merchant.findUnique({
+            where: { id: merchantId },
+            select: { plan: true }
+        });
+        const mapping = await this.prisma.planTierMapping.findUnique({
+            where: { plan: merchant?.plan || 'FREE' }
+        });
+        const activeTier = mapping?.tier || 'NORMAL';
         const whereClause = {
             status: 'ACTIVE',
         };
@@ -36,7 +44,7 @@ let ProductsService = class ProductsService {
                 skus: {
                     where: { status: 'ACTIVE' },
                     include: {
-                        merchantPrices: {
+                        merchantProductPrices: {
                             where: { merchantId }
                         }
                     }
@@ -46,19 +54,27 @@ let ProductsService = class ProductsService {
         });
         return products.map(product => {
             const mappedSkus = product.skus.map(sku => {
-                const merchantPriceDetails = sku.merchantPrices.length > 0 ? sku.merchantPrices[0] : null;
-                const finalPrice = merchantPriceDetails ? Number(merchantPriceDetails.sellingPrice) : Number(sku.sellingPrice);
+                const merchantPriceDetails = sku.merchantProductPrices.length > 0 ? sku.merchantProductPrices[0] : null;
+                let defaultTierPrice = Number(sku.priceNormal);
+                if (activeTier === 'PRO')
+                    defaultTierPrice = Number(sku.pricePro);
+                if (activeTier === 'LEGEND')
+                    defaultTierPrice = Number(sku.priceLegend);
+                if (activeTier === 'SUPREME')
+                    defaultTierPrice = Number(sku.priceSupreme);
+                const finalPrice = merchantPriceDetails ? Number(merchantPriceDetails.customPrice) : defaultTierPrice;
                 const isActive = merchantPriceDetails ? merchantPriceDetails.isActive : true;
                 const margin = finalPrice - Number(sku.basePrice);
                 return {
                     id: sku.id,
                     name: sku.name,
                     basePrice: Number(sku.basePrice),
-                    defaultSellingPrice: Number(sku.sellingPrice),
+                    defaultSellingPrice: defaultTierPrice,
                     merchantSellingPrice: finalPrice,
                     margin: margin,
                     isActive: isActive,
                     hasOverride: !!merchantPriceDetails,
+                    tier: activeTier
                 };
             });
             return {
@@ -70,7 +86,7 @@ let ProductsService = class ProductsService {
             };
         });
     }
-    async updateSkuPriceOverrides(merchantId, userId, skuId, sellingPrice, isActive) {
+    async updateSkuPriceOverrides(merchantId, userId, skuId, customPrice, isActive) {
         const sku = await this.prisma.productSku.findUnique({ where: { id: skuId } });
         if (!sku) {
             throw new common_1.NotFoundException('SKU tidak ditemukan');
@@ -83,14 +99,14 @@ let ProductsService = class ProductsService {
                 }
             },
             update: {
-                sellingPrice,
+                customPrice,
                 isActive,
                 userId
             },
             create: {
                 merchantId,
                 productSkuId: skuId,
-                sellingPrice,
+                customPrice,
                 isActive,
                 userId
             }
@@ -107,15 +123,15 @@ let ProductsService = class ProductsService {
         });
         const skus = products.flatMap(p => p.skus);
         const operations = skus.map(sku => {
-            const defaultPrice = Number(sku.sellingPrice);
+            const defaultPrice = Number(sku.priceNormal);
             const newPrice = defaultPrice + (defaultPrice * (markupPercentage / 100));
             return this.prisma.merchantProductPrice.upsert({
                 where: { merchantId_productSkuId: { merchantId, productSkuId: sku.id } },
-                update: { sellingPrice: newPrice, userId },
+                update: { customPrice: newPrice, userId },
                 create: {
                     merchantId,
                     productSkuId: sku.id,
-                    sellingPrice: newPrice,
+                    customPrice: newPrice,
                     isActive: true,
                     userId
                 }

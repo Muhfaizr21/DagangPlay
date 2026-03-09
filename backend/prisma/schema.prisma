@@ -278,6 +278,7 @@ enum FraudRiskLevel {
 enum InvoiceStatus {
   UNPAID
   PAID
+  PENDING
   OVERDUE
   CANCELLED
 }
@@ -1333,6 +1334,7 @@ model Invoice {
   tripayResponse   Json?
 
   paidAt    DateTime?
+  proofUrl  String?
   notes     String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

@@ -19,14 +19,17 @@ import {
     Loader2,
     ToggleLeft,
     ToggleRight,
+    TrendingUp,
+    ArrowRight,
     Search,
     Server,
     CreditCard,
-    Lock
+    Lock,
+    ArrowUpRight
 } from 'lucide-react';
 
 const fetcher = (url: string) => {
-    const token = localStorage.getItem('admin_token');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
     return axios.get(url, {
         headers: {
             Authorization: `Bearer ${token}`
@@ -35,7 +38,7 @@ const fetcher = (url: string) => {
 };
 
 export default function SettingsManagementPage() {
-    const [activeTab, setActiveTab] = useState<'GLOBAL' | 'STAFF' | 'JOBS'>('GLOBAL');
+    const [activeTab, setActiveTab] = useState<'GLOBAL' | 'STAFF' | 'JOBS' | 'PLANS'>('GLOBAL');
     const [toastMsg, setToastMsg] = useState<{ title: string; desc: string; type: 'success' | 'error' } | null>(null);
 
     // ===================================
@@ -139,6 +142,24 @@ export default function SettingsManagementPage() {
         }
     };
 
+    // ===================================
+    // PLAN MAPPING STATE
+    // ===================================
+    const { data: planMappings, mutate: mutatePlans } = useSWR('http://localhost:3001/admin/plan-tier-mappings', fetcher);
+
+    const handleUpdatePlanMapping = async (plan: string, tier: string) => {
+        try {
+            const token = localStorage.getItem('admin_token');
+            await axios.post('http://localhost:3001/admin/plan-tier-mappings', { plan, tier }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            mutatePlans();
+            showToast('Tersimpan', `Mapping plan ${plan} diperbarui ke ${tier}.`);
+        } catch (err) {
+            showToast('Gagal', 'Gagal memperbarui mapping plan.', 'error');
+        }
+    };
+
     return (
         <AdminLayout>
             {toastMsg && (
@@ -162,6 +183,9 @@ export default function SettingsManagementPage() {
                     <button onClick={() => setActiveTab('GLOBAL')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition whitespace-nowrap ${activeTab === 'GLOBAL' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
                         <Settings className="w-4 h-4" /> Global Config
                     </button>
+                    <button onClick={() => setActiveTab('PLANS')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition whitespace-nowrap ${activeTab === 'PLANS' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                        <TrendingUp className="w-4 h-4" /> Plan Tier Mapping
+                    </button>
                     <button onClick={() => setActiveTab('STAFF')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition whitespace-nowrap ${activeTab === 'STAFF' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
                         <Shield className="w-4 h-4" /> Admin Roles
                     </button>
@@ -170,6 +194,68 @@ export default function SettingsManagementPage() {
                     </button>
                 </div>
             </div>
+
+            {/* TAB: PLAN MAPPING */}
+            {activeTab === 'PLANS' && (
+                <div className="space-y-6 animate-in fade-in">
+                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden p-6">
+                        <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
+                            <div>
+                                <h2 className="text-lg font-black text-slate-800 tracking-tight tracking-tight">Mapping Plan ke Tier Harga</h2>
+                                <p className="text-xs text-slate-500 mt-0.5">Tentukan tier harga mana yang didapat oleh masing-masing Merchant Plan.</p>
+                            </div>
+                            <button
+                                onClick={async () => {
+                                    const token = localStorage.getItem('admin_token');
+                                    await axios.post('http://localhost:3001/admin/plan-tier-mappings/sync', {}, { headers: { Authorization: `Bearer ${token}` } });
+                                    mutatePlans();
+                                    showToast('Selesai', 'Mapping default telah dipulihkan.');
+                                }}
+                                className="px-4 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-100"
+                            >
+                                Reset to Default
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {['FREE', 'PRO', 'LEGEND', 'SUPREME'].map((plan) => {
+                                const currentMapping = planMappings?.find((m: any) => m.plan === plan);
+                                return (
+                                    <div key={plan} className="p-5 bg-slate-50/50 border border-slate-200 rounded-2xl flex items-center justify-between">
+                                        <div>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Merchant Plan</p>
+                                            <p className="text-lg font-black text-slate-800">{plan}</p>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <ArrowRight className="w-4 h-4 text-slate-300" />
+                                            <select
+                                                value={currentMapping?.tier || 'NORMAL'}
+                                                onChange={(e) => handleUpdatePlanMapping(plan, e.target.value)}
+                                                className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold shadow-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                                            >
+                                                <option value="NORMAL">NORMAL TIER</option>
+                                                <option value="PRO">PRO TIER</option>
+                                                <option value="LEGEND">LEGEND TIER</option>
+                                                <option value="SUPREME">SUPREME TIER</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 flex gap-4">
+                        <AlertTriangle className="w-6 h-6 text-amber-600 shrink-0" />
+                        <div>
+                            <p className="text-sm font-bold text-amber-900">Penting: Perubahan Tier Bersifat Instant</p>
+                            <p className="text-[13px] text-amber-800 mt-1 opacity-90">
+                                Jika Anda mengubah mapping plan, maka seluruh merchant dengan plan tersebut akan langsung mendapatkan harga baru saat melakukan transaksi atau melihat katalog. Gunakan fitur ini untuk promo sementara atau penyesuaian model bisnis.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* TAB 1: GLOBAL SETTINGS */}
             {activeTab === 'GLOBAL' && (

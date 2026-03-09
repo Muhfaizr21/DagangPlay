@@ -1,8 +1,12 @@
 import { PrismaService } from '../../prisma.service';
+import { DigiflazzService } from '../digiflazz/digiflazz.service';
 export declare class WorkersService {
     private prisma;
+    private digiflazz;
     private readonly logger;
-    constructor(prisma: PrismaService);
+    constructor(prisma: PrismaService, digiflazz: DigiflazzService);
     handleJobQueue(): Promise<void>;
     checkSubscriptions(): Promise<void>;
+    syncPendingOrders(): Promise<void>;
+    syncSupplierBalance(): Promise<void>;
 }

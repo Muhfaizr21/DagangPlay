@@ -143,7 +143,7 @@ let DigiflazzService = class DigiflazzService {
                         productName: localSku.product.name,
                         categoryId: localSku.product.categoryId,
                         categoryName: localSku.product.category?.name,
-                        sellingPrice: localSku.sellingPrice,
+                        priceNormal: localSku.priceNormal,
                         status: localSku.status,
                     } : null
                 };
@@ -159,7 +159,7 @@ let DigiflazzService = class DigiflazzService {
             const supplier = await this.prisma.supplier.upsert({
                 where: { code: 'DIGIFLAZZ' },
                 update: {},
-                create: { name: 'Digiflazz', code: 'DIGIFLAZZ', status: 'ACTIVE' }
+                create: { name: 'Digiflazz', code: 'DIGIFLAZZ', status: 'ACTIVE', apiUrl: 'https://api.digiflazz.com/v1', apiKey: 'DUMMY_KEY', apiSecret: 'DUMMY_SECRET' }
             });
             let categoryId = dto.categoryId;
             const brandSlug = dto.brand.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -192,17 +192,24 @@ let DigiflazzService = class DigiflazzService {
                         productId: productId,
                         name: dto.product_name,
                         basePrice: dto.digiflazz_price,
-                        sellingPrice: dto.sellingPrice,
+                        priceNormal: dto.priceNormal,
+                        pricePro: dto.pricePro || dto.priceNormal,
+                        priceLegend: dto.priceLegend || dto.priceNormal,
+                        priceSupreme: dto.priceSupreme || dto.priceNormal,
+                        marginNormal: dto.priceNormal - dto.digiflazz_price,
+                        marginPro: (dto.pricePro || dto.priceNormal) - dto.digiflazz_price,
+                        marginLegend: (dto.priceLegend || dto.priceNormal) - dto.digiflazz_price,
+                        marginSupreme: (dto.priceSupreme || dto.priceNormal) - dto.digiflazz_price,
                         status: dto.status
                     }
                 });
-                if (Number(existingSku.sellingPrice) !== Number(dto.sellingPrice) || Number(existingSku.basePrice) !== Number(dto.digiflazz_price)) {
+                if (Number(existingSku.priceNormal) !== Number(dto.priceNormal) || Number(existingSku.basePrice) !== Number(dto.digiflazz_price)) {
                     await this.prisma.auditLog.create({
                         data: {
                             action: 'DIGIFLAZZ_PRICE_UPDATE',
                             entity: 'ProductSku',
-                            newData: { sellingPrice: dto.sellingPrice, basePrice: dto.digiflazz_price },
-                            oldData: { sellingPrice: Number(existingSku.sellingPrice), basePrice: Number(existingSku.basePrice) },
+                            newData: { priceNormal: dto.priceNormal, basePrice: dto.digiflazz_price },
+                            oldData: { priceNormal: Number(existingSku.priceNormal), basePrice: Number(existingSku.basePrice) },
                         }
                     });
                 }
@@ -215,7 +222,14 @@ let DigiflazzService = class DigiflazzService {
                         name: dto.product_name,
                         supplierCode: dto.buyer_sku_code,
                         basePrice: dto.digiflazz_price,
-                        sellingPrice: dto.sellingPrice,
+                        priceNormal: dto.priceNormal,
+                        pricePro: dto.pricePro || dto.priceNormal,
+                        priceLegend: dto.priceLegend || dto.priceNormal,
+                        priceSupreme: dto.priceSupreme || dto.priceNormal,
+                        marginNormal: dto.priceNormal - dto.digiflazz_price,
+                        marginPro: (dto.pricePro || dto.priceNormal) - dto.digiflazz_price,
+                        marginLegend: (dto.priceLegend || dto.priceNormal) - dto.digiflazz_price,
+                        marginSupreme: (dto.priceSupreme || dto.priceNormal) - dto.digiflazz_price,
                         status: dto.status
                     }
                 });
@@ -245,12 +259,47 @@ let DigiflazzService = class DigiflazzService {
                 digiflazz_price: p.price,
                 categoryId: p.categoryId,
                 productId: p.productId,
-                sellingPrice: p.sellingPrice,
+                priceNormal: p.sellingPrice || p.priceNormal,
                 status: p.status
             });
             successCount++;
         }
         return { success: true, message: `${successCount} produk berhasil di-sync secara massal.` };
+    }
+    async checkOrderStatus(orderId, supplierRefId, buyerSkuCode, customerNo) {
+        const { username, key, url } = this.getDigiflazzConfig();
+        const sign = crypto.createHash('md5').update(username + key + supplierRefId).digest('hex');
+        const response = await fetch(`${url}/transaction`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username,
+                buyer_sku_code: buyerSkuCode,
+                customer_no: customerNo,
+                ref_id: supplierRefId,
+                sign
+            })
+        });
+        const resJson = await response.json();
+        return resJson.data;
+    }
+    async checkBalance() {
+        const { username, key, url } = this.getDigiflazzConfig();
+        const sign = crypto.createHash('md5').update(username + key + 'depo').digest('hex');
+        const response = await fetch(`${url}/cek-saldo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                cmd: 'deposit',
+                username,
+                sign
+            })
+        });
+        const resJson = await response.json();
+        if (resJson.data) {
+            return Number(resJson.data.deposit || 0);
+        }
+        throw new Error('Gagal ambil saldo: ' + JSON.stringify(resJson));
     }
 };
 exports.DigiflazzService = DigiflazzService;

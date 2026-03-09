@@ -28,8 +28,7 @@ export class OrdersService {
         const orders = await this.prisma.order.findMany({
             where: whereClause,
             include: {
-                customer: { select: { id: true, name: true, email: true } },
-                reseller: { select: { id: true, name: true, email: true } },
+                user: { select: { id: true, name: true, email: true } },
                 productSku: {
                     select: {
                         name: true,
@@ -58,8 +57,7 @@ export class OrdersService {
         const order = await this.prisma.order.findFirst({
             where: { id: orderId, merchantId },
             include: {
-                customer: { select: { id: true, name: true, email: true } },
-                reseller: { select: { id: true, name: true, email: true } },
+                user: { select: { id: true, name: true, email: true } },
                 productSku: {
                     select: {
                         name: true,
@@ -96,6 +94,7 @@ export class OrdersService {
                 orderId,
                 status: 'PROCESSING',
                 note: 'Order retried manually by Merchant',
+                changedBy: 'MERCHANT'
             }
         });
 
@@ -122,13 +121,14 @@ export class OrdersService {
                 data: {
                     orderId,
                     status: 'FAILED',
-                    note: `Refunded manually: ${reason}`
+                    note: `Refunded manually: ${reason}`,
+                    changedBy: 'MERCHANT'
                 }
             });
 
             // Add balance back if it was paid
             if (order.paymentStatus === 'PAID') {
-                const buyerId = order.resellerId || order.userId;
+                const buyerId = order.userId;
                 if (buyerId) {
                     await tx.user.update({
                         where: { id: buyerId },

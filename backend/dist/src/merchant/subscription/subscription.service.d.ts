@@ -15,13 +15,14 @@ export declare class SubscriptionService {
             plan: import("@prisma/client").$Enums.MerchantPlan;
             paidAt: Date | null;
             amount: number;
+            totalAmount: number;
             tripayReference: string | null;
             tripayPaymentUrl: string | null;
             tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
             invoiceNo: string;
             tax: number;
-            totalAmount: number;
             dueDate: Date;
+            proofUrl: string | null;
             notes: string | null;
         } | null;
     }>;
@@ -34,13 +35,14 @@ export declare class SubscriptionService {
         plan: import("@prisma/client").$Enums.MerchantPlan;
         paidAt: Date | null;
         amount: number;
+        totalAmount: number;
         tripayReference: string | null;
         tripayPaymentUrl: string | null;
         tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
         invoiceNo: string;
         tax: number;
-        totalAmount: number;
         dueDate: Date;
+        proofUrl: string | null;
         notes: string | null;
     }[]>;
     createInvoice(merchantId: string, data: any): Promise<{
@@ -52,13 +54,14 @@ export declare class SubscriptionService {
         plan: import("@prisma/client").$Enums.MerchantPlan;
         paidAt: Date | null;
         amount: number;
+        totalAmount: number;
         tripayReference: string | null;
         tripayPaymentUrl: string | null;
         tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
         invoiceNo: string;
         tax: number;
-        totalAmount: number;
         dueDate: Date;
+        proofUrl: string | null;
         notes: string | null;
     }>;
     uploadProof(merchantId: string, invoiceId: string, proofUrl: string): Promise<{
@@ -70,13 +73,14 @@ export declare class SubscriptionService {
         plan: import("@prisma/client").$Enums.MerchantPlan;
         paidAt: Date | null;
         amount: number;
+        totalAmount: number;
         tripayReference: string | null;
         tripayPaymentUrl: string | null;
         tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
         invoiceNo: string;
         tax: number;
-        totalAmount: number;
         dueDate: Date;
+        proofUrl: string | null;
         notes: string | null;
     }>;
 }

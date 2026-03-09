@@ -28,6 +28,6 @@ export class FinanceController {
     async requestDeposit(@Request() req, @Body() body: any) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
         if (!merchant) throw new Error('Merchant not found');
-        return this.financeService.requestDeposit(merchant.id, req.user.id, body.amount, body.method, body.provider);
+        return this.financeService.requestDeposit(merchant.id, req.user.id, body.amount, body.method);
     }
 }

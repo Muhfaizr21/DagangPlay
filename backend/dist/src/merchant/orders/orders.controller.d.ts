@@ -5,7 +5,20 @@ export declare class OrdersController {
     private prisma;
     constructor(ordersService: OrdersService, prisma: PrismaService);
     getOrders(req: any, filters: any): Promise<{
-        orders: {
+        orders: ({
+            user: {
+                id: string;
+                email: string | null;
+                name: string;
+            };
+            productSku: {
+                name: string;
+                product: {
+                    name: string;
+                    thumbnail: string | null;
+                };
+            };
+        } & {
             id: string;
             merchantId: string;
             createdAt: Date;
@@ -40,13 +53,35 @@ export declare class OrdersController {
             userId: string;
             productSkuId: string;
             promoCodeId: string | null;
-        }[];
+        })[];
         stats: {
             totalCount: number;
             successRate: string | number;
         };
     }>;
     getOrderDetails(req: any, orderId: string): Promise<{
+        user: {
+            id: string;
+            email: string | null;
+            name: string;
+        };
+        productSku: {
+            name: string;
+            product: {
+                name: string;
+                categoryId: string;
+                thumbnail: string | null;
+            };
+        };
+        statusHistories: {
+            id: string;
+            status: string;
+            createdAt: Date;
+            note: string | null;
+            changedBy: string;
+            orderId: string;
+        }[];
+    } & {
         id: string;
         merchantId: string;
         createdAt: Date;

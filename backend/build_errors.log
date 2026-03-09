@@ -1,0 +1,42 @@
+
+> backend@0.0.1 build
+> nest build
+
+[96msrc/admin/digiflazz/digiflazz.service.ts[0m:[93m161[0m:[93m17[0m - [91merror[0m[90m TS2322: [0mType '{ name: string; code: "DIGIFLAZZ"; status: "ACTIVE"; }' is not assignable to type '(Without<SupplierCreateInput, SupplierUncheckedCreateInput> & SupplierUncheckedCreateInput) | (Without<...> & SupplierCreateInput)'.
+  Type '{ name: string; code: "DIGIFLAZZ"; status: "ACTIVE"; }' is not assignable to type 'Without<SupplierUncheckedCreateInput, SupplierCreateInput> & SupplierCreateInput'.
+    Type '{ name: string; code: "DIGIFLAZZ"; status: "ACTIVE"; }' is missing the following properties from type 'SupplierCreateInput': apiUrl, apiKey, apiSecret
+
+[7m161[0m                 create: { name: 'Digiflazz', code: 'DIGIFLAZZ', status: 'ACTIVE' }
+[7m   [0m [91m                ~~~~~~[0m
+
+  [96mnode_modules/.prisma/client/index.d.ts[0m:[93m22371[0m:[93m5[0m
+    [7m22371[0m     create: XOR<SupplierCreateInput, SupplierUncheckedCreateInput>
+    [7m     [0m [96m    ~~~~~~[0m
+    The expected type comes from property 'create' which is declared here on type '{ select?: SupplierSelect<DefaultArgs> | null | undefined; omit?: SupplierOmit<DefaultArgs> | null | undefined; include?: SupplierInclude<...> | ... 1 more ... | undefined; where: SupplierWhereUniqueInput; create: (Without<...> & SupplierUncheckedCreateInput) | (Without<...> & SupplierCreateInput); update: (Without<...'
+[96msrc/admin/merchants/merchants.service.ts[0m:[93m102[0m:[93m67[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'tickets' does not exist in type 'MerchantCountOutputTypeSelect<DefaultArgs>'.
+
+[7m102[0m                 _count: { select: { orders: true, deposits: true, tickets: true } }
+[7m   [0m [91m                                                                  ~~~~~~~[0m
+[96msrc/admin/products/products.service.ts[0m:[93m71[0m:[93m17[0m - [91merror[0m[90m TS2322: [0mType '{ name: string; code: "DIGIFLAZZ"; status: "ACTIVE"; }' is not assignable to type '(Without<SupplierCreateInput, SupplierUncheckedCreateInput> & SupplierUncheckedCreateInput) | (Without<...> & SupplierCreateInput)'.
+  Type '{ name: string; code: "DIGIFLAZZ"; status: "ACTIVE"; }' is not assignable to type 'Without<SupplierUncheckedCreateInput, SupplierCreateInput> & SupplierCreateInput'.
+    Type '{ name: string; code: "DIGIFLAZZ"; status: "ACTIVE"; }' is missing the following properties from type 'SupplierCreateInput': apiUrl, apiKey, apiSecret
+
+[7m71[0m                 create: { name: 'Digiflazz', code: 'DIGIFLAZZ', status: 'ACTIVE' }
+[7m  [0m [91m                ~~~~~~[0m
+
+  [96mnode_modules/.prisma/client/index.d.ts[0m:[93m22371[0m:[93m5[0m
+    [7m22371[0m     create: XOR<SupplierCreateInput, SupplierUncheckedCreateInput>
+    [7m     [0m [96m    ~~~~~~[0m
+    The expected type comes from property 'create' which is declared here on type '{ select?: SupplierSelect<DefaultArgs> | null | undefined; omit?: SupplierOmit<DefaultArgs> | null | undefined; include?: SupplierInclude<...> | ... 1 more ... | undefined; where: SupplierWhereUniqueInput; create: (Without<...> & SupplierUncheckedCreateInput) | (Without<...> & SupplierCreateInput); update: (Without<...'
+[96msrc/admin/products/products.service.ts[0m:[93m133[0m:[93m29[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'sellingPrice' does not exist in type 'Without<ProductSkuCreateInput, ProductSkuUncheckedCreateInput> & ProductSkuUncheckedCreateInput'.
+
+[7m133[0m                             sellingPrice,
+[7m   [0m [91m                            ~~~~~~~~~~~~[0m
+
+  [96mnode_modules/.prisma/client/index.d.ts[0m:[93m28907[0m:[93m5[0m
+    [7m28907[0m     data: XOR<ProductSkuCreateInput, ProductSkuUncheckedCreateInput>
+    [7m     [0m [96m    ~~~~[0m
+    The expected type comes from property 'data' which is declared here on type '{ select?: ProductSkuSelect<DefaultArgs> | null | undefined; omit?: ProductSkuOmit<DefaultArgs> | null | undefined; include?: ProductSkuInclude<...> | ... 1 more ... | undefined; data: (Without<...> & ProductSkuUncheckedCreateInput) | (Without<...> & ProductSkuCreateInput); }'
+
+Found 4 error(s).
+
