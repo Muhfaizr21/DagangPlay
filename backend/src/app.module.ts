@@ -18,9 +18,10 @@ import { SettingsModule } from './admin/settings/settings.module';
 import { AuthModule } from './auth/auth.module';
 import { UploadModule } from './admin/upload/upload.module';
 import { WorkersModule } from './admin/workers/workers.module';
+import { MerchantModule } from './merchant/merchant.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), DashboardModule, MerchantsModule, ProductsModule, SuppliersModule, UsersModule, TransactionsModule, FinanceModule, CommissionsModule, PromosModule, SubscriptionsModule, ContentModule, SecurityModule, TicketsModule, SettingsModule, AuthModule, UploadModule, WorkersModule],
+  imports: [ScheduleModule.forRoot(), DashboardModule, MerchantsModule, ProductsModule, SuppliersModule, UsersModule, TransactionsModule, FinanceModule, CommissionsModule, PromosModule, SubscriptionsModule, ContentModule, SecurityModule, TicketsModule, SettingsModule, AuthModule, UploadModule, WorkersModule, MerchantModule],
   controllers: [],
   providers: [PrismaService],
 })

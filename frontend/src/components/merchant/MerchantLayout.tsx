@@ -14,16 +14,23 @@ import {
     Zap,
     CreditCard,
     Ticket,
-    Activity
+    Activity,
+    Tag,
+    Palette
 } from 'lucide-react';
 
 const MENU_ITEMS = [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/merchant' },
     { label: 'Katalog Produk', icon: Package, href: '/merchant/products' },
     { label: 'Pesanan & Transaksi', icon: ShoppingCart, href: '/merchant/orders' },
-    { label: 'Kelola Reseller', icon: Users, href: '/merchant/resellers' },
+    { label: 'Laporan & Analytics', icon: Activity, href: '/merchant/reports' },
     { label: 'Keuangan & Saldo', icon: CreditCard, href: '/merchant/finance' },
+    { label: 'Promo & Voucher', icon: Tag, href: '/merchant/promos' },
+    { label: 'Tampilan Toko', icon: Palette, href: '/merchant/content' },
+    { label: 'Kelola Reseller', icon: Users, href: '/merchant/resellers' },
+    { label: 'Tim / Staff', icon: Users, href: '/merchant/team' },
     { label: 'Support & Tiket', icon: Ticket, href: '/merchant/support' },
+    { label: 'Subscription & Billing', icon: Zap, href: '/merchant/subscription' },
     { label: 'Pengaturan Toko', icon: Settings, href: '/merchant/settings' },
 ];
 
@@ -107,8 +114,8 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
                                 key={item.label}
                                 onClick={() => router.push(item.href)}
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-                                        ? 'bg-indigo-50 text-indigo-700 font-bold border border-indigo-100/50 shadow-sm'
-                                        : 'text-slate-600 hover:bg-slate-50/80 hover:text-slate-900 font-medium'
+                                    ? 'bg-indigo-50 text-indigo-700 font-bold border border-indigo-100/50 shadow-sm'
+                                    : 'text-slate-600 hover:bg-slate-50/80 hover:text-slate-900 font-medium'
                                     }`}
                             >
                                 <Icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} />

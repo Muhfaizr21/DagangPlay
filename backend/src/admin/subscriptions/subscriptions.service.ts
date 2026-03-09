@@ -136,9 +136,9 @@ export class SubscriptionsService {
             // Default features if not found
             return {
                 FREE: { maxProducts: 10, customDomain: false, multiUser: false },
-                STARTER: { maxProducts: 50, customDomain: true, multiUser: false },
-                PROFESSIONAL: { maxProducts: 500, customDomain: true, multiUser: true },
-                ENTERPRISE: { maxProducts: 99999, customDomain: true, multiUser: true, whiteLabel: true }
+                PRO: { maxProducts: 50, customDomain: true, multiUser: false, price: 74917 },
+                LEGEND: { maxProducts: 500, customDomain: true, multiUser: true, price: 82250 },
+                SUPREME: { maxProducts: 99999, customDomain: true, multiUser: true, whiteLabel: true, price: 99917 }
             };
         }
         return JSON.parse(setting.value);

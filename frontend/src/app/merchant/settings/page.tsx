@@ -1,0 +1,184 @@
+"use client";
+
+import React, { useState } from 'react';
+import MerchantLayout from '../../../components/merchant/MerchantLayout';
+import useSWR from 'swr';
+import axios from 'axios';
+import { Settings, Globe, CreditCard, Webhook, Save, ShieldAlert } from 'lucide-react';
+
+const fetcher = (url: string) => {
+    const token = localStorage.getItem('admin_token');
+    return axios.get(url, { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data);
+};
+
+export default function MerchantSettingsPage() {
+    const [activeTab, setActiveTab] = useState('profile');
+
+    // Data Fetching
+    const { data: settings, mutate: mutateSettings } = useSWR('http://localhost:3001/merchant/settings', fetcher);
+    // const { data: channels, mutate: mutateChannels } = useSWR('http://localhost:3001/merchant/settings/payment-channels', fetcher);
+    // const { data: webhooks, mutate: mutateWebhooks } = useSWR('http://localhost:3001/merchant/settings/webhooks', fetcher);
+
+    // Form States
+    const [profileForm, setProfileForm] = useState({ name: '', tagline: '', description: '', contactEmail: '', contactPhone: '', contactWhatsapp: '', address: '' });
+    const [domainForm, setDomainForm] = useState({ domain: '' });
+
+    // Populate on load
+    React.useEffect(() => {
+        if (settings) {
+            setProfileForm({
+                name: settings.name || '',
+                tagline: settings.tagline || '',
+                description: settings.description || '',
+                contactEmail: settings.contactEmail || '',
+                contactPhone: settings.contactPhone || '',
+                contactWhatsapp: settings.contactWhatsapp || '',
+                address: settings.address || '',
+            });
+            setDomainForm({ domain: settings.domain || '' });
+        }
+    }, [settings]);
+
+    const handleSaveProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem('admin_token');
+            await axios.put('http://localhost:3001/merchant/settings/profile', profileForm, { headers: { Authorization: `Bearer ${token}` } });
+            alert('Profil berhasil diperbarui!');
+            mutateSettings();
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Gagal menyimpan profil');
+        }
+    };
+
+    const handleSaveDomain = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem('admin_token');
+            await axios.put('http://localhost:3001/merchant/settings/domain', domainForm, { headers: { Authorization: `Bearer ${token}` } });
+            alert('Domain berhasil diperbarui! Pastikan Anda sudah setting CNAME/A Record di DNS provider Anda.');
+            mutateSettings();
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Gagal menyimpan domain');
+        }
+    };
+
+    return (
+        <MerchantLayout>
+            <div className="mb-6">
+                <h1 className="text-2xl font-bold text-slate-800">Pengaturan Toko</h1>
+                <p className="text-slate-500 text-sm mt-1">Atur profil, domain, pembayaran, dan integrasi webhook toko Anda.</p>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-6">
+                {/* Sidebar Navigation */}
+                <div className="w-full md:w-64 flex-shrink-0">
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-3 flex flex-col gap-1">
+                        <button onClick={() => setActiveTab('profile')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'profile' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
+                            <Settings className="w-4 h-4" /> Profil & Kontak
+                        </button>
+                        <button onClick={() => setActiveTab('domain')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'domain' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
+                            <Globe className="w-4 h-4" /> Custom Domain
+                        </button>
+                        <button onClick={() => setActiveTab('payment')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'payment' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
+                            <CreditCard className="w-4 h-4" /> Metode Pembayaran
+                        </button>
+                        <button onClick={() => setActiveTab('webhook')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'webhook' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
+                            <Webhook className="w-4 h-4" /> Webhook & API
+                        </button>
+                    </div>
+                </div>
+
+                {/* Content Area */}
+                <div className="flex-grow">
+                    {/* Profil & Kontak */}
+                    {activeTab === 'profile' && (
+                        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+                            <h3 className="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Profil Bisnis & Kontak</h3>
+                            <form onSubmit={handleSaveProfile} className="space-y-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <div className="col-span-1 md:col-span-2">
+                                        <label className="block text-[12px] font-bold text-slate-500 mb-2">Nama Toko</label>
+                                        <input type="text" value={profileForm.name} onChange={e => setProfileForm({ ...profileForm, name: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[12px] font-bold text-slate-500 mb-2">Tagline (Opsional)</label>
+                                        <input type="text" value={profileForm.tagline} onChange={e => setProfileForm({ ...profileForm, tagline: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[12px] font-bold text-slate-500 mb-2">Email Kontak</label>
+                                        <input type="email" value={profileForm.contactEmail} onChange={e => setProfileForm({ ...profileForm, contactEmail: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[12px] font-bold text-slate-500 mb-2">Nomor Telepon</label>
+                                        <input type="text" value={profileForm.contactPhone} onChange={e => setProfileForm({ ...profileForm, contactPhone: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[12px] font-bold text-slate-500 mb-2">Nomor WhatsApp CS</label>
+                                        <input type="text" value={profileForm.contactWhatsapp} onChange={e => setProfileForm({ ...profileForm, contactWhatsapp: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all" placeholder="628..." />
+                                    </div>
+                                    <div className="col-span-1 md:col-span-2">
+                                        <label className="block text-[12px] font-bold text-slate-500 mb-2">Deskripsi Toko</label>
+                                        <textarea value={profileForm.description} onChange={e => setProfileForm({ ...profileForm, description: e.target.value })} rows={3} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all"></textarea>
+                                    </div>
+                                    <div className="col-span-1 md:col-span-2">
+                                        <label className="block text-[12px] font-bold text-slate-500 mb-2">Alamat Fisik (Opsional)</label>
+                                        <textarea value={profileForm.address} onChange={e => setProfileForm({ ...profileForm, address: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all"></textarea>
+                                    </div>
+                                </div>
+                                <div className="flex justify-end pt-4">
+                                    <button type="submit" className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-md flex items-center gap-2">
+                                        <Save className="w-4 h-4" /> Simpan Perubahan
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    {/* Custom Domain */}
+                    {activeTab === 'domain' && (
+                        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+                            <h3 className="text-lg font-bold text-slate-800 mb-2 border-b border-slate-100 pb-4 flex items-center gap-2">
+                                <Globe className="w-5 h-5 text-indigo-600" /> Custom Domain
+                            </h3>
+                            <div className="mb-6 mt-4 p-4 bg-blue-50/50 border border-blue-100 rounded-xl">
+                                <p className="text-sm text-blue-800 leading-relaxed">
+                                    Untuk menggunakan domain Anda sendiri (contoh: <b>topupdewa.com</b>), silakan arahkan DNS record dari penyedia domain Anda: <br />
+                                    - <b>A Record:</b> Arahkan ke IP <code>103.145.226.12</code><br />
+                                    - <b>CNAME:</b> Arahkan <code>www</code> ke domain utama Anda.
+                                </p>
+                            </div>
+                            <form onSubmit={handleSaveDomain}>
+                                <div className="mb-6">
+                                    <label className="block text-[12px] font-bold text-slate-500 mb-2">Nama Domain</label>
+                                    <input type="text" value={domainForm.domain} onChange={e => setDomainForm({ ...domainForm, domain: e.target.value })} placeholder="Contoh: topupdewa.com" className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all font-mono" />
+                                </div>
+                                <button type="submit" className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-md flex items-center gap-2">
+                                    Verifikasi & Simpan
+                                </button>
+                            </form>
+                        </div>
+                    )}
+
+                    {/* Payment Channels (Mockup) */}
+                    {activeTab === 'payment' && (
+                        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 text-center py-16">
+                            <ShieldAlert className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                            <h3 className="text-lg font-bold text-slate-800 mb-2">Modul Payment Channels</h3>
+                            <p className="text-slate-500 px-8 text-sm max-w-md mx-auto">Pengaturan aktif/non-aktifkan payment gateway seperti QRIS, Virtual Account, Retail, dan E-Wallet akan tersedia di sini.</p>
+                        </div>
+                    )}
+
+                    {/* Webhook (Mockup) */}
+                    {activeTab === 'webhook' && (
+                        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 text-center py-16">
+                            <Webhook className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                            <h3 className="text-lg font-bold text-slate-800 mb-2">Integrasi Webhook</h3>
+                            <p className="text-slate-500 px-8 text-sm max-w-md mx-auto">Kami akan mengirim data transaksi secara realtime ke endpoint aplikasi Anda. Modul sedang dalam pengembangan.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </MerchantLayout>
+    );
+}

@@ -51,9 +51,9 @@ enum MerchantStatus {
 
 enum MerchantPlan {
   FREE
-  STARTER
-  PROFESSIONAL
-  ENTERPRISE
+  PRO
+  LEGEND
+  SUPREME
 }
 
 enum MerchantMemberRole {

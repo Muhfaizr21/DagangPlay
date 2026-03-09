@@ -387,13 +387,13 @@ export default function SaaSManagementPage() {
                     {!plansConfig ? (
                         <div className="flex items-center gap-2 text-slate-400 py-10 justify-center"><Loader2 className="w-5 h-5 animate-spin" /> Loading Config...</div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            {['FREE', 'STARTER', 'PROFESSIONAL', 'ENTERPRISE'].map((planKey) => (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {['PRO', 'LEGEND', 'SUPREME'].map((planKey) => (
                                 <div key={planKey} className="border border-slate-200 rounded-2xl p-6 bg-slate-50">
                                     <div className="text-center mb-6">
-                                        <span className={`inline-block px-3 py-1 text-xs font-black uppercase rounded-full mb-2 ${planKey === 'ENTERPRISE' ? 'bg-purple-100 text-purple-700' :
-                                            planKey === 'PROFESSIONAL' ? 'bg-indigo-100 text-indigo-700' :
-                                                planKey === 'STARTER' ? 'bg-blue-100 text-blue-700' :
+                                        <span className={`inline-block px-3 py-1 text-xs font-black uppercase rounded-full mb-2 ${planKey === 'SUPREME' ? 'bg-orange-100 text-orange-700' :
+                                            planKey === 'LEGEND' ? 'bg-purple-100 text-purple-700' :
+                                                planKey === 'PRO' ? 'bg-emerald-100 text-emerald-700' :
                                                     'bg-slate-200 text-slate-600'
                                             }`}>{planKey}</span>
                                         <p className="font-medium text-xs text-slate-500">Subscription Tier</p>
@@ -535,9 +535,9 @@ export default function SaaSManagementPage() {
                                         onChange={e => setCreateInvoiceForm({ ...createInvoiceForm, plan: e.target.value })}
                                         className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-indigo-700"
                                     >
-                                        <option value="STARTER">Starter</option>
-                                        <option value="PROFESSIONAL">Professional</option>
-                                        <option value="ENTERPRISE">Enterprise</option>
+                                        <option value="PRO">Pro</option>
+                                        <option value="LEGEND">Legend</option>
+                                        <option value="SUPREME">Supreme</option>
                                     </select>
                                 </div>
                                 <div>
@@ -565,145 +565,150 @@ export default function SaaSManagementPage() {
                             </button>
                         </form>
                     </div>
-                </div>
-            )}
+                </div >
+            )
+            }
 
             {/* INVOICE DETAIL MODAL */}
-            {selectedInvoice && (
-                <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-3xl flex flex-col md:flex-row overflow-hidden animate-in zoom-in-95 duration-300">
-                        {/* Left: Invoice Info */}
-                        <div className="flex-1 p-8 border-r border-slate-100">
-                            <div className="flex items-center justify-between mb-8">
-                                <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200">
-                                    <CreditCard className="w-6 h-6" />
+            {
+                selectedInvoice && (
+                    <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
+                        <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-3xl flex flex-col md:flex-row overflow-hidden animate-in zoom-in-95 duration-300">
+                            {/* Left: Invoice Info */}
+                            <div className="flex-1 p-8 border-r border-slate-100">
+                                <div className="flex items-center justify-between mb-8">
+                                    <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200">
+                                        <CreditCard className="w-6 h-6" />
+                                    </div>
+                                    <div className="text-right uppercase tracking-widest text-slate-400 font-bold text-[10px]">Invoice Summary</div>
                                 </div>
-                                <div className="text-right uppercase tracking-widest text-slate-400 font-bold text-[10px]">Invoice Summary</div>
-                            </div>
 
-                            <h3 className="text-xl font-black text-slate-800 tracking-tight">{selectedInvoice.invoiceNo}</h3>
-                            <p className="text-sm text-slate-500 mt-1 uppercase font-bold tracking-tighter">{selectedInvoice.merchant.name}</p>
+                                <h3 className="text-xl font-black text-slate-800 tracking-tight">{selectedInvoice.invoiceNo}</h3>
+                                <p className="text-sm text-slate-500 mt-1 uppercase font-bold tracking-tighter">{selectedInvoice.merchant.name}</p>
 
-                            <div className="mt-8 space-y-4">
-                                <div className="flex justify-between border-b border-slate-50 pb-2">
-                                    <span className="text-xs text-slate-400 font-bold">Plan Target</span>
-                                    <span className="text-sm font-black text-slate-700">{selectedInvoice.plan}</span>
-                                </div>
-                                <div className="flex justify-between border-b border-slate-50 pb-2">
-                                    <span className="text-xs text-slate-400 font-bold">Nominal Pokok</span>
-                                    <span className="text-sm font-black text-slate-700">Rp {Number(selectedInvoice.amount).toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between border-b border-slate-50 pb-2">
-                                    <span className="text-xs text-slate-400 font-bold text-red-400">Pajak (PPN)</span>
-                                    <span className="text-sm font-black text-red-500">Rp {Number(selectedInvoice.tax).toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between pt-2">
-                                    <span className="text-sm text-slate-700 font-black">Total Bayar</span>
-                                    <span className="text-xl font-black text-indigo-700">Rp {Number(selectedInvoice.totalAmount).toLocaleString()}</span>
-                                </div>
-                            </div>
-
-                            {selectedInvoice.status === 'PENDING' && (
-                                <div className="mt-10 flex flex-col gap-3">
-                                    <button onClick={() => handleConfirm(selectedInvoice.id)} className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-100 transition">
-                                        <CheckCircle2 className="w-5 h-5" /> Konfirmasi Bayar
-                                    </button>
-                                    <button onClick={() => handleReject(selectedInvoice.id)} className="w-full py-4 bg-red-50 text-red-600 hover:bg-red-100 rounded-2xl font-bold text-sm transition flex items-center justify-center gap-2">
-                                        <XCircle className="w-5 h-5" /> Tolak Data
-                                    </button>
-                                </div>
-                            )}
-
-                            <button onClick={() => setSelectedInvoice(null)} className="w-full mt-4 py-2 text-slate-400 hover:text-slate-600 text-xs font-bold transition">Tutup Detail</button>
-                        </div>
-
-                        {/* Right: Payment Proof */}
-                        <div className="flex-1 bg-slate-50 p-8 flex flex-col items-center justify-center text-center">
-                            <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-200 pb-2 flex items-center gap-2">
-                                <Shield className="w-3 h-3" /> Bukti Pembayaran Manual
-                            </h4>
-                            {selectedInvoice.proofUrl ? (
-                                <div className="w-full aspect-[3/4] bg-white rounded-2xl shadow-inner border border-slate-200 overflow-hidden flex items-center justify-center relative group">
-                                    <img src={selectedInvoice.proofUrl} className="w-full h-full object-contain" />
-                                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                                        <a href={selectedInvoice.proofUrl} target="_blank" className="bg-white p-3 rounded-full text-indigo-600 shadow-xl scale-95 group-hover:scale-100 transition duration-300">
-                                            <Eye className="w-6 h-6" />
-                                        </a>
+                                <div className="mt-8 space-y-4">
+                                    <div className="flex justify-between border-b border-slate-50 pb-2">
+                                        <span className="text-xs text-slate-400 font-bold">Plan Target</span>
+                                        <span className="text-sm font-black text-slate-700">{selectedInvoice.plan}</span>
+                                    </div>
+                                    <div className="flex justify-between border-b border-slate-50 pb-2">
+                                        <span className="text-xs text-slate-400 font-bold">Nominal Pokok</span>
+                                        <span className="text-sm font-black text-slate-700">Rp {Number(selectedInvoice.amount).toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between border-b border-slate-50 pb-2">
+                                        <span className="text-xs text-slate-400 font-bold text-red-400">Pajak (PPN)</span>
+                                        <span className="text-sm font-black text-red-500">Rp {Number(selectedInvoice.tax).toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between pt-2">
+                                        <span className="text-sm text-slate-700 font-black">Total Bayar</span>
+                                        <span className="text-xl font-black text-indigo-700">Rp {Number(selectedInvoice.totalAmount).toLocaleString()}</span>
                                     </div>
                                 </div>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center py-20 grayscale opacity-40">
-                                    <XCircle className="w-16 h-16 text-slate-300 mb-4" />
-                                    <p className="text-sm font-bold text-slate-400">Bukti transfer belum diunggah</p>
-                                </div>
-                            )}
-                            <p className="mt-6 text-[11px] text-slate-500 leading-relaxed italic">
-                                Periksa nomor referensi, nominal, dan nama pengirim sesuai struk bank sebelum konfirmasi.
-                            </p>
+
+                                {selectedInvoice.status === 'PENDING' && (
+                                    <div className="mt-10 flex flex-col gap-3">
+                                        <button onClick={() => handleConfirm(selectedInvoice.id)} className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-100 transition">
+                                            <CheckCircle2 className="w-5 h-5" /> Konfirmasi Bayar
+                                        </button>
+                                        <button onClick={() => handleReject(selectedInvoice.id)} className="w-full py-4 bg-red-50 text-red-600 hover:bg-red-100 rounded-2xl font-bold text-sm transition flex items-center justify-center gap-2">
+                                            <XCircle className="w-5 h-5" /> Tolak Data
+                                        </button>
+                                    </div>
+                                )}
+
+                                <button onClick={() => setSelectedInvoice(null)} className="w-full mt-4 py-2 text-slate-400 hover:text-slate-600 text-xs font-bold transition">Tutup Detail</button>
+                            </div>
+
+                            {/* Right: Payment Proof */}
+                            <div className="flex-1 bg-slate-50 p-8 flex flex-col items-center justify-center text-center">
+                                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-200 pb-2 flex items-center gap-2">
+                                    <Shield className="w-3 h-3" /> Bukti Pembayaran Manual
+                                </h4>
+                                {selectedInvoice.proofUrl ? (
+                                    <div className="w-full aspect-[3/4] bg-white rounded-2xl shadow-inner border border-slate-200 overflow-hidden flex items-center justify-center relative group">
+                                        <img src={selectedInvoice.proofUrl} className="w-full h-full object-contain" />
+                                        <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                            <a href={selectedInvoice.proofUrl} target="_blank" className="bg-white p-3 rounded-full text-indigo-600 shadow-xl scale-95 group-hover:scale-100 transition duration-300">
+                                                <Eye className="w-6 h-6" />
+                                            </a>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-20 grayscale opacity-40">
+                                        <XCircle className="w-16 h-16 text-slate-300 mb-4" />
+                                        <p className="text-sm font-bold text-slate-400">Bukti transfer belum diunggah</p>
+                                    </div>
+                                )}
+                                <p className="mt-6 text-[11px] text-slate-500 leading-relaxed italic">
+                                    Periksa nomor referensi, nominal, dan nama pengirim sesuai struk bank sebelum konfirmasi.
+                                </p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* ADJUST MODAL */}
-            {showAdjustModal && (
-                <div className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
-                        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-indigo-50/50">
-                            <div>
-                                <h2 className="text-lg font-black text-indigo-900 tracking-tight flex items-center gap-2">
-                                    <Zap className="w-5 h-5 text-indigo-600" /> Adjust Plan Merchant
-                                </h2>
-                                <p className="text-[11px] text-indigo-700 font-bold opacity-80 mt-0.5">{adjustForm.merchantName}</p>
+            {
+                showAdjustModal && (
+                    <div className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
+                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+                            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-indigo-50/50">
+                                <div>
+                                    <h2 className="text-lg font-black text-indigo-900 tracking-tight flex items-center gap-2">
+                                        <Zap className="w-5 h-5 text-indigo-600" /> Adjust Plan Merchant
+                                    </h2>
+                                    <p className="text-[11px] text-indigo-700 font-bold opacity-80 mt-0.5">{adjustForm.merchantName}</p>
+                                </div>
+                                <button onClick={() => setShowAdjustModal(false)} className="p-2 text-indigo-400 hover:text-indigo-900 hover:bg-white rounded-full transition">
+                                    <X className="w-5 h-5" />
+                                </button>
                             </div>
-                            <button onClick={() => setShowAdjustModal(false)} className="p-2 text-indigo-400 hover:text-indigo-900 hover:bg-white rounded-full transition">
-                                <X className="w-5 h-5" />
-                            </button>
+                            <form onSubmit={handleAdjust} className="p-6 space-y-5">
+                                <div>
+                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Pilih Plan Baru</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {['STARTER', 'PROFESSIONAL', 'ENTERPRISE'].map(p => (
+                                            <button
+                                                key={p}
+                                                type="button"
+                                                onClick={() => setAdjustForm({ ...adjustForm, plan: p })}
+                                                className={`py-2 px-3 rounded-xl border text-[11px] font-bold transition ${adjustForm.plan === p ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                                            >
+                                                {p}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Durasi Tambahan (Hari)</label>
+                                    <div className="relative">
+                                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="number"
+                                            value={adjustForm.days}
+                                            onChange={e => setAdjustForm({ ...adjustForm, days: Number(e.target.value) })}
+                                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-1 focus:ring-indigo-500 focus:bg-white transition"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="bg-amber-50 p-3 rounded-xl border border-amber-100 flex gap-3 items-start">
+                                    <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                                    <p className="text-[11px] text-amber-800 font-medium">Aksi ini akan merubah akses fitur merchant seketika tanpa membutuhkan pembayaran invoice.</p>
+                                </div>
+                                <button type="submit" className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm shadow-xl shadow-indigo-100 transition">
+                                    Simpan Perubahan Akses
+                                </button>
+                            </form>
                         </div>
-                        <form onSubmit={handleAdjust} className="p-6 space-y-5">
-                            <div>
-                                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Pilih Plan Baru</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {['STARTER', 'PROFESSIONAL', 'ENTERPRISE'].map(p => (
-                                        <button
-                                            key={p}
-                                            type="button"
-                                            onClick={() => setAdjustForm({ ...adjustForm, plan: p })}
-                                            className={`py-2 px-3 rounded-xl border text-[11px] font-bold transition ${adjustForm.plan === p ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-                                        >
-                                            {p}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Durasi Tambahan (Hari)</label>
-                                <div className="relative">
-                                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                    <input
-                                        type="number"
-                                        value={adjustForm.days}
-                                        onChange={e => setAdjustForm({ ...adjustForm, days: Number(e.target.value) })}
-                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-1 focus:ring-indigo-500 focus:bg-white transition"
-                                    />
-                                </div>
-                            </div>
-                            <div className="bg-amber-50 p-3 rounded-xl border border-amber-100 flex gap-3 items-start">
-                                <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                                <p className="text-[11px] text-amber-800 font-medium">Aksi ini akan merubah akses fitur merchant seketika tanpa membutuhkan pembayaran invoice.</p>
-                            </div>
-                            <button type="submit" className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm shadow-xl shadow-indigo-100 transition">
-                                Simpan Perubahan Akses
-                            </button>
-                        </form>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             <style jsx global>{`
                 @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
                 .sticky-blink { animation: blink 2s infinite; }
             `}</style>
-        </AdminLayout>
+        </AdminLayout >
     );
 }

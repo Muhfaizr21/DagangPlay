@@ -30,7 +30,7 @@ async function main() {
                 name: 'Toko Merchant Satu',
                 slug: 'toko-merchant-satu',
                 domain: 'merchant1.dagangplay.com',
-                plan: 'STARTER',
+                plan: 'PRO',
                 status: 'ACTIVE',
                 ownerId: merchant.id,
             }

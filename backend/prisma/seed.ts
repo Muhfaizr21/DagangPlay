@@ -46,7 +46,7 @@ async function main() {
             description: 'Official store of DagangPlay Platform',
             contactEmail: 'support@dagangplay.com',
             status: MerchantStatus.ACTIVE,
-            plan: MerchantPlan.ENTERPRISE, // Highest plan
+            plan: MerchantPlan.SUPREME, // Highest plan
             isOfficial: true,
             ownerId: superAdmin.id,
         },

@@ -33,7 +33,7 @@ async function main() {
             name: 'Topup Dewa Gaming',
             slug: 'topup-dewa',
             domain: 'topupdewa.com',
-            plan: MerchantPlan.PROFESSIONAL,
+            plan: MerchantPlan.LEGEND,
             status: MerchantStatus.ACTIVE,
         }
     });
@@ -61,7 +61,7 @@ async function main() {
             name: 'Juragan Diamond',
             slug: 'juragan-diamond',
             domain: 'juragandiamond.net',
-            plan: MerchantPlan.STARTER,
+            plan: MerchantPlan.PRO,
             status: MerchantStatus.PENDING_REVIEW,
         }
     });
