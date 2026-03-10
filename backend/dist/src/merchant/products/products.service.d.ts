@@ -1,7 +1,9 @@
 import { PrismaService } from '../../prisma.service';
+import { SubscriptionsService } from '../../admin/subscriptions/subscriptions.service';
 export declare class ProductsService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private subscriptionsService;
+    constructor(prisma: PrismaService, subscriptionsService: SubscriptionsService);
     getProducts(merchantId: string, search?: string, categoryId?: string): Promise<{
         id: string;
         name: string;
@@ -29,8 +31,8 @@ export declare class ProductsService {
         userId: string;
         productSkuId: string;
         customPrice: number;
-        customModalPrice: number | null;
         reason: string | null;
+        customModalPrice: number | null;
     }>;
     bulkUpdateMargin(merchantId: string, userId: string, markupPercentage: number, categoryId?: string): Promise<{
         success: boolean;

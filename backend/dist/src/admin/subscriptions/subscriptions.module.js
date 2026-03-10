@@ -18,7 +18,8 @@ exports.SubscriptionsModule = SubscriptionsModule;
 exports.SubscriptionsModule = SubscriptionsModule = __decorate([
     (0, common_1.Module)({
         controllers: [subscriptions_controller_1.SubscriptionsController, public_subscriptions_controller_1.PublicSubscriptionsController],
-        providers: [subscriptions_service_1.SubscriptionsService, prisma_service_1.PrismaService]
+        providers: [subscriptions_service_1.SubscriptionsService, prisma_service_1.PrismaService],
+        exports: [subscriptions_service_1.SubscriptionsService]
     })
 ], SubscriptionsModule);
 //# sourceMappingURL=subscriptions.module.js.map

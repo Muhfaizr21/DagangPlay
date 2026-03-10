@@ -34,8 +34,8 @@ export declare class ProductsController {
         userId: string;
         productSkuId: string;
         customPrice: number;
-        customModalPrice: number | null;
         reason: string | null;
+        customModalPrice: number | null;
     }>;
     bulkUpdatePricing(req: any, body: {
         markupPercentage: number;

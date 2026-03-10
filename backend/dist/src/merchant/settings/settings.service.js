@@ -12,10 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SettingsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma.service");
+const subscriptions_service_1 = require("../../admin/subscriptions/subscriptions.service");
 let SettingsService = class SettingsService {
     prisma;
-    constructor(prisma) {
+    subscriptionsService;
+    constructor(prisma, subscriptionsService) {
         this.prisma = prisma;
+        this.subscriptionsService = subscriptionsService;
     }
     async getSettings(merchantId) {
         return this.prisma.merchant.findUnique({
@@ -37,6 +40,7 @@ let SettingsService = class SettingsService {
         });
     }
     async updateDomain(merchantId, domain) {
+        await this.subscriptionsService.checkFeatureLimit(merchantId, 'customDomain');
         return this.prisma.merchant.update({
             where: { id: merchantId },
             data: { domain }
@@ -90,6 +94,7 @@ let SettingsService = class SettingsService {
 exports.SettingsService = SettingsService;
 exports.SettingsService = SettingsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        subscriptions_service_1.SubscriptionsService])
 ], SettingsService);
 //# sourceMappingURL=settings.service.js.map

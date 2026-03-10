@@ -14,14 +14,17 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma.service");
 const tripay_service_1 = require("../../tripay/tripay.service");
 const digiflazz_service_1 = require("../../admin/digiflazz/digiflazz.service");
+const subscriptions_service_1 = require("../../admin/subscriptions/subscriptions.service");
 let PublicOrdersService = class PublicOrdersService {
     prisma;
     tripay;
     digiflazz;
-    constructor(prisma, tripay, digiflazz) {
+    subscriptionsService;
+    constructor(prisma, tripay, digiflazz, subscriptionsService) {
         this.prisma = prisma;
         this.tripay = tripay;
         this.digiflazz = digiflazz;
+        this.subscriptionsService = subscriptionsService;
     }
     mapPaymentMethod(code) {
         const mapping = {
@@ -40,7 +43,7 @@ let PublicOrdersService = class PublicOrdersService {
         };
         return mapping[code] || 'TRIPAY_QRIS';
     }
-    async createCheckout(body, host) {
+    async createCheckout(body, host, origin) {
         const { skuId, gameId, serverId, whatsapp, paymentMethod } = body;
         const sku = await this.prisma.productSku.findUnique({
             where: { id: skuId },
@@ -90,8 +93,9 @@ let PublicOrdersService = class PublicOrdersService {
                 }
             }
         });
-        if (merchantOverride && !merchantOverride.isActive) {
-            throw new common_1.BadRequestException('Produk ini sedang dinonaktifkan oleh pemilik toko');
+        const isProductActiveForMerchant = merchantOverride ? merchantOverride.isActive : merchant.isOfficial;
+        if (!isProductActiveForMerchant) {
+            throw new common_1.BadRequestException('Produk ini tidak tersedia di toko ini atau telah dinonaktifkan oleh pemilik toko');
         }
         const basePrice = Number(sku.basePrice);
         const sellPrice = merchantOverride ? Number(merchantOverride.customPrice) : Number(sku.priceNormal);
@@ -166,7 +170,7 @@ let PublicOrdersService = class PublicOrdersService {
                     quantity: 1
                 }
             ],
-            return_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/invoice/${order.orderNumber}`
+            return_url: `${origin || process.env.FRONTEND_URL || 'http://localhost:3000'}/invoice/${order.orderNumber}`
         };
         const tripayRes = await this.tripay.requestTransaction(tripayPayload);
         await this.prisma.payment.create({
@@ -243,12 +247,45 @@ let PublicOrdersService = class PublicOrdersService {
             throw new common_1.BadRequestException('Pesanan tidak ditemukan');
         return order;
     }
+    async getStoreConfig(host) {
+        const merchant = await this.prisma.merchant.findFirst({
+            where: {
+                OR: [
+                    { domain: host },
+                    { slug: host?.split('.')[0] }
+                ]
+            }
+        });
+        const targetMerchant = merchant || await this.prisma.merchant.findFirst({ where: { isOfficial: true, status: 'ACTIVE' } });
+        if (!targetMerchant) {
+            return {
+                name: 'DagangPlay',
+                logo: null,
+                whiteLabel: false,
+                plan: 'FREE'
+            };
+        }
+        const features = await this.subscriptionsService.getMerchantPlanFeatures(targetMerchant.id);
+        console.log(`[PublicOrdersService] getStoreConfig: host=${host}, selectedMerchant=${targetMerchant.name}, theme=${JSON.stringify(targetMerchant.settings?.theme)}`);
+        return {
+            id: targetMerchant.id,
+            name: targetMerchant.name,
+            logo: targetMerchant.logo,
+            banner: targetMerchant.bannerImage,
+            tagline: targetMerchant.tagline,
+            whiteLabel: features.whiteLabel || false,
+            plan: targetMerchant.plan,
+            isOfficial: targetMerchant.isOfficial,
+            theme: targetMerchant.settings?.theme || { active: 'dark' }
+        };
+    }
 };
 exports.PublicOrdersService = PublicOrdersService;
 exports.PublicOrdersService = PublicOrdersService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         tripay_service_1.TripayService,
-        digiflazz_service_1.DigiflazzService])
+        digiflazz_service_1.DigiflazzService,
+        subscriptions_service_1.SubscriptionsService])
 ], PublicOrdersService);
 //# sourceMappingURL=public-orders.service.js.map

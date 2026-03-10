@@ -2,6 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import { TripayService } from '../../tripay/tripay.service';
 import { DigiflazzService } from '../../admin/digiflazz/digiflazz.service';
+import { SubscriptionsService } from '../../admin/subscriptions/subscriptions.service';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -9,7 +10,8 @@ export class PublicOrdersService {
     constructor(
         private prisma: PrismaService,
         private tripay: TripayService,
-        private digiflazz: DigiflazzService
+        private digiflazz: DigiflazzService,
+        private subscriptionsService: SubscriptionsService
     ) { }
 
     private mapPaymentMethod(code: string): any {
@@ -30,7 +32,7 @@ export class PublicOrdersService {
         return mapping[code] || 'TRIPAY_QRIS';
     }
 
-    async createCheckout(body: any, host?: string) {
+    async createCheckout(body: any, host?: string, origin?: string) {
         const { skuId, gameId, serverId, whatsapp, paymentMethod } = body;
 
         // 1. Get the SKU details
@@ -100,9 +102,10 @@ export class PublicOrdersService {
             }
         });
 
-        // Visibility Boundary check
-        if (merchantOverride && !merchantOverride.isActive) {
-            throw new BadRequestException('Produk ini sedang dinonaktifkan oleh pemilik toko');
+        // Visibility Boundary check (Enforce SaaS opt-in)
+        const isProductActiveForMerchant = merchantOverride ? merchantOverride.isActive : merchant.isOfficial;
+        if (!isProductActiveForMerchant) {
+            throw new BadRequestException('Produk ini tidak tersedia di toko ini atau telah dinonaktifkan oleh pemilik toko');
         }
 
         const basePrice = Number(sku.basePrice);
@@ -191,7 +194,7 @@ export class PublicOrdersService {
                     quantity: 1
                 }
             ],
-            return_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/invoice/${order.orderNumber}`
+            return_url: `${origin || process.env.FRONTEND_URL || 'http://localhost:3000'}/invoice/${order.orderNumber}`
         };
 
         const tripayRes = await this.tripay.requestTransaction(tripayPayload);
@@ -285,5 +288,45 @@ export class PublicOrdersService {
         if (!order) throw new BadRequestException('Pesanan tidak ditemukan');
 
         return order;
+    }
+
+    async getStoreConfig(host?: string) {
+        // 1. Find Merchant
+        const merchant = await this.prisma.merchant.findFirst({
+            where: {
+                OR: [
+                    { domain: host },
+                    { slug: host?.split('.')[0] }
+                ]
+            }
+        });
+
+        const targetMerchant = merchant || await this.prisma.merchant.findFirst({ where: { isOfficial: true, status: 'ACTIVE' } });
+
+        if (!targetMerchant) {
+            return {
+                name: 'DagangPlay',
+                logo: null,
+                whiteLabel: false,
+                plan: 'FREE'
+            };
+        }
+
+        // 2. Get Features
+        const features = await this.subscriptionsService.getMerchantPlanFeatures(targetMerchant.id);
+
+        console.log(`[PublicOrdersService] getStoreConfig: host=${host}, selectedMerchant=${targetMerchant.name}, theme=${JSON.stringify((targetMerchant.settings as any)?.theme)}`);
+
+        return {
+            id: targetMerchant.id,
+            name: targetMerchant.name,
+            logo: targetMerchant.logo,
+            banner: targetMerchant.bannerImage,
+            tagline: targetMerchant.tagline,
+            whiteLabel: features.whiteLabel || false,
+            plan: targetMerchant.plan,
+            isOfficial: targetMerchant.isOfficial,
+            theme: (targetMerchant.settings as any)?.theme || { active: 'dark' }
+        };
     }
 }

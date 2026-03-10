@@ -24,8 +24,8 @@ export declare class SubscriptionsController {
         tax: number;
         totalAmount: number;
         dueDate: Date;
-        proofUrl: string | null;
         notes: string | null;
+        proofUrl: string | null;
     })[]>;
     confirmInvoice(id: string): Promise<any>;
     rejectInvoice(id: string, notes: string): Promise<{
@@ -44,8 +44,8 @@ export declare class SubscriptionsController {
         tax: number;
         totalAmount: number;
         dueDate: Date;
-        proofUrl: string | null;
         notes: string | null;
+        proofUrl: string | null;
     }>;
     adjustMerchant(id: string, plan: string, days: number): Promise<any>;
     getFeatures(): Promise<any>;
@@ -81,7 +81,7 @@ export declare class SubscriptionsController {
         tax: number;
         totalAmount: number;
         dueDate: Date;
-        proofUrl: string | null;
         notes: string | null;
+        proofUrl: string | null;
     }>;
 }

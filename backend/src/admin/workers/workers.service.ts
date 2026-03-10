@@ -129,7 +129,7 @@ export class WorkersService {
                 data: { balance: currentBalance, lastSyncAt: new Date() }
             });
 
-            if (currentBalance < 500000) {
+            if (currentBalance < 0) {
                 this.logger.warn(`LOW BALANCE ALERT: Digiflazz balance is Rp ${currentBalance.toLocaleString('id-ID')}. Setting products to MAINTENANCE.`);
                 // Auto-Maintenance: Lock all products to prevent unpaid orders failing at fulfillment
                 await this.prisma.product.updateMany({

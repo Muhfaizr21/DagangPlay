@@ -24,8 +24,8 @@ export declare class MerchantOverridesController {
         userId: string;
         productSkuId: string;
         customPrice: number;
-        customModalPrice: number | null;
         reason: string | null;
+        customModalPrice: number | null;
     })[]>;
     getOverridesByMerchant(merchantId: string): Promise<({
         productSku: {
@@ -62,8 +62,8 @@ export declare class MerchantOverridesController {
         userId: string;
         productSkuId: string;
         customPrice: number;
-        customModalPrice: number | null;
         reason: string | null;
+        customModalPrice: number | null;
     })[]>;
     createOverride(dto: any, req: any): Promise<{
         id: string;
@@ -75,8 +75,8 @@ export declare class MerchantOverridesController {
         userId: string;
         productSkuId: string;
         customPrice: number;
-        customModalPrice: number | null;
         reason: string | null;
+        customModalPrice: number | null;
     }>;
     deleteOverride(id: string): Promise<{
         id: string;
@@ -88,7 +88,7 @@ export declare class MerchantOverridesController {
         userId: string;
         productSkuId: string;
         customPrice: number;
-        customModalPrice: number | null;
         reason: string | null;
+        customModalPrice: number | null;
     }>;
 }

@@ -24,8 +24,8 @@ export declare class SubscriptionService {
             tax: number;
             totalAmount: number;
             dueDate: Date;
-            proofUrl: string | null;
             notes: string | null;
+            proofUrl: string | null;
         } | null;
     }>;
     getInvoiceHistory(merchantId: string): Promise<{
@@ -44,8 +44,8 @@ export declare class SubscriptionService {
         tax: number;
         totalAmount: number;
         dueDate: Date;
-        proofUrl: string | null;
         notes: string | null;
+        proofUrl: string | null;
     }[]>;
     createInvoice(merchantId: string, data: any): Promise<{
         id: string;
@@ -63,8 +63,8 @@ export declare class SubscriptionService {
         tax: number;
         totalAmount: number;
         dueDate: Date;
-        proofUrl: string | null;
         notes: string | null;
+        proofUrl: string | null;
     }>;
     uploadProof(merchantId: string, invoiceId: string, proofUrl: string): Promise<{
         id: string;
@@ -82,7 +82,7 @@ export declare class SubscriptionService {
         tax: number;
         totalAmount: number;
         dueDate: Date;
-        proofUrl: string | null;
         notes: string | null;
+        proofUrl: string | null;
     }>;
 }

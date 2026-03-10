@@ -41,6 +41,7 @@ let MarketingService = class MarketingService {
                 slug: data.slug || data.title.toLowerCase().replace(/ /g, '-'),
                 content: data.content,
                 videoUrl: data.videoUrl,
+                imageUrl: data.imageUrl,
                 thumbnail: data.thumbnail,
                 category: data.category,
                 targetPlan: data.targetPlan || 'SUPREME',

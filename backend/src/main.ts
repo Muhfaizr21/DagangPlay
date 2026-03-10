@@ -28,4 +28,5 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3001);
 }
+// Triggering reload to pick up new chat module
 bootstrap();

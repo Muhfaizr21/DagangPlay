@@ -17,8 +17,9 @@ export default function MerchantOrdersPage() {
     const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
     const [refundReason, setRefundReason] = useState('');
 
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
     const { data, error, isLoading, mutate } = useSWR(
-        `http://localhost:3001/merchant/orders?search=${search}`,
+        `${baseUrl}/merchant/orders?search=${search}`,
         fetcher,
         { refreshInterval: 10000 } // real-time updates
     );
@@ -27,7 +28,7 @@ export default function MerchantOrdersPage() {
         if (!confirm('Apakah Anda yakin ingin mencoba ulang transaksi ini ke provider?')) return;
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.post(`http://localhost:3001/merchant/orders/${orderId}/retry`, {}, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.post(`${baseUrl}/merchant/orders/${orderId}/retry`, {}, { headers: { Authorization: `Bearer ${token}` } });
             alert('Transaksi sedang dicoba ulang. Silakan tunggu beberapa saat.');
             mutate();
         } catch (err: any) {
@@ -39,7 +40,7 @@ export default function MerchantOrdersPage() {
         e.preventDefault();
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.post(`http://localhost:3001/merchant/orders/${selectedOrder.id}/refund`,
+            await axios.post(`${baseUrl}/merchant/orders/${selectedOrder.id}/refund`,
                 { reason: refundReason },
                 { headers: { Authorization: `Bearer ${token}` } }
             );

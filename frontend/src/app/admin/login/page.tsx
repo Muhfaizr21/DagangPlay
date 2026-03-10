@@ -17,7 +17,8 @@ export default function AdminLoginPage() {
         setError('');
 
         try {
-            const res = await axios.post('http://localhost:3001/api/auth/admin/login', {
+            const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+            const res = await axios.post(`${baseUrl}/api/auth/admin/login`, {
                 email,
                 password
             });

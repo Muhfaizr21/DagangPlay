@@ -3,7 +3,10 @@ import { TeamController } from './team.controller';
 import { TeamService } from './team.service';
 import { PrismaService } from '../../prisma.service';
 
+import { SubscriptionsModule } from '../../admin/subscriptions/subscriptions.module';
+
 @Module({
+  imports: [SubscriptionsModule],
   controllers: [TeamController],
   providers: [TeamService, PrismaService]
 })

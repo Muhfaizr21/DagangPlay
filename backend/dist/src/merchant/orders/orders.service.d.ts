@@ -28,7 +28,6 @@ export declare class OrdersService {
             productName: string;
             productSkuName: string;
             priceTierUsed: import("@prisma/client").$Enums.PriceTier;
-            merchantModalPrice: number | null;
             sellingPrice: number;
             totalPrice: number;
             gameUserId: string;
@@ -49,6 +48,7 @@ export declare class OrdersService {
             completedAt: Date | null;
             failedAt: Date | null;
             expiredAt: Date | null;
+            merchantModalPrice: number | null;
             userId: string;
             productSkuId: string;
             promoCodeId: string | null;
@@ -92,7 +92,6 @@ export declare class OrdersService {
         productName: string;
         productSkuName: string;
         priceTierUsed: import("@prisma/client").$Enums.PriceTier;
-        merchantModalPrice: number | null;
         sellingPrice: number;
         totalPrice: number;
         gameUserId: string;
@@ -113,6 +112,7 @@ export declare class OrdersService {
         completedAt: Date | null;
         failedAt: Date | null;
         expiredAt: Date | null;
+        merchantModalPrice: number | null;
         userId: string;
         productSkuId: string;
         promoCodeId: string | null;
@@ -131,7 +131,6 @@ export declare class OrdersService {
             productName: string;
             productSkuName: string;
             priceTierUsed: import("@prisma/client").$Enums.PriceTier;
-            merchantModalPrice: number | null;
             sellingPrice: number;
             totalPrice: number;
             gameUserId: string;
@@ -152,6 +151,7 @@ export declare class OrdersService {
             completedAt: Date | null;
             failedAt: Date | null;
             expiredAt: Date | null;
+            merchantModalPrice: number | null;
             userId: string;
             productSkuId: string;
             promoCodeId: string | null;

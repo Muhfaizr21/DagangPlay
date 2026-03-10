@@ -144,6 +144,60 @@ export class SubscriptionsService {
         return JSON.parse(setting.value);
     }
 
+    async getMerchantPlanFeatures(merchantId: string) {
+        const merchant = await this.prisma.merchant.findUnique({
+            where: { id: merchantId },
+            select: { plan: true, planExpiredAt: true }
+        });
+
+        if (!merchant) throw new NotFoundException('Merchant tidak ditemukan');
+
+        // Check expiry
+        const now = new Date();
+        const isExpired = merchant.planExpiredAt && merchant.planExpiredAt < now;
+
+        const allFeatures = await this.getPlanFeatures();
+        const planFeatures = allFeatures[merchant.plan || 'FREE'] || allFeatures['FREE'];
+
+        return {
+            ...planFeatures,
+            isExpired,
+            plan: merchant.plan
+        };
+    }
+
+    async checkFeatureLimit(merchantId: string, feature: 'maxProducts' | 'multiUser' | 'whiteLabel' | 'customDomain') {
+        const features = await this.getMerchantPlanFeatures(merchantId);
+
+        if (features.isExpired) {
+            throw new BadRequestException('Masa aktif paket Anda telah habis. Silakan lakukan perpanjangan.');
+        }
+
+        if (feature === 'multiUser' && !features.multiUser) {
+            throw new BadRequestException('Paket Anda tidak mendukung fitur Multi-User (Staff). Silakan upgrade ke LEGEND/SUPREME.');
+        }
+
+        if (feature === 'whiteLabel' && !features.whiteLabel) {
+            throw new BadRequestException('Paket Anda tidak mendukung fitur White-Label. Silakan upgrade ke SUPREME.');
+        }
+
+        if (feature === 'customDomain' && !features.customDomain) {
+            throw new BadRequestException('Paket Anda tidak mendukung fitur Custom Domain. Silakan upgrade ke PRO+');
+        }
+
+        if (feature === 'maxProducts') {
+            const count = await this.prisma.merchantProductPrice.count({
+                where: { merchantId, isActive: true }
+            });
+
+            if (features.maxProducts !== undefined && count >= features.maxProducts) {
+                throw new BadRequestException(`Limit produk aktif terlampaui (${count}/${features.maxProducts}). Silakan upgrade paket Anda.`);
+            }
+        }
+
+        return true;
+    }
+
     async updatePlanFeatures(features: any, operator: string) {
         return this.prisma.systemSetting.upsert({
             where: { key: 'saas_plan_features' },

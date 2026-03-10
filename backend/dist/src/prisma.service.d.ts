@@ -45,6 +45,9 @@ export declare class PrismaService implements OnModuleInit, OnModuleDestroy {
     get tierPriceHistory(): import("@prisma/client").Prisma.TierPriceHistoryDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get webhookEndpoint(): import("@prisma/client").Prisma.WebhookEndpointDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get paymentChannel(): import("@prisma/client").Prisma.PaymentChannelDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get chatRoom(): import("@prisma/client").Prisma.ChatRoomDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get chatMessage(): import("@prisma/client").Prisma.ChatMessageDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get marketingGuide(): import("@prisma/client").Prisma.MarketingGuideDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     onModuleInit(): Promise<void>;
     onModuleDestroy(): Promise<void>;
 }

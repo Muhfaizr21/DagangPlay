@@ -45,11 +45,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TeamService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma.service");
+const subscriptions_service_1 = require("../../admin/subscriptions/subscriptions.service");
 const bcrypt = __importStar(require("bcrypt"));
 let TeamService = class TeamService {
     prisma;
-    constructor(prisma) {
+    subscriptionsService;
+    constructor(prisma, subscriptionsService) {
         this.prisma = prisma;
+        this.subscriptionsService = subscriptionsService;
     }
     async getTeamMembers(merchantId) {
         return this.prisma.merchantMember.findMany({
@@ -58,6 +61,7 @@ let TeamService = class TeamService {
         });
     }
     async addTeamMember(merchantId, data) {
+        await this.subscriptionsService.checkFeatureLimit(merchantId, 'multiUser');
         let user = await this.prisma.user.findUnique({ where: { email: data.email } });
         if (!user) {
             if (data.phone) {
@@ -116,6 +120,7 @@ let TeamService = class TeamService {
 exports.TeamService = TeamService;
 exports.TeamService = TeamService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        subscriptions_service_1.SubscriptionsService])
 ], TeamService);
 //# sourceMappingURL=team.service.js.map

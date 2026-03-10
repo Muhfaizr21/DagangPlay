@@ -28,8 +28,9 @@ export default function MerchantProductsPage() {
         }
     }, []);
 
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
     const { data: products, error, isLoading, mutate } = useSWR(
-        `http://localhost:3001/merchant/products?search=${search}`,
+        `${baseUrl}/merchant/products?search=${search}`,
         fetcher
     );
 
@@ -46,7 +47,8 @@ export default function MerchantProductsPage() {
 
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.put(`http://localhost:3001/merchant/products/${sku.id}/price`, {
+            const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+            await axios.put(`${baseUrl}/merchant/products/${sku.id}/price`, {
                 sellingPrice: Number(editPrice),
                 isActive: sku.isActive
             }, {
@@ -62,7 +64,8 @@ export default function MerchantProductsPage() {
     const handleToggleSku = async (sku: any) => {
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.put(`http://localhost:3001/merchant/products/${sku.id}/price`, {
+            const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+            await axios.put(`${baseUrl}/merchant/products/${sku.id}/price`, {
                 sellingPrice: sku.merchantSellingPrice,
                 isActive: !sku.isActive
             }, {
@@ -77,7 +80,8 @@ export default function MerchantProductsPage() {
     const handleBulkUpdate = async () => {
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.post(`http://localhost:3001/merchant/products/bulk-update`, {
+            const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+            await axios.post(`${baseUrl}/merchant/products/bulk-update`, {
                 markupPercentage: Number(bulkPercentage)
             }, {
                 headers: { Authorization: `Bearer ${token}` }

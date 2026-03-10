@@ -1,6 +1,8 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import useSWR from 'swr';
+import axios from 'axios';
 import {
     LayoutDashboard,
     Package,
@@ -17,7 +19,8 @@ import {
     Activity,
     Tag,
     Palette,
-    GraduationCap
+    GraduationCap,
+    MessageSquare
 } from 'lucide-react';
 
 const MENU_ITEMS = [
@@ -29,17 +32,34 @@ const MENU_ITEMS = [
     { label: 'Keuangan & Saldo', icon: CreditCard, href: '/merchant/finance' },
     { label: 'Promo & Voucher', icon: Tag, href: '/merchant/promos' },
     { label: 'Tampilan Toko', icon: Palette, href: '/merchant/content' },
-    { label: 'Tim / Staff', icon: Users, href: '/merchant/team' },
+    { label: 'Tim / Staff', icon: Users, href: '/merchant/team', minPlan: 'LEGEND' },
     { label: 'Support & Tiket', icon: Ticket, href: '/merchant/support' },
+    { label: 'Live Chat Admin', icon: MessageSquare, href: '/merchant/chat' },
     { label: 'Subscription & Billing', icon: Zap, href: '/merchant/subscription' },
     { label: 'Pengaturan Toko', icon: Settings, href: '/merchant/settings' },
 ];
+
+const PLAN_LEVELS: Record<string, number> = {
+    'FREE': 0,
+    'PRO': 1,
+    'LEGEND': 2,
+    'SUPREME': 3
+};
+
+const fetcher = (url: string) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
+    return axios.get(url, { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data);
+};
 
 export default function MerchantLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
     const [user, setUser] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
+
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const { data: chatData } = useSWR(`${baseUrl}/chat/merchant`, fetcher, { refreshInterval: 10000 });
+    const merchantUnreadCount = chatData?.messages?.filter((m: any) => m.isAdmin && !m.isRead).length || 0;
 
     useEffect(() => {
         const token = localStorage.getItem('admin_token');
@@ -106,7 +126,7 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
                     <div className="px-4 mb-3 mt-2">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Menu Utama</p>
                     </div>
-                    {MENU_ITEMS.filter((item: any) => !item.minPlan || (user?.plan === item.minPlan)).map((item) => {
+                    {MENU_ITEMS.filter((item: any) => !item.minPlan || (PLAN_LEVELS[user?.plan || 'FREE'] >= PLAN_LEVELS[item.minPlan])).map((item) => {
                         const Icon = item.icon;
                         const isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/merchant');
 
@@ -120,7 +140,12 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
                                     }`}
                             >
                                 <Icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
-                                <span className="text-[13px]">{item.label}</span>
+                                <span className="text-[13px] flex-1">{item.label}</span>
+                                {item.href === '/merchant/chat' && merchantUnreadCount > 0 && (
+                                    <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-bounce">
+                                        {merchantUnreadCount}
+                                    </span>
+                                )}
                             </button>
                         );
                     })}

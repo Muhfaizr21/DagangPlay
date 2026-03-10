@@ -13,8 +13,9 @@ function useCount(target: number, active: boolean, ms = 2000) {
     return val;
 }
 
-export default function Stats() {
+export default function Stats({ theme }: { theme?: string }) {
     const { ref, v } = useReveal();
+    const isLight = theme === 'light';
     const STATS = [
         { target: 500000, suffix: "+", label: "Total Transaksi", fmt: (n: number) => `${Math.floor(n / 1000)}K` },
         { target: 100, suffix: "+", label: "Game Tersedia", fmt: (n: number) => String(n) },
@@ -30,13 +31,13 @@ export default function Stats() {
     ];
 
     return (
-        <section className="py-16 border-gold-t border-gold-b" style={{ background: "linear-gradient(180deg,#060e25,#0a1735)" }}>
+        <section className={`py-16 ${isLight ? 'bg-white border-y border-slate-100 shadow-inner' : 'border-gold-t border-gold-b'}`} style={!isLight ? { background: "linear-gradient(180deg,#060e25,#0a1735)" } : {}}>
             <div className="container mx-auto px-6">
                 <div ref={ref} className={`grid grid-cols-2 md:grid-cols-4 gap-8 reveal ${v ? "visible" : ""}`}>
                     {STATS.map((s, i) => (
                         <div key={i} className="text-center">
                             <p className="font-heading text-gradient-gold text-5xl md:text-6xl mb-1">{s.fmt(vals[i])}{s.suffix}</p>
-                            <p className="font-body text-slate-400 text-xs uppercase tracking-widest">{s.label}</p>
+                            <p className={`font-body text-xs uppercase tracking-widest ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{s.label}</p>
                         </div>
                     ))}
                 </div>

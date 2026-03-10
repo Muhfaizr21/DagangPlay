@@ -24,8 +24,8 @@ export declare class SubscriptionController {
             tax: number;
             totalAmount: number;
             dueDate: Date;
-            proofUrl: string | null;
             notes: string | null;
+            proofUrl: string | null;
         } | null;
     }>;
     getInvoices(req: any): Promise<{
@@ -44,8 +44,8 @@ export declare class SubscriptionController {
         tax: number;
         totalAmount: number;
         dueDate: Date;
-        proofUrl: string | null;
         notes: string | null;
+        proofUrl: string | null;
     }[]>;
     createInvoice(req: any, body: any): Promise<{
         id: string;
@@ -63,8 +63,8 @@ export declare class SubscriptionController {
         tax: number;
         totalAmount: number;
         dueDate: Date;
-        proofUrl: string | null;
         notes: string | null;
+        proofUrl: string | null;
     }>;
     uploadProof(req: any, id: string, proofUrl: string): Promise<{
         id: string;
@@ -82,7 +82,7 @@ export declare class SubscriptionController {
         tax: number;
         totalAmount: number;
         dueDate: Date;
-        proofUrl: string | null;
         notes: string | null;
+        proofUrl: string | null;
     }>;
 }

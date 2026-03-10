@@ -26,8 +26,8 @@ export declare class SubscriptionsService {
         tax: number;
         totalAmount: number;
         dueDate: Date;
-        proofUrl: string | null;
         notes: string | null;
+        proofUrl: string | null;
     })[]>;
     confirmInvoice(id: string, operator: string): Promise<any>;
     rejectInvoice(id: string, notes: string): Promise<{
@@ -46,11 +46,13 @@ export declare class SubscriptionsService {
         tax: number;
         totalAmount: number;
         dueDate: Date;
-        proofUrl: string | null;
         notes: string | null;
+        proofUrl: string | null;
     }>;
     updateMerchantPlanManual(merchantId: string, plan: string, durationDays: number, operator: string): Promise<any>;
     getPlanFeatures(): Promise<any>;
+    getMerchantPlanFeatures(merchantId: string): Promise<any>;
+    checkFeatureLimit(merchantId: string, feature: 'maxProducts' | 'multiUser' | 'whiteLabel' | 'customDomain'): Promise<boolean>;
     updatePlanFeatures(features: any, operator: string): Promise<{
         id: string;
         description: string | null;
@@ -84,7 +86,7 @@ export declare class SubscriptionsService {
         tax: number;
         totalAmount: number;
         dueDate: Date;
-        proofUrl: string | null;
         notes: string | null;
+        proofUrl: string | null;
     }>;
 }

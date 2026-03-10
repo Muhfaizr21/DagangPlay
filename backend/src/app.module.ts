@@ -25,9 +25,10 @@ import { DigiflazzModule } from './admin/digiflazz/digiflazz.module';
 import { WithdrawalsModule } from './merchant/withdrawals/withdrawals.module';
 
 import { MarketingModule } from './admin/marketing/marketing.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), DashboardModule, MerchantsModule, ProductsModule, SuppliersModule, UsersModule, TransactionsModule, FinanceModule, CommissionsModule, PromosModule, SubscriptionsModule, ContentModule, SecurityModule, TicketsModule, SettingsModule, AuthModule, UploadModule, WorkersModule, MerchantModule, DigiflazzModule, TripayModule, PublicOrdersModule, WithdrawalsModule, MarketingModule],
+  imports: [ScheduleModule.forRoot(), DashboardModule, MerchantsModule, ProductsModule, SuppliersModule, UsersModule, TransactionsModule, FinanceModule, CommissionsModule, PromosModule, SubscriptionsModule, ContentModule, SecurityModule, TicketsModule, SettingsModule, AuthModule, UploadModule, WorkersModule, MerchantModule, DigiflazzModule, TripayModule, PublicOrdersModule, WithdrawalsModule, MarketingModule, ChatModule],
   controllers: [],
   providers: [PrismaService],
 })

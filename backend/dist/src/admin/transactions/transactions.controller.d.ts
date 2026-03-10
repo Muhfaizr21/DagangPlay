@@ -11,44 +11,39 @@ export declare class TransactionsController {
             };
             user: {
                 id: string;
-                name: string;
                 email: string | null;
+                name: string;
             };
             payment: {
                 id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                status: import("@prisma/client").$Enums.PaymentStatus;
-                merchantId: string;
                 paidAt: Date | null;
                 expiredAt: Date | null;
+                createdAt: Date;
+                updatedAt: Date;
                 userId: string;
-                method: import("@prisma/client").$Enums.PaymentMethod;
+                merchantId: string;
+                status: import("@prisma/client").$Enums.PaymentStatus;
                 orderId: string;
+                method: import("@prisma/client").$Enums.PaymentMethod;
                 amount: number;
+                fee: number;
+                totalAmount: number;
                 tripayReference: string | null;
                 tripayMerchantRef: string | null;
                 tripayPaymentUrl: string | null;
-                tripayVaNumber: string | null;
                 tripayQrUrl: string | null;
-                tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
-                totalAmount: number;
-                fee: number;
+                tripayVaNumber: string | null;
                 tripayExpiredTime: Date | null;
+                tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
             } | null;
         } & {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            merchantId: string;
-            productId: string;
-            supplierId: string | null;
-            basePrice: number;
             orderNumber: string;
+            productId: string;
             productName: string;
             productSkuName: string;
             priceTierUsed: import("@prisma/client").$Enums.PriceTier;
-            merchantModalPrice: number | null;
+            basePrice: number;
             sellingPrice: number;
             totalPrice: number;
             gameUserId: string;
@@ -59,6 +54,7 @@ export declare class TransactionsController {
             paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
             paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
             fulfillmentStatus: import("@prisma/client").$Enums.OrderFulfillmentStatus;
+            supplierId: string | null;
             supplierRefId: string | null;
             supplierResponse: import("@prisma/client/runtime/client").JsonValue | null;
             serialNumber: string | null;
@@ -69,7 +65,11 @@ export declare class TransactionsController {
             completedAt: Date | null;
             failedAt: Date | null;
             expiredAt: Date | null;
+            createdAt: Date;
+            updatedAt: Date;
+            merchantModalPrice: number | null;
             userId: string;
+            merchantId: string;
             productSkuId: string;
             promoCodeId: string | null;
         })[];
@@ -81,15 +81,11 @@ export declare class TransactionsController {
         };
     }>;
     getTransactionDetail(id: string): Promise<{
-        merchant: {
-            id: string;
-            name: string;
-        };
         fraudDetections: {
             id: string;
             createdAt: Date;
-            metadata: import("@prisma/client/runtime/client").JsonValue | null;
             userId: string;
+            metadata: import("@prisma/client/runtime/client").JsonValue | null;
             reason: string;
             orderId: string | null;
             riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
@@ -97,15 +93,50 @@ export declare class TransactionsController {
             resolvedBy: string | null;
             resolvedAt: Date | null;
         }[];
-        user: {
+        merchant: {
             id: string;
             name: string;
-            email: string | null;
         };
+        user: {
+            id: string;
+            email: string | null;
+            name: string;
+        };
+        statusHistories: {
+            id: string;
+            note: string | null;
+            createdAt: Date;
+            status: string;
+            orderId: string;
+            changedBy: string;
+        }[];
+        payment: {
+            id: string;
+            paidAt: Date | null;
+            expiredAt: Date | null;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            merchantId: string;
+            status: import("@prisma/client").$Enums.PaymentStatus;
+            orderId: string;
+            method: import("@prisma/client").$Enums.PaymentMethod;
+            amount: number;
+            fee: number;
+            totalAmount: number;
+            tripayReference: string | null;
+            tripayMerchantRef: string | null;
+            tripayPaymentUrl: string | null;
+            tripayQrUrl: string | null;
+            tripayVaNumber: string | null;
+            tripayExpiredTime: Date | null;
+            tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
+        } | null;
         supplierLogs: {
             id: string;
-            createdAt: Date;
             supplierId: string;
+            createdAt: Date;
+            orderId: string | null;
             method: string;
             endpoint: string;
             requestBody: import("@prisma/client/runtime/client").JsonValue | null;
@@ -113,51 +144,15 @@ export declare class TransactionsController {
             httpStatus: number | null;
             duration: number | null;
             isSuccess: boolean;
-            orderId: string | null;
-        }[];
-        payment: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            status: import("@prisma/client").$Enums.PaymentStatus;
-            merchantId: string;
-            paidAt: Date | null;
-            expiredAt: Date | null;
-            userId: string;
-            method: import("@prisma/client").$Enums.PaymentMethod;
-            orderId: string;
-            amount: number;
-            tripayReference: string | null;
-            tripayMerchantRef: string | null;
-            tripayPaymentUrl: string | null;
-            tripayVaNumber: string | null;
-            tripayQrUrl: string | null;
-            tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
-            totalAmount: number;
-            fee: number;
-            tripayExpiredTime: Date | null;
-        } | null;
-        statusHistories: {
-            id: string;
-            createdAt: Date;
-            status: string;
-            note: string | null;
-            orderId: string;
-            changedBy: string;
         }[];
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        merchantId: string;
-        productId: string;
-        supplierId: string | null;
-        basePrice: number;
         orderNumber: string;
+        productId: string;
         productName: string;
         productSkuName: string;
         priceTierUsed: import("@prisma/client").$Enums.PriceTier;
-        merchantModalPrice: number | null;
+        basePrice: number;
         sellingPrice: number;
         totalPrice: number;
         gameUserId: string;
@@ -168,6 +163,7 @@ export declare class TransactionsController {
         paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
         paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
         fulfillmentStatus: import("@prisma/client").$Enums.OrderFulfillmentStatus;
+        supplierId: string | null;
         supplierRefId: string | null;
         supplierResponse: import("@prisma/client/runtime/client").JsonValue | null;
         serialNumber: string | null;
@@ -178,7 +174,11 @@ export declare class TransactionsController {
         completedAt: Date | null;
         failedAt: Date | null;
         expiredAt: Date | null;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantModalPrice: number | null;
         userId: string;
+        merchantId: string;
         productSkuId: string;
         promoCodeId: string | null;
     }>;

@@ -2,6 +2,8 @@
 import React, { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import useSWR from 'swr';
+import axios from 'axios';
 import {
     LayoutDashboard,
     Store,
@@ -21,7 +23,8 @@ import {
     ShieldAlert,
     LifeBuoy,
     Box,
-    GraduationCap
+    GraduationCap,
+    MessageSquare
 } from 'lucide-react';
 
 const MENU_ITEMS = [
@@ -29,6 +32,7 @@ const MENU_ITEMS = [
     { href: '/admin/content', label: 'Web Konten & Broadcast', icon: Megaphone },
     { href: '/admin/merchants', label: 'Manajemen Merchant', icon: Store },
     { href: '/admin/marketing', label: 'Marketing Academy', icon: GraduationCap },
+    { href: '/admin/chat', label: 'Live Chat Merchant', icon: MessageSquare },
     { href: '/admin/subscriptions', label: 'SaaS Subscriptions', icon: CreditCard },
     { href: '/admin/products', label: 'Produk & Kategori', icon: Gamepad2 },
     { href: '/admin/products/pricing', label: 'Manajemen Tier Harga', icon: Tag },
@@ -42,8 +46,17 @@ const MENU_ITEMS = [
     { href: '/admin/settings', label: 'Pengaturan', icon: Settings },
 ];
 
+const fetcher = (url: string) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
+    return axios.get(url, { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data);
+};
+
 export default function AdminLayout({ children }: { children: ReactNode }) {
     const pathname = usePathname();
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const { data: chatRooms } = useSWR(`${baseUrl}/chat/admin/rooms`, fetcher, { refreshInterval: 10000 });
+
+    const totalChatUnread = chatRooms?.reduce((acc: number, room: any) => acc + (room._count?.messages || 0), 0) || 0;
 
     return (
         <div className="min-h-screen bg-[#fafafa] flex text-slate-800 font-body selection:bg-blue-500/20">
@@ -74,7 +87,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                     }`}
                             >
                                 <Icon strokeWidth={2} className={`w-4 h-4 ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
-                                {item.label}
+                                <span className="flex-1">{item.label}</span>
+                                {item.href === '/admin/chat' && totalChatUnread > 0 && (
+                                    <span className="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                                        {totalChatUnread}
+                                    </span>
+                                )}
                             </Link>
                         );
                     })}

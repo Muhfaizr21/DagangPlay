@@ -14,10 +14,11 @@ const fetcher = (url: string) => {
 export default function MerchantSettingsPage() {
     const [activeTab, setActiveTab] = useState('profile');
 
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
     // Data Fetching
-    const { data: settings, mutate: mutateSettings } = useSWR('http://localhost:3001/merchant/settings', fetcher);
-    // const { data: channels, mutate: mutateChannels } = useSWR('http://localhost:3001/merchant/settings/payment-channels', fetcher);
-    // const { data: webhooks, mutate: mutateWebhooks } = useSWR('http://localhost:3001/merchant/settings/webhooks', fetcher);
+    const { data: settings, mutate: mutateSettings } = useSWR(`${baseUrl}/merchant/settings`, fetcher);
+    // const { data: channels, mutate: mutateChannels } = useSWR(`${baseUrl}/merchant/settings/payment-channels`, fetcher);
+    // const { data: webhooks, mutate: mutateWebhooks } = useSWR(`${baseUrl}/merchant/settings/webhooks`, fetcher);
 
     // Form States
     const [profileForm, setProfileForm] = useState({ name: '', tagline: '', description: '', contactEmail: '', contactPhone: '', contactWhatsapp: '', address: '' });
@@ -54,7 +55,7 @@ export default function MerchantSettingsPage() {
         e.preventDefault();
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.put('http://localhost:3001/merchant/settings/profile', profileForm, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.put(`${baseUrl}/merchant/settings/profile`, profileForm, { headers: { Authorization: `Bearer ${token}` } });
             alert('Profil berhasil diperbarui!');
             mutateSettings();
         } catch (err: any) {
@@ -66,7 +67,7 @@ export default function MerchantSettingsPage() {
         e.preventDefault();
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.put('http://localhost:3001/merchant/settings/domain', domainForm, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.put(`${baseUrl}/merchant/settings/domain`, domainForm, { headers: { Authorization: `Bearer ${token}` } });
             alert('Domain berhasil diperbarui! Pastikan Anda sudah setting CNAME/A Record di DNS provider Anda.');
             mutateSettings();
         } catch (err: any) {

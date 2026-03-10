@@ -26,23 +26,6 @@ export declare class UsersController {
         };
     }>;
     getUserDetail(id: string): Promise<{
-        profile: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            address: string | null;
-            city: string | null;
-            province: string | null;
-            userId: string;
-            bankName: string | null;
-            bankAccountNumber: string | null;
-            bankAccountName: string | null;
-            fullName: string | null;
-            birthDate: Date | null;
-            gender: import("@prisma/client").$Enums.Gender | null;
-            postalCode: string | null;
-            idCardNumber: string | null;
-        } | null;
         merchantMemberships: ({
             merchant: {
                 id: string;
@@ -79,6 +62,23 @@ export declare class UsersController {
             userId: string;
             permissions: import("@prisma/client/runtime/client").JsonValue | null;
         })[];
+        profile: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            address: string | null;
+            city: string | null;
+            province: string | null;
+            userId: string;
+            bankName: string | null;
+            bankAccountNumber: string | null;
+            bankAccountName: string | null;
+            fullName: string | null;
+            birthDate: Date | null;
+            gender: import("@prisma/client").$Enums.Gender | null;
+            postalCode: string | null;
+            idCardNumber: string | null;
+        } | null;
     } & {
         id: string;
         name: string;

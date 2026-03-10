@@ -1,9 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
+import { SubscriptionsService } from '../../admin/subscriptions/subscriptions.service';
 
 @Injectable()
 export class SettingsService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private subscriptionsService: SubscriptionsService
+    ) { }
 
     async getSettings(merchantId: string) {
         return this.prisma.merchant.findUnique({
@@ -27,6 +31,8 @@ export class SettingsService {
     }
 
     async updateDomain(merchantId: string, domain: string) {
+        // Enforce SaaS Limit
+        await this.subscriptionsService.checkFeatureLimit(merchantId, 'customDomain');
         // Here we could add logic to verify if the domain is already in use by someone else 
         // outside this merchant
         return this.prisma.merchant.update({

@@ -12,7 +12,8 @@ const fetcher = (url: string) => {
 };
 
 export default function MerchantReportsPage() {
-    const { data: sales, mutate } = useSWR('http://localhost:3001/merchant/reports/sales', fetcher);
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const { data: sales, mutate } = useSWR(`${baseUrl}/merchant/reports/sales`, fetcher);
 
     return (
         <MerchantLayout>

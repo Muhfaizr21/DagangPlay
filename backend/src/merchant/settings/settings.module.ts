@@ -3,7 +3,10 @@ import { SettingsController } from './settings.controller';
 import { SettingsService } from './settings.service';
 import { PrismaService } from '../../prisma.service';
 
+import { SubscriptionsModule } from '../../admin/subscriptions/subscriptions.module';
+
 @Module({
+  imports: [SubscriptionsModule],
   controllers: [SettingsController],
   providers: [SettingsService, PrismaService]
 })

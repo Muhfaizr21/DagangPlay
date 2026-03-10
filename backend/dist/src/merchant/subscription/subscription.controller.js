@@ -30,25 +30,25 @@ let SubscriptionController = class SubscriptionController {
     async getStatus(req) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
         if (!merchant)
-            throw new Error('Merchant not found');
+            throw new common_1.NotFoundException('Data profil merchant tidak ditemukan di sistem.');
         return this.subscriptionService.getSubscriptionStatus(merchant.id);
     }
     async getInvoices(req) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
         if (!merchant)
-            throw new Error('Merchant not found');
+            throw new common_1.NotFoundException('Daftar tagihan tidak ditemukan.');
         return this.subscriptionService.getInvoiceHistory(merchant.id);
     }
     async createInvoice(req, body) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
         if (!merchant)
-            throw new Error('Merchant not found');
+            throw new common_1.NotFoundException('Aksi ditolak: Merchant tidak valid.');
         return this.subscriptionService.createInvoice(merchant.id, body);
     }
     async uploadProof(req, id, proofUrl) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
         if (!merchant)
-            throw new Error('Merchant not found');
+            throw new common_1.NotFoundException('Aksi ditolak: Identitas merchant tidak ditemukan.');
         return this.subscriptionService.uploadProof(merchant.id, id, proofUrl);
     }
 };

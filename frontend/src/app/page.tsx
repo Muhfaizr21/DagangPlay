@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, memo } from "react";
+import { useEffect, useState } from "react";
 import useSWR from 'swr';
 import axios from 'axios';
 import Stats from "@/components/Stats";
@@ -8,71 +8,31 @@ import {
   IGamepad, IMenu, IClose, IStar
 } from "@/components/Icons";
 import {
-  NAV, HERO_CARDS, PRODUCTS, FEATURES, STEPS, TESTI, FOOTCOLS, SOCIALS
+  NAV, FEATURES, STEPS, TESTI, FOOTCOLS, SOCIALS
 } from "@/data/constants";
 import BannerSlider from "@/components/BannerSlider";
 import AnnouncementBar from "@/components/AnnouncementBar";
 
+const fetcher = (url: string) => axios.get(url).then(res => res.data);
 
-// ─── Navbar ────────────────────────────────────────────────────────
-const Navbar = ({ scrolled, mOpen, setMOpen }: { scrolled: boolean, mOpen: boolean, setMOpen: (v: boolean) => void }) => (
-  <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${scrolled ? "nav-blur shadow-2xl shadow-black/50" : "bg-transparent"}`}
-    style={scrolled ? { backgroundColor: "rgba(2,8,24,.88)" } : {}}>
-    <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-      <a href="#top" className="flex items-center gap-2.5 group no-underline">
-        <span className="text-gold drop-shadow-[0_0_8px_rgba(201,168,76,.7)] group-hover:drop-shadow-[0_0_14px_rgba(201,168,76,.9)] transition-all">
-          <IGamepad />
-        </span>
-        <span className="font-heading text-white tracking-[.12em] text-2xl">DAGANGPLAY</span>
-      </a>
-
-      <nav className="hidden md:flex items-center gap-8">
-        {NAV.map(l => (
-          <a key={l} href={`#${l.toLowerCase().replace(" ", "-")}`}
-            className="font-body text-sm text-slate-300 hover:text-cyan transition-colors duration-200 relative
-              after:content-[''] after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-0
-              after:bg-cyan after:transition-all after:duration-300 hover:after:w-full">
-            {l}
-          </a>
-        ))}
-      </nav>
-
-      <a href="#produk" className="btn-mint hidden md:inline-flex text-sm px-5 py-2.5">Mulai Top Up</a>
-
-      <button className="md:hidden text-white p-1 border-none bg-transparent cursor-pointer"
-        onClick={() => setMOpen(!mOpen)} aria-label="Menu">
-        {mOpen ? <IClose /> : <IMenu />}
-      </button>
-    </div>
-
-    {mOpen && (
-      <div className="md:hidden nav-blur border-t border-cyan/10 px-6 py-4 flex flex-col gap-3"
-        style={{ background: "rgba(2,8,24,.96)" }}>
-        {NAV.map(l => (
-          <a key={l} href={`#${l.toLowerCase().replace(" ", "-")}`}
-            onClick={() => setMOpen(false)}
-            className="font-body text-sm text-slate-400 hover:text-cyan transition-colors py-1">
-            {l}
-          </a>
-        ))}
-        <a href="#produk" onClick={() => setMOpen(false)}
-          className="btn-mint text-sm px-5 py-2.5 text-center mt-2">
-          Mulai Top Up
-        </a>
-      </div>
-    )}
-  </header>
-);
-
-// ─── Hero ──────────────────────────────────────────────────────────
-const Hero = ({ banners }: { banners: any[] }) => {
+// ─── Hero Component ───────────────────────────────────────────────
+const Hero = ({ banners, theme }: { banners: any[], theme?: string }) => {
   const { ref, v } = useReveal();
+  const isLight = theme === 'light';
   return (
-    <section id="beranda" className="grid-bg relative min-h-[85vh] flex items-center overflow-hidden">
-      <div className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full opacity-[.17] pointer-events-none"
-        style={{ background: "radial-gradient(circle,#38D9F5,transparent 70%)", filter: "blur(80px)" }} />
-      <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full opacity-[.12] pointer-events-none"
-        style={{ background: "radial-gradient(circle,#C9A84C,transparent 70%)", filter: "blur(80px)" }} />
+    <section id="beranda" className={`${isLight ? 'bg-slate-50' : 'grid-bg'} relative min-h-[85vh] flex items-center overflow-hidden`}>
+      {!isLight && (
+        <>
+          <div className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full opacity-[.17] pointer-events-none"
+            style={{ background: "radial-gradient(circle,#38D9F5,transparent 70%)", filter: "blur(80px)" }} />
+          <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full opacity-[.12] pointer-events-none"
+            style={{ background: "radial-gradient(circle,#C9A84C,transparent 70%)", filter: "blur(80px)" }} />
+        </>
+      )}
+      {isLight && (
+        <div className="absolute inset-0 opacity-[0.4] pointer-events-none"
+          style={{ backgroundImage: 'radial-gradient(circle at 20% 30%, #38D9F511 0%, transparent 50%), radial-gradient(circle at 80% 70%, #C9A84C11 0%, transparent 50%)' }} />
+      )}
 
       <div className="container mx-auto px-6 py-12 md:py-24 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center relative z-10">
         <div ref={ref} className={`reveal ${v ? "visible" : ""}`}>
@@ -81,12 +41,12 @@ const Hero = ({ banners }: { banners: any[] }) => {
             <span className="font-body text-cyan text-xs">Platform Top Up #1 Terpercaya</span>
           </div>
           <h1 className="font-heading leading-[.95] mb-3 text-shadow-cyan" style={{ fontSize: "clamp(3rem,6vw,4.5rem)" }}>
-            <span className="text-white block">TOP UP GAMES</span>
+            <span className={`${isLight ? 'text-slate-900' : 'text-white'} block`}>TOP UP GAMES</span>
           </h1>
           <h2 className="font-heading text-gradient-gold leading-[.95] mb-6" style={{ fontSize: "clamp(1.8rem,4vw,3rem)" }}>
             TERCEPAT & TERMURAH
           </h2>
-          <p className="font-body text-slate-400 text-base leading-relaxed max-w-lg mb-8">
+          <p className={`font-body text-base leading-relaxed max-w-lg mb-8 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
             Ribuan produk voucher & top up untuk <span className="text-cyan font-semibold">100+ game populer</span>. Proses otomatis nonstop 24 jam.
           </p>
           <div className="flex flex-wrap gap-4">
@@ -99,193 +59,24 @@ const Hero = ({ banners }: { banners: any[] }) => {
           <BannerSlider banners={banners} />
         </div>
       </div>
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-20">
-        <div className="w-px h-8 bg-gradient-to-b from-transparent via-cyan to-transparent animate-pulse" />
-      </div>
     </section>
   );
 };
-
-// ─── Features ──────────────────────────────────────────────────────
-const Features = () => {
-  const { ref, v } = useReveal();
-  return (
-    <section id="tentang-kami" className="py-24 relative" style={{ background: "linear-gradient(180deg,#0a1735,#050f24)" }}>
-      <div className="container mx-auto px-6">
-        <div ref={ref} className={`text-center mb-16 reveal ${v ? "visible" : ""}`}>
-          <p className="font-body text-cyan text-xs uppercase tracking-[.2em] mb-3">Keunggulan Platform</p>
-          <h2 className="font-heading text-white text-4xl md:text-5xl lg:text-6xl mb-4">
-            KENAPA PILIH <span className="text-gradient-gold">DAGANGPLAY?</span>
-          </h2>
-          <span className="sep-gold" />
-        </div>
-        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 reveal ${v ? "visible" : ""}`}>
-          {FEATURES.map((f, i) => (
-            <div key={i} className="glass-card rounded-2xl p-6" style={{ transitionDelay: `${i * 80}ms` }}>
-              <div className="flex mb-4" style={{ color: f.c, filter: `drop-shadow(0 0 8px ${f.c}66)` }}>{f.icon}</div>
-              <h3 className="font-syne text-white font-extrabold text-lg mb-2">{f.title}</h3>
-              <p className="font-body text-slate-400 text-sm leading-relaxed">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// ─── Products ──────────────────────────────────────────────────────
-const fetcher = (url: string) => axios.get(url).then(res => res.data);
-
-const ProductsList = () => {
-  const { ref, v } = useReveal();
-  const { data: categories, error } = useSWR('http://localhost:3001/public/products/categories', fetcher);
-
-  return (
-    <section id="produk" className="py-24 relative bg-navy-deep">
-      <div className="container mx-auto px-6 relative z-10">
-        <div ref={ref} className={`text-center mb-16 reveal ${v ? "visible" : ""}`}>
-          <p className="font-body text-cyan text-xs uppercase tracking-[.2em] mb-3">Koleksi Lengkap</p>
-          <h2 className="font-heading text-white text-4xl md:text-5xl lg:text-6xl mb-2">
-            GAME <span className="text-gradient-gold">POPULER</span>
-          </h2>
-          <p className="font-body text-slate-500 text-sm">Top up langsung, proses instan</p>
-        </div>
-        <div className={`grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 reveal ${v ? "visible" : ""}`}>
-          {!categories ? (
-            <div className="col-span-full text-center py-20 text-slate-500">Memuat game...</div>
-          ) : categories.map((c: any, i: number) => (
-            <a href={`/produk/${c.slug}`} key={c.id} className="group rounded-2xl overflow-hidden cursor-pointer border border-white/5 hover:border-cyan/40 hover:-translate-y-1 transition-all duration-300 block" style={{ transitionDelay: `${i * 30}ms` }}>
-              <div className="h-36 flex items-center justify-center relative overflow-hidden bg-slate-800">
-                {c.image ? (
-                  <img src={c.image} alt={c.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-transform duration-300" />
-                ) : (
-                  <span className="font-heading text-4xl opacity-80 group-hover:scale-110 transition-transform duration-300 text-slate-300">{c.name.substring(0, 2)}</span>
-                )}
-              </div>
-              <div className="p-3" style={{ background: "#0d1c3d" }}>
-                <p className="font-body text-white text-sm font-semibold truncate">{c.name}</p>
-                <div className="flex justify-between items-center mt-1">
-                  <span className="font-body inline-flex items-center gap-1 text-[10px] text-mint">
-                    <span className="w-1.5 h-1.5 rounded-full bg-mint inline-block" /> Tersedia
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-bold">{c.skuCount || 0} Item</span>
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// ─── How it Works ──────────────────────────────────────────────────
-const HowItWorks = () => {
-  const { ref, v } = useReveal();
-  return (
-    <section className="py-24 overflow-hidden relative" style={{ background: "linear-gradient(180deg,#050f24,#020818)" }}>
-      <div className="container mx-auto px-6">
-        <div ref={ref} className={`text-center mb-20 reveal ${v ? "visible" : ""}`}>
-          <p className="font-body text-cyan text-xs uppercase tracking-[.2em] mb-3">Mudah & Cepat</p>
-          <h2 className="font-heading text-white text-4xl md:text-5xl lg:text-6xl">CARA <span className="text-gradient-gold">TOP UP</span></h2>
-        </div>
-        <div className={`relative flex flex-col md:flex-row items-center gap-12 md:gap-0 reveal ${v ? "visible" : ""}`}>
-          <div className="hidden md:block absolute top-[80px] left-1/2 -translate-x-1/2 w-2/3 h-px" style={{ background: "linear-gradient(90deg,transparent,rgba(201,168,76,.3),#38D9F5,rgba(201,168,76,.3),transparent)" }} />
-          {STEPS.map((s, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center text-center px-6 relative">
-              <span className="font-heading absolute -top-8 opacity-[.04] text-8xl md:text-9xl select-none pointer-events-none" style={{ color: s.c }}>{s.num}</span>
-              <div className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center mb-5 border-2 hover:scale-110 transition-transform duration-300" style={{ background: `${s.c}18`, borderColor: `${s.c}55`, color: s.c, filter: `drop-shadow(0 0 14px ${s.c}44)` }}>{s.icon}</div>
-              <div className="w-8 h-8 rounded-full flex items-center justify-center font-body font-bold text-xs mb-3 text-navy-deep" style={{ background: s.c }}>{i + 1}</div>
-              <h3 className="font-syne text-white font-extrabold text-xl mb-2">{s.title}</h3>
-              <p className="font-body text-slate-400 text-sm leading-relaxed max-w-[200px]">{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// ─── Testimonials ──────────────────────────────────────────────────
-const Testimonials = () => {
-  const { ref, v } = useReveal();
-  return (
-    <section className="py-24" style={{ background: "#0a1735" }}>
-      <div className="container mx-auto px-6">
-        <div ref={ref} className={`text-center mb-16 reveal ${v ? "visible" : ""}`}>
-          <p className="font-body text-cyan text-xs uppercase tracking-[.2em] mb-3">Testimoni</p>
-          <h2 className="font-heading text-white text-4xl md:text-5xl lg:text-6xl">DIPERCAYA <span className="text-gradient-gold">RIBUAN GAMER</span></h2>
-        </div>
-        <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 reveal ${v ? "visible" : ""}`}>
-          {TESTI.map((t, i) => (
-            <div key={i} className="glass-card rounded-2xl p-6 flex flex-col" style={{ transitionDelay: `${i * 100}ms` }}>
-              <div className="flex gap-1 mb-4">{Array.from({ length: t.stars }).map((_, j) => <IStar key={j} />)}</div>
-              <p className="font-body text-slate-300 text-sm leading-relaxed italic flex-1 mb-6">&ldquo;{t.text}&rdquo;</p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-body font-bold text-sm text-navy-deep" style={{ background: "linear-gradient(135deg,#C9A84C,#38D9F5)" }}>{t.init}</div>
-                  <div>
-                    <p className="font-body text-white text-sm font-semibold">{t.name}</p>
-                    <p className="font-body text-slate-500 text-xs">{t.city}</p>
-                  </div>
-                </div>
-                <span className="font-body text-[10px] text-mint border border-mint/30 bg-mint/[.08] px-2.5 py-0.5 rounded-full">✓ Verified</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// ─── Footer ────────────────────────────────────────────────────────
-const Footer = () => (
-  <footer id="kontak" className="pt-16 pb-8 border-gold-t bg-navy-deep">
-    <div className="container mx-auto px-6">
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-10 mb-12">
-        <div className="md:col-span-2">
-          <div className="flex items-center gap-2.5 mb-4">
-            <span className="text-gold"><IGamepad /></span>
-            <span className="font-heading text-white text-2xl tracking-[.1em]">DAGANGPLAY</span>
-          </div>
-          <p className="font-body text-slate-500 text-sm leading-relaxed max-w-xs mb-5">Platform top up & voucher game terpercaya. Proses otomatis, harga terbaik, layanan 24/7.</p>
-          <div className="flex items-center gap-2.5">
-            {SOCIALS.map((s, i) => (
-              <a key={i} href={s.href} aria-label={s.label} className="w-9 h-9 rounded-full flex items-center justify-center text-cyan border border-cyan/25 hover:bg-cyan/10 hover:border-cyan transition-all duration-300">{s.icon}</a>
-            ))}
-          </div>
-        </div>
-        {FOOTCOLS.map((col, i) => (
-          <div key={i}>
-            <h4 className="font-body text-white text-xs font-semibold uppercase tracking-widest mb-4">{col.title}</h4>
-            <ul className="space-y-2.5 list-none p-0 m-0">
-              {col.links.map(l => <li key={l}><a href="#" className="font-body text-sm text-slate-500 hover:text-cyan transition-colors duration-200">{l}</a></li>)}
-            </ul>
-          </div>
-        ))}
-      </div>
-      <div className="pt-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
-        <p className="font-body text-xs text-slate-600">© {new Date().getFullYear()} DagangPlay. All rights reserved.</p>
-        <div className="flex items-center gap-5">
-          {["Kebijakan Privasi", "Syarat & Ketentuan", "Bantuan"].map(item => (
-            <a key={item} href="#" className="font-body text-xs text-slate-600 hover:text-cyan transition-colors duration-200">{item}</a>
-          ))}
-        </div>
-      </div>
-    </div>
-  </footer>
-);
 
 // ─── Home Page ────────────────────────────────────────────────────
 export default function Home() {
   const [mOpen, setMOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  // Fetch Public Content (Banners & Announcements)
-  const { data: contentData } = useSWR('http://localhost:3001/public/products/content', fetcher);
+  // Fetch Public Content
+  const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+  const { data: config } = useSWR(`${baseUrl}/public/orders/config?t=${new Date().getTime()}`, fetcher);
+  const { data: contentData } = useSWR(`${baseUrl}/public/products/content`, fetcher);
+  const { data: categories, error: categoriesError } = useSWR(`${baseUrl}/public/products/categories`, fetcher);
   const banners = contentData?.banners || [];
   const announcements = contentData?.announcements || [];
+
+  const activeTheme = config?.theme?.active || 'dark';
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 50);
@@ -293,34 +84,233 @@ export default function Home() {
     return () => window.removeEventListener("scroll", fn);
   }, []);
 
-  return (
-    <div id="top" className="bg-navy-deep text-white overflow-x-hidden">
-      <Navbar scrolled={scrolled} mOpen={mOpen} setMOpen={setMOpen} />
+  useEffect(() => {
+    if (config?.name) {
+      document.title = `${config.name} – ${config.tagline || 'Top Up Games Tercepat & Termurah'}`;
+    }
+  }, [config]);
 
-      {/* Spacer for navbar height if needed, OR we put announcements below navbar */}
+  // Dynamic Theme Styling
+  const themeClasses: Record<string, any> = {
+    dark: {
+      body: "bg-[#020818] text-white",
+      navbar: scrolled ? "bg-[#020818]/88 shadow-2xl shadow-black/50 nav-blur" : "bg-transparent",
+      featureSec: "bg-gradient-to-b from-navy-mid to-navy-dark",
+      productSec: "bg-navy-deep",
+      howSec: "bg-gradient-to-b from-navy-dark to-navy-deep",
+      testiSec: "bg-navy-mid",
+      ctaSec: "linear-gradient(135deg,#020818,#0a1a3a 50%,#020818)",
+      footer: "bg-navy-deep"
+    },
+    light: {
+      body: "bg-white text-slate-800",
+      navbar: scrolled ? "bg-white/90 shadow-lg nav-blur border-b border-slate-100" : "bg-transparent",
+      featureSec: "bg-slate-50",
+      productSec: "bg-white",
+      howSec: "bg-slate-50",
+      testiSec: "bg-white",
+      ctaSec: "linear-gradient(135deg,#f8fafc,#e2e8f0 50%,#f8fafc)",
+      footer: "bg-slate-50 text-slate-900 border-t border-slate-200"
+    }
+  };
+
+  const t = themeClasses[activeTheme] || themeClasses.dark;
+  const isLight = activeTheme === 'light';
+
+  useEffect(() => {
+    console.log(`[FRONTEND] Active Theme: ${activeTheme}, isLight: ${isLight}`);
+  }, [activeTheme, isLight]);
+
+  return (
+    <div id="top" className={`${t.body} min-h-screen overflow-x-hidden`}>
+      {/* Dynamic Navbar */}
+      <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${t.navbar}`}>
+        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+          <a href="#top" className="flex items-center gap-2.5 group no-underline">
+            <span className={isLight ? "text-indigo-600" : "text-gold drop-shadow-[0_0_8px_rgba(201,168,76,.7)]"}>
+              {config?.logo ? <img src={config.logo} alt="Logo" className="w-8 h-8 object-contain" /> : <IGamepad />}
+            </span>
+            <span className={`font-heading tracking-[.12em] text-2xl uppercase ${isLight ? 'text-slate-900' : 'text-white'}`}>{config?.name || "DAGANGPLAY"}</span>
+          </a>
+
+          <nav className="hidden md:flex items-center gap-8">
+            {NAV.map(l => (
+              <a key={l} href={`#${l.toLowerCase().replace(" ", "-")}`}
+                className={`font-body text-sm transition-all duration-200 relative after:content-[''] after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-0 after:bg-cyan hover:after:w-full ${isLight ? 'text-slate-600 hover:text-indigo-600' : 'text-slate-300 hover:text-cyan'}`}>
+                {l}
+              </a>
+            ))}
+          </nav>
+
+          <a href="#produk" className="btn-mint hidden md:inline-flex text-sm px-5 py-2.5">Mulai Top Up</a>
+
+          <button className={`md:hidden p-1 border-none bg-transparent cursor-pointer ${isLight ? 'text-slate-900' : 'text-white'}`}
+            onClick={() => setMOpen(!mOpen)}>
+            {mOpen ? <IClose /> : <IMenu />}
+          </button>
+        </div>
+      </header>
+
       <div className="pt-16">
-        <AnnouncementBar announcements={announcements} />
+        <AnnouncementBar announcements={announcements} theme={activeTheme} />
       </div>
 
-      <Hero banners={banners} />
-      <Stats />
+      <Hero banners={banners} theme={activeTheme} />
+      <Stats theme={activeTheme} />
 
-      <Features />
-      <ProductsList />
-      <HowItWorks />
-      <Testimonials />
-
-      {/* CTA Banner */}
-      <section id="reseller" className="py-24 relative overflow-hidden" style={{ background: "linear-gradient(135deg,#020818,#0a1a3a 50%,#020818)" }}>
-        <div className="container mx-auto px-6 text-center relative z-10">
-          <p className="font-body text-cyan text-xs uppercase tracking-[.2em] mb-4">Program Reseller</p>
-          <h2 className="font-heading text-white text-4xl md:text-6xl lg:text-7xl leading-tight mb-4">SIAP MULAI JUALAN<br /><span className="text-gradient-gold">VOUCHER GAMES?</span></h2>
-          <p className="font-body text-slate-400 text-base md:text-lg max-w-xl mx-auto mb-10">Daftar gratis, langsung aktif, komisi menggiurkan. Bergabung dengan <span className="text-cyan font-semibold">50.000+ reseller</span> kami sekarang.</p>
-          <a href="/reseller" className="btn-gold text-base md:text-lg px-10 py-4 tracking-wide">🚀 Lihat Program Reseller Lengkap</a>
+      {/* Features Section */}
+      <section id="tentang-kami" className={`py-24 relative ${t.featureSec}`}>
+        <div className="container mx-auto px-6 text-center mb-16">
+          <p className="font-body text-cyan text-xs uppercase tracking-[.2em] mb-3">Keunggulan Platform</p>
+          <h2 className={`font-heading text-4xl md:text-5xl lg:text-6xl mb-4 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            KENAPA PILIH <span className="text-gradient-gold">{config?.name?.toUpperCase() || "DAGANGPLAY"}?</span>
+          </h2>
+          <span className="sep-gold" />
+        </div>
+        <div className="container mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {FEATURES.map((f, i) => (
+            <div key={i} className={`rounded-2xl p-6 border transition-all hover:-translate-y-1 ${isLight ? 'bg-white border-slate-100 shadow-sm' : 'glass-card'}`}>
+              <div className="flex mb-4" style={{ color: f.c }}>{f.icon}</div>
+              <h3 className={`font-syne font-extrabold text-lg mb-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>{f.title}</h3>
+              <p className={`font-body text-sm leading-relaxed ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{f.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      <Footer />
+      {/* Products Catalog */}
+      <section id="produk" className={`py-24 relative ${t.productSec}`}>
+        <div className="container mx-auto px-6 relative z-10 text-center mb-16">
+          <p className="font-body text-cyan text-xs uppercase tracking-[.2em] mb-3">Koleksi Lengkap</p>
+          <h2 className={`font-heading text-4xl md:text-5xl lg:text-6xl mb-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            GAME <span className="text-gradient-gold">POPULER</span>
+          </h2>
+          <p className="font-body text-slate-500 text-sm">Top up langsung, proses instan</p>
+        </div>
+        <div className="container mx-auto px-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {categoriesError ? (
+            <div className="col-span-full text-center py-20">
+              <p className="text-red-500 font-bold mb-2">Gagal memuat produk ⚠️</p>
+              <button onClick={() => window.location.reload()} className="text-cyan underline text-sm border-none bg-transparent cursor-pointer">Coba Refresh</button>
+            </div>
+          ) : !categories ? (
+            <div className={`col-span-full text-center py-20 flex flex-col items-center gap-3 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+              <div className="w-10 h-10 border-4 border-cyan/20 border-t-cyan rounded-full animate-spin"></div>
+              <span>Sedang menyiapkan katalog game terbaik untuk Anda...</span>
+            </div>
+          ) : categories.length === 0 ? (
+            <div className={`col-span-full text-center py-20 font-medium ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
+              Katalog produk sedang dalam pemeliharaan. Kembali sesaat lagi.
+            </div>
+          ) : categories.map((c: any, i: number) => (
+            <a href={`/produk/${c.slug}`} key={c.id} className="group rounded-2xl overflow-hidden cursor-pointer border border-transparent hover:border-cyan/40 hover:-translate-y-1 transition-all duration-300 block shadow-sm">
+              <div className="h-40 flex items-center justify-center relative overflow-hidden bg-slate-800">
+                {c.image ? (
+                  <img src={c.image} alt={c.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                ) : (
+                  <span className="font-heading text-4xl text-white opacity-40">{c.name.substring(0, 2)}</span>
+                )}
+              </div>
+              <div className={isLight ? "p-4 bg-white" : "p-4 bg-navy-mid"}>
+                <p className={`font-body text-sm font-bold truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>{c.name}</p>
+                <div className="flex justify-between items-center mt-1 text-[10px]">
+                  <span className="text-mint font-bold italic">✓ Instan</span>
+                  <span className="text-slate-400 font-bold">{c.skuCount || 0} Item</span>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      {/* How it Works */}
+      <section className={`py-24 overflow-hidden relative ${t.howSec}`}>
+        <div className="container mx-auto px-6 text-center mb-20">
+          <p className="font-body text-cyan text-xs uppercase tracking-[.2em] mb-3">Mudah & Cepat</p>
+          <h2 className={`font-heading text-4xl md:text-5xl lg:text-6xl ${isLight ? 'text-slate-900' : 'text-white'}`}>CARA <span className="text-gradient-gold">TOP UP</span></h2>
+        </div>
+        <div className="container mx-auto px-6 relative flex flex-col md:flex-row items-center gap-12 md:gap-0">
+          {STEPS.map((s, i) => (
+            <div key={i} className="flex-1 flex flex-col items-center text-center px-6 relative">
+              <span className="font-heading absolute -top-8 opacity-[.06] text-8xl md:text-9xl select-none pointer-events-none" style={{ color: s.c }}>{s.num}</span>
+              <div className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center mb-5 border-2" style={{ background: `${s.c}18`, borderColor: `${s.c}55`, color: s.c }}>{s.icon}</div>
+              <h3 className={`font-syne font-extrabold text-xl mb-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>{s.title}</h3>
+              <p className={`font-body text-sm leading-relaxed max-w-[200px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className={`py-24 ${t.testiSec}`}>
+        <div className="container mx-auto px-6 text-center mb-16">
+          <p className="font-body text-cyan text-xs uppercase tracking-[.2em] mb-3">Testimoni</p>
+          <h2 className={`font-heading text-4xl md:text-5xl lg:text-6xl ${isLight ? 'text-slate-900' : 'text-white'}`}>DIPERCAYA <span className="text-gradient-gold">RIBUAN GAMER</span></h2>
+        </div>
+        <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+          {TESTI.map((t, i) => (
+            <div key={i} className={`rounded-2xl p-6 flex flex-col border ${isLight ? 'bg-slate-50 border-slate-200 shadow-sm' : 'glass-card'}`}>
+              <div className="flex gap-1 mb-4">{Array.from({ length: t.stars }).map((_, j) => <IStar key={j} />)}</div>
+              <p className={`font-body text-sm leading-relaxed italic flex-1 mb-6 ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>&ldquo;{t.text}&rdquo;</p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center font-body font-bold text-sm text-navy-deep bg-gradient-to-br from-gold to-cyan">{t.init}</div>
+                <div>
+                  <p className={`font-body text-sm font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>{t.name}</p>
+                  <span className="text-[10px] text-mint font-bold uppercase tracking-wider">✓ Verified Buyer</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA Footer */}
+      <section id="reseller" className="py-24 relative overflow-hidden" style={{ background: t.ctaSec }}>
+        <div className="container mx-auto px-6 text-center relative z-10">
+          <p className="font-body text-cyan text-xs uppercase tracking-[.2em] mb-4">Program Reseller</p>
+          <h2 className={`font-heading text-4xl md:text-6xl lg:text-7xl leading-tight mb-4 ${isLight ? 'text-slate-900' : 'text-white'}`}>SIAP MULAI JUALAN<br /><span className="text-gradient-gold">VOUCHER GAMES?</span></h2>
+          <p className={`font-body text-base md:text-lg max-w-xl mx-auto mb-10 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Daftar gratis, langsung aktif, komisi menggiurkan. Bergabung dengan <span className="text-cyan font-semibold">50.000+ reseller</span> kami sekarang.</p>
+          <a href="/reseller" className="btn-gold text-base md:text-lg px-10 py-4 tracking-wide shadow-gold">🚀 Lihat Program Reseller Lengkap</a>
+        </div>
+      </section>
+
+      <footer id="kontak" className={`pt-16 pb-8 ${t.footer}`}>
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-10 mb-12">
+            <div className="md:col-span-2">
+              <div className="flex items-center gap-2.5 mb-4">
+                <span className={isLight ? "text-indigo-600" : "text-gold"}>{config?.logo ? <img src={config.logo} alt="Logo" className="w-6 h-6 object-contain" /> : <IGamepad />}</span>
+                <span className={`font-heading text-2xl tracking-[.1em] uppercase ${isLight ? 'text-slate-900' : 'text-white'}`}>{config?.name || "DAGANGPLAY"}</span>
+              </div>
+              <p className="font-body text-slate-500 text-sm leading-relaxed max-w-xs mb-5">
+                {config?.tagline || "Platform top up & voucher game terpercaya. Proses otomatis, harga terbaik, layanan 24/7."}
+              </p>
+              <div className="flex items-center gap-2.5">
+                {SOCIALS.map((s, i) => (
+                  <a key={i} href={s.href} aria-label={s.label} className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all duration-300 ${isLight ? 'text-slate-400 border-slate-200 hover:text-indigo-600 hover:border-indigo-600' : 'text-cyan border-cyan/25 hover:bg-cyan/10 hover:border-cyan'}`}>{s.icon}</a>
+                ))}
+              </div>
+            </div>
+            {FOOTCOLS.map((col, i) => (
+              <div key={i}>
+                <h4 className={`font-body text-xs font-semibold uppercase tracking-widest mb-4 ${isLight ? 'text-slate-900' : 'text-white'}`}>{col.title}</h4>
+                <ul className="space-y-2.5 list-none p-0 m-0">
+                  {col.links.map(l => <li key={l}><a href="#" className="font-body text-sm text-slate-500 hover:text-cyan transition-colors">{l}</a></li>)}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <div className="pt-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-xs text-slate-500">
+              © {new Date().getFullYear()} {config?.name || "DagangPlay"}. {!config?.whiteLabel && !config?.isOfficial && <span className="opacity-50 ml-1">Powered by DagangPlay</span>}
+            </p>
+            <div className="flex items-center gap-4 text-xs text-slate-500">
+              <a href="#" className="hover:text-cyan transition-colors">Syarat & Ketentuan</a>
+              <a href="#" className="hover:text-cyan transition-colors">Kebijakan Privasi</a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

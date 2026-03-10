@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
+import { SubscriptionsService } from '../../admin/subscriptions/subscriptions.service';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class TeamService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private subscriptionsService: SubscriptionsService
+    ) { }
 
     async getTeamMembers(merchantId: string) {
         return this.prisma.merchantMember.findMany({
@@ -14,6 +18,9 @@ export class TeamService {
     }
 
     async addTeamMember(merchantId: string, data: any) {
+        // Enforce SaaS Limit
+        await this.subscriptionsService.checkFeatureLimit(merchantId, 'multiUser');
+
         // Find if user already exists
         let user = await this.prisma.user.findUnique({ where: { email: data.email } });
 

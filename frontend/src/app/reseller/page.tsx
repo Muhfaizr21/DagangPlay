@@ -2,56 +2,808 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-    ShieldCheck,
-    Zap,
-    Coins,
-    TrendingUp,
-    ChevronRight,
-    CheckCircle2,
-    MonitorPlay,
-    Layout,
-    Search,
-    ArrowRight,
-    ChevronDown,
-    Star,
-    XCircle,
-    Check,
-    Gamepad2
+    ShieldCheck, Zap, Coins, TrendingUp, CheckCircle2,
+    MonitorPlay, Layout, Search, ArrowRight, ChevronDown,
+    Star, Check, ArrowUpRight, Minus, Play, BarChart3,
+    Users, Globe, Sparkles, ChevronRight
 } from 'lucide-react';
 import PriceCatalog from '@/components/PriceCatalog';
 
+/* ─────────────────────────────────────────────────────
+   DESIGN: "Luxury Fintech Command Center"
+   — Deep navy #0A1628 as dominant base
+   — Pure white sections for contrast rhythm
+   — True black #060A0F for depth panels
+   — Gold #E8B84B as single precious accent
+   — Plus Jakarta Sans: bold, geometric, modern
+   — Asymmetric hero with diagonal clip
+   — Floating stat cards with layered depth shadows
+   — Editorial typography scale
+───────────────────────────────────────────────────── */
 
-// --- MOCK DATA FOR PLANS ---
-// Nanti ini bisa diambil dari API settingan Super Admin
-const RESELLER_PLANS = [
-    {
-        id: 'PRO',
-        name: 'Pro',
-        price: 150000,
-        features: ['Keuntungan hingga 15%', 'Support Prioritas', 'Website Subdomain'],
-        monthlyProfitEst: 1500000
-    },
-    {
-        id: 'LEGEND',
-        name: 'Legend',
-        price: 350000,
-        features: ['Keuntungan hingga 25%', 'Support VIP 24/7', 'Website Domain Sendiri', 'Akses API Dasar'],
-        monthlyProfitEst: 4500000
-    },
-    {
-        id: 'SUPREME',
-        name: 'Supreme',
-        price: 750000,
-        features: ['Harga Modal Termurah', 'Support Dedicated Manager', 'Website Domain Sendiri', 'Akses API Full', 'Custom Aplikasi Android'],
-        monthlyProfitEst: 12000000
+const Styles = () => (
+    <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,700;1,800&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:      #0A1628;
+      --navy-mid:  #0D1E38;
+      --navy-lit:  #132544;
+      --navy-soft: #1A3260;
+      --white:     #FFFFFF;
+      --off:       #F4F6FA;
+      --black:     #060A0F;
+      --black2:    #0C1118;
+      --gold:      #E8B84B;
+      --gold-dim:  rgba(232,184,75,0.15);
+      --gold-glow: rgba(232,184,75,0.3);
+      --slate:     rgba(255,255,255,0.07);
+      --slate2:    rgba(255,255,255,0.04);
+      --border-n:  rgba(255,255,255,0.08);
+      --border-w:  rgba(10,22,40,0.1);
+      --text-dim:  rgba(255,255,255,0.55);
+      --text-mute: rgba(255,255,255,0.3);
+      --navy-text: #2D4A6E;
+      --body-text: #4A5568;
+      --ff: 'Plus Jakarta Sans', sans-serif;
+      --sh: 0 24px 60px rgba(6,10,15,0.5), 0 4px 20px rgba(6,10,15,0.3);
+      --sh2: 0 40px 80px rgba(6,10,15,0.6);
+      --r4: 4px; --r8: 8px; --r12: 12px; --r16: 16px; --r24: 24px;
     }
-];
 
-const SAMPLE_PRODUCTS = [
-    { name: 'Mobile Legends 86 Diamonds', normal: 19500, pro: 18800, legend: 18500, supreme: 18100, img: 'https://cdn.unipin.com/images/icon_product_channels/1592285005-icon-ml.png' },
-    { name: 'Free Fire 70 Diamonds', normal: 10000, pro: 9500, legend: 9300, supreme: 9000, img: 'https://cdn.unipin.com/images/icon_product_channels/1598282333-icon-ff.png' },
-    { name: 'PUBG M 60 UC', normal: 14000, pro: 13500, legend: 13200, supreme: 12800, img: 'https://cdn.unipin.com/images/icon_product_channels/1593414902-icon-pubgm.png' },
+    html { scroll-behavior: smooth; }
+    body { background: var(--navy); font-family: var(--ff); }
+
+    .root { font-family: var(--ff); background: var(--navy); color: var(--white); overflow-x: hidden; }
+
+    /* ── NAV ── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: 64px; padding: 0 2.5rem;
+      display: flex; align-items: center;
+      background: rgba(10,22,40,0.85);
+      backdrop-filter: blur(24px) saturate(160%);
+      border-bottom: 1px solid var(--border-n);
+    }
+    .nav::after {
+      content: '';
+      position: absolute; bottom: -1px; left: 2.5rem; right: 2.5rem;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(232,184,75,0.4), transparent);
+    }
+    .nav-brand { display: flex; align-items: center; gap: .75rem; text-decoration: none; margin-right: auto; }
+    .nav-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--gold), #d4a030);
+      border-radius: var(--r8);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 13px; color: var(--navy);
+      box-shadow: 0 4px 16px var(--gold-glow);
+      letter-spacing: -.03em;
+    }
+    .nav-name { font-weight: 800; font-size: 1.05rem; color: var(--white); letter-spacing: -.01em; }
+    .nav-links { display: flex; gap: .25rem; margin-right: 1rem; }
+    .nav-lk {
+      padding: .5rem .875rem; border-radius: var(--r8);
+      font-size: .8rem; font-weight: 500; color: var(--text-dim);
+      text-decoration: none; letter-spacing: .01em;
+      transition: color .15s, background .15s;
+    }
+    .nav-lk:hover { color: var(--white); background: var(--slate); }
+    .nav-login {
+      height: 36px; padding: 0 1.1rem;
+      border: 1px solid var(--border-n); border-radius: var(--r8);
+      color: var(--text-dim); font-size: .8rem; font-weight: 500;
+      background: transparent; text-decoration: none;
+      display: flex; align-items: center; margin-right: .5rem;
+      transition: all .15s;
+    }
+    .nav-login:hover { color: var(--white); border-color: rgba(255,255,255,0.2); background: var(--slate); }
+    .nav-cta {
+      height: 36px; padding: 0 1.25rem;
+      background: var(--gold); color: var(--navy);
+      font-weight: 700; font-size: .8rem; border-radius: var(--r8);
+      text-decoration: none; display: flex; align-items: center; gap: .35rem;
+      box-shadow: 0 4px 20px var(--gold-glow);
+      transition: all .2s;
+    }
+    .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 30px var(--gold-glow); background: #f0c55a; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      background: var(--navy);
+      position: relative; overflow: hidden;
+      padding-top: 64px;
+      display: flex; flex-direction: column;
+    }
+
+    /* Mesh background */
+    .hero-mesh {
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 60% at 70% 50%, rgba(19,37,68,0.8) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(232,184,75,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 90% 10%, rgba(13,30,56,0.9) 0%, transparent 60%);
+    }
+    /* Grid lines */
+    .hero-grid {
+      position: absolute; inset: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 72px 72px;
+    }
+    /* Diagonal cut at bottom */
+    .hero-cut {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 120px;
+      background: var(--white);
+      clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0 100%);
+    }
+
+    .hero-inner {
+      flex: 1; display: grid; grid-template-columns: 1fr 1fr;
+      max-width: 1280px; margin: 0 auto; width: 100%;
+      padding: 5rem 2.5rem 4rem;
+      gap: 4rem; align-items: center;
+      position: relative; z-index: 2;
+    }
+
+    /* Left */
+    .hero-left {}
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .35rem .875rem;
+      background: var(--gold-dim);
+      border: 1px solid rgba(232,184,75,0.3);
+      border-radius: 999px;
+      font-size: .72rem; font-weight: 700; color: var(--gold);
+      letter-spacing: .06em; text-transform: uppercase;
+      margin-bottom: 1.75rem;
+    }
+    .hero-tag-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--gold); box-shadow: 0 0 8px var(--gold);
+      animation: blink 2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    .hero-h1 {
+      font-size: clamp(2.8rem, 5vw, 4.5rem);
+      font-weight: 800; line-height: 1.06;
+      letter-spacing: -.03em; color: var(--white);
+      margin-bottom: 1.5rem;
+    }
+    .hero-h1 .hl {
+      background: linear-gradient(135deg, var(--gold) 0%, #f5d280 50%, var(--gold) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .hero-p {
+      font-size: 1rem; color: var(--text-dim);
+      line-height: 1.75; max-width: 440px;
+      margin-bottom: 2.5rem; font-weight: 400;
+    }
+
+    .hero-btns { display: flex; gap: .75rem; margin-bottom: 3rem; flex-wrap: wrap; }
+    .btn-gold {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .875rem 1.75rem;
+      background: var(--gold); color: var(--navy);
+      font-weight: 700; font-size: .9rem; border-radius: var(--r12);
+      text-decoration: none; border: none; cursor: pointer;
+      box-shadow: 0 4px 24px var(--gold-glow);
+      transition: all .2s;
+    }
+    .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 10px 36px var(--gold-glow); background: #f0c55a; }
+    .btn-ghost-w {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .875rem 1.5rem;
+      background: var(--slate); color: var(--white);
+      font-weight: 600; font-size: .9rem; border-radius: var(--r12);
+      text-decoration: none; border: 1px solid var(--border-n);
+      transition: all .2s; cursor: pointer;
+    }
+    .btn-ghost-w:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.18); }
+
+    .hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+    .hero-stat {}
+    .hero-sv {
+      font-size: 1.75rem; font-weight: 800; letter-spacing: -.03em;
+      color: var(--white);
+    }
+    .hero-sv .g { color: var(--gold); }
+    .hero-sl { font-size: .72rem; color: var(--text-mute); font-weight: 500; margin-top: .1rem; letter-spacing: .03em; }
+    .hero-divider { width: 1px; background: var(--border-n); align-self: stretch; }
+
+    /* Right: Dashboard card */
+    .hero-right { position: relative; }
+    .dash-card {
+      background: var(--black2);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--r24);
+      overflow: hidden;
+      box-shadow: var(--sh2);
+      position: relative;
+    }
+    .dash-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(232,184,75,0.5), transparent);
+    }
+    .dash-top {
+      padding: 1rem 1.25rem;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      background: rgba(255,255,255,0.02);
+    }
+    .dash-top-l { display: flex; align-items: center; gap: .625rem; }
+    .dot-row { display: flex; gap: .35rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dash-title { font-size: .72rem; font-weight: 600; color: var(--text-mute); letter-spacing: .04em; }
+    .dash-live {
+      display: flex; align-items: center; gap: .35rem;
+      font-size: .68rem; font-weight: 700; color: #4ade80;
+      background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.2);
+      padding: .2rem .625rem; border-radius: 999px;
+    }
+    .dash-live::before { content:''; width:5px;height:5px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80; }
+
+    .dash-metrics {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .dash-m {
+      padding: 1rem 1.25rem;
+      border-right: 1px solid rgba(255,255,255,0.04);
+    }
+    .dash-m:last-child { border-right: none; }
+    .dash-ml { font-size: .65rem; font-weight: 600; color: var(--text-mute); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .3rem; }
+    .dash-mv { font-size: 1.1rem; font-weight: 800; color: var(--white); }
+    .dash-md { font-size: .65rem; font-weight: 600; color: #4ade80; margin-top: .15rem; }
+
+    .dash-chart { padding: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .dash-cl { font-size: .65rem; color: var(--text-mute); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .875rem; font-weight: 600; }
+    .chart-bars { display: flex; align-items: flex-end; gap: 3px; height: 72px; }
+    .cbar {
+      flex: 1; border-radius: 2px 2px 0 0;
+      background: rgba(255,255,255,0.07);
+      transition: background .2s;
+    }
+    .cbar.on { background: var(--gold); }
+    .cbar:hover { background: rgba(255,255,255,0.15); }
+
+    .dash-trx-list {}
+    .dash-trx-hd {
+      padding: .75rem 1.25rem;
+      font-size: .65rem; font-weight: 600; color: var(--text-mute);
+      text-transform: uppercase; letter-spacing: .06em;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      display: flex; justify-content: space-between;
+    }
+    .trx-row {
+      display: grid; grid-template-columns: 1.2fr 1.8fr .8fr 1fr;
+      padding: .625rem 1.25rem;
+      font-size: .72rem; color: var(--text-dim);
+      border-bottom: 1px solid rgba(255,255,255,0.02);
+      align-items: center; transition: background .15s;
+    }
+    .trx-row:hover { background: rgba(255,255,255,0.03); }
+    .trx-row:last-child { border-bottom: none; }
+    .trx-id { color: var(--text-mute); font-size: .65rem; }
+    .trx-badge {
+      display: inline-flex; align-items: center;
+      padding: .15rem .5rem; border-radius: 999px;
+      font-size: .6rem; font-weight: 700;
+    }
+    .trx-ok { background: rgba(74,222,128,0.1); color: #4ade80; }
+    .trx-pend { background: rgba(232,184,75,0.12); color: var(--gold); }
+    .trx-amt { font-weight: 700; color: var(--white); text-align: right; }
+
+    /* Floating WoF card */
+    .wof-float {
+      position: absolute; bottom: -20px; left: -30px;
+      background: var(--white);
+      border-radius: var(--r16);
+      padding: .875rem 1rem;
+      box-shadow: 0 20px 60px rgba(6,10,15,0.4);
+      min-width: 220px; z-index: 10;
+    }
+    .wof-label { font-size: .62rem; font-weight: 700; color: var(--navy-text); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .625rem; }
+    .wof-row { display: flex; flex-direction: column; gap: .4rem; }
+    .wof-item { display: flex; align-items: center; gap: .5rem; }
+    .wof-av { width: 26px; height: 26px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+    .wof-name { font-size: .75rem; font-weight: 600; color: var(--navy); }
+    .wof-amt { font-size: .7rem; font-weight: 700; color: var(--gold); margin-left: auto; }
+
+    /* ── MARQUEE STRIP ── */
+    .strip {
+      background: var(--navy-soft);
+      height: 44px; overflow: hidden;
+      display: flex; align-items: center;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .strip-track {
+      display: flex; gap: 3rem;
+      animation: marquee 30s linear infinite;
+      white-space: nowrap;
+    }
+    @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+    .strip-item {
+      display: flex; align-items: center; gap: .5rem;
+      font-size: .75rem; font-weight: 600; color: rgba(255,255,255,0.6);
+    }
+    .strip-dot { color: var(--gold); opacity: .5; }
+
+    /* ── WHITE SECTION (features, compare, faq) ── */
+    .sec-white { background: var(--white); }
+    .sec-navy { background: var(--navy); }
+    .sec-dark { background: var(--black); }
+    .sec-offwhite { background: var(--off); }
+
+    /* ── SECTION HEADER ── */
+    .s-eyebrow {
+      display: inline-flex; align-items: center; gap: .5rem;
+      font-size: .72rem; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; margin-bottom: .875rem;
+    }
+    .s-eyebrow.gold { color: var(--gold); }
+    .s-eyebrow.navy { color: var(--navy-soft); }
+    .s-eyebrow.line::after { content:''; display:block; width:24px; height:2px; background:currentColor; border-radius:1px; }
+
+    .s-h2-white {
+      font-size: clamp(2rem, 3.5vw, 3rem);
+      font-weight: 800; letter-spacing: -.03em; line-height: 1.1;
+      color: var(--white); margin-bottom: 1rem;
+    }
+    .s-h2-white em { font-style: normal; color: var(--gold); }
+    .s-h2-dark {
+      font-size: clamp(2rem, 3.5vw, 3rem);
+      font-weight: 800; letter-spacing: -.03em; line-height: 1.1;
+      color: var(--navy); margin-bottom: 1rem;
+    }
+    .s-h2-dark em { font-style: normal; color: var(--navy-soft); }
+    .s-p-white { font-size: .9rem; color: var(--text-dim); line-height: 1.75; max-width: 500px; }
+    .s-p-dark { font-size: .9rem; color: var(--body-text); line-height: 1.75; max-width: 500px; }
+
+    .s-wrap { max-width: 1280px; margin: 0 auto; padding: 5.5rem 2.5rem; }
+    .s-wrap-sm { max-width: 1280px; margin: 0 auto; padding: 4rem 2.5rem; }
+
+    /* ── FEATURES ── */
+    .feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; margin-top: 3.5rem; }
+    .feat-card {
+      background: var(--white);
+      border: 1px solid var(--border-w);
+      border-radius: var(--r16);
+      padding: 2rem;
+      transition: all .25s;
+      position: relative; overflow: hidden;
+      box-shadow: 0 2px 12px rgba(10,22,40,0.06);
+    }
+    .feat-card::before {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--navy), var(--navy-soft));
+      transform: scaleX(0); transform-origin: left;
+      transition: transform .3s;
+    }
+    .feat-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(10,22,40,0.12); }
+    .feat-card:hover::before { transform: scaleX(1); }
+    .feat-icon-wrap {
+      width: 48px; height: 48px; border-radius: var(--r12);
+      background: linear-gradient(135deg, var(--navy), var(--navy-soft));
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gold); margin-bottom: 1.25rem;
+      box-shadow: 0 8px 20px rgba(10,22,40,0.2);
+    }
+    .feat-title { font-size: 1.05rem; font-weight: 700; color: var(--navy); margin-bottom: .5rem; letter-spacing: -.01em; }
+    .feat-desc { font-size: .84rem; color: var(--body-text); line-height: 1.7; }
+
+    /* ── DEMO ── */
+    .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 3.5rem; }
+    .demo-card {
+      background: var(--navy-lit);
+      border: 1px solid var(--border-n);
+      border-radius: var(--r16);
+      overflow: hidden;
+      transition: all .25s;
+    }
+    .demo-card:hover { transform: translateY(-3px); box-shadow: 0 30px 60px rgba(6,10,15,0.4); border-color: rgba(232,184,75,0.2); }
+    .demo-thumb {
+      aspect-ratio: 16/9; position: relative; overflow: hidden;
+      background: var(--navy-mid);
+    }
+    .demo-thumb-bg { position: absolute; inset: 0; padding: 1rem; display: flex; flex-direction: column; gap: .5rem; }
+    .demo-mock-bar { height: 20px; background: rgba(255,255,255,0.05); border-radius: var(--r4); }
+    .demo-mock-grid { flex: 1; display: grid; grid-template-columns: .8fr 2fr; gap: .5rem; }
+    .demo-mock-side { background: rgba(255,255,255,0.04); border-radius: var(--r4); }
+    .demo-mock-main { display: flex; flex-direction: column; gap: .35rem; }
+    .demo-mock-row { background: rgba(255,255,255,0.04); border-radius: var(--r4); flex: 1; }
+    .demo-overlay {
+      position: absolute; inset: 0; background: rgba(10,22,40,0.6);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity .2s;
+    }
+    .demo-card:hover .demo-overlay { opacity: 1; }
+    .demo-play-btn {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: var(--gold); color: var(--navy);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 30px var(--gold-glow);
+    }
+    .demo-body { padding: 1.5rem; }
+    .demo-tag { font-size: .68rem; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .4rem; }
+    .demo-title { font-size: 1.15rem; font-weight: 700; color: var(--white); margin-bottom: .3rem; letter-spacing: -.01em; }
+    .demo-desc { font-size: .82rem; color: var(--text-dim); margin-bottom: 1.1rem; }
+    .demo-link {
+      display: inline-flex; align-items: center; gap: .35rem;
+      font-size: .8rem; font-weight: 600; color: var(--gold);
+      text-decoration: none; transition: gap .15s;
+    }
+    .demo-link:hover { gap: .55rem; }
+
+    /* ── CALCULATOR ── */
+    .calc-wrap {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 2rem; margin-top: 3.5rem;
+    }
+    .calc-panel {
+      background: var(--white);
+      border: 1px solid var(--border-w);
+      border-radius: var(--r16);
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(10,22,40,0.06);
+    }
+    .plan-row { display: flex; gap: .5rem; margin-bottom: 2rem; }
+    .plan-btn {
+      flex: 1; padding: .625rem;
+      background: var(--off); border: 1.5px solid transparent;
+      border-radius: var(--r8); color: var(--body-text);
+      font-weight: 600; font-size: .8rem;
+      cursor: pointer; transition: all .2s;
+      font-family: var(--ff);
+    }
+    .plan-btn.active {
+      background: var(--navy); color: var(--white);
+      border-color: var(--navy);
+      box-shadow: 0 4px 16px rgba(10,22,40,0.25);
+    }
+    .c-label {
+      font-size: .72rem; font-weight: 700; color: var(--navy-text);
+      text-transform: uppercase; letter-spacing: .05em;
+      margin-bottom: .4rem; display: flex; justify-content: space-between; align-items: center;
+    }
+    .c-chip {
+      background: rgba(10,22,40,0.08); color: var(--navy-soft);
+      padding: .15rem .5rem; border-radius: var(--r4);
+      font-size: .7rem; font-weight: 700;
+    }
+    .c-field { position: relative; margin-bottom: 1.5rem; }
+    .c-pfx { position: absolute; left: .875rem; top: 50%; transform: translateY(-50%); font-size: .72rem; font-weight: 600; color: var(--navy-text); }
+    .c-input {
+      width: 100%; padding: .75rem .875rem .75rem 2.75rem;
+      background: var(--off); border: 1.5px solid rgba(10,22,40,0.1);
+      border-radius: var(--r8); color: var(--navy);
+      font-weight: 700; font-size: .95rem; font-family: var(--ff);
+      outline: none; transition: border-color .15s;
+    }
+    .c-input:focus { border-color: var(--navy-soft); background: var(--white); }
+    .c-input[readonly] { cursor: default; color: var(--body-text); }
+    .c-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; background: #e2e8f0; border-radius: 2px; outline: none; cursor: pointer; accent-color: var(--navy); margin-top: .5rem; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--navy); box-shadow: 0 2px 8px rgba(10,22,40,0.3); }
+    .range-meta { display: flex; justify-content: space-between; margin-top: .35rem; font-size: .68rem; color: var(--body-text); }
+
+    .result-panel {
+      background: linear-gradient(145deg, var(--navy) 0%, var(--navy-soft) 100%);
+      border-radius: var(--r16); padding: 2rem;
+      display: flex; flex-direction: column; justify-content: space-between;
+      position: relative; overflow: hidden;
+      box-shadow: 0 20px 60px rgba(10,22,40,0.4);
+    }
+    .result-panel::before {
+      content: '';
+      position: absolute; top: -40px; right: -40px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(232,184,75,0.15), transparent 70%);
+      pointer-events: none;
+    }
+    .r-label { font-size: .72rem; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .5rem; }
+    .r-val {
+      font-size: clamp(2rem, 3.5vw, 3rem);
+      font-weight: 800; letter-spacing: -.03em; line-height: 1.05;
+      color: var(--white); margin-bottom: .5rem;
+    }
+    .r-note { font-size: .75rem; color: var(--text-mute); margin-bottom: 1.75rem; }
+    .r-tags { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 2rem; }
+    .r-tag {
+      font-size: .7rem; font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: .3rem .75rem; border-radius: 999px;
+    }
+
+    /* ── PLANS ── */
+    .billing-toggle-wrap {
+      display: flex; align-items: center; gap: 1rem;
+      margin-bottom: 2.5rem; flex-wrap: wrap;
+    }
+    .b-toggle {
+      display: flex; background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border-n);
+      border-radius: 999px; padding: .3rem;
+    }
+    .b-tab {
+      padding: .45rem 1.25rem; border-radius: 999px;
+      background: transparent; color: var(--text-dim);
+      font-weight: 600; font-size: .8rem;
+      border: none; cursor: pointer; transition: all .2s;
+      font-family: var(--ff); position: relative;
+    }
+    .b-tab.on { background: var(--white); color: var(--navy); box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+    .b-save {
+      font-size: .7rem; font-weight: 700; color: var(--gold);
+      background: var(--gold-dim); border: 1px solid rgba(232,184,75,0.25);
+      padding: .3rem .875rem; border-radius: 999px;
+    }
+
+    .plans-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; align-items: end; }
+
+    .plan-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-n);
+      border-radius: var(--r16);
+      overflow: hidden; transition: all .25s;
+    }
+    .plan-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.14); }
+    .plan-card.featured {
+      background: var(--white);
+      border-color: transparent;
+      transform: translateY(-12px);
+      box-shadow: 0 40px 80px rgba(6,10,15,0.5);
+    }
+    .plan-card.featured:hover { transform: translateY(-16px); }
+
+    .plan-chip {
+      display: flex; align-items: center; justify-content: center; gap: .4rem;
+      padding: .625rem;
+      background: var(--gold); color: var(--navy);
+      font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    }
+    .plan-body { padding: 2rem; }
+    .plan-name { font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; margin-bottom: .3rem; }
+    .plan-name.dark { color: var(--navy); }
+    .plan-name.light { color: var(--white); }
+    .plan-desc { font-size: .8rem; padding-bottom: 1.5rem; border-bottom: 1px solid; margin-bottom: 1.5rem; }
+    .plan-desc.dark { color: var(--body-text); border-color: rgba(10,22,40,0.08); }
+    .plan-desc.light { color: var(--text-dim); border-color: var(--border-n); }
+    .plan-orig { font-size: .78rem; text-decoration: line-through; margin-bottom: .2rem; }
+    .plan-orig.dark { color: #a0aec0; }
+    .plan-orig.light { color: var(--text-mute); }
+    .plan-price { font-size: 2rem; font-weight: 800; letter-spacing: -.04em; line-height: 1; margin-bottom: .3rem; }
+    .plan-price.dark { color: var(--navy); }
+    .plan-price.light { color: var(--white); }
+    .plan-period { font-size: .72rem; font-weight: 600; margin-bottom: 1.5rem; }
+    .plan-period.dark { color: var(--body-text); }
+    .plan-period.light { color: var(--text-dim); }
+    .plan-cta {
+      display: flex; align-items: center; justify-content: center; gap: .4rem;
+      width: 100%; padding: .8rem;
+      border-radius: var(--r8); font-weight: 700; font-size: .85rem;
+      text-decoration: none; margin-bottom: 1.75rem;
+      transition: all .2s; border: none; cursor: pointer;
+      font-family: var(--ff);
+    }
+    .plan-cta.navy-fill { background: var(--navy); color: var(--white); box-shadow: 0 4px 18px rgba(10,22,40,0.35); }
+    .plan-cta.navy-fill:hover { background: var(--navy-soft); transform: translateY(-1px); }
+    .plan-cta.gold-fill { background: var(--gold); color: var(--navy); box-shadow: 0 4px 18px var(--gold-glow); }
+    .plan-cta.gold-fill:hover { background: #f0c55a; transform: translateY(-1px); }
+    .plan-cta.ghost-w { background: rgba(255,255,255,0.06); color: var(--white); border: 1px solid var(--border-n); }
+    .plan-cta.ghost-w:hover { background: rgba(255,255,255,0.1); }
+    .plan-feats { display: flex; flex-direction: column; gap: .75rem; }
+    .pf { display: flex; align-items: flex-start; gap: .5rem; font-size: .82rem; }
+    .pf.off { opacity: .35; }
+    .pf-i { flex-shrink: 0; margin-top: 1px; }
+    .pf-on-navy { color: var(--navy-soft); }
+    .pf-on-gold { color: var(--gold); }
+    .pf-off-c { color: #a0aec0; }
+    .pf-text-dark { color: var(--navy); }
+    .pf-text-light { color: var(--text-dim); }
+
+    /* ── COMPARISON TABLE ── */
+    .cmp { border: 1px solid var(--border-w); border-radius: var(--r16); overflow: hidden; margin-top: 3rem; }
+    .cmp-head { display: grid; grid-template-columns: 2fr 1fr 1fr; background: var(--navy); }
+    .cmp-th { padding: 1rem 1.5rem; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+    .cmp-th.label { color: rgba(255,255,255,0.4); }
+    .cmp-th.bad { color: #f87171; text-align: center; border-left: 1px solid var(--border-n); }
+    .cmp-th.good { color: var(--gold); text-align: center; border-left: 1px solid var(--border-n); }
+    .cmp-row { display: grid; grid-template-columns: 2fr 1fr 1fr; border-bottom: 1px solid var(--border-w); transition: background .15s; }
+    .cmp-row:hover { background: rgba(10,22,40,0.03); }
+    .cmp-row:last-child { border-bottom: none; }
+    .cmp-td { padding: .875rem 1.5rem; font-size: .84rem; color: var(--navy); font-weight: 500; }
+    .cmp-td.bad { color: #ef4444; border-left: 1px solid var(--border-w); text-align: center; }
+    .cmp-td.good { color: #16a34a; border-left: 1px solid var(--border-w); text-align: center; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: .3rem; }
+    .cmp-foot { display: grid; grid-template-columns: 2fr 1fr 1fr; background: var(--navy); }
+    .cmp-ft { padding: 1.1rem 1.5rem; }
+    .cmp-ft.label { font-size: .72rem; font-weight: 700; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: .06em; display: flex; align-items: center; }
+    .cmp-ft.bad { border-left: 1px solid var(--border-n); text-align: center; }
+    .cmp-ft.good { border-left: 1px solid var(--border-n); text-align: center; }
+    .cmp-ft-val { font-size: 1.1rem; font-weight: 800; }
+    .cmp-ft-val.red { color: #f87171; }
+    .cmp-ft-val.green { color: var(--gold); }
+
+    /* ── ACADEMY ── */
+    .academy-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1.5rem; margin-top: 3.5rem; }
+    .ac-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-n);
+      border-radius: var(--r16);
+      padding: 1.75rem;
+      cursor: pointer; position: relative; overflow: hidden;
+      transition: all .25s;
+    }
+    .ac-card:hover { background: rgba(255,255,255,0.07); border-color: rgba(232,184,75,0.3); transform: translateY(-3px); }
+    .ac-num {
+      font-size: 3.5rem; font-weight: 800; color: rgba(255,255,255,0.06);
+      line-height: 1; margin-bottom: 1.25rem; letter-spacing: -.04em;
+      transition: color .25s;
+    }
+    .ac-card:hover .ac-num { color: rgba(232,184,75,0.15); }
+    .ac-icon { color: var(--gold); margin-bottom: .875rem; }
+    .ac-title { font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: .35rem; letter-spacing: -.01em; }
+    .ac-desc { font-size: .78rem; color: var(--text-dim); line-height: 1.6; }
+    .ac-arrow { position: absolute; top: 1.5rem; right: 1.5rem; color: var(--text-mute); transition: color .2s, transform .2s; }
+    .ac-card:hover .ac-arrow { color: var(--gold); transform: translate(2px,-2px); }
+
+    /* ── TESTIMONIALS ── */
+    .testi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; margin-top: 3.5rem; }
+    .testi-card {
+      background: var(--white);
+      border: 1px solid var(--border-w);
+      border-radius: var(--r16);
+      padding: 2rem;
+      transition: all .25s;
+      box-shadow: 0 2px 12px rgba(10,22,40,0.06);
+    }
+    .testi-card:hover { transform: translateY(-3px); box-shadow: 0 20px 50px rgba(10,22,40,0.1); }
+    .testi-stars { display: flex; gap: .2rem; margin-bottom: 1rem; }
+    .testi-quote {
+      font-size: .87rem; color: var(--body-text); line-height: 1.75;
+      margin-bottom: 1.5rem; font-style: italic;
+      border-left: 3px solid var(--navy); padding-left: 1rem;
+    }
+    .testi-foot { display: flex; align-items: center; gap: .75rem; padding-top: 1.25rem; border-top: 1px solid var(--border-w); }
+    .testi-av {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--navy), var(--navy-soft));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; color: var(--white); font-size: 1rem; flex-shrink: 0;
+    }
+    .testi-name { font-weight: 700; font-size: .85rem; color: var(--navy); }
+    .testi-role { font-size: .72rem; color: var(--body-text); margin-top: .1rem; }
+
+    /* ── FAQ ── */
+    .faq-list { max-width: 720px; margin: 3rem auto 0; }
+    .faq-item {
+      border: 1px solid var(--border-w);
+      border-radius: var(--r12); margin-bottom: .75rem;
+      overflow: hidden; transition: border-color .2s;
+      background: var(--white);
+    }
+    .faq-item[open] { border-color: var(--navy-soft); }
+    .faq-q {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.1rem 1.5rem; cursor: pointer; list-style: none;
+      font-weight: 600; font-size: .9rem; color: var(--navy);
+      transition: background .15s;
+    }
+    .faq-q::-webkit-details-marker { display: none; }
+    .faq-q:hover { background: var(--off); }
+    .faq-icon { flex-shrink: 0; color: var(--navy-text); transition: transform .25s; }
+    details[open] .faq-icon { transform: rotate(45deg); color: var(--navy-soft); }
+    .faq-a {
+      padding: 0 1.5rem 1.1rem;
+      font-size: .83rem; color: var(--body-text); line-height: 1.75; font-weight: 400;
+      border-top: 1px solid var(--border-w); padding-top: 1rem; margin: 0 1.5rem .25rem;
+    }
+
+    /* ── DOMAIN ── */
+    .domain-box {
+      max-width: 620px; margin: 2.5rem auto 0;
+      display: flex;
+      background: var(--white);
+      border: 1.5px solid var(--border-w);
+      border-radius: var(--r12);
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(10,22,40,0.1);
+      transition: border-color .2s;
+    }
+    .domain-box:focus-within { border-color: var(--navy-soft); box-shadow: 0 0 0 4px rgba(19,37,68,0.1); }
+    .domain-ico { padding: 0 .875rem; color: var(--navy-text); display: flex; align-items: center; }
+    .domain-in {
+      flex: 1; padding: .875rem 0;
+      background: transparent; border: none; outline: none;
+      color: var(--navy); font-size: .9rem; font-family: var(--ff);
+    }
+    .domain-in::placeholder { color: #a0aec0; }
+    .domain-sel {
+      background: var(--off); border: none; border-left: 1px solid var(--border-w);
+      color: var(--body-text); padding: 0 .875rem;
+      font-family: var(--ff); font-size: .8rem; outline: none; cursor: pointer;
+    }
+    .domain-btn {
+      padding: 0 1.5rem; background: var(--navy); color: var(--white); border: none; cursor: pointer;
+      font-family: var(--ff); font-size: .82rem; font-weight: 700;
+      display: flex; align-items: center; gap: .35rem; transition: background .15s;
+    }
+    .domain-btn:hover { background: var(--navy-soft); }
+
+    /* ── CTA ── */
+    .cta-section {
+      background: linear-gradient(145deg, var(--black) 0%, var(--navy) 60%);
+      padding: 8rem 2.5rem;
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: 600px; height: 400px;
+      background: radial-gradient(ellipse, rgba(232,184,75,0.08), transparent 70%);
+      pointer-events: none;
+    }
+    .cta-h {
+      font-size: clamp(2.2rem, 4.5vw, 4rem);
+      font-weight: 800; letter-spacing: -.04em; line-height: 1.1;
+      color: var(--white); max-width: 700px; margin: 0 auto 2.5rem;
+      position: relative; z-index: 2;
+    }
+    .cta-h em { font-style: normal; color: var(--gold); }
+
+    /* ── FOOTER ── */
+    .footer {
+      background: var(--black);
+      padding: 1.5rem 2.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px solid rgba(255,255,255,0.04);
+      flex-wrap: wrap; gap: 1rem;
+    }
+    .footer-copy { font-size: .75rem; color: rgba(255,255,255,0.25); letter-spacing: .02em; }
+
+    /* ANIMS */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    .a1{animation:fadeUp .5s ease both .1s}.a2{animation:fadeUp .5s ease both .2s}.a3{animation:fadeUp .5s ease both .32s}.a4{animation:fadeUp .5s ease both .46s}.a5{animation:fadeUp .5s ease both .62s}
+
+    @media(max-width:920px){
+      .hero-inner{grid-template-columns:1fr;padding:3rem 1.5rem}
+      .dash-card{display:none}
+      .feat-grid,.plans-grid,.testi-grid,.academy-grid{grid-template-columns:1fr}
+      .demo-grid,.calc-wrap{grid-template-columns:1fr}
+      .cta-section{padding:5rem 1.5rem}
+      .nav-links,.nav-login{display:none}
+      .s-wrap,.s-wrap-sm{padding:4rem 1.5rem}
+      .cmp-row{grid-template-columns:1fr}
+    }
+  `}</style>
+);
+
+const BARS = [28, 44, 36, 58, 45, 70, 54, 82, 64, 75, 60, 88, 70, 80, 65, 93, 76, 88];
+const TRX = [
+    { id: '#7821', game: 'MLBB 148 Diamonds', st: 'ok', amt: 'Rp 42.500' },
+    { id: '#7820', game: 'Free Fire 70 Diamonds', st: 'ok', amt: 'Rp 11.000' },
+    { id: '#7819', game: 'PUBG 60 UC', st: 'pend', amt: 'Rp 14.500' },
+    { id: '#7818', game: 'MLBB 86 Diamonds', st: 'ok', amt: 'Rp 21.000' },
 ];
+const WOF = [
+    { name: "Fantasi Gamer", profit: "Rp27.8Jt", img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Fantasi" },
+    { name: "Arb Store", profit: "Rp24.5Jt", img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Arb" },
+    { name: "Rolly Store", profit: "Rp18.1Jt", img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rolly" },
+];
+const STRIP = ["MLBB +2.1%", "Free Fire +1.8%", "PUBG M +3.2%", "Genshin -0.5%", "Honkai SR +4.1%", "COD Mobile +2.7%", "Total Trx Hari Ini 14,821", "Reseller Aktif 3,204"];
+const RESELLER_PLANS = [{ id: 'PRO', name: 'Pro' }, { id: 'LEGEND', name: 'Legend' }, { id: 'SUPREME', name: 'Supreme' }];
 
 export default function ResellerLandingPage() {
     const [isMounted, setIsMounted] = useState(false);
@@ -60,814 +812,537 @@ export default function ResellerLandingPage() {
     const [hargaJual, setHargaJual] = useState(40000);
     const [jumlahPenjualan, setJumlahPenjualan] = useState(20);
     const [sampleProducts, setSampleProducts] = useState<any[]>([]);
-
     const [billingCycle, setBillingCycle] = useState<'yearly' | 'quarterly'>('yearly');
+    const MLBB: any = { pro: 39709, legend: 38773, supreme: 38023, normal: 40646 };
 
-    const MLBB_148_PRICES: any = {
-        pro: 39709,
-        legend: 38773,
-        supreme: 38023,
-        normal: 40646
-    };
-
-    // Auto update hargaModal when plan changes (Fixed to MLBB 148)
     useEffect(() => {
-        const modal = MLBB_148_PRICES[selectedPlan.toLowerCase()] || MLBB_148_PRICES.pro;
-        setHargaModal(modal);
-        // Set harga jual default untung dikit biar kalkulator ga kosong
-        setHargaJual(Math.ceil(modal * 1.08 / 500) * 500); // Bulatin ke 500 terdekat
+        const m = MLBB[selectedPlan.toLowerCase()] || MLBB.pro;
+        setHargaModal(m); setHargaJual(Math.ceil(m * 1.08 / 500) * 500);
     }, [selectedPlan]);
 
-
-    const [plansConfig, setPlansConfig] = useState<any>({
-        PRO: { price: 74917, maxProducts: 50, customDomain: true, multiUser: false, whiteLabel: false, customFeatures: [] },
-        LEGEND: { price: 82250, maxProducts: 500, customDomain: true, multiUser: true, whiteLabel: false, customFeatures: [] },
-        SUPREME: { price: 99917, maxProducts: 99999, customDomain: true, multiUser: true, whiteLabel: true, customFeatures: [] }
+    const [plans, setPlans] = useState<any>({
+        PRO: { price: 74917, maxProducts: 50, customDomain: true, multiUser: false, whiteLabel: false, customFeatures: [], description: "Mulai bisnis dengan mudah!" },
+        LEGEND: { price: 82250, maxProducts: 500, customDomain: true, multiUser: true, whiteLabel: false, customFeatures: [], description: "Naik level, untung berlipat!" },
+        SUPREME: { price: 99917, maxProducts: 99999, customDomain: true, multiUser: true, whiteLabel: true, customFeatures: [], description: "Fitur terlengkap, untung maksimal!" },
     });
 
-    const getPriceDetails = (yearlyFinalPrice: number) => {
-        if (!yearlyFinalPrice) yearlyFinalPrice = 0;
-
-        // Harga yang diinput di Super Admin sekarang dianggap sebagai HARGA TAHUNAN FINAL
-        const originalPrice = yearlyFinalPrice * 2.5; // Tampilkan mock harga asli yang dicoret (lebih mahal)
-
-        if (billingCycle === 'yearly') {
-            return {
-                original: originalPrice,
-                discounted: yearlyFinalPrice,
-                label: '/ tahun',
-                monthlyEquivalent: yearlyFinalPrice / 12
-            };
-        } else {
-            // Jika 3 bulan, anggap harganya 30% dari harga tahunan final
-            const quarterlyPrice = Math.round(yearlyFinalPrice * 0.3);
-            return {
-                original: originalPrice * 0.3,
-                discounted: quarterlyPrice,
-                label: '/ 3 bulan',
-                monthlyEquivalent: quarterlyPrice / 3
-            };
-        }
+    const gpd = (p: number) => {
+        if (!p) p = 0; const o = p * 2.5;
+        if (billingCycle === 'yearly') return { original: o, discounted: p, label: '/ tahun', mo: p / 12 };
+        const q = Math.round(p * .3); return { original: o * .3, discounted: q, label: '/ 3 bulan', mo: q / 3 };
     };
 
-    // Fetch plan config dynamically
     useEffect(() => {
         setIsMounted(true);
-        // Coba fetch plan config dari API, jika gagal akan pakai default di atas
-        // Tambahkan query parameter timestamp untuk mematikan cache Next.js / Browser
-        fetch(`http://localhost:3001/public/subscriptions/plans/features?t=${new Date().getTime()}`, {
-            cache: 'no-store',
-            headers: {
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache'
-            }
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data && data.PRO) {
-                    setPlansConfig(data);
-                }
-            })
-            .catch(() => console.log('Using default plan configuration fallback.'));
-
-        // Fetch sample products
+        const fb = [
+            { name: 'Mobile Legends 86 Diamonds', normal: 19500, pro: 18800, legend: 18500, supreme: 18100, img: 'https://cdn.unipin.com/images/icon_product_channels/1592285005-icon-ml.png' },
+            { name: 'Free Fire 70 Diamonds', normal: 10000, pro: 9500, legend: 9300, supreme: 9000, img: 'https://cdn.unipin.com/images/icon_product_channels/1598282333-icon-ff.png' },
+            { name: 'PUBG M 60 UC', normal: 14000, pro: 13500, legend: 13200, supreme: 12800, img: 'https://cdn.unipin.com/images/icon_product_channels/1593414902-icon-pubgm.png' },
+        ];
+        fetch(`http://localhost:3001/public/subscriptions/plans/features?t=${Date.now()}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache,no-store,must-revalidate', 'Pragma': 'no-cache' } })
+            .then(r => r.json()).then(d => { if (d?.PRO) setPlans(d) }).catch(() => { });
         fetch('http://localhost:3001/public/products/reseller-prices')
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data) && data.length > 0) {
-                    setSampleProducts(data);
-                    // Set initial harga modal ke produk pertama
-                    const first = data[0];
-                    const initialModal = first.pro || first.normal || 0;
-                    setHargaModal(initialModal);
-                    setHargaJual(Math.ceil(initialModal * 1.1 / 100) * 100);
-                } else {
-                    // Fallback
-                    setSampleProducts([
-                        { name: 'Mobile Legends 86 Diamonds', normal: 19500, pro: 18800, legend: 18500, supreme: 18100, img: 'https://cdn.unipin.com/images/icon_product_channels/1592285005-icon-ml.png' },
-                        { name: 'Free Fire 70 Diamonds', normal: 10000, pro: 9500, legend: 9300, supreme: 9000, img: 'https://cdn.unipin.com/images/icon_product_channels/1598282333-icon-ff.png' },
-                        { name: 'PUBG M 60 UC', normal: 14000, pro: 13500, legend: 13200, supreme: 12800, img: 'https://cdn.unipin.com/images/icon_product_channels/1593414902-icon-pubgm.png' },
-                    ]);
-                }
-            })
-            .catch(() => {
-                setSampleProducts([
-                    { name: 'Mobile Legends 86 Diamonds', normal: 19500, pro: 18800, legend: 18500, supreme: 18100, img: 'https://cdn.unipin.com/images/icon_product_channels/1592285005-icon-ml.png' },
-                    { name: 'Free Fire 70 Diamonds', normal: 10000, pro: 9500, legend: 9300, supreme: 9000, img: 'https://cdn.unipin.com/images/icon_product_channels/1598282333-icon-ff.png' },
-                    { name: 'PUBG M 60 UC', normal: 14000, pro: 13500, legend: 13200, supreme: 12800, img: 'https://cdn.unipin.com/images/icon_product_channels/1593414902-icon-pubgm.png' },
-                ]);
-            });
+            .then(r => r.json())
+            .then(d => {
+                if (Array.isArray(d) && d.length > 0) { setSampleProducts(d); const f = d[0]; const im = f.pro || f.normal || 0; setHargaModal(im); setHargaJual(Math.ceil(im * 1.1 / 100) * 100); }
+                else setSampleProducts(fb);
+            }).catch(() => setSampleProducts(fb));
     }, []);
 
+    const profit = (hargaJual - hargaModal) * jumlahPenjualan * 30;
+    const fmt = (n: number) => isMounted ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n) : `Rp ${n}`;
 
-    // Hitung Estimasi Keuntungan
-    const profitPerTrx = hargaJual - hargaModal;
-    const profitPerBulan = profitPerTrx * jumlahPenjualan * 30; // asumsi 30 hari
-
-    // Safety check utk Hydration Error locale-formatting
-    const formattedProfit = isMounted
-        ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(profitPerBulan)
-        : `Rp ${profitPerBulan.toString()}`;
-
+    const Feat = ({ on, text, light, accent }: { on: boolean, text: string, light: boolean, accent?: boolean }) => (
+        <div className={`pf${on ? '' : ' off'}`}>
+            {on
+                ? <Check size={14} className={`pf-i ${light ? 'pf-on-gold' : 'pf-on-navy'}`} />
+                : <Minus size={14} className="pf-i pf-off-c" />}
+            <span className={light ? 'pf-text-light' : 'pf-text-dark'} style={accent && on ? { fontWeight: 700 } : {}}>{text}</span>
+        </div>
+    );
 
     return (
-        <div className="min-h-screen bg-slate-50 font-sans selection:bg-indigo-500 selection:text-white pb-20">
+        <div className="root">
+            <Styles />
 
-            {/* Navbar */}
-            <nav className="fixed top-0 left-0 right-0 py-4 px-6 md:px-12 bg-slate-900 border-b border-white/10 z-50 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-cyan-400 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-500/20">
-                        DP
-                    </div>
-                    <span className="font-bold text-xl tracking-tight text-white">
-                        DagangPlay
-                    </span>
+            {/* NAV */}
+            <nav className="nav">
+                <Link href="/" className="nav-brand">
+                    <div className="nav-icon">DP</div>
+                    <span className="nav-name">DagangPlay</span>
+                </Link>
+                <div className="nav-links">
+                    <a href="#features" className="nav-lk">Fitur</a>
+                    <a href="#pricing" className="nav-lk">Harga Modal</a>
+                    <a href="#demo" className="nav-lk">Demo</a>
                 </div>
-                <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
-                    <a href="#features" className="hover:text-white transition-colors">Testimoni</a>
-                    <a href="#pricing" className="hover:text-white transition-colors">Harga Modal</a>
-                    <a href="#demo" className="hover:text-white transition-colors">Demo</a>
-                </div>
-                <div className="flex items-center gap-4">
-                    <Link href="/admin/login" className="text-sm font-semibold text-slate-300 hover:text-white transition-colors hidden md:block">
-                        Masuk
-                    </Link>
-                    <Link href="/reseller/register" className="px-5 py-2.5 rounded-full bg-gradient-to-r from-indigo-600 to-indigo-500 text-white text-sm font-bold shadow-md shadow-indigo-600/30 hover:scale-105 active:scale-95 transition-all">
-                        Daftar Reseller
-                    </Link>
-                </div>
+                <Link href="/admin/login" className="nav-login">Masuk</Link>
+                <Link href="/reseller/register" className="nav-cta">Daftar Reseller <ArrowUpRight size={13} /></Link>
             </nav>
 
-            {/* Hero Section */}
-            <section className="pt-32 pb-20 px-6 md:px-12 bg-slate-900 relative overflow-hidden">
-                <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none"></div>
-                <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-cyan-600/10 rounded-full blur-[120px] pointer-events-none"></div>
-
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12 relative z-10">
-                    <div className="flex-1 text-center md:text-left">
-                        <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight leading-[1.15] mb-6">
-                            Buat <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Web Top Up Otomatis</span> Tidur Pun Cuan Masuk!
+            {/* HERO */}
+            <section className="hero">
+                <div className="hero-mesh" />
+                <div className="hero-grid" />
+                <div className="hero-inner">
+                    <div className="hero-left">
+                        <div className="hero-tag a1"><span className="hero-tag-dot" />&nbsp;Platform Reseller #1 Indonesia</div>
+                        <h1 className="hero-h1 a2">
+                            Buat Web Top Up.<br />
+                            <span className="hl">Tidur Pun<br />Cuan Masuk.</span>
                         </h1>
-                        <p className="text-lg text-slate-400 mb-10 max-w-xl mx-auto md:mx-0">
-                            Biarkan sistem kami yang bekerja, kamu yang terima profitnya. Tanpa deposit saldo, gak ribet.
-                        </p>
-
-                        <div className="flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start">
-                            <a href="#pricing" className="w-full sm:w-auto px-8 py-4 rounded-full bg-transparent border border-slate-700 text-white text-lg font-bold hover:bg-slate-800 transition-all text-center">
-                                Cek Harga Modal
-                            </a>
-                            <Link href="/reseller/register" className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-indigo-600 to-indigo-500 text-white text-lg font-bold shadow-lg shadow-indigo-600/30 hover:scale-105 transition-all text-center flex items-center justify-center gap-2">
-                                Mulai Sekarang <ArrowRight className="w-5 h-5" />
-                            </Link>
+                        <p className="hero-p a3">Sistem otomatis kami yang bekerja keras. Kamu yang terima profitnya. Tanpa deposit, tanpa ribet — langsung jalan dari hari pertama.</p>
+                        <div className="hero-btns a4">
+                            <Link href="/reseller/register" className="btn-gold">Mulai Sekarang <ArrowRight size={15} /></Link>
+                            <a href="#pricing" className="btn-ghost-w">Cek Harga Modal</a>
                         </div>
-
-                        <div className="mt-12 flex flex-col sm:flex-row items-center gap-12 justify-center md:justify-start border-t border-slate-800 pt-8">
-                            <div>
-                                <p className="text-slate-400 text-sm mb-1">Total Omzet Reseller</p>
-                                <p className="text-3xl font-black text-white">Rp<span className="text-4xl">1.928.023.291</span></p>
+                        <div className="hero-stats a5">
+                            <div className="hero-stat">
+                                <div className="hero-sv">Rp<span className="g">1,9M</span></div>
+                                <div className="hero-sl">Total Omzet Reseller</div>
                             </div>
-                            <div>
-                                <p className="text-slate-400 text-sm mb-1">Total Nilai Transaksi</p>
-                                <p className="text-3xl font-black text-white">Rp<span className="text-4xl">40 Miliar</span></p>
+                            <div className="hero-divider" />
+                            <div className="hero-stat">
+                                <div className="hero-sv">Rp<span className="g">40M+</span></div>
+                                <div className="hero-sl">Nilai Transaksi</div>
+                            </div>
+                            <div className="hero-divider" />
+                            <div className="hero-stat">
+                                <div className="hero-sv"><span className="g">14K+</span></div>
+                                <div className="hero-sl">Trx Hari Ini</div>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Wall of Fame */}
-                        <div className="mt-12 hidden md:block">
-                            <p className="text-slate-400 text-sm mb-4">Wall of Fame: Reseller Paling Cuan Bulan Ini 🎖</p>
-                            <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
-                                {[
-                                    { name: "Fantasi Gamer", profit: "Rp27.815.726", img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Fantasi" },
-                                    { name: "Arb Store", profit: "Rp24.534.679", img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Arb" },
-                                    { name: "Rolly Store", profit: "Rp18.128.915", img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rolly" },
-                                    { name: "PHS Top Up", profit: "Rp19.478.850", img: "https://api.dicebear.com/7.x/avataaars/svg?seed=PHS" },
-                                ].map((reseller, idx) => (
-                                    <div key={idx} className="flex-shrink-0 bg-slate-800/50 backdrop-blur-sm border border-slate-700 p-3 rounded-2xl flex items-center gap-3 w-64">
-                                        <div className="w-12 h-12 bg-slate-700 rounded-full overflow-hidden border-2 border-indigo-500">
-                                            <img src={reseller.img} alt={reseller.name} className="w-full h-full object-cover" />
-                                        </div>
-                                        <div>
-                                            <p className="text-white font-bold text-sm truncate">{reseller.name}</p>
-                                            <p className="text-emerald-400 font-bold">{reseller.profit}</p>
-                                        </div>
+                    {/* Dashboard Mockup */}
+                    <div className="hero-right">
+                        <div className="dash-card">
+                            <div className="dash-top">
+                                <div className="dash-top-l">
+                                    <div className="dot-row">
+                                        <div className="dot" style={{ background: '#ff5f57' }} />
+                                        <div className="dot" style={{ background: '#febc2e' }} />
+                                        <div className="dot" style={{ background: '#28c840' }} />
+                                    </div>
+                                    <span className="dash-title">Dashboard Reseller — Bulan Ini</span>
+                                </div>
+                                <span className="dash-live">Live</span>
+                            </div>
+                            <div className="dash-metrics">
+                                {[{ l: 'Omzet', v: 'Rp27.8Jt', d: '▲ 12.4%' }, { l: 'Transaksi', v: '1,284', d: '▲ 8.1%' }, { l: 'Profit Bersih', v: 'Rp4.2Jt', d: '▲ 19.7%' }].map((m, i) => (
+                                    <div key={i} className="dash-m">
+                                        <div className="dash-ml">{m.l}</div>
+                                        <div className="dash-mv">{m.v}</div>
+                                        <div className="dash-md">{m.d}</div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="dash-chart">
+                                <div className="dash-cl">Transaksi 18 Hari Terakhir</div>
+                                <div className="chart-bars">
+                                    {BARS.map((h, i) => <div key={i} className={`cbar${i === BARS.length - 1 ? ' on' : ''}`} style={{ height: `${h}%` }} />)}
+                                </div>
+                            </div>
+                            <div className="dash-trx-list">
+                                <div className="dash-trx-hd"><span>Transaksi Terbaru</span><span>auto-refresh</span></div>
+                                {TRX.map((t, i) => (
+                                    <div key={i} className="trx-row">
+                                        <span className="trx-id">{t.id}</span>
+                                        <span style={{ fontSize: '.72rem', color: 'rgba(255,255,255,0.6)' }}>{t.game}</span>
+                                        <span className={`trx-badge ${t.st === 'ok' ? 'trx-ok' : 'trx-pend'}`}>{t.st === 'ok' ? 'Sukses' : 'Proses'}</span>
+                                        <span className="trx-amt">{t.amt}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        {/* Floating WoF */}
+                        <div className="wof-float">
+                            <div className="wof-label">🏆 Top Reseller Bulan Ini</div>
+                            <div className="wof-row">
+                                {WOF.map((r, i) => (
+                                    <div key={i} className="wof-item">
+                                        <img src={r.img} alt={r.name} className="wof-av" />
+                                        <span className="wof-name">{r.name}</span>
+                                        <span className="wof-amt">{r.profit}</span>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     </div>
+                </div>
+            </section>
 
-                    {/* Mockup Image Area */}
-                    <div className="flex-1 w-full relative perspective-1000 hidden md:block">
-                        <div className="relative w-full aspect-video bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden transform -rotate-y-12 rotate-x-6">
-                            <div className="absolute inset-0 bg-gradient-to-tr from-slate-800 to-slate-900 flex flex-col items-center justify-center p-8">
-                                <div className="w-full h-8 bg-slate-950 rounded-t-xl border-b border-slate-800 flex items-center px-4 gap-2 absolute top-0 left-0">
-                                    <div className="w-3 h-3 rounded-full bg-rose-500"></div>
-                                    <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                                    <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+            {/* STRIP */}
+            <div className="strip">
+                <div className="strip-track">
+                    {[...STRIP, ...STRIP].map((s, i) => (
+                        <span key={i} className="strip-item">{s}<span className="strip-dot"> ✦ </span></span>
+                    ))}
+                </div>
+            </div>
+
+            {/* FEATURES */}
+            <div className="sec-white" id="features">
+                <div className="s-wrap">
+                    <div style={{ maxWidth: 560 }}>
+                        <div className="s-eyebrow navy line">Kenapa DagangPlay?</div>
+                        <h2 className="s-h2-dark">Sistem yang Bekerja<br /><em>Lebih Keras Darimu</em></h2>
+                        <p className="s-p-dark">Fokus ke jualan. Server, teknis, stok, payment — semua kami yang urus sampai beres.</p>
+                    </div>
+                    <div className="feat-grid">
+                        {[
+                            { icon: <Coins size={20} />, title: "Tanpa Modal Deposit", desc: "Mulai tanpa setoran awal. Jualan produk digital tanpa risiko kehilangan modal sepeserpun." },
+                            { icon: <TrendingUp size={20} />, title: "Bebas Atur Margin", desc: "Tentukan sendiri margin keuntunganmu. 20%, 50%, atau 100%? Strategi ada di tanganmu." },
+                            { icon: <ShieldCheck size={20} />, title: "All-in-One Siap Pakai", desc: "Website, domain, server, dan payment gateway sudah terpasang. Tinggal bawa pelanggan." },
+                        ].map((f, i) => (
+                            <div key={i} className="feat-card">
+                                <div className="feat-icon-wrap">{f.icon}</div>
+                                <div className="feat-title">{f.title}</div>
+                                <div className="feat-desc">{f.desc}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* DEMO */}
+            <div className="sec-navy" id="demo">
+                <div className="s-wrap">
+                    <div style={{ maxWidth: 560 }}>
+                        <div className="s-eyebrow gold line">Demo Live</div>
+                        <h2 className="s-h2-white">Jangan Beli Kucing <em>Dalam Karung</em></h2>
+                        <p className="s-p-white">Rasakan sendiri jadi owner. Login, atur harga, dan lihat betapa mudahnya sistem kami.</p>
+                    </div>
+                    <div className="demo-grid">
+                        <div className="demo-card">
+                            <div className="demo-thumb">
+                                <div className="demo-thumb-bg">
+                                    <div className="demo-mock-bar" />
+                                    <div className="demo-mock-grid">
+                                        <div className="demo-mock-side" />
+                                        <div className="demo-mock-main">{[1, 2, 3].map(i => <div key={i} className="demo-mock-row" />)}</div>
+                                    </div>
                                 </div>
-                                <div className="mt-8 grid grid-cols-4 gap-4 w-full">
-                                    {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-                                        <div key={i} className="aspect-square bg-slate-700 rounded-xl relative overflow-hidden group">
-                                            <div className="absolute inset-0 bg-indigo-500/20 group-hover:bg-indigo-500/40 transition-colors"></div>
-                                        </div>
-                                    ))}
-                                </div>
+                                <div className="demo-overlay"><div className="demo-play-btn"><Play size={20} fill="currentColor" /></div></div>
+                            </div>
+                            <div className="demo-body">
+                                <div className="demo-tag">Panel Admin</div>
+                                <div className="demo-title">Demo Panel Reseller</div>
+                                <div className="demo-desc">Jelajahi semua fitur dashboard reseller secara langsung</div>
+                                <Link href="/admin/login" className="demo-link">Login Sebagai Admin <ArrowUpRight size={13} /></Link>
                             </div>
                         </div>
-
-                        {/* Mobile mock */}
-                        <div className="absolute -bottom-10 -right-10 w-48 h-96 bg-slate-950 rounded-[2.5rem] border-8 border-slate-800 shadow-2xl overflow-hidden transform rotate-12 z-20">
-                            <div className="w-full h-full bg-slate-900 p-4">
-                                <div className="w-full h-24 bg-indigo-900/50 rounded-xl mb-4"></div>
-                                <div className="w-full h-12 bg-slate-800 rounded-lg mb-2"></div>
-                                <div className="w-full h-12 bg-slate-800 rounded-lg mb-2"></div>
-                                <div className="w-full h-12 bg-slate-800 rounded-lg mb-2"></div>
+                        <div className="demo-card">
+                            <div className="demo-thumb" style={{ background: 'var(--navy-soft)' }}>
+                                <div className="demo-thumb-bg">
+                                    <div className="demo-mock-bar" style={{ background: 'rgba(255,255,255,0.08)' }} />
+                                    <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '.35rem' }}>
+                                        {[1, 2, 3, 4, 5, 6].map(i => <div key={i} style={{ background: 'rgba(255,255,255,0.07)', borderRadius: '4px' }} />)}
+                                    </div>
+                                </div>
+                                <div className="demo-overlay"><div className="demo-play-btn"><Play size={20} fill="currentColor" /></div></div>
+                            </div>
+                            <div className="demo-body">
+                                <div className="demo-tag">Storefront</div>
+                                <div className="demo-title">Demo Tema Website</div>
+                                <div className="demo-desc">Preview tampilan toko top up yang akan dilihat pelangganmu</div>
+                                <a href="#" className="demo-link" style={{ color: 'rgba(255,255,255,0.5)' }}>Buka Demo <ArrowUpRight size={13} /></a>
                             </div>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            {/* Features (Sistem Otomatis) */}
-            <section id="features" className="py-24 bg-white px-6">
-                <div className="max-w-6xl mx-auto">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-4">Sistem Otomatis yang Kerja Keras Untukmu</h2>
-                        <p className="text-lg text-slate-500">Fokus jualan saja. Urusan teknis, server, dan stok produk biar kami yang urus.</p>
+            {/* CALCULATOR */}
+            <div className="sec-white">
+                <div className="s-wrap">
+                    <div style={{ maxWidth: 560 }}>
+                        <div className="s-eyebrow navy line">Simulasi Profit</div>
+                        <h2 className="s-h2-dark">Hitung <em>Cuan</em> Bulananmu</h2>
+                        <p className="s-p-dark">Gunakan harga modal terbaik kami dan simulasikan penghasilan nyata kamu.</p>
                     </div>
-
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <div className="bg-white p-8 rounded-3xl border-2 border-slate-100 hover:border-indigo-100 transition-colors">
-                            <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-6">
-                                <Coins className="w-8 h-8" />
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-800 mb-3">Tanpa Modal Deposit</h3>
-                            <p className="text-slate-500 leading-relaxed">
-                                Mulai bisnis tanpa perlu setoran awal. Kamu bisa langsung jualan produk digital tanpa risiko kehilangan modal sepeserpun.
-                            </p>
-                        </div>
-                        <div className="bg-white p-8 rounded-3xl border-2 border-slate-100 hover:border-indigo-100 transition-colors">
-                            <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-6">
-                                <TrendingUp className="w-8 h-8" />
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-800 mb-3">Bebas Atur Keuntungan</h3>
-                            <p className="text-slate-500 leading-relaxed">
-                                Tentukan sendiri margin keuntungan yang kamu mau. Mau profit 20%, 50%, atau bahkan 100%? Semua terserah kamu!
-                            </p>
-                        </div>
-                        <div className="bg-white p-8 rounded-3xl border-2 border-slate-100 hover:border-indigo-100 transition-colors">
-                            <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-6">
-                                <ShieldCheck className="w-8 h-8" />
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-800 mb-3">Terima Beres (All-in-One)</h3>
-                            <p className="text-slate-500 leading-relaxed">
-                                Website, Domain, Server, hingga Payment Gateway sudah terpasang. Kamu tinggal fokus promosi.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Demos */}
-            <section id="demo" className="py-24 bg-slate-50 px-6">
-                <div className="max-w-6xl mx-auto text-center">
-                    <p className="text-indigo-600 font-bold tracking-wider uppercase text-sm mb-2">WEBSITE DEMO</p>
-                    <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-4">Jangan Beli Kucing Dalam Karung.<br />Coba Kecanggihan Sistem Kami Sekarang!</h2>
-                    <p className="text-lg text-slate-500 mb-16">Rasakan sensasi jadi Owner. Login ke dashboard, atur harga sesuka hati, dan lihat betapa mudahnya mengelola ribuan produk dalam 1 klik.</p>
-
-                    <div className="grid md:grid-cols-2 gap-8">
-                        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 group">
-                            <div className="w-full aspect-video bg-indigo-50 rounded-xl mb-6 overflow-hidden relative">
-                                <div className="absolute inset-0 flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-indigo-900/10 backdrop-blur-sm">
-                                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-xl text-indigo-600">
-                                        <MonitorPlay className="w-8 h-8 ml-1" />
-                                    </div>
-                                </div>
-                                {/* Placeholder image untuk demo panel */}
-                                <div className="absolute inset-0 bg-slate-100 p-4">
-                                    <div className="w-full h-8 bg-slate-200 rounded-md mb-4 flex items-center px-4">
-                                        <div className="w-20 h-4 bg-slate-300 rounded"></div>
-                                    </div>
-                                    <div className="flex gap-4">
-                                        <div className="w-1/4 h-32 bg-slate-200 rounded-lg"></div>
-                                        <div className="w-3/4 flex flex-col gap-2">
-                                            <div className="w-full h-10 bg-slate-200 rounded-lg"></div>
-                                            <div className="w-full h-10 bg-slate-200 rounded-lg"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3 className="text-2xl font-bold text-slate-800 mb-2">Demo Panel Reseller</h3>
-                            <p className="text-slate-500 mb-6">Jelajahi semua fitur menjadi Reseller</p>
-                            <Link href="/admin/login" className="inline-flex px-6 py-2.5 rounded-full border-2 border-indigo-600 text-indigo-600 font-bold hover:bg-indigo-50 transition-colors items-center gap-2">
-                                Login Sebagai Admin <ChevronRight className="w-4 h-4" />
-                            </Link>
-                        </div>
-
-                        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 group">
-                            <div className="w-full aspect-video bg-cyan-50 rounded-xl mb-6 overflow-hidden relative">
-                                <div className="absolute inset-0 flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-cyan-900/10 backdrop-blur-sm">
-                                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-xl text-cyan-600">
-                                        <Layout className="w-8 h-8" />
-                                    </div>
-                                </div>
-                                {/* Placeholder image untuk demo web */}
-                                <div className="absolute inset-0 bg-slate-900 p-4 flex flex-col pt-8 items-center">
-                                    <div className="w-full max-w-sm h-32 bg-slate-800 rounded-xl mb-4 border border-slate-700"></div>
-                                    <div className="w-full max-w-sm grid grid-cols-3 gap-2">
-                                        <div className="aspect-square bg-slate-800 rounded-lg border border-slate-700"></div>
-                                        <div className="aspect-square bg-slate-800 rounded-lg border border-slate-700"></div>
-                                        <div className="aspect-square bg-slate-800 rounded-lg border border-slate-700"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3 className="text-2xl font-bold text-slate-800 mb-2">Demo Tema Website</h3>
-                            <p className="text-slate-500 mb-6">Mulai coba langsung website toko</p>
-                            <a href="#" className="inline-flex px-6 py-2.5 rounded-full border-2 border-cyan-600 text-cyan-600 font-bold hover:bg-cyan-50 transition-colors items-center gap-2">
-                                Demo Website <ChevronRight className="w-4 h-4" />
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Profit Calculator */}
-            <section className="py-24 bg-white px-6">
-                <div className="max-w-5xl mx-auto">
-                    <div className="text-center mb-16">
-                        <p className="text-indigo-600 font-bold tracking-wider uppercase text-sm mb-2">KALKULATOR PROFIT</p>
-                        <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-4">Coba Hitung Profit Bulanan Kamu!</h2>
-                        <p className="text-lg text-slate-500">Harga terbaik yang siap mendukung bisnis top up anda.</p>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-                        {/* Inputs */}
-                        <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-                            <h4 className="font-bold text-slate-700 mb-4">Rencana ingin ambil paket reseller apa?</h4>
-                            <div className="grid grid-cols-3 gap-3 mb-8">
-                                {RESELLER_PLANS.map(plan => (
-                                    <button
-                                        key={plan.id}
-                                        onClick={() => setSelectedPlan(plan.id)}
-                                        className={`py-3 px-2 rounded-xl border text-sm font-bold transition-all ${selectedPlan === plan.id
-                                            ? 'border-indigo-600 bg-indigo-50 text-indigo-600 shadow-sm'
-                                            : 'border-slate-200 text-slate-500 hover:bg-slate-50'
-                                            }`}
-                                    >
-                                        {plan.name}
-                                    </button>
+                    <div className="calc-wrap">
+                        <div className="calc-panel">
+                            <div className="c-label" style={{ marginBottom: '.5rem' }}><span>Pilih Paket</span></div>
+                            <div className="plan-row">
+                                {RESELLER_PLANS.map(p => (
+                                    <button key={p.id} className={`plan-btn${selectedPlan === p.id ? ' active' : ''}`} onClick={() => setSelectedPlan(p.id)}>{p.name}</button>
                                 ))}
                             </div>
-
-                            <div className="space-y-6">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-bold text-slate-700 mb-2">Harga Modal Tier {selectedPlan}</label>
-                                        <div className="relative">
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium text-xs">Rp</span>
-                                            <input
-                                                type="text"
-                                                readOnly
-                                                value={hargaModal.toLocaleString('id-ID')}
-                                                className="w-full pl-10 pr-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-600 font-bold"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-bold text-slate-700 mb-2">Harga Jual Kamu</label>
-                                        <div className="relative">
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium text-xs">Rp</span>
-                                            <input
-                                                type="number"
-                                                value={hargaJual}
-                                                onChange={(e) => setHargaJual(Number(e.target.value))}
-                                                className="w-full pl-10 pr-4 py-3 bg-white border border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 text-slate-900 font-bold"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
+                            <div className="c-row">
                                 <div>
-                                    <label className="flex justify-between text-sm font-bold text-slate-700 mb-2">
-                                        <span>Target Penjualan Perhari</span>
-                                        <span className="text-indigo-600 font-black px-3 py-1 bg-indigo-50 rounded-lg">{jumlahPenjualan} Order</span>
-                                    </label>
-                                    <input
-                                        type="range"
-                                        min="1" max="500"
-                                        value={jumlahPenjualan}
-                                        onChange={(e) => setJumlahPenjualan(Number(e.target.value))}
-                                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                                    />
-                                    <div className="flex justify-between text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-wider">
-                                        <span>Santai (1)</span>
-                                        <span>Maksimal (500)</span>
+                                    <div className="c-label"><span>Harga Modal {selectedPlan}</span></div>
+                                    <div className="c-field">
+                                        <span className="c-pfx">Rp</span>
+                                        <input type="text" readOnly value={hargaModal.toLocaleString('id-ID')} className="c-input" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="c-label"><span>Harga Jual Kamu</span></div>
+                                    <div className="c-field">
+                                        <span className="c-pfx">Rp</span>
+                                        <input type="number" value={hargaJual} onChange={e => setHargaJual(Number(e.target.value))} className="c-input" />
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        {/* Result */}
-                        <div className="bg-indigo-50 rounded-3xl border border-indigo-100 p-8 shadow-inner relative overflow-hidden flex flex-col justify-center">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-200/50 rounded-full blur-3xl mix-blend-multiply pointer-events-none"></div>
-
-                            <div className="relative z-10 text-center mb-8">
-                                <h3 className="text-lg font-bold text-slate-700 mb-2">Keuntungan Per Bulan</h3>
-                                <div className="text-5xl lg:text-6xl font-black text-indigo-600 tracking-tight">
-                                    {formattedProfit}
+                            <div>
+                                <div className="c-label">
+                                    <span>Target Penjualan / Hari</span>
+                                    <span className="c-chip">{jumlahPenjualan} Order</span>
                                 </div>
-                                <p className="text-sm text-slate-500 mt-4">Profit kotor estimasi. Belum dikurangi biaya operasional.</p>
+                                <input type="range" min="1" max="500" value={jumlahPenjualan} onChange={e => setJumlahPenjualan(Number(e.target.value))} />
+                                <div className="range-meta"><span>Santai (1)</span><span>Maksimal (500)</span></div>
                             </div>
-
-                            <div className="flex gap-4 justify-center mb-8">
-                                <span className="bg-white text-indigo-600 px-4 py-2 rounded-full text-xs font-bold border border-indigo-100 shadow-sm shadow-indigo-100/50">Dapat Website Siap Pakai</span>
-                                <span className="bg-white text-indigo-600 px-4 py-2 rounded-full text-xs font-bold border border-indigo-100 shadow-sm shadow-indigo-100/50">Tanpa Deposit</span>
+                        </div>
+                        <div className="result-panel">
+                            <div>
+                                <div className="r-label">Estimasi Profit / Bulan</div>
+                                <div className="r-val">{fmt(profit)}</div>
+                                <div className="r-note">Estimasi kotor. Belum dikurangi biaya operasional.</div>
+                                <div className="r-tags">
+                                    <span className="r-tag">Website Siap Pakai</span>
+                                    <span className="r-tag">Tanpa Deposit</span>
+                                    <span className="r-tag">Bayar Per Trx</span>
+                                </div>
                             </div>
-
-                            <Link href="/reseller/register" className="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 text-white font-bold text-lg text-center shadow-lg shadow-indigo-500/30 hover:scale-[1.02] transition-transform">
-                                Daftar Sekarang
+                            <Link href="/reseller/register" className="btn-gold" style={{ justifyContent: 'center', width: '100%', fontSize: '.9rem', padding: '1rem' }}>
+                                Daftar Sekarang <ArrowRight size={15} />
                             </Link>
-
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            {/* Subscription Plans Section */}
-            <section id="subscription" className="py-32 bg-slate-900 px-6 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-rose-600/10 blur-[100px] rounded-full pointer-events-none"></div>
-
-                <div className="max-w-7xl mx-auto relative z-10">
-                    <div className="mb-12 flex justify-center">
-                        <div className="bg-slate-800/80 backdrop-blur-md p-1.5 rounded-full inline-flex font-bold text-sm border border-slate-700 shadow-xl relative z-20">
-                            <button
-                                onClick={() => setBillingCycle('quarterly')}
-                                className={`px-6 py-3 rounded-full transition-all duration-300 relative ${billingCycle === 'quarterly' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
-                            >
-                                Paket 3 Bulan
-                                {billingCycle !== 'quarterly' && <span className="absolute -top-3 -right-2 text-[10px] bg-slate-700 text-indigo-400 px-2 py-0.5 rounded-full border border-slate-600 shadow-sm">-20%</span>}
-                            </button>
-                            <button
-                                onClick={() => setBillingCycle('yearly')}
-                                className={`px-6 py-3 rounded-full transition-all duration-300 relative ${billingCycle === 'yearly' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
-                            >
-                                Paket 1 Tahun
-                                <span className={`absolute -top-3 -right-2 text-[10px] px-2 py-0.5 rounded-full border shadow-sm transition-colors ${billingCycle === 'yearly' ? 'bg-amber-400 text-amber-900 border-amber-500' : 'bg-amber-400/20 text-amber-500 border-amber-500/50'}`}>-60%</span>
-                            </button>
-                        </div>
+            {/* PLANS */}
+            <div className="sec-navy" id="subscription">
+                <div className="s-wrap">
+                    <div style={{ maxWidth: 560, marginBottom: '2.5rem' }}>
+                        <div className="s-eyebrow gold line">Paket Langganan</div>
+                        <h2 className="s-h2-white">Pilih Senjata <em>Bisnismu</em></h2>
+                        <p className="s-p-white">Harga modal transparan. Semua sistem siap 100%, langsung jalan dari hari pertama.</p>
                     </div>
-
-                    <div className="text-center mb-20">
-                        <span className="inline-block bg-gradient-to-r from-amber-400 to-orange-500 text-white font-black px-6 py-2 rounded-full text-sm shadow-[0_0_30px_rgba(245,158,11,0.3)] mb-6 ring-2 ring-white/20">🔥 BEBAS BIAYA DOMAIN SELAMANYA!</span>
-                        <h2 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">Pilih Senjata<br /><span className="text-indigo-400">Bisnismu Sekarang</span></h2>
-                        <p className="text-xl text-slate-400 max-w-2xl mx-auto">Kami transparan dengan harga modal. Semua sistem siap pakai 100%.</p>
+                    <div className="billing-toggle-wrap">
+                        <div className="b-toggle">
+                            <button className={`b-tab${billingCycle === 'quarterly' ? ' on' : ''}`} onClick={() => setBillingCycle('quarterly')}>3 Bulan</button>
+                            <button className={`b-tab${billingCycle === 'yearly' ? ' on' : ''}`} onClick={() => setBillingCycle('yearly')}>Tahunan</button>
+                        </div>
+                        {billingCycle === 'yearly' && <span className="b-save">Hemat hingga 60%</span>}
                     </div>
-
-                    <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto items-center">
-
-                        {/* Pro Plan */}
-                        <div className="bg-slate-800/40 backdrop-blur-sm rounded-[2rem] border border-slate-700 hover:border-emerald-500/50 flex flex-col overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/10 group relative mt-8 lg:mt-0">
-                            <div className="h-1.5 w-full bg-slate-700 group-hover:bg-emerald-500 transition-colors"></div>
-                            <div className="p-8 flex-1 flex flex-col relative z-10">
-                                <h3 className="text-2xl font-black text-white mb-2">Pro</h3>
-                                <p className="text-sm text-slate-400 mb-8 border-b border-slate-700 pb-8">{plansConfig.PRO.description || "Mulai bisnis dengan mudah!"}</p>
-
-                                <div className="mb-8">
-                                    <p className="text-slate-500 line-through text-sm font-semibold mb-1">Rp {getPriceDetails(plansConfig.PRO.price).original.toLocaleString('id-ID')}</p>
-                                    <div className="flex items-baseline gap-1.5 mb-2">
-                                        <span className="text-4xl lg:text-5xl font-black text-white">Rp {Math.round(getPriceDetails(plansConfig.PRO.price).discounted).toLocaleString('id-ID')}</span>
-                                    </div>
-                                    <p className="text-emerald-400 font-medium">{getPriceDetails(plansConfig.PRO.price).label} <span className="text-slate-500 text-xs ml-2">(Setara Rp {Math.round(getPriceDetails(plansConfig.PRO.price).monthlyEquivalent).toLocaleString('id-ID')} / bln)</span></p>
-                                </div>
-
-                                <Link href="/reseller/register" className="flex justify-center w-full py-4 rounded-xl bg-slate-800 text-emerald-400 font-bold border border-slate-600 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all mb-10 text-lg">Daftar Sekarang</Link>
-
-                                <div className="space-y-5 text-sm text-slate-300 font-medium">
-                                    <p className="flex items-start gap-3"><Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" /> <span>Akses Maksimal <b className="text-white">{plansConfig.PRO.maxProducts.toLocaleString('id-ID')}</b> Produk</span></p>
-                                    <p className="flex items-start gap-3">
-                                        {plansConfig.PRO.customDomain
-                                            ? <><Check className="w-5 h-5 text-emerald-500 mt-0.5" /> <span>Akses Pakai <b className="text-white">Custom Domain</b></span></>
-                                            : <><XCircle className="w-5 h-5 text-slate-600 mt-0.5" /> <span className="text-slate-500">Hanya Subdomain</span></>}
-                                    </p>
-                                    <p className="flex items-start gap-3">
-                                        {plansConfig.PRO.multiUser
-                                            ? <><Check className="w-5 h-5 text-emerald-500 mt-0.5" /> <span>Fitur Multi User (Akun Staff)</span></>
-                                            : <><XCircle className="w-5 h-5 text-slate-600 mt-0.5" /> <span className="text-slate-500">Maksimal 1 Akun Admin</span></>}
-                                    </p>
-                                    <p className="flex items-start gap-3">
-                                        {plansConfig.PRO.whiteLabel
-                                            ? <><Check className="w-5 h-5 text-emerald-500 mt-0.5" /> <span>Full White Label</span></>
-                                            : <><XCircle className="w-5 h-5 text-slate-600 mt-0.5" /> <span className="text-slate-500">Tanpa White Label</span></>}
-                                    </p>
-                                    <p className="flex items-start gap-3"><Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" /> <span>Harga Modal Kategori Pro</span></p>
-                                    <p className="flex items-start gap-3"><Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" /> <span>Sistem Auto-Transfer (Tanpa Deposit)</span></p>
-
-                                    {plansConfig.PRO.customFeatures && plansConfig.PRO.customFeatures.map((feat: string, i: number) => (
-                                        feat && <p key={i} className="flex items-start gap-3"><Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" /> {feat}</p>
-                                    ))}
+                    <div className="plans-grid">
+                        {/* PRO */}
+                        <div className="plan-card">
+                            <div className="plan-body">
+                                <div className="plan-name light">Pro</div>
+                                <div className="plan-desc light">{plans.PRO.description}</div>
+                                <div className="plan-orig light">Rp {gpd(plans.PRO.price).original.toLocaleString('id-ID')}</div>
+                                <div className="plan-price light">Rp {Math.round(gpd(plans.PRO.price).discounted).toLocaleString('id-ID')}</div>
+                                <div className="plan-period light">{gpd(plans.PRO.price).label} · Rp {Math.round(gpd(plans.PRO.price).mo).toLocaleString('id-ID')}/bln</div>
+                                <Link href="/reseller/register" className="plan-cta ghost-w">Daftar Sekarang <ArrowRight size={13} /></Link>
+                                <div className="plan-feats">
+                                    <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Maks. <b>{plans.PRO.maxProducts.toLocaleString('id-ID')}</b> Produk</span></div>
+                                    <Feat on={plans.PRO.customDomain} text="Custom Domain" light={true} />
+                                    <Feat on={plans.PRO.multiUser} text="Multi User / Akun Staff" light={true} />
+                                    <Feat on={plans.PRO.whiteLabel} text="White Label" light={true} />
+                                    <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Harga Modal Tier Pro</span></div>
+                                    <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Auto-Transfer (Tanpa Deposit)</span></div>
+                                    {plans.PRO.customFeatures?.map((f: string, i: number) => f && <div key={i} className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">{f}</span></div>)}
                                 </div>
                             </div>
                         </div>
 
-                        {/* Supreme Plan (Highlighted Center) */}
-                        <div className="bg-gradient-to-b from-indigo-900 to-slate-900 rounded-[2rem] border-2 border-indigo-500 relative flex flex-col overflow-hidden shadow-[0_0_50px_rgba(99,102,241,0.2)] transform lg:-translate-y-8 z-20">
-                            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-indigo-400 via-cyan-400 to-indigo-400"></div>
-                            <div className="bg-indigo-600 text-white text-center py-2.5 font-bold text-sm tracking-wider uppercase shadow-md flex items-center justify-center gap-2">
-                                <Star className="w-4 h-4 fill-amber-300 text-amber-300" /> Paling Banjir Cuan
-                            </div>
-                            <div className="p-8 flex-1 flex flex-col relative z-10">
-                                <h3 className="text-3xl font-black text-white mb-2">Supreme</h3>
-                                <p className="text-sm text-indigo-200 mb-8 border-b border-indigo-800 pb-8">{plansConfig.SUPREME.description || "Fitur terlengkap, untung maksimal!"}</p>
-
-                                <div className="mb-8">
-                                    <p className="text-indigo-400/50 line-through text-lg font-semibold mb-1">Rp {getPriceDetails(plansConfig.SUPREME.price).original.toLocaleString('id-ID')}</p>
-                                    <div className="flex items-baseline gap-1.5 mb-2">
-                                        <span className="text-5xl lg:text-6xl font-black text-white tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white to-indigo-200">Rp {Math.round(getPriceDetails(plansConfig.SUPREME.price).discounted).toLocaleString('id-ID')}</span>
-                                    </div>
-                                    <p className="text-indigo-300 font-medium">{getPriceDetails(plansConfig.SUPREME.price).label} <span className="opacity-75 text-xs ml-2">(Setara Rp {Math.round(getPriceDetails(plansConfig.SUPREME.price).monthlyEquivalent).toLocaleString('id-ID')} / bln)</span></p>
-                                </div>
-
-                                <Link href="/reseller/register" className="flex justify-center w-full py-4.5 rounded-xl bg-indigo-500 text-white font-black hover:bg-indigo-400 transition-all shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[0_0_30px_rgba(99,102,241,0.6)] hover:scale-[1.02] mb-10 text-xl items-center gap-2">
-                                    Daftar Sekarang <Zap className="w-5 h-5" />
-                                </Link>
-
-                                <div className="space-y-5 text-sm text-indigo-50 font-medium">
-                                    <p className="flex items-start gap-3"><Check className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" /> <span>Akses Maksimal <b className="text-white bg-indigo-500/30 px-2 py-0.5 rounded">{plansConfig.SUPREME.maxProducts.toLocaleString('id-ID')}</b> Produk</span></p>
-                                    <p className="flex items-start gap-3">
-                                        {plansConfig.SUPREME.customDomain
-                                            ? <><Check className="w-5 h-5 text-indigo-400 mt-0.5" /> <span>Bebas Pakai <b className="text-white">Custom Domain</b></span></>
-                                            : <><XCircle className="w-5 h-5 text-indigo-800 mt-0.5" /> <span className="text-indigo-300">Hanya Subdomain</span></>}
-                                    </p>
-                                    <p className="flex items-start gap-3">
-                                        {plansConfig.SUPREME.multiUser
-                                            ? <><Check className="w-5 h-5 text-indigo-400 mt-0.5" /> <span>Fitur Multi User (Tambah Akun Staff)</span></>
-                                            : <><XCircle className="w-5 h-5 text-indigo-800 mt-0.5" /> <span className="text-indigo-300">Maksimal 1 Akun Admin</span></>}
-                                    </p>
-                                    <p className="flex items-start gap-3">
-                                        {plansConfig.SUPREME.whiteLabel
-                                            ? <><Check className="w-5 h-5 text-indigo-400 mt-0.5" /> <span className="text-white font-bold">Full White Label Brand Anda</span></>
-                                            : <><XCircle className="w-5 h-5 text-indigo-800 mt-0.5" /> <span className="text-indigo-300">Tanpa White Label</span></>}
-                                    </p>
-                                    <p className="flex items-start gap-3"><Check className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" /> <span className="text-white font-bold underline decoration-indigo-400 underline-offset-4">Harga Modal Paling Murah (VIP)</span></p>
-                                    <p className="flex items-start gap-3"><Check className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" /> <span>Sistem Auto-Transfer (Tanpa Deposit)</span></p>
-
-                                    {plansConfig.SUPREME.customFeatures && plansConfig.SUPREME.customFeatures.map((feat: string, i: number) => (
-                                        feat && <p key={i} className="flex items-start gap-3"><Check className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" /> {feat}</p>
-                                    ))}
+                        {/* SUPREME */}
+                        <div className="plan-card featured">
+                            <div className="plan-chip"><Star size={12} fill="currentColor" /> Paling Banjir Cuan</div>
+                            <div className="plan-body">
+                                <div className="plan-name dark">Supreme</div>
+                                <div className="plan-desc dark">{plans.SUPREME.description}</div>
+                                <div className="plan-orig dark">Rp {gpd(plans.SUPREME.price).original.toLocaleString('id-ID')}</div>
+                                <div className="plan-price dark" style={{ color: 'var(--navy)' }}>Rp {Math.round(gpd(plans.SUPREME.price).discounted).toLocaleString('id-ID')}</div>
+                                <div className="plan-period dark">{gpd(plans.SUPREME.price).label} · Rp {Math.round(gpd(plans.SUPREME.price).mo).toLocaleString('id-ID')}/bln</div>
+                                <Link href="/reseller/register" className="plan-cta navy-fill">Daftar Sekarang <Zap size={13} /></Link>
+                                <div className="plan-feats">
+                                    <div className="pf"><Check size={14} className="pf-i pf-on-navy" /><span className="pf-text-dark">Maks. <b>{plans.SUPREME.maxProducts.toLocaleString('id-ID')}</b> Produk</span></div>
+                                    <Feat on={plans.SUPREME.customDomain} text="Custom Domain Bebas" light={false} />
+                                    <Feat on={plans.SUPREME.multiUser} text="Multi User + Akun Staff" light={false} />
+                                    <div className={`pf${plans.SUPREME.whiteLabel ? '' : ' off'}`}>{plans.SUPREME.whiteLabel ? <Check size={14} className="pf-i pf-on-navy" /> : <Minus size={14} className="pf-i pf-off-c" />}<span className="pf-text-dark" style={plans.SUPREME.whiteLabel ? { fontWeight: 700 } : {}}>{plans.SUPREME.whiteLabel ? 'Full White Label Brand Kamu' : 'White Label'}</span></div>
+                                    <div className="pf"><Check size={14} className="pf-i pf-on-navy" /><span className="pf-text-dark" style={{ fontWeight: 700 }}>Harga Modal VIP — Termurah</span></div>
+                                    <div className="pf"><Check size={14} className="pf-i pf-on-navy" /><span className="pf-text-dark">Auto-Transfer (Tanpa Deposit)</span></div>
+                                    {plans.SUPREME.customFeatures?.map((f: string, i: number) => f && <div key={i} className="pf"><Check size={14} className="pf-i pf-on-navy" /><span className="pf-text-dark">{f}</span></div>)}
                                 </div>
                             </div>
                         </div>
 
-                        {/* Legend Plan */}
-                        <div className="bg-slate-800/40 backdrop-blur-sm rounded-[2rem] border border-slate-700 hover:border-fuchsia-500/50 flex flex-col overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-fuchsia-500/10 group relative mt-8 lg:mt-0">
-                            <div className="h-1.5 w-full bg-slate-700 group-hover:bg-fuchsia-500 transition-colors"></div>
-                            <div className="p-8 flex-1 flex flex-col relative z-10">
-                                <h3 className="text-2xl font-black text-white mb-2">Legend</h3>
-                                <p className="text-sm text-slate-400 mb-8 border-b border-slate-700 pb-8">{plansConfig.LEGEND.description || "Naik level, untung berlipat!"}</p>
-
-                                <div className="mb-8">
-                                    <p className="text-slate-500 line-through text-sm font-semibold mb-1">Rp {getPriceDetails(plansConfig.LEGEND.price).original.toLocaleString('id-ID')}</p>
-                                    <div className="flex items-baseline gap-1.5 mb-2">
-                                        <span className="text-4xl lg:text-5xl font-black text-white">Rp {Math.round(getPriceDetails(plansConfig.LEGEND.price).discounted).toLocaleString('id-ID')}</span>
-                                    </div>
-                                    <p className="text-fuchsia-400 font-medium">{getPriceDetails(plansConfig.LEGEND.price).label} <span className="text-slate-500 text-xs ml-2">(Setara Rp {Math.round(getPriceDetails(plansConfig.LEGEND.price).monthlyEquivalent).toLocaleString('id-ID')} / bln)</span></p>
-                                </div>
-
-                                <Link href="/reseller/register" className="flex justify-center w-full py-4 rounded-xl bg-slate-800 text-fuchsia-400 font-bold border border-slate-600 hover:bg-fuchsia-500 hover:text-white hover:border-fuchsia-500 transition-all mb-10 text-lg">Daftar Sekarang</Link>
-
-                                <div className="space-y-5 text-sm text-slate-300 font-medium">
-                                    <p className="flex items-start gap-3"><Check className="w-5 h-5 text-fuchsia-500 flex-shrink-0 mt-0.5" /> <span>Akses Maksimal <b className="text-white">{plansConfig.LEGEND.maxProducts.toLocaleString('id-ID')}</b> Produk</span></p>
-                                    <p className="flex items-start gap-3">
-                                        {plansConfig.LEGEND.customDomain
-                                            ? <><Check className="w-5 h-5 text-fuchsia-500 mt-0.5" /> <span>Akses Pakai <b className="text-white">Custom Domain</b></span></>
-                                            : <><XCircle className="w-5 h-5 text-slate-600 mt-0.5" /> <span className="text-slate-500">Hanya Subdomain</span></>}
-                                    </p>
-                                    <p className="flex items-start gap-3">
-                                        {plansConfig.LEGEND.multiUser
-                                            ? <><Check className="w-5 h-5 text-fuchsia-500 mt-0.5" /> <span>Fitur Multi User (Akun Staff)</span></>
-                                            : <><XCircle className="w-5 h-5 text-slate-600 mt-0.5" /> <span className="text-slate-500">Maksimal 1 Akun Admin</span></>}
-                                    </p>
-                                    <p className="flex items-start gap-3">
-                                        {plansConfig.LEGEND.whiteLabel
-                                            ? <><Check className="w-5 h-5 text-fuchsia-500 mt-0.5" /> <span>Full White Label</span></>
-                                            : <><XCircle className="w-5 h-5 text-slate-600 mt-0.5" /> <span className="text-slate-500">Tanpa White Label</span></>}
-                                    </p>
-                                    <p className="flex items-start gap-3"><Check className="w-5 h-5 text-fuchsia-500 flex-shrink-0 mt-0.5" /> <span>Harga Modal Kategori Legend</span></p>
-                                    <p className="flex items-start gap-3"><Check className="w-5 h-5 text-fuchsia-500 flex-shrink-0 mt-0.5" /> <span>Sistem Auto-Transfer (Tanpa Deposit)</span></p>
-
-                                    {plansConfig.LEGEND.customFeatures && plansConfig.LEGEND.customFeatures.map((feat: string, i: number) => (
-                                        feat && <p key={i} className="flex items-start gap-3"><Check className="w-5 h-5 text-fuchsia-500 flex-shrink-0 mt-0.5" /> {feat}</p>
-                                    ))}
+                        {/* LEGEND */}
+                        <div className="plan-card">
+                            <div className="plan-body">
+                                <div className="plan-name light">Legend</div>
+                                <div className="plan-desc light">{plans.LEGEND.description}</div>
+                                <div className="plan-orig light">Rp {gpd(plans.LEGEND.price).original.toLocaleString('id-ID')}</div>
+                                <div className="plan-price light">Rp {Math.round(gpd(plans.LEGEND.price).discounted).toLocaleString('id-ID')}</div>
+                                <div className="plan-period light">{gpd(plans.LEGEND.price).label} · Rp {Math.round(gpd(plans.LEGEND.price).mo).toLocaleString('id-ID')}/bln</div>
+                                <Link href="/reseller/register" className="plan-cta ghost-w">Daftar Sekarang <ArrowRight size={13} /></Link>
+                                <div className="plan-feats">
+                                    <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Maks. <b>{plans.LEGEND.maxProducts.toLocaleString('id-ID')}</b> Produk</span></div>
+                                    <Feat on={plans.LEGEND.customDomain} text="Custom Domain" light={true} />
+                                    <Feat on={plans.LEGEND.multiUser} text="Multi User / Akun Staff" light={true} />
+                                    <Feat on={plans.LEGEND.whiteLabel} text="White Label" light={true} />
+                                    <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Harga Modal Tier Legend</span></div>
+                                    <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Auto-Transfer (Tanpa Deposit)</span></div>
+                                    {plans.LEGEND.customFeatures?.map((f: string, i: number) => f && <div key={i} className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">{f}</span></div>)}
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
-            </section>
+            </div>
 
-            {/* Dynamic Catalog Section */}
-            <div id="pricing" className="bg-slate-50 relative">
+            {/* CATALOG */}
+            <div id="pricing" style={{ background: 'var(--off)', borderTop: '1px solid rgba(10,22,40,0.08)', borderBottom: '1px solid rgba(10,22,40,0.08)' }}>
                 <PriceCatalog />
             </div>
 
-            {/* Amankan Domain Kamu */}
-            <section className="py-24 bg-gradient-to-b from-indigo-50 to-white px-6">
-                <div className="max-w-4xl mx-auto text-center">
-                    <p className="text-indigo-600 font-bold tracking-wider uppercase text-sm mb-2">MULAI HASILKAN CUAN</p>
-                    <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-4">Amankan Domain Kamu</h2>
-                    <p className="text-lg text-slate-500 mb-10">Cek ketersediaan domain impianmu. Jika tersedia, langsung klaim sebelum diambil orang lain.</p>
-
-                    <div className="bg-white p-2 md:p-3 rounded-full border-2 border-indigo-200 shadow-xl shadow-indigo-100 max-w-2xl mx-auto flex flex-col md:flex-row focus-within:border-indigo-500 transition-colors">
-                        <div className="flex-1 flex items-center px-4 mb-2 md:mb-0">
-                            <Search className="w-5 h-5 text-slate-400 mr-3" />
-                            <input
-                                type="text"
-                                placeholder="Cek domain kamu di sini..."
-                                className="w-full bg-transparent focus:outline-none text-slate-800 font-medium placeholder-slate-400"
-                            />
-                        </div>
-                        <div className="w-full md:w-auto flex">
-                            <div className="border-l border-slate-200 px-2 flex items-center bg-slate-50 my-1 ml-1 rounded">
-                                <select className="bg-transparent focus:outline-none text-slate-600 font-medium cursor-pointer">
-                                    <option>.com</option>
-                                    <option>.id</option>
-                                    <option>.my.id</option>
-                                    <option>.store</option>
-                                </select>
-                            </div>
-                            <button className="ml-2 flex-1 md:flex-none py-3 px-8 rounded-full bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">
-                                <Search className="w-4 h-4" /> Cari
-                            </button>
-                        </div>
+            {/* DOMAIN */}
+            <div className="sec-white">
+                <div className="s-wrap-sm" style={{ textAlign: 'center' }}>
+                    <div className="s-eyebrow navy line" style={{ justifyContent: 'center' }}>Amankan Domain</div>
+                    <h2 className="s-h2-dark" style={{ textAlign: 'center' }}>Klaim Domain <em>Impianmu</em></h2>
+                    <p className="s-p-dark" style={{ margin: '0 auto 0', textAlign: 'center' }}>Cek ketersediaan domain. Jika tersedia, klaim sebelum diambil orang lain.</p>
+                    <div className="domain-box">
+                        <div className="domain-ico"><Search size={14} /></div>
+                        <input type="text" placeholder="nama-toko-kamu" className="domain-in" />
+                        <select className="domain-sel"><option>.com</option><option>.id</option><option>.my.id</option><option>.store</option></select>
+                        <button className="domain-btn"><Search size={12} /> Cek Domain</button>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            {/* Comparison Table */}
-            <section className="py-24 bg-white px-6">
-                <div className="max-w-4xl mx-auto">
-                    <div className="text-center mb-16">
-                        <p className="text-indigo-600 font-bold tracking-wider uppercase text-sm mb-2">JANGAN SAMPAI SALAH PILIH</p>
-                        <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-4">Kenapa Harus Jadi Reseller DagangPlay?</h2>
-                        <p className="text-lg text-slate-500">Coba bandingkan sendiri, mana yang lebih murah dan lebih mudah!</p>
+            {/* COMPARISON */}
+            <div className="sec-offwhite">
+                <div className="s-wrap">
+                    <div style={{ maxWidth: 560 }}>
+                        <div className="s-eyebrow navy line">Perbandingan Biaya</div>
+                        <h2 className="s-h2-dark">Kenapa Harus <em>DagangPlay?</em></h2>
+                        <p className="s-p-dark">Bandingkan sendiri. Mana yang lebih masuk akal untuk bisnis kamu.</p>
                     </div>
-
-                    <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div className="grid grid-cols-3 bg-slate-50 border-b border-slate-200 text-center font-bold text-sm">
-                            <div className="p-4 md:p-6 text-left">Komponen Biaya</div>
-                            <div className="p-4 md:p-6 bg-red-50 text-red-600 border-x border-slate-200">Bikin Web Sendiri</div>
-                            <div className="p-4 md:p-6 bg-indigo-50 text-indigo-600">DagangPlay</div>
+                    <div className="cmp">
+                        <div className="cmp-head">
+                            <div className="cmp-th label">Komponen Biaya</div>
+                            <div className="cmp-th bad">Bikin Web Sendiri</div>
+                            <div className="cmp-th good">DagangPlay</div>
                         </div>
-                        <div className="divide-y divide-slate-100">
-                            {[
-                                { item: "Gaji Developer per bulan", own: "Rp10.000.000 x 12", dp: "Termasuk" },
-                                { item: "Biaya Hosting & Domain", own: "Rp1.000.000", dp: "Termasuk" },
-                                { item: "Theme / Template", own: "Rp500.000", dp: "Termasuk" },
-                                { item: "Integrasi Payment Gateway", own: "Rp1.000.000", dp: "Termasuk" },
-                                { item: "Maintenance & Update", own: "Rp1.000.000", dp: "Termasuk" },
-                                { item: "Biaya Teknis Tambahan", own: "Tidak Terduga", dp: "Termasuk" }
-                            ].map((row, idx) => (
-                                <div key={idx} className="grid grid-cols-3 text-sm md:text-base text-center items-center hover:bg-slate-50 transition-colors">
-                                    <div className="p-4 md:px-6 text-left font-medium text-slate-700">{row.item}</div>
-                                    <div className="p-4 text-slate-500 border-x border-slate-100 font-medium">
-                                        {row.own}
-                                    </div>
-                                    <div className="p-4 text-slate-800 font-bold flex items-center justify-center gap-2">
-                                        <CheckCircle2 className="w-5 h-5 text-emerald-500 hidden sm:block" /> {row.dp}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="grid grid-cols-3 bg-slate-900 text-white text-center font-bold text-sm md:text-base">
-                            <div className="p-4 md:p-6 text-left">Total Biaya Tahun Pertama</div>
-                            <div className="p-4 md:p-6 text-red-400 border-x border-slate-700">± Rp 123.500.000</div>
-                            <div className="p-4 md:p-6 text-emerald-400">Rp 0 (Gratis) - Rp 750.000</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Academy / Learning */}
-            <section className="py-24 bg-slate-900 px-6 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/20 blur-[100px] rounded-full pointer-events-none"></div>
-                <div className="max-w-6xl mx-auto">
-                    <div className="text-center mb-16 relative z-10">
-                        <p className="text-indigo-400 font-bold tracking-wider uppercase text-sm mb-2">DIAJARIN CARA JUALAN</p>
-                        <h2 className="text-3xl md:text-5xl font-black text-white mb-4">Gak Bisa Jualan? Tenang Aja<br />Kami Bimbing Sampai Pecah Telur!</h2>
-                        <p className="text-lg text-slate-400">Kami tidak hanya memberikan sistem, tapi juga ilmu marketing agar jualan kamu makin laris manis.</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
                         {[
-                            { title: "Master Branding", desc: "Rahasia bangun brand yang kuat" },
-                            { title: "Master Sales", desc: "Strategi closing tanpa pusing" },
-                            { title: "Master TikTok", desc: "Jualan laku lewat FYP TikTok" },
-                            { title: "Master Instagram", desc: "Optimasi IG untuk topup game" },
-                        ].map((modul, idx) => (
-                            <div key={idx} className="bg-slate-800 rounded-2xl p-6 border border-slate-700 hover:border-indigo-500 transition-all group overflow-hidden relative cursor-pointer">
-                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <div className="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center mb-4 text-indigo-400">
-                                    <MonitorPlay className="w-6 h-6" />
-                                </div>
-                                <h3 className="text-xl font-bold text-white mb-2 relative z-10">{modul.title}</h3>
-                                <p className="text-slate-400 text-sm relative z-10">{modul.desc}</p>
+                            { item: "Gaji Developer", own: "Rp10.000.000 × 12", dp: "Termasuk" },
+                            { item: "Hosting & Domain", own: "Rp1.000.000", dp: "Termasuk" },
+                            { item: "Theme / Template", own: "Rp500.000", dp: "Termasuk" },
+                            { item: "Payment Gateway", own: "Rp1.000.000", dp: "Termasuk" },
+                            { item: "Maintenance & Update", own: "Rp1.000.000", dp: "Termasuk" },
+                            { item: "Biaya Tak Terduga", own: "Tidak Terduga", dp: "Termasuk" },
+                        ].map((r, i) => (
+                            <div key={i} className="cmp-row">
+                                <div className="cmp-td">{r.item}</div>
+                                <div className="cmp-td bad">{r.own}</div>
+                                <div className="cmp-td good"><CheckCircle2 size={13} /> {r.dp}</div>
+                            </div>
+                        ))}
+                        <div className="cmp-foot">
+                            <div className="cmp-ft label">Total Tahun Pertama</div>
+                            <div className="cmp-ft bad"><div className="cmp-ft-val red">± Rp 123.500.000</div></div>
+                            <div className="cmp-ft good"><div className="cmp-ft-val green">Rp 0 – 750.000</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ACADEMY */}
+            <div className="sec-navy">
+                <div className="s-wrap">
+                    <div style={{ maxWidth: 560 }}>
+                        <div className="s-eyebrow gold line">DagangPlay Academy</div>
+                        <h2 className="s-h2-white">Gak Bisa Jualan?<br /><em>Kami Bimbing</em> Sampai Pecah Telur</h2>
+                        <p className="s-p-white">Sistem canggih plus ilmu marketing dari praktisi berpengalaman — gratis untuk semua reseller.</p>
+                    </div>
+                    <div className="academy-grid">
+                        {[
+                            { title: "Master Branding", desc: "Bangun brand yang kuat dan diingat pelanggan" },
+                            { title: "Master Sales", desc: "Strategi closing yang terbukti menghasilkan" },
+                            { title: "Master TikTok", desc: "Masuk FYP dan konvert jadi transaksi nyata" },
+                            { title: "Master Instagram", desc: "Optimasi IG khusus bisnis top up game" },
+                        ].map((m, i) => (
+                            <div key={i} className="ac-card">
+                                <div className="ac-num">0{i + 1}</div>
+                                <div className="ac-icon"><MonitorPlay size={20} /></div>
+                                <div className="ac-title">{m.title}</div>
+                                <div className="ac-desc">{m.desc}</div>
+                                <div className="ac-arrow"><ArrowUpRight size={16} /></div>
                             </div>
                         ))}
                     </div>
                 </div>
-            </section>
+            </div>
 
-            {/* Testimonial */}
-            <section className="py-24 bg-slate-50 px-6">
-                <div className="max-w-6xl mx-auto">
-                    <div className="text-center mb-16">
-                        <p className="text-indigo-600 font-bold tracking-wider uppercase text-sm mb-2">APA KATA MEREKA?</p>
-                        <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-4">Reseller DagangPlay Buktikan Sendiri</h2>
+            {/* TESTIMONIALS */}
+            <div className="sec-white">
+                <div className="s-wrap">
+                    <div style={{ maxWidth: 560 }}>
+                        <div className="s-eyebrow navy line">Testimoni</div>
+                        <h2 className="s-h2-dark">Kata Mereka yang<br />Sudah <em>Membuktikan</em></h2>
                     </div>
-
-                    <div className="grid md:grid-cols-3 gap-8">
+                    <div className="testi-grid">
                         {[
                             { name: "Budi Santoso", role: "Owner TopUp XYZ", text: "Gila sih DagangPlay, marginnya gede banget! Sebulan bisa dapet omset 50jt padahal gw cuma nyebar link di grup mabar." },
-                            { name: "Siti Aminah", role: "Pelajar", text: "Awalnya iseng buat jajan, eh keterusan pas tau harganya murah. Prosesnya juga otomatis jadi gak ganggu waktu sekolah." },
-                            { name: "Andi Wijaya", role: "Pemilik Warnet", text: "Integrasi sistemnya mantap. Warnet sepi tapi bisnis top up game jalan terus. Supportnya juga super responsif." }
-                        ].map((testi, idx) => (
-                            <div key={idx} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
-                                <div className="flex gap-1 mb-6">
-                                    {[1, 2, 3, 4, 5].map(star => <Star key={star} className="w-5 h-5 fill-amber-400 text-amber-400" />)}
-                                </div>
-                                <p className="text-slate-600 font-medium leading-relaxed mb-8 italic">"{testi.text}"</p>
-                                <div className="flex items-center gap-4 border-t border-slate-100 pt-6">
-                                    <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                                        <span className="text-indigo-600 font-bold text-lg">{testi.name[0]}</span>
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-slate-900">{testi.name}</p>
-                                        <p className="text-sm text-slate-500">{testi.role}</p>
-                                    </div>
+                            { name: "Siti Aminah", role: "Pelajar", text: "Awalnya iseng buat jajan, eh keterusan pas tau harganya murah. Prosesnya otomatis jadi gak ganggu waktu sekolah." },
+                            { name: "Andi Wijaya", role: "Pemilik Warnet", text: "Integrasi sistemnya mantap. Warnet sepi tapi bisnis top up game jalan terus. Supportnya juga super responsif." },
+                        ].map((t, i) => (
+                            <div key={i} className="testi-card">
+                                <div className="testi-stars">{[1, 2, 3, 4, 5].map(s => <Star key={s} size={13} fill="#E8B84B" color="#E8B84B" />)}</div>
+                                <p className="testi-quote">"{t.text}"</p>
+                                <div className="testi-foot">
+                                    <div className="testi-av">{t.name[0]}</div>
+                                    <div><div className="testi-name">{t.name}</div><div className="testi-role">{t.role}</div></div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
-            </section>
+            </div>
 
             {/* FAQ */}
-            <section className="py-24 bg-white px-6">
-                <div className="max-w-3xl mx-auto">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-4">Paling Sering Ditanyakan</h2>
-                    </div>
-
-                    <div className="space-y-4">
+            <div className="sec-offwhite">
+                <div className="s-wrap" style={{ textAlign: 'center' }}>
+                    <div className="s-eyebrow navy line" style={{ justifyContent: 'center' }}>FAQ</div>
+                    <h2 className="s-h2-dark" style={{ textAlign: 'center' }}>Pertanyaan yang Paling <em>Sering Muncul</em></h2>
+                    <div className="faq-list" style={{ textAlign: 'left' }}>
                         {[
                             { q: "Apakah ini beneran gratis?", a: "Ya, kami menyediakan paket FREE (Reseller Normal) selamanya, tanpa biaya pendaftaran." },
-                            { q: "Apa bedanya Free dengan Pro/Legend/Supreme?", a: "Paket berbayar akan memberikan kamu Harga Modal yang lebih murah dibanding plan di bawahnya, dan memberikan fitur prioritas." },
-                            { q: "Apakah saldo harus deposit dulu?", a: "Tidak. Kamu tidak wajib deposit saldo. Setiap pesanan pelanggan bisa langsung diteruskan dan dibayar per transaksi via Payment Gateway." },
-                            { q: "Gimana cara narik keuntungan (withdraw)?", a: "Margin keuntungan dari setiap transaksi akan masuk ke saldo DagangPlay kamu, dan bisa dicairkan (withdraw) ke rekening bank kamu kapan saja." },
-                        ].map((faq, idx) => (
-                            <details key={idx} className="group bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden [&_summary::-webkit-details-marker]:hidden transition-all duration-300">
-                                <summary className="flex items-center justify-between font-bold cursor-pointer p-6 text-slate-800">
-                                    <span className="text-lg pr-4">{faq.q}</span>
-                                    <span className="transition duration-300 group-open:rotate-180 flex-shrink-0">
-                                        <ChevronDown className="w-6 h-6 text-slate-400" />
-                                    </span>
-                                </summary>
-                                <div className="p-6 pt-0 text-slate-600 leading-relaxed border-t border-slate-200 mx-6 mt-2">
-                                    {faq.a}
-                                </div>
+                            { q: "Apa bedanya Free dengan Pro/Legend/Supreme?", a: "Paket berbayar memberikan Harga Modal yang lebih murah, plus fitur-fitur prioritas eksklusif." },
+                            { q: "Apakah saldo harus deposit dulu?", a: "Tidak. Kamu tidak wajib deposit saldo. Setiap pesanan bisa langsung dibayar per transaksi via Payment Gateway." },
+                            { q: "Gimana cara narik keuntungan (withdraw)?", a: "Margin dari setiap transaksi masuk ke saldo DagangPlay kamu, bisa dicairkan ke rekening bank kapan saja." },
+                        ].map((f, i) => (
+                            <details key={i} className="faq-item">
+                                <summary className="faq-q"><span>{f.q}</span><ChevronDown size={16} className="faq-icon" /></summary>
+                                <div className="faq-a">{f.a}</div>
                             </details>
                         ))}
                     </div>
                 </div>
+            </div>
+
+            {/* CTA */}
+            <section className="cta-section">
+                <div className="s-eyebrow gold line" style={{ justifyContent: 'center', marginBottom: '1.5rem' }}>Ayo Bergabung</div>
+                <h2 className="cta-h">Siap Punya Kerajaan Bisnis<br />Top-Up <em>Sendiri?</em></h2>
+                <Link href="/reseller/register" className="btn-gold" style={{ fontSize: '1rem', padding: '1rem 2.5rem', position: 'relative', zIndex: 2 }}>
+                    Ambil Sekarang <ArrowUpRight size={17} />
+                </Link>
             </section>
 
-            {/* Final CTA Footer block */}
-            <section className="relative overflow-hidden group">
-                <div className="absolute inset-0 bg-slate-900 mix-blend-multiply"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-900 via-slate-900 to-cyan-900 opacity-90"></div>
-
-                <div className="relative z-10 py-24 px-6 text-center max-w-4xl mx-auto">
-                    <h2 className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tight">Siap Memiliki Kerajaan Bisnis Top-Up Mu Sendiri?</h2>
-                    <Link href="/reseller/register" className="inline-flex px-10 md:px-12 py-4 md:py-5 rounded-full bg-white text-indigo-600 text-lg md:text-xl font-black shadow-2xl hover:scale-105 active:scale-95 transition-all outline outline-8 outline-white/20 items-center gap-3 group-hover:outline-white/40">
-                        Ambil Kesempatan Sekarang <ArrowRight className="w-6 h-6" />
-                    </Link>
+            {/* FOOTER */}
+            <footer className="footer">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '.625rem' }}>
+                    <div className="nav-icon">DP</div>
+                    <span style={{ fontWeight: 700, fontSize: '.85rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '-.01em' }}>DagangPlay Partner Network</span>
                 </div>
-            </section>
-
-            <footer className="py-8 border-t border-slate-100 bg-white">
-                <div className="max-w-6xl mx-auto px-6 text-center md:flex md:justify-between md:items-center">
-                    <div className="flex items-center gap-3 justify-center md:justify-start mb-4 md:mb-0">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-cyan-400 flex items-center justify-center text-white font-black shadow-lg">
-                            DP
-                        </div>
-                        <span className="font-bold text-lg tracking-tight text-slate-800">
-                            DagangPlay Partner Network
-                        </span>
-                    </div>
-                    <p className="text-slate-500 text-sm font-medium">© {new Date().getFullYear()} DagangPlay Partner Network. All rights reserved.</p>
-                </div>
+                <div className="footer-copy">© {new Date().getFullYear()} DagangPlay. All rights reserved.</div>
             </footer>
         </div>
     );

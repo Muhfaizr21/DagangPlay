@@ -26,9 +26,14 @@ let PublicOrdersController = class PublicOrdersController {
     async getPaymentChannels() {
         return this.tripayService.getPaymentChannels();
     }
-    async checkout(body, req) {
+    async getConfig(req) {
         const host = req.headers.host || req.headers.origin;
-        return this.publicOrdersService.createCheckout(body, host);
+        return this.publicOrdersService.getStoreConfig(host);
+    }
+    async checkout(body, req) {
+        const host = req.headers.host;
+        const origin = req.headers.origin;
+        return this.publicOrdersService.createCheckout(body, host, origin);
     }
     async getOrder(orderNumber) {
         return this.publicOrdersService.getOrderDetails(orderNumber);
@@ -41,6 +46,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], PublicOrdersController.prototype, "getPaymentChannels", null);
+__decorate([
+    (0, common_1.Get)('config'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], PublicOrdersController.prototype, "getConfig", null);
 __decorate([
     (0, common_1.Post)('checkout'),
     __param(0, (0, common_1.Body)()),

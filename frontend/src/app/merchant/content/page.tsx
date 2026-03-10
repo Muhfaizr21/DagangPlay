@@ -31,6 +31,21 @@ export default function MerchantContentPage() {
             const parsed = JSON.parse(userData);
             setMerchantPlan(parsed.plan || 'PRO');
         }
+
+        // Sync active theme from backend settings
+        const fetchSettings = async () => {
+            try {
+                const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+                const token = localStorage.getItem('admin_token');
+                const res = await axios.get(`${baseUrl}/merchant/settings`, { headers: { Authorization: `Bearer ${token}` } });
+                if (res.data?.settings?.theme?.active) {
+                    setActiveTheme(res.data.settings.theme.active);
+                }
+            } catch (err) {
+                console.error('Failed to sync theme settings');
+            }
+        };
+        fetchSettings();
     }, []);
 
     const handleCreateBanner = async (e: React.FormEvent) => {
@@ -65,6 +80,18 @@ export default function MerchantContentPage() {
             mutateBanners();
         } catch (err) {
             alert('Gagal hapus banner');
+        }
+    };
+
+    const handleUpdateTheme = async (newTheme: string) => {
+        try {
+            const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+            const token = localStorage.getItem('admin_token');
+            await axios.put(`${baseUrl}/merchant/content/theme`, { active: newTheme }, { headers: { Authorization: `Bearer ${token}` } });
+            setActiveTheme(newTheme);
+            alert(`Tema ${newTheme} berhasil diterapkan!`);
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Gagal mengubah tema');
         }
     };
 
@@ -176,7 +203,7 @@ export default function MerchantContentPage() {
                                     <h4 className="font-bold text-slate-800 text-lg mb-1">Tema Dasar (Light)</h4>
                                     <p className="text-slate-500 text-xs mb-4">Tampilan default yang bersih dan cepat, tersedia untuk seluruh level akun merchant.</p>
 
-                                    <button onClick={() => setActiveTheme('light')} className={`w-full py-2.5 rounded-xl font-bold text-sm transition-colors ${activeTheme === 'light' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}>
+                                    <button onClick={() => handleUpdateTheme('light')} className={`w-full py-2.5 rounded-xl font-bold text-sm transition-colors ${activeTheme === 'light' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}>
                                         {activeTheme === 'light' ? 'Tema Aktif' : 'Gunakan Tema Ini'}
                                     </button>
                                 </div>
@@ -210,7 +237,7 @@ export default function MerchantContentPage() {
                                             <Lock className="w-4 h-4" /> Terkunci (Upgrade Required)
                                         </button>
                                     ) : (
-                                        <button onClick={() => setActiveTheme('dark')} className={`w-full py-2.5 rounded-xl font-bold text-sm transition-colors ${activeTheme === 'dark' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}>
+                                        <button onClick={() => handleUpdateTheme('dark')} className={`w-full py-2.5 rounded-xl font-bold text-sm transition-colors ${activeTheme === 'dark' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}>
                                             {activeTheme === 'dark' ? 'Tema Aktif' : 'Gunakan Tema Ini'}
                                         </button>
                                     )}

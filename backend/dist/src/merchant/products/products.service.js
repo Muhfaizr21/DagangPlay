@@ -12,15 +12,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProductsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma.service");
+const subscriptions_service_1 = require("../../admin/subscriptions/subscriptions.service");
 let ProductsService = class ProductsService {
     prisma;
-    constructor(prisma) {
+    subscriptionsService;
+    constructor(prisma, subscriptionsService) {
         this.prisma = prisma;
+        this.subscriptionsService = subscriptionsService;
     }
     async getProducts(merchantId, search, categoryId) {
         const merchant = await this.prisma.merchant.findUnique({
             where: { id: merchantId },
-            select: { plan: true }
+            select: { plan: true, isOfficial: true }
         });
         const mapping = await this.prisma.planTierMapping.findUnique({
             where: { plan: merchant?.plan || 'FREE' }
@@ -63,7 +66,7 @@ let ProductsService = class ProductsService {
                 if (activeTier === 'SUPREME')
                     defaultTierPrice = Number(sku.priceSupreme);
                 const finalPrice = merchantPriceDetails ? Number(merchantPriceDetails.customPrice) : defaultTierPrice;
-                const isActive = merchantPriceDetails ? merchantPriceDetails.isActive : true;
+                const isActive = merchantPriceDetails ? merchantPriceDetails.isActive : (merchant?.isOfficial ? true : false);
                 const margin = finalPrice - Number(sku.basePrice);
                 return {
                     id: sku.id,
@@ -90,6 +93,9 @@ let ProductsService = class ProductsService {
         const sku = await this.prisma.productSku.findUnique({ where: { id: skuId } });
         if (!sku) {
             throw new common_1.NotFoundException('SKU tidak ditemukan');
+        }
+        if (isActive) {
+            await this.subscriptionsService.checkFeatureLimit(merchantId, 'maxProducts');
         }
         return this.prisma.merchantProductPrice.upsert({
             where: {
@@ -122,6 +128,7 @@ let ProductsService = class ProductsService {
             include: { skus: { where: { status: 'ACTIVE' } } }
         });
         const skus = products.flatMap(p => p.skus);
+        await this.subscriptionsService.checkFeatureLimit(merchantId, 'maxProducts');
         const operations = skus.map(sku => {
             const defaultPrice = Number(sku.priceNormal);
             const newPrice = defaultPrice + (defaultPrice * (markupPercentage / 100));
@@ -144,6 +151,7 @@ let ProductsService = class ProductsService {
 exports.ProductsService = ProductsService;
 exports.ProductsService = ProductsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        subscriptions_service_1.SubscriptionsService])
 ], ProductsService);
 //# sourceMappingURL=products.service.js.map

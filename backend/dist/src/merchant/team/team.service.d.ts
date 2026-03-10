@@ -1,7 +1,9 @@
 import { PrismaService } from '../../prisma.service';
+import { SubscriptionsService } from '../../admin/subscriptions/subscriptions.service';
 export declare class TeamService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private subscriptionsService;
+    constructor(prisma: PrismaService, subscriptionsService: SubscriptionsService);
     getTeamMembers(merchantId: string): Promise<({
         user: {
             id: string;

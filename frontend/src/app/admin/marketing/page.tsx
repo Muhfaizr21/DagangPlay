@@ -29,6 +29,7 @@ export default function MarketingAdmin() {
         title: '',
         content: '',
         videoUrl: '',
+        imageUrl: '',
         thumbnail: '',
         category: 'Marketing Strategy',
         targetPlan: 'SUPREME',
@@ -44,6 +45,7 @@ export default function MarketingAdmin() {
             title: '',
             content: '',
             videoUrl: '',
+            imageUrl: '',
             thumbnail: '',
             category: 'Marketing Strategy',
             targetPlan: 'SUPREME',
@@ -218,6 +220,16 @@ export default function MarketingAdmin() {
                                         onChange={(e) => setForm({ ...form, videoUrl: e.target.value })}
                                         className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-[18px] text-[13px] focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold text-slate-700"
                                         placeholder="https://www.youtube.com/watch?v=..."
+                                    />
+                                </div>
+                                <div className="sm:col-span-2">
+                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Banner / Marketing Kit Image URL</label>
+                                    <input
+                                        type="url"
+                                        value={form.imageUrl}
+                                        onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                                        className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-[18px] text-[13px] focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold text-slate-700"
+                                        placeholder="https://example.com/marketing-kit.jpg..."
                                     />
                                 </div>
                                 <div className="sm:col-span-2">

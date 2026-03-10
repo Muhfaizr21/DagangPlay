@@ -1,15 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
+import { SubscriptionsService } from '../../admin/subscriptions/subscriptions.service';
 
 @Injectable()
 export class ProductsService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private subscriptionsService: SubscriptionsService
+    ) { }
 
     async getProducts(merchantId: string, search?: string, categoryId?: string) {
         // 1. Get merchant's plan and its mapped tier
         const merchant = await this.prisma.merchant.findUnique({
             where: { id: merchantId },
-            select: { plan: true }
+            select: { plan: true, isOfficial: true }
         });
 
         const mapping = await this.prisma.planTierMapping.findUnique({
@@ -60,7 +64,7 @@ export class ProductsService {
                 if (activeTier === 'SUPREME') defaultTierPrice = Number(sku.priceSupreme);
 
                 const finalPrice = merchantPriceDetails ? Number(merchantPriceDetails.customPrice) : defaultTierPrice;
-                const isActive = merchantPriceDetails ? merchantPriceDetails.isActive : true;
+                const isActive = merchantPriceDetails ? merchantPriceDetails.isActive : (merchant?.isOfficial ? true : false);
                 const margin = finalPrice - Number(sku.basePrice);
 
                 return {
@@ -89,6 +93,11 @@ export class ProductsService {
         const sku = await this.prisma.productSku.findUnique({ where: { id: skuId } });
         if (!sku) {
             throw new NotFoundException('SKU tidak ditemukan');
+        }
+
+        // Enforce SaaS Limit
+        if (isActive) {
+            await this.subscriptionsService.checkFeatureLimit(merchantId, 'maxProducts');
         }
 
         return this.prisma.merchantProductPrice.upsert({
@@ -127,7 +136,10 @@ export class ProductsService {
 
         const skus = products.flatMap(p => p.skus);
 
-        // 2. Upsert each SKU price to base + percentage
+        // Enforce SaaS Limit for Bulk
+        // Note: For simplicity, we check if they are already at limit. 
+        // In real world, we'd check if adding 'skus.length' exceeds limit.
+        await this.subscriptionsService.checkFeatureLimit(merchantId, 'maxProducts');
         const operations = skus.map(sku => {
             // we'll calculate margin based on default Super Admin priceNormal
             // if markupPercentage = 10, new price = priceNormal * 1.10

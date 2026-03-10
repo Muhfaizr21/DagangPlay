@@ -44,13 +44,19 @@ export default function MerchantAcademy() {
                     </button>
 
                     <div className="bg-white rounded-[32px] border border-slate-200 overflow-hidden shadow-sm">
-                        <div className="aspect-video bg-black relative">
+                        <div className="aspect-video bg-black relative flex items-center justify-center overflow-hidden">
                             {selectedGuide.videoUrl ? (
                                 <iframe
                                     src={selectedGuide.videoUrl.replace('watch?v=', 'embed/')}
                                     className="w-full h-full border-none"
                                     allowFullScreen
                                 ></iframe>
+                            ) : selectedGuide.imageUrl ? (
+                                <img
+                                    src={selectedGuide.imageUrl}
+                                    className="w-full h-full object-contain bg-slate-100"
+                                    alt={selectedGuide.title}
+                                />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-white/20">
                                     <Video className="w-20 h-20" />
@@ -132,7 +138,7 @@ export default function MerchantAcademy() {
                                 <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-slate-900/40 transition-colors" />
                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                     <div className="w-14 h-14 rounded-full bg-white text-indigo-600 flex items-center justify-center shadow-2xl transform scale-75 group-hover:scale-100 transition-transform">
-                                        <Play className="w-6 h-6 fill-current ml-1" />
+                                        {guide.videoUrl ? <Play className="w-6 h-6 fill-current ml-1" /> : <BookOpen className="w-6 h-6" />}
                                     </div>
                                 </div>
                                 <div className="absolute top-4 left-4">

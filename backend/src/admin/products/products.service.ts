@@ -362,24 +362,25 @@ export class ProductsService {
             let canonicalSlug = cat.slug;
             let canonicalName = cat.name;
 
-            // Merging logic
-            if (cat.slug.startsWith('free-fire')) {
+            // Merging logic by slug
+            const lowSlug = cat.slug.toLowerCase();
+            if (lowSlug.startsWith('free-fire')) {
                 canonicalSlug = 'free-fire';
                 canonicalName = 'Free Fire';
-            } else if (cat.slug === 'mlbb' || cat.slug === 'mobile-legend') {
+            } else if (lowSlug === 'mlbb' || lowSlug === 'mobile-legend' || lowSlug === 'mobile-legends') {
                 canonicalSlug = 'mobile-legends';
                 canonicalName = 'Mobile Legends';
+            } else if (lowSlug === 'pubg' || lowSlug === 'pubg-mobile') {
+                canonicalSlug = 'pubg-mobile';
+                canonicalName = 'PUBG MOBILE';
             }
 
-            const skuCount = cat.products.reduce((acc, p) => acc + p._count.skus, 0);
+            const skuCount = cat.products.reduce((acc, p) => acc + (p._count?.skus || 0), 0);
 
             if (mergedMap.has(canonicalSlug)) {
                 const existing = mergedMap.get(canonicalSlug);
                 existing.skuCount += skuCount;
-                // Keep the one with an image if possible
-                if (!existing.image && cat.image) {
-                    existing.image = cat.image;
-                }
+                if (!existing.image && cat.image) existing.image = cat.image;
             } else {
                 mergedMap.set(canonicalSlug, {
                     ...cat,

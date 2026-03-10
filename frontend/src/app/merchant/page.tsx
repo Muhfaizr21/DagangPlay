@@ -23,7 +23,8 @@ const fetcher = (url: string) => {
 };
 
 export default function MerchantDashboard() {
-    const { data: dashboard, error, isLoading } = useSWR('http://localhost:3001/merchant/dashboard', fetcher);
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const { data: dashboard, error, isLoading } = useSWR(`${baseUrl}/merchant/dashboard`, fetcher);
 
     if (isLoading) {
         return (

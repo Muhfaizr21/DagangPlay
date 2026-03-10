@@ -1,7 +1,9 @@
 import { PrismaService } from '../../prisma.service';
+import { SubscriptionsService } from '../../admin/subscriptions/subscriptions.service';
 export declare class SettingsService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private subscriptionsService;
+    constructor(prisma: PrismaService, subscriptionsService: SubscriptionsService);
     getSettings(merchantId: string): Promise<{
         id: string;
         name: string;
@@ -113,22 +115,22 @@ export declare class SettingsService {
         tripayConfig: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     getWebhooks(merchantId: string): Promise<{
+        url: string;
         id: string;
         isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
-        url: string;
         secret: string;
         events: import("@prisma/client/runtime/client").JsonValue;
     }[]>;
     updateWebhook(merchantId: string, data: any): Promise<{
+        url: string;
         id: string;
         isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
-        url: string;
         secret: string;
         events: import("@prisma/client/runtime/client").JsonValue;
     }>;

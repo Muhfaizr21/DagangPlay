@@ -6,6 +6,1262 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id                    String                 @id @default(cuid())
+  email                 String?                @unique
+  phone                 String?                @unique
+  password              String
+  name                  String
+  username              String?                @unique
+  avatar                String?
+  role                  Role                   @default(CUSTOMER)
+  status                UserStatus             @default(ACTIVE)
+  adminPermissions      Json?                  @default("[]")
+  isVerified            Boolean                @default(false)
+  verifiedAt            DateTime?
+  referralCode          String                 @unique
+  referredById          String?
+  merchantId            String?
+  balance               Float                  @default(0)
+  bonusBalance          Float                  @default(0)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  deletedAt             DateTime?
+  apiKeys               ApiKey[]
+  auditLogs             AuditLog[]
+  balanceTransactions   BalanceTransaction[]
+  commissionsEarned     Commission[]
+  confirmedDeposits     Deposit[]              @relation("DepositConfirmedBy")
+  deposits              Deposit[]
+  trustedDevices        DeviceTrusted[]
+  downlineAsChild       DownlineTree[]         @relation("DownlineChild")
+  downlineAsParent      DownlineTree[]         @relation("DownlineParent")
+  emailCampaignLogs     EmailCampaignLog[]
+  fraudDetections       FraudDetection[]
+  loginAttempts         LoginAttempt[]
+  mlmCommissions        MLMCommission[]
+  ownedMerchant         Merchant?              @relation("MerchantOwner")
+  merchantMemberships   MerchantMember[]
+  merchantProductPrices MerchantProductPrice[]
+  notifications         Notification[]
+  ordersAsCustomer      Order[]                @relation("OrderCustomer")
+  otpVerifications      OtpVerification[]
+  productReviews        ProductReview[]
+  promoUsages           PromoUsage[]
+  pushNotifLogs         PushNotificationLog[]
+  referralRewardsFrom   ReferralReward[]       @relation("ReferredRewards")
+  referralRewards       ReferralReward[]       @relation("ReferrerRewards")
+  assignedTickets       SupportTicket[]        @relation("TicketAssigned")
+  supportTickets        SupportTicket[]        @relation("TicketUser")
+  ticketReplies         SupportTicketReply[]
+  priceHistories        TierPriceHistory[]
+  referredBy            User?                  @relation("UserReferral", fields: [referredById], references: [id])
+  referrals             User[]                 @relation("UserReferral")
+  userActivityLogs      UserActivityLog[]
+  userFavorites         UserFavorite[]
+  profile               UserProfile?
+  sessions              UserSession[]
+  processedWithdrawals  Withdrawal[]           @relation("WithdrawalProcessedBy")
+  withdrawals           Withdrawal[]
+
+  @@index([email, phone, role, status, merchantId, referredById, adminPermissions])
+}
+
+model UserProfile {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  fullName          String?
+  birthDate         DateTime?
+  gender            Gender?
+  address           String?
+  city              String?
+  province          String?
+  postalCode        String?
+  idCardNumber      String?
+  bankName          String?
+  bankAccountNumber String?
+  bankAccountName   String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       String
+  token        String   @unique
+  refreshToken String   @unique
+  ipAddress    String?
+  userAgent    String?
+  device       String?
+  expiresAt    DateTime
+  lastActiveAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, token])
+}
+
+model OtpVerification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      OtpType
+  code      String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, token, type])
+}
+
+model IPBlacklist {
+  id        String    @id @default(cuid())
+  ipAddress String    @unique
+  reason    String
+  blockedBy String
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([ipAddress])
+}
+
+model FraudDetection {
+  id         String         @id @default(cuid())
+  userId     String
+  orderId    String?
+  riskLevel  FraudRiskLevel
+  reason     String
+  metadata   Json?
+  isResolved Boolean        @default(false)
+  resolvedBy String?
+  resolvedAt DateTime?
+  createdAt  DateTime       @default(now())
+  order      Order?         @relation(fields: [orderId], references: [id])
+  user       User           @relation(fields: [userId], references: [id])
+
+  @@index([userId, riskLevel, isResolved])
+}
+
+model LoginAttempt {
+  id         String   @id @default(cuid())
+  userId     String?
+  ipAddress  String
+  userAgent  String?
+  email      String?
+  isSuccess  Boolean
+  failReason String?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId, ipAddress, isSuccess, createdAt])
+}
+
+model DeviceTrusted {
+  id         String    @id @default(cuid())
+  userId     String
+  deviceId   String
+  deviceName String?
+  userAgent  String?
+  ipAddress  String?
+  trustedAt  DateTime  @default(now())
+  expiresAt  DateTime?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceId])
+  @@index([userId])
+}
+
+model Merchant {
+  id                    String                 @id @default(cuid())
+  name                  String
+  slug                  String                 @unique
+  logo                  String?
+  favicon               String?
+  bannerImage           String?
+  domain                String?                @unique
+  description           String?
+  tagline               String?
+  contactEmail          String?
+  contactPhone          String?
+  contactWhatsapp       String?
+  address               String?
+  city                  String?
+  province              String?
+  status                MerchantStatus         @default(PENDING_REVIEW)
+  plan                  MerchantPlan           @default(FREE)
+  planExpiredAt         DateTime?
+  isOfficial            Boolean                @default(false)
+  settings              Json?
+  ownerId               String                 @unique
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  deletedAt             DateTime?
+  announcements         Announcement[]
+  apiKeys               ApiKey[]
+  auditLogs             AuditLog[]
+  banners               Banner[]
+  dailySalesSnapshots   DailySalesSnapshot[]
+  deposits              Deposit[]
+  emailCampaigns        EmailCampaign[]
+  invoices              Invoice[]
+  owner                 User                   @relation("MerchantOwner", fields: [ownerId], references: [id])
+  members               MerchantMember[]
+  merchantProductPrices MerchantProductPrice[]
+  merchantSettings      MerchantSetting[]
+  notifications         Notification[]
+  orders                Order[]
+  paymentChannels       PaymentChannel[]
+  popupPromos           PopupPromo[]
+  promoCodes            PromoCode[]
+  subscriptionHistories SubscriptionHistory[]
+  supportTickets        SupportTicket[]
+  webhookEndpoints      WebhookEndpoint[]
+  chatRoom              ChatRoom?
+
+  @@index([slug, domain, status, plan, isOfficial])
+}
+
+model MerchantMember {
+  id          String             @id @default(cuid())
+  merchantId  String
+  userId      String
+  role        MerchantMemberRole @default(STAFF)
+  permissions Json?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  merchant    Merchant           @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  user        User               @relation(fields: [userId], references: [id])
+
+  @@unique([merchantId, userId])
+  @@index([merchantId, userId])
+}
+
+model Supplier {
+  id               String                   @id @default(cuid())
+  name             String
+  code             SupplierCode             @unique
+  apiUrl           String
+  apiKey           String
+  apiSecret        String
+  status           SupplierStatus           @default(ACTIVE)
+  balance          Float                    @default(0)
+  lastSyncAt       DateTime?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  maintenances     MaintenanceSchedule[]
+  productSkus      ProductSku[]
+  supplierBalances SupplierBalanceHistory[]
+  supplierLogs     SupplierLog[]
+}
+
+model SupplierLog {
+  id           String   @id @default(cuid())
+  supplierId   String
+  orderId      String?
+  method       String
+  endpoint     String
+  requestBody  Json?
+  responseBody Json?
+  httpStatus   Int?
+  duration     Int?
+  isSuccess    Boolean
+  createdAt    DateTime @default(now())
+  order        Order?   @relation(fields: [orderId], references: [id])
+  supplier     Supplier @relation(fields: [supplierId], references: [id])
+
+  @@index([supplierId, orderId, isSuccess, createdAt])
+}
+
+model SupplierBalanceHistory {
+  id            String   @id @default(cuid())
+  supplierId    String
+  type          String
+  amount        Float
+  balanceBefore Float
+  balanceAfter  Float
+  note          String?
+  createdAt     DateTime @default(now())
+  supplier      Supplier @relation(fields: [supplierId], references: [id])
+
+  @@index([supplierId, createdAt])
+}
+
+model Category {
+  id                String              @id @default(cuid())
+  name              String
+  slug              String              @unique
+  icon              String?
+  image             String?
+  description       String?
+  sortOrder         Int                 @default(0)
+  isActive          Boolean             @default(true)
+  parentId          String?
+  digiflazzCategory String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  parent            Category?           @relation("CategoryTree", fields: [parentId], references: [id])
+  children          Category[]          @relation("CategoryTree")
+  commissionRules   CommissionRule[]
+  products          Product[]
+  productSalesStats ProductSalesStats[]
+  promoCodes        PromoCode[]
+  tierPricingRules  TierPricingRule[]
+
+  @@index([slug, isActive, parentId])
+}
+
+model Product {
+  id                String                @id @default(cuid())
+  name              String
+  slug              String                @unique
+  categoryId        String
+  description       String?
+  thumbnail         String?
+  banner            String?
+  gameIdLabel       String?
+  gameServerId      Boolean               @default(false)
+  serverLabel       String?
+  digiflazzBrand    String?
+  digiflazzCategory String?
+  instruction       String?
+  status            ProductStatus         @default(ACTIVE)
+  sortOrder         Int                   @default(0)
+  isFeatured        Boolean               @default(false)
+  isPopular         Boolean               @default(false)
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  commissionRules   CommissionRule[]
+  gameServers       GameServer[]
+  maintenances      MaintenanceSchedule[]
+  category          Category              @relation(fields: [categoryId], references: [id])
+  reviews           ProductReview[]
+  productSalesStats ProductSalesStats[]
+  skus              ProductSku[]
+  refundPolicy      RefundPolicy?
+  userFavorites     UserFavorite[]
+}
+
+model ProductSku {
+  id                    String                 @id @default(cuid())
+  productId             String
+  supplierId            String
+  name                  String
+  supplierCode          String
+  backupSupplierId      String?
+  backupSupplierCode    String?
+  basePrice             Float
+  priceNormal           Float
+  pricePro              Float
+  priceLegend           Float
+  priceSupreme          Float
+  marginNormal          Float
+  marginPro             Float
+  marginLegend          Float
+  marginSupreme         Float
+  stock                 Int                    @default(-1)
+  status                SkuStatus              @default(ACTIVE)
+  sortOrder             Int                    @default(0)
+  metadata              Json?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  merchantProductPrices MerchantProductPrice[]
+  orders                Order[]
+  product               Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplier              Supplier               @relation(fields: [supplierId], references: [id])
+  promoCodes            PromoCode[]
+  tierPriceHistories    TierPriceHistory[]
+
+  @@index([productId, supplierId, status, supplierCode])
+}
+
+model TierPricingRule {
+  id               String    @id @default(cuid())
+  categoryId       String?
+  marginNormal     Float
+  marginPro        Float
+  marginLegend     Float
+  marginSupreme    Float
+  minMarginNormal  Float     @default(5.0)
+  minMarginPro     Float     @default(3.0)
+  minMarginLegend  Float     @default(2.0)
+  minMarginSupreme Float     @default(1.0)
+  isActive         Boolean   @default(true)
+  createdBy        String
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  category         Category? @relation(fields: [categoryId], references: [id])
+
+  @@index([categoryId, isActive])
+}
+
+model TierPriceHistory {
+  id              String     @id @default(cuid())
+  productSkuId    String
+  oldBasePrice    Float
+  oldPriceNormal  Float
+  oldPricePro     Float
+  oldPriceLegend  Float
+  oldPriceSupreme Float
+  newBasePrice    Float
+  newPriceNormal  Float
+  newPricePro     Float
+  newPriceLegend  Float
+  newPriceSupreme Float
+  changeType      ChangeType
+  changedBy       String
+  reason          String?
+  createdAt       DateTime   @default(now())
+  userId          String?
+  productSku      ProductSku @relation(fields: [productSkuId], references: [id])
+  user            User?      @relation(fields: [userId], references: [id])
+
+  @@index([productSkuId, changeType, createdAt])
+}
+
+model PlanTierMapping {
+  id        String       @id @default(cuid())
+  plan      MerchantPlan @unique
+  tier      PriceTier
+  isActive  Boolean      @default(true)
+  updatedBy String
+  updatedAt DateTime     @updatedAt
+}
+
+model MerchantProductPrice {
+  id               String     @id @default(cuid())
+  merchantId       String
+  productSkuId     String
+  userId           String
+  customPrice      Float
+  isActive         Boolean    @default(true)
+  reason           String?
+  expiredAt        DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  customModalPrice Float?
+  merchant         Merchant   @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  productSku       ProductSku @relation(fields: [productSkuId], references: [id])
+  user             User       @relation(fields: [userId], references: [id])
+
+  @@unique([merchantId, productSkuId])
+  @@index([merchantId, productSkuId, isActive])
+}
+
+model GameServer {
+  id        String  @id @default(cuid())
+  productId String
+  serverId  String
+  name      String
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, serverId])
+  @@index([productId])
+}
+
+model GameValidation {
+  id         String   @id @default(cuid())
+  productId  String
+  gameUserId String
+  serverId   String?
+  nickname   String?
+  isValid    Boolean
+  checkedAt  DateTime @default(now())
+  ipAddress  String?
+
+  @@index([productId, gameUserId])
+}
+
+model GameNickname {
+  id         String   @id @default(cuid())
+  productId  String
+  gameUserId String
+  serverId   String?
+  nickname   String
+  cachedAt   DateTime @default(now())
+  expiresAt  DateTime
+
+  @@unique([productId, gameUserId, serverId])
+  @@index([productId, gameUserId])
+}
+
+model Order {
+  id                 String                 @id @default(cuid())
+  orderNumber        String                 @unique
+  userId             String
+  merchantId         String
+  productId          String
+  productSkuId       String
+  productName        String
+  productSkuName     String
+  priceTierUsed      PriceTier
+  basePrice          Float
+  sellingPrice       Float
+  totalPrice         Float
+  gameUserId         String
+  gameUserServerId   String?
+  gameUserName       String?
+  quantity           Int                    @default(1)
+  promoCodeId        String?
+  discountAmount     Float                  @default(0)
+  paymentMethod      PaymentMethod?
+  paymentStatus      OrderPaymentStatus     @default(PENDING)
+  fulfillmentStatus  OrderFulfillmentStatus @default(PENDING)
+  supplierId         String?
+  supplierRefId      String?
+  supplierResponse   Json?
+  serialNumber       String?
+  note               String?
+  failReason         String?
+  paidAt             DateTime?
+  processedAt        DateTime?
+  completedAt        DateTime?
+  failedAt           DateTime?
+  expiredAt          DateTime?
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  merchantModalPrice Float?
+  balanceTrx         BalanceTransaction[]
+  commissions        Commission[]
+  disputeCases       DisputeCase[]
+  fraudDetections    FraudDetection[]
+  mlmCommissions     MLMCommission[]
+  merchant           Merchant               @relation(fields: [merchantId], references: [id])
+  productSku         ProductSku             @relation(fields: [productSkuId], references: [id])
+  promoCode          PromoCode?             @relation(fields: [promoCodeId], references: [id])
+  user               User                   @relation("OrderCustomer", fields: [userId], references: [id])
+  statusHistories    OrderStatusHistory[]
+  payment            Payment?
+  supplierLogs       SupplierLog[]
+
+  @@index([userId, merchantId, paymentStatus, fulfillmentStatus, createdAt])
+}
+
+model OrderStatusHistory {
+  id        String   @id @default(cuid())
+  orderId   String
+  status    String
+  note      String?
+  changedBy String
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  orderId           String        @unique
+  userId            String
+  merchantId        String
+  method            PaymentMethod
+  amount            Float
+  fee               Float         @default(0)
+  totalAmount       Float
+  status            PaymentStatus @default(PENDING)
+  tripayReference   String?
+  tripayMerchantRef String?
+  tripayPaymentUrl  String?
+  tripayQrUrl       String?
+  tripayVaNumber    String?
+  tripayExpiredTime DateTime?
+  tripayResponse    Json?
+  paidAt            DateTime?
+  expiredAt         DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  order             Order         @relation(fields: [orderId], references: [id])
+
+  @@index([orderId, userId, merchantId, status, tripayReference])
+}
+
+model PaymentChannel {
+  id           String        @id @default(cuid())
+  merchantId   String?
+  method       PaymentMethod
+  name         String
+  icon         String?
+  fee          Float         @default(0)
+  feeType      FeeType       @default(FLAT)
+  minAmount    Float?
+  maxAmount    Float?
+  isActive     Boolean       @default(true)
+  sortOrder    Int           @default(0)
+  tripayConfig Json?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  merchant     Merchant?     @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId, method, isActive])
+}
+
+model Deposit {
+  id                 String              @id @default(cuid())
+  userId             String
+  merchantId         String
+  amount             Float
+  method             PaymentMethod
+  status             DepositStatus       @default(PENDING)
+  tripayReference    String?
+  tripayMerchantRef  String?
+  tripayPaymentUrl   String?
+  tripayVaNumber     String?
+  tripayQrUrl        String?
+  tripayResponse     Json?
+  receiptImage       String?
+  confirmedById      String?
+  confirmedAt        DateTime?
+  rejectedAt         DateTime?
+  note               String?
+  expiredAt          DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  balanceTransaction BalanceTransaction?
+  confirmedBy        User?               @relation("DepositConfirmedBy", fields: [confirmedById], references: [id])
+  merchant           Merchant            @relation(fields: [merchantId], references: [id])
+  user               User                @relation(fields: [userId], references: [id])
+
+  @@index([userId, merchantId, status, createdAt])
+}
+
+model BalanceTransaction {
+  id            String         @id @default(cuid())
+  userId        String
+  type          BalanceTrxType
+  amount        Float
+  balanceBefore Float
+  balanceAfter  Float
+  orderId       String?
+  depositId     String?        @unique
+  withdrawalId  String?        @unique
+  description   String?
+  note          String?
+  createdAt     DateTime       @default(now())
+  deposit       Deposit?       @relation(fields: [depositId], references: [id])
+  order         Order?         @relation(fields: [orderId], references: [id])
+  user          User           @relation(fields: [userId], references: [id])
+  withdrawal    Withdrawal?    @relation(fields: [withdrawalId], references: [id])
+
+  @@index([userId, type, createdAt])
+}
+
+model Withdrawal {
+  id                 String              @id @default(cuid())
+  userId             String
+  amount             Float
+  fee                Float               @default(0)
+  netAmount          Float
+  bankName           String
+  bankAccountNumber  String
+  bankAccountName    String
+  status             WithdrawalStatus    @default(PENDING)
+  processedById      String?
+  processedAt        DateTime?
+  rejectedAt         DateTime?
+  note               String?
+  receiptImage       String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  balanceTransaction BalanceTransaction?
+  processedBy        User?               @relation("WithdrawalProcessedBy", fields: [processedById], references: [id])
+  user               User                @relation(fields: [userId], references: [id])
+
+  @@index([userId, status, createdAt])
+}
+
+model CommissionRule {
+  id          String              @id @default(cuid())
+  merchantId  String?
+  name        String
+  description String?
+  type        CommissionType
+  value       Float
+  appliesTo   CommissionAppliesTo @default(ALL)
+  categoryId  String?
+  productId   String?
+  forRole     CommissionForRole
+  isActive    Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  category    Category?           @relation(fields: [categoryId], references: [id])
+  product     Product?            @relation(fields: [productId], references: [id])
+
+  @@index([merchantId, forRole, isActive])
+}
+
+model Commission {
+  id        String           @id @default(cuid())
+  orderId   String
+  userId    String
+  type      String
+  amount    Float
+  status    CommissionStatus @default(PENDING)
+  settledAt DateTime?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  order     Order            @relation(fields: [orderId], references: [id])
+  user      User             @relation(fields: [userId], references: [id])
+
+  @@index([orderId, userId, status])
+}
+
+model ReferralReward {
+  id         String           @id @default(cuid())
+  referrerId String
+  referredId String
+  orderId    String?
+  amount     Float
+  type       String
+  status     CommissionStatus @default(PENDING)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  referred   User             @relation("ReferredRewards", fields: [referredId], references: [id])
+  referrer   User             @relation("ReferrerRewards", fields: [referrerId], references: [id])
+
+  @@index([referrerId, referredId, status])
+}
+
+model DownlineTree {
+  id        String   @id @default(cuid())
+  parentId  String
+  childId   String
+  level     Int      @default(1)
+  createdAt DateTime @default(now())
+  child     User     @relation("DownlineChild", fields: [childId], references: [id])
+  parent    User     @relation("DownlineParent", fields: [parentId], references: [id])
+
+  @@unique([parentId, childId])
+  @@index([parentId, childId, level])
+}
+
+model MLMCommission {
+  id         String           @id @default(cuid())
+  orderId    String
+  userId     String
+  level      Int
+  percentage Float
+  amount     Float
+  status     CommissionStatus @default(PENDING)
+  settledAt  DateTime?
+  createdAt  DateTime         @default(now())
+  order      Order            @relation(fields: [orderId], references: [id])
+  user       User             @relation(fields: [userId], references: [id])
+
+  @@index([orderId, userId, level, status])
+}
+
+model PromoCode {
+  id           String         @id @default(cuid())
+  merchantId   String?
+  code         String         @unique
+  name         String
+  description  String?
+  type         PromoType
+  value        Float
+  maxDiscount  Float?
+  minPurchase  Float?
+  quota        Int?
+  usedCount    Int            @default(0)
+  startDate    DateTime?
+  endDate      DateTime?
+  isActive     Boolean        @default(true)
+  appliesTo    PromoAppliesTo @default(ALL)
+  categoryId   String?
+  productSkuId String?
+  forRole      PromoForRole   @default(ALL)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  orders       Order[]
+  category     Category?      @relation(fields: [categoryId], references: [id])
+  merchant     Merchant?      @relation(fields: [merchantId], references: [id])
+  productSku   ProductSku?    @relation(fields: [productSkuId], references: [id])
+  usages       PromoUsage[]
+
+  @@index([code, merchantId, isActive])
+}
+
+model PromoUsage {
+  id             String    @id @default(cuid())
+  promoCodeId    String
+  userId         String
+  orderId        String
+  discountAmount Float
+  createdAt      DateTime  @default(now())
+  promoCode      PromoCode @relation(fields: [promoCodeId], references: [id])
+  user           User      @relation(fields: [userId], references: [id])
+
+  @@unique([promoCodeId, orderId])
+  @@index([promoCodeId, userId])
+}
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  userId      String
+  merchantId  String?
+  name        String
+  key         String    @unique
+  secret      String
+  permissions Json?
+  isActive    Boolean   @default(true)
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  merchant    Merchant? @relation(fields: [merchantId], references: [id])
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, merchantId, key])
+}
+
+model WebhookEndpoint {
+  id         String       @id @default(cuid())
+  merchantId String
+  url        String
+  secret     String
+  events     Json
+  isActive   Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  merchant   Merchant     @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  logs       WebhookLog[]
+
+  @@index([merchantId])
+}
+
+model WebhookLog {
+  id                String          @id @default(cuid())
+  webhookEndpointId String
+  event             WebhookEvent
+  payload           Json
+  responseStatus    Int?
+  responseBody      String?
+  status            WebhookStatus   @default(PENDING)
+  retryCount        Int             @default(0)
+  nextRetryAt       DateTime?
+  sentAt            DateTime?
+  createdAt         DateTime        @default(now())
+  webhookEndpoint   WebhookEndpoint @relation(fields: [webhookEndpointId], references: [id])
+
+  @@index([webhookEndpointId, status, event])
+}
+
+model Invoice {
+  id               String        @id @default(cuid())
+  merchantId       String
+  invoiceNo        String        @unique
+  plan             MerchantPlan
+  amount           Float
+  tax              Float         @default(0)
+  totalAmount      Float
+  status           InvoiceStatus @default(UNPAID)
+  dueDate          DateTime
+  tripayReference  String?
+  tripayPaymentUrl String?
+  tripayResponse   Json?
+  paidAt           DateTime?
+  notes            String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  proofUrl         String?
+  merchant         Merchant      @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId, status, dueDate])
+}
+
+model SubscriptionHistory {
+  id         String        @id @default(cuid())
+  merchantId String
+  oldPlan    MerchantPlan?
+  newPlan    MerchantPlan
+  startDate  DateTime
+  endDate    DateTime
+  amount     Float
+  note       String?
+  createdAt  DateTime      @default(now())
+  merchant   Merchant      @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId, createdAt])
+}
+
+model DailySalesSnapshot {
+  id            String   @id @default(cuid())
+  merchantId    String
+  date          DateTime
+  totalOrders   Int      @default(0)
+  successOrders Int      @default(0)
+  failedOrders  Int      @default(0)
+  totalRevenue  Float    @default(0)
+  totalProfit   Float    @default(0)
+  newCustomers  Int      @default(0)
+  createdAt     DateTime @default(now())
+  merchant      Merchant @relation(fields: [merchantId], references: [id])
+
+  @@unique([merchantId, date])
+  @@index([merchantId, date])
+}
+
+model ProductSalesStats {
+  id           String   @id @default(cuid())
+  productId    String
+  categoryId   String
+  date         DateTime
+  totalSold    Int      @default(0)
+  totalRevenue Float    @default(0)
+  createdAt    DateTime @default(now())
+  category     Category @relation(fields: [categoryId], references: [id])
+  product      Product  @relation(fields: [productId], references: [id])
+
+  @@unique([productId, date])
+  @@index([productId, categoryId, date])
+}
+
+model UserActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  page      String?
+  metadata  Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, action, createdAt])
+}
+
+model Notification {
+  id         String           @id @default(cuid())
+  userId     String
+  merchantId String?
+  type       NotificationType
+  title      String
+  message    String
+  imageUrl   String?
+  isRead     Boolean          @default(false)
+  readAt     DateTime?
+  data       Json?
+  createdAt  DateTime         @default(now())
+  merchant   Merchant?        @relation(fields: [merchantId], references: [id])
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, merchantId, isRead, type, createdAt])
+}
+
+model NotificationTemplate {
+  id         String              @id @default(cuid())
+  merchantId String?
+  type       NotificationType
+  channel    NotificationChannel
+  subject    String?
+  body       String
+  isActive   Boolean             @default(true)
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  @@unique([merchantId, type, channel])
+}
+
+model PushNotificationLog {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  data      Json?
+  isSuccess Boolean
+  errorMsg  String?
+  sentAt    DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, isSuccess, sentAt])
+}
+
+model EmailCampaignLog {
+  id         String        @id @default(cuid())
+  campaignId String
+  userId     String
+  isSuccess  Boolean
+  errorMsg   String?
+  sentAt     DateTime      @default(now())
+  campaign   EmailCampaign @relation(fields: [campaignId], references: [id])
+  user       User          @relation(fields: [userId], references: [id])
+
+  @@index([campaignId, userId])
+}
+
+model Banner {
+  id         String         @id @default(cuid())
+  merchantId String?
+  title      String
+  image      String
+  linkUrl    String?
+  position   BannerPosition @default(HERO)
+  sortOrder  Int            @default(0)
+  startDate  DateTime?
+  endDate    DateTime?
+  isActive   Boolean        @default(true)
+  clickCount Int            @default(0)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  merchant   Merchant?      @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId, position, isActive])
+}
+
+model Announcement {
+  id         String    @id @default(cuid())
+  merchantId String?
+  title      String
+  content    String
+  imageUrl   String?
+  isActive   Boolean   @default(true)
+  startDate  DateTime?
+  endDate    DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  merchant   Merchant? @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId, isActive])
+}
+
+model PopupPromo {
+  id         String    @id @default(cuid())
+  merchantId String?
+  title      String
+  image      String?
+  content    String?
+  linkUrl    String?
+  startDate  DateTime?
+  endDate    DateTime?
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  merchant   Merchant? @relation(fields: [merchantId], references: [id])
+}
+
+model EmailCampaign {
+  id          String             @id @default(cuid())
+  merchantId  String?
+  name        String
+  subject     String
+  body        String
+  targetRole  Role?
+  sentCount   Int                @default(0)
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  merchant    Merchant?          @relation(fields: [merchantId], references: [id])
+  logs        EmailCampaignLog[]
+
+  @@index([merchantId, isActive])
+}
+
+model MarketingGuide {
+  id         String       @id @default(cuid())
+  title      String
+  slug       String       @unique
+  content    String?
+  videoUrl   String?
+  thumbnail  String?
+  category   String?
+  targetPlan MerchantPlan @default(SUPREME)
+  isActive   Boolean      @default(true)
+  sortOrder  Int          @default(0)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  imageUrl   String?
+
+  @@index([targetPlan, isActive])
+}
+
+model UserFavorite {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model SupportTicket {
+  id           String               @id @default(cuid())
+  userId       String
+  merchantId   String
+  orderId      String?
+  subject      String
+  description  String
+  category     TicketCategory
+  priority     TicketPriority       @default(MEDIUM)
+  status       TicketStatus         @default(OPEN)
+  assignedToId String?
+  resolvedAt   DateTime?
+  closedAt     DateTime?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  assignedTo   User?                @relation("TicketAssigned", fields: [assignedToId], references: [id])
+  merchant     Merchant             @relation(fields: [merchantId], references: [id])
+  user         User                 @relation("TicketUser", fields: [userId], references: [id])
+  replies      SupportTicketReply[]
+
+  @@index([userId, merchantId, status, priority, createdAt])
+}
+
+model SupportTicketReply {
+  id          String        @id @default(cuid())
+  ticketId    String
+  userId      String
+  message     String
+  attachments Json?
+  isFromStaff Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id])
+
+  @@index([ticketId, userId])
+}
+
+model ProductReview {
+  id          String   @id @default(cuid())
+  productId   String
+  userId      String
+  orderId     String   @unique
+  rating      Int
+  comment     String?
+  images      Json?
+  isVerified  Boolean  @default(false)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  product     Product  @relation(fields: [productId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([productId, userId, rating, isPublished])
+}
+
+model MaintenanceSchedule {
+  id          String    @id @default(cuid())
+  supplierId  String?
+  productId   String?
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  product     Product?  @relation(fields: [productId], references: [id])
+  supplier    Supplier? @relation(fields: [supplierId], references: [id])
+
+  @@index([supplierId, productId, startTime, endTime])
+}
+
+model RefundPolicy {
+  id           String   @id @default(cuid())
+  productId    String   @unique
+  isRefundable Boolean  @default(true)
+  maxHours     Int      @default(24)
+  conditions   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  product      Product  @relation(fields: [productId], references: [id])
+}
+
+model DisputeCase {
+  id         String        @id @default(cuid())
+  orderId    String
+  userId     String
+  reason     String
+  evidence   Json?
+  status     DisputeStatus @default(OPEN)
+  resolution String?
+  resolvedBy String?
+  resolvedAt DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  order      Order         @relation(fields: [orderId], references: [id])
+
+  @@index([orderId, userId, status])
+}
+
+model JobQueue {
+  id          String    @id @default(cuid())
+  type        String
+  payload     Json
+  status      JobStatus @default(PENDING)
+  retryCount  Int       @default(0)
+  maxRetry    Int       @default(3)
+  error       String?
+  scheduledAt DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([type, status, scheduledAt])
+}
+
+model ApiRateLimit {
+  id          String   @id @default(cuid())
+  userId      String?
+  ipAddress   String
+  endpoint    String
+  hitCount    Int      @default(1)
+  windowStart DateTime
+  windowEnd   DateTime
+  isBlocked   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, ipAddress, endpoint, windowStart])
+}
+
+model SystemSetting {
+  id          String      @id @default(cuid())
+  key         String      @unique
+  value       String
+  type        SettingType @default(STRING)
+  description String?
+  group       String?
+  updatedBy   String?
+  updatedAt   DateTime    @updatedAt
+}
+
+model MerchantSetting {
+  id         String      @id @default(cuid())
+  merchantId String
+  key        String
+  value      String
+  type       SettingType @default(STRING)
+  updatedAt  DateTime    @updatedAt
+  merchant   Merchant    @relation(fields: [merchantId], references: [id])
+
+  @@unique([merchantId, key])
+  @@index([merchantId])
+}
+
+model AuditLog {
+  id         String    @id @default(cuid())
+  userId     String?
+  merchantId String?
+  action     String
+  entity     String
+  entityId   String?
+  oldData    Json?
+  newData    Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+  merchant   Merchant? @relation(fields: [merchantId], references: [id])
+  user       User?     @relation(fields: [userId], references: [id])
+
+  @@index([userId, merchantId, action, entity, createdAt])
+}
+
 enum Role {
   SUPER_ADMIN
   ADMIN_STAFF
@@ -39,12 +1295,6 @@ enum MerchantStatus {
   PENDING_REVIEW
 }
 
-// 3 plan berbayar + FREE
-// Mapping ke tier harga:
-// FREE     → harga NORMAL (sama seperti customer)
-// PRO      → harga PRO
-// LEGEND   → harga LEGEND
-// SUPREME  → harga SUPREME
 enum MerchantPlan {
   FREE
   PRO
@@ -83,9 +1333,6 @@ enum SkuStatus {
   EMPTY
 }
 
-// Tier harga produk
-// NORMAL  = harga customer toko resmi DagangPlay
-// PRO/LEGEND/SUPREME = harga modal merchant sesuai plan
 enum PriceTier {
   NORMAL
   PRO
@@ -108,22 +1355,21 @@ enum OrderFulfillmentStatus {
   REFUNDED
 }
 
-// Semua metode payment via Tripay
 enum PaymentMethod {
-  BALANCE // bayar pakai saldo DagangPlay
-  TRIPAY_QRIS // QRIS via Tripay
-  TRIPAY_VA_BCA // Virtual Account BCA
-  TRIPAY_VA_BNI // Virtual Account BNI
-  TRIPAY_VA_BRI // Virtual Account BRI
-  TRIPAY_VA_MANDIRI // Virtual Account Mandiri
-  TRIPAY_VA_PERMATA // Virtual Account Permata
-  TRIPAY_GOPAY // GoPay via Tripay
-  TRIPAY_OVO // OVO via Tripay
-  TRIPAY_DANA // DANA via Tripay
-  TRIPAY_SHOPEEPAY // ShopeePay via Tripay
-  TRIPAY_ALFAMART // Alfamart via Tripay
-  TRIPAY_INDOMARET // Indomaret via Tripay
-  MANUAL_TRANSFER // Transfer manual (konfirmasi admin)
+  BALANCE
+  TRIPAY_QRIS
+  TRIPAY_VA_BCA
+  TRIPAY_VA_BNI
+  TRIPAY_VA_BRI
+  TRIPAY_VA_MANDIRI
+  TRIPAY_VA_PERMATA
+  TRIPAY_GOPAY
+  TRIPAY_OVO
+  TRIPAY_DANA
+  TRIPAY_SHOPEEPAY
+  TRIPAY_ALFAMART
+  TRIPAY_INDOMARET
+  MANUAL_TRANSFER
 }
 
 enum PaymentStatus {
@@ -278,9 +1524,9 @@ enum FraudRiskLevel {
 enum InvoiceStatus {
   UNPAID
   PAID
-  PENDING
   OVERDUE
   CANCELLED
+  PENDING
 }
 
 enum DisputeStatus {
@@ -289,9 +1535,6 @@ enum DisputeStatus {
   RESOLVED
   REJECTED
 }
-
-// End of ResellerLevelName legacy
-
 
 enum JobStatus {
   PENDING
@@ -315,1459 +1558,25 @@ enum ChangeType {
   BULK_UPDATE
 }
 
-// ============================================
-// USERS & AUTH
-// ============================================
-
-// Master semua user semua role
-model User {
-  id              String     @id @default(cuid())
-  email           String?    @unique
-  phone           String?    @unique
-  password        String
-  name            String
-  username        String?    @unique
-  avatar          String?
-  role            Role       @default(CUSTOMER)
-  status          UserStatus @default(ACTIVE)
-  adminPermissions Json?     @default("[]")
-  isVerified      Boolean    @default(false)
-  verifiedAt      DateTime?
-  referralCode    String     @unique
-  referredById    String?
-  referredBy      User?      @relation("UserReferral", fields: [referredById], references: [id])
-  referrals       User[]     @relation("UserReferral")
-  merchantId      String?
-  balance         Float      @default(0)
-  bonusBalance    Float      @default(0)
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  deletedAt       DateTime?
-
-  // Relations
-  profile               UserProfile?
-  sessions              UserSession[]
-  otpVerifications      OtpVerification[]
-  merchantMemberships   MerchantMember[]
-  ownedMerchant         Merchant?              @relation("MerchantOwner")
-  ordersAsCustomer      Order[]                @relation("OrderCustomer")
-  balanceTransactions   BalanceTransaction[]
-  deposits              Deposit[]
-  withdrawals           Withdrawal[]
-  commissionsEarned     Commission[]
-  referralRewards       ReferralReward[]       @relation("ReferrerRewards")
-  referralRewardsFrom   ReferralReward[]       @relation("ReferredRewards")
-  promoUsages           PromoUsage[]
-  notifications         Notification[]
-  supportTickets        SupportTicket[]        @relation("TicketUser")
-  assignedTickets       SupportTicket[]        @relation("TicketAssigned")
-  ticketReplies         SupportTicketReply[]
-  productReviews        ProductReview[]
-  auditLogs             AuditLog[]
-  apiKeys               ApiKey[]
-  trustedDevices        DeviceTrusted[]
-  loginAttempts         LoginAttempt[]
-  fraudDetections       FraudDetection[]
-  downlineAsParent      DownlineTree[]         @relation("DownlineParent")
-  downlineAsChild       DownlineTree[]         @relation("DownlineChild")
-  mlmCommissions        MLMCommission[]
-  userFavorites         UserFavorite[]
-  userActivityLogs      UserActivityLog[]
-  merchantProductPrices MerchantProductPrice[]
-  emailCampaignLogs     EmailCampaignLog[]
-  pushNotifLogs         PushNotificationLog[]
-  confirmedDeposits     Deposit[]              @relation("DepositConfirmedBy")
-  processedWithdrawals  Withdrawal[]           @relation("WithdrawalProcessedBy")
-  priceHistories        TierPriceHistory[]
-
-  @@index([email, phone, role, status, merchantId, referredById, adminPermissions])
-}
-
-// Profil lengkap user
-model UserProfile {
-  id                String    @id @default(cuid())
-  userId            String    @unique
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fullName          String?
-  birthDate         DateTime?
-  gender            Gender?
-  address           String?
-  city              String?
-  province          String?
-  postalCode        String?
-  idCardNumber      String?
-  bankName          String?
-  bankAccountNumber String?
-  bankAccountName   String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-}
-
-// Session login aktif
-model UserSession {
-  id           String   @id @default(cuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token        String   @unique
-  refreshToken String   @unique
-  ipAddress    String?
-  userAgent    String?
-  device       String?
-  expiresAt    DateTime
-  lastActiveAt DateTime @default(now())
-  createdAt    DateTime @default(now())
-
-  @@index([userId, token])
-}
-
-// OTP verifikasi
-model OtpVerification {
-  id        String    @id @default(cuid())
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      OtpType
-  code      String
-  token     String    @unique
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime  @default(now())
-
-  @@index([userId, token, type])
-}
-
-// ============================================
-// KEAMANAN & ANTI-FRAUD
-// ============================================
-
-model IPBlacklist {
-  id        String    @id @default(cuid())
-  ipAddress String    @unique
-  reason    String
-  blockedBy String
-  expiresAt DateTime?
-  createdAt DateTime  @default(now())
-
-  @@index([ipAddress])
-}
-
-model FraudDetection {
-  id         String         @id @default(cuid())
-  userId     String
-  user       User           @relation(fields: [userId], references: [id])
-  orderId    String?
-  order      Order?         @relation(fields: [orderId], references: [id])
-  riskLevel  FraudRiskLevel
-  reason     String
-  metadata   Json?
-  isResolved Boolean        @default(false)
-  resolvedBy String?
-  resolvedAt DateTime?
-  createdAt  DateTime       @default(now())
-
-  @@index([userId, riskLevel, isResolved])
-}
-
-model LoginAttempt {
-  id         String   @id @default(cuid())
-  userId     String?
-  user       User?    @relation(fields: [userId], references: [id])
-  ipAddress  String
-  userAgent  String?
-  email      String?
-  isSuccess  Boolean
-  failReason String?
-  createdAt  DateTime @default(now())
-
-  @@index([userId, ipAddress, isSuccess, createdAt])
-}
-
-model DeviceTrusted {
-  id         String    @id @default(cuid())
-  userId     String
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  deviceId   String
-  deviceName String?
-  userAgent  String?
-  ipAddress  String?
-  trustedAt  DateTime  @default(now())
-  expiresAt  DateTime?
-
-  @@unique([userId, deviceId])
-  @@index([userId])
-}
-
-// ============================================
-// MERCHANT / TENANT
-// ============================================
-
-// Data tenant/mitra berlangganan SaaS
-model Merchant {
-  id              String         @id @default(cuid())
-  name            String
-  slug            String         @unique
-  logo            String?
-  favicon         String?
-  bannerImage     String?
-  domain          String?        @unique
-  description     String?
-  tagline         String?
-  contactEmail    String?
-  contactPhone    String?
-  contactWhatsapp String?
-  address         String?
-  city            String?
-  province        String?
-  status          MerchantStatus @default(PENDING_REVIEW)
-  plan            MerchantPlan   @default(FREE)
-  planExpiredAt   DateTime?
-  isOfficial      Boolean        @default(false) // true = toko resmi DagangPlay
-  settings        Json?
-  ownerId         String         @unique
-  owner           User           @relation("MerchantOwner", fields: [ownerId], references: [id])
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  deletedAt       DateTime?
-
-  // Relations
-  members               MerchantMember[]
-  orders                Order[]
-  deposits              Deposit[]
-  notifications         Notification[]
-  supportTickets        SupportTicket[]
-  auditLogs             AuditLog[]
-  apiKeys               ApiKey[]
-  webhookEndpoints      WebhookEndpoint[]
-  merchantProductPrices MerchantProductPrice[]
-  promoCodes            PromoCode[]
-  paymentChannels       PaymentChannel[]
-  banners               Banner[]
-  announcements         Announcement[]
-  popupPromos           PopupPromo[]
-  emailCampaigns        EmailCampaign[]
-  merchantSettings      MerchantSetting[]
-  invoices              Invoice[]
-  subscriptionHistories SubscriptionHistory[]
-  dailySalesSnapshots   DailySalesSnapshot[]
-
-  @@index([slug, domain, status, plan, isOfficial])
-}
-
-// Anggota tim merchant
-model MerchantMember {
-  id          String             @id @default(cuid())
-  merchantId  String
-  merchant    Merchant           @relation(fields: [merchantId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User               @relation(fields: [userId], references: [id])
-  role        MerchantMemberRole @default(STAFF)
-  permissions Json?
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-
-  @@unique([merchantId, userId])
-  @@index([merchantId, userId])
-}
-
-// ============================================
-// SUPPLIER & PRODUK
-// ============================================
-
-// Data supplier voucher (Digiflazz dll)
-model Supplier {
-  id         String         @id @default(cuid())
-  name       String
-  code       SupplierCode   @unique
-  apiUrl     String
-  apiKey     String
-  apiSecret  String
-  status     SupplierStatus @default(ACTIVE)
-  balance    Float          @default(0)
-  lastSyncAt DateTime?
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
-
-  productSkus      ProductSku[]
-  supplierLogs     SupplierLog[]
-  supplierBalances SupplierBalanceHistory[]
-  maintenances     MaintenanceSchedule[]
-}
-
-// Log semua request/response ke Digiflazz
-model SupplierLog {
-  id           String   @id @default(cuid())
-  supplierId   String
-  supplier     Supplier @relation(fields: [supplierId], references: [id])
-  orderId      String?
-  order        Order?   @relation(fields: [orderId], references: [id])
-  method       String
-  endpoint     String
-  requestBody  Json?
-  responseBody Json?
-  httpStatus   Int?
-  duration     Int?
-  isSuccess    Boolean
-  createdAt    DateTime @default(now())
-
-  @@index([supplierId, orderId, isSuccess, createdAt])
-}
-
-// Riwayat saldo di supplier
-model SupplierBalanceHistory {
-  id            String   @id @default(cuid())
-  supplierId    String
-  supplier      Supplier @relation(fields: [supplierId], references: [id])
-  type          String
-  amount        Float
-  balanceBefore Float
-  balanceAfter  Float
-  note          String?
-  createdAt     DateTime @default(now())
-
-  @@index([supplierId, createdAt])
-}
-
-// Kategori produk (nested)
-model Category {
-  id          String     @id @default(cuid())
-  name        String
-  slug        String     @unique
-  icon        String?
-  image       String?
-  description String?
-  sortOrder   Int        @default(0)
-  isActive    Boolean    @default(true)
-  parentId    String?
-  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
-  children    Category[] @relation("CategoryTree")
-
-  // Mapping ke kategori Digiflazz
-  digiflazzCategory String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  products          Product[]
-  commissionRules   CommissionRule[]
-  promoCodes        PromoCode[]
-  productSalesStats ProductSalesStats[]
-  tierPricingRules  TierPricingRule[]
-
-  @@index([slug, isActive, parentId])
-}
-
-// Master produk game
-model Product {
+model ChatRoom {
   id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id])
-  description String?
-  thumbnail   String?
-  banner      String?
-
-  // Info game untuk validasi ID
-  gameIdLabel  String? // label field ID (contoh: "User ID", "Player ID")
-  gameServerId Boolean @default(false) // perlu input server atau tidak
-  serverLabel  String? // label field server (contoh: "Server", "Zone")
-
-  // Info dari Digiflazz
-  digiflazzBrand    String? // brand di Digiflazz (contoh: "Mobile Legends")
-  digiflazzCategory String? // kategori di Digiflazz
-
-  instruction String? // cara top up step by step
-  status      ProductStatus @default(ACTIVE)
-  sortOrder   Int           @default(0)
-  isFeatured  Boolean       @default(false)
-  isPopular   Boolean       @default(false)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-
-  skus              ProductSku[]
-  reviews           ProductReview[]
-  commissionRules   CommissionRule[]
-  gameServers       GameServer[]
-  userFavorites     UserFavorite[]
-  productSalesStats ProductSalesStats[]
-  maintenances      MaintenanceSchedule[]
-  refundPolicy      RefundPolicy?
+  merchantId  String   @unique
+  lastMessage String?
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+  messages    ChatMessage[]
+  merchant    Merchant @relation(fields: [merchantId], references: [id])
 }
 
-// SKU/varian produk dengan sistem 4 tier harga
-// Ini inti dari koneksi ke Digiflazz
-model ProductSku {
+model ChatMessage {
   id         String   @id @default(cuid())
-  productId  String
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  supplierId String
-  supplier   Supplier @relation(fields: [supplierId], references: [id])
-  name       String // contoh: "86 Diamond"
-
-  // Kode produk di Digiflazz (buyer_sku_code)
-  supplierCode String // contoh: "mleg-86"
-
-  // Supplier backup jika utama gagal
-  backupSupplierId   String?
-  backupSupplierCode String?
-
-  // Harga beli dari Digiflazz (tidak tampil ke merchant/reseller/customer)
-  basePrice Float
-
-  // Harga jual per tier
-  // NORMAL  = harga customer beli di toko resmi DagangPlay
-  // PRO     = harga modal merchant plan PRO
-  // LEGEND  = harga modal merchant plan LEGEND
-  // SUPREME = harga modal merchant plan SUPREME
-  priceNormal  Float
-  pricePro     Float
-  priceLegend  Float
-  priceSupreme Float
-
-  // Margin tersimpan untuk referensi cepat (dalam persen)
-  marginNormal  Float
-  marginPro     Float
-  marginLegend  Float
-  marginSupreme Float
-
-  stock     Int       @default(-1) // -1 = unlimited
-  status    SkuStatus @default(ACTIVE)
-  sortOrder Int       @default(0)
-  metadata  Json? // data tambahan dari Digiflazz
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  orders                Order[]
-  merchantProductPrices MerchantProductPrice[]
-  promoCodes            PromoCode[]
-  tierPriceHistories    TierPriceHistory[]
-
-  @@index([productId, supplierId, status, supplierCode])
-}
-
-// Formula otomatis set harga per tier per kategori
-// Supaya Super Admin tidak set manual satu-satu SKU
-model TierPricingRule {
-  id         String    @id @default(cuid())
-  categoryId String? // null = berlaku global semua kategori
-  category   Category? @relation(fields: [categoryId], references: [id])
-
-  // Persentase margin per tier di atas basePrice
-  marginNormal  Float // contoh: 11.4 = 11.4% di atas harga beli
-  marginPro     Float // contoh: 8.0
-  marginLegend  Float // contoh: 5.7
-  marginSupreme Float // contoh: 3.4
-
-  // Batas minimum margin (sistem tolak jika di bawah ini)
-  minMarginNormal  Float @default(5.0)
-  minMarginPro     Float @default(3.0)
-  minMarginLegend  Float @default(2.0)
-  minMarginSupreme Float @default(1.0)
-
-  isActive  Boolean  @default(true)
-  createdBy String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([categoryId, isActive])
-}
-
-// Riwayat perubahan harga per tier (gabungan dari PriceHistory lama)
-model TierPriceHistory {
-  id           String     @id @default(cuid())
-  productSkuId String
-  productSku   ProductSku @relation(fields: [productSkuId], references: [id])
-
-  // Snapshot harga lama
-  oldBasePrice    Float
-  oldPriceNormal  Float
-  oldPricePro     Float
-  oldPriceLegend  Float
-  oldPriceSupreme Float
-
-  // Snapshot harga baru
-  newBasePrice    Float
-  newPriceNormal  Float
-  newPricePro     Float
-  newPriceLegend  Float
-  newPriceSupreme Float
-
-  // Trigger perubahan
-  changeType ChangeType
-  changedBy  String // userId atau "SYSTEM"
-  reason     String?
-  createdAt  DateTime   @default(now())
-  user       User?      @relation(fields: [userId], references: [id])
-  userId     String?
-
-  @@index([productSkuId, changeType, createdAt])
-}
-
-// Mapping plan merchant ke tier harga
-// Fleksibel: bisa diubah Super Admin tanpa deploy ulang
-// Contoh: promo bulan ini STARTER dapat harga PRO
-model PlanTierMapping {
-  id        String       @id @default(cuid())
-  plan      MerchantPlan @unique
-  tier      PriceTier
-  isActive  Boolean      @default(true)
-  updatedBy String
-  updatedAt DateTime     @updatedAt
-}
-
-// Data default PlanTierMapping:
-// FREE    → NORMAL
-// PRO     → PRO
-// LEGEND  → LEGEND
-// SUPREME → SUPREME
-
-// Harga override khusus per merchant
-// Digunakan jika Super Admin beri harga spesial
-// diluar tier normal ke merchant tertentu
-model MerchantProductPrice {
-  id           String     @id @default(cuid())
-  merchantId   String
-  merchant     Merchant   @relation(fields: [merchantId], references: [id], onDelete: Cascade)
-  productSkuId String
-  productSku   ProductSku @relation(fields: [productSkuId], references: [id])
-  userId       String // Super Admin yang set
-  user         User       @relation(fields: [userId], references: [id])
-  customPrice  Float // harga jual kustom yang diset merchant untuk customer
-  customModalPrice Float? // harga modal kustom yang diset Super Admin untuk merchant
-  isActive     Boolean    @default(true)
-  reason       String? // alasan diberi harga khusus
-  expiredAt    DateTime? // batas waktu harga khusus berlaku
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
-  @@unique([merchantId, productSkuId])
-  @@index([merchantId, productSkuId, isActive])
-}
-
-// End of ResellerProductPrice legacy
-
-
-// Server/region per game (ML server 1-999 dll)
-model GameServer {
-  id        String  @id @default(cuid())
-  productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  serverId  String
-  name      String
-  isActive  Boolean @default(true)
-  sortOrder Int     @default(0)
-
-  @@unique([productId, serverId])
-  @@index([productId])
-}
-
-// Log validasi ID game
-model GameValidation {
-  id         String   @id @default(cuid())
-  productId  String
-  gameUserId String
-  serverId   String?
-  nickname   String?
-  isValid    Boolean
-  checkedAt  DateTime @default(now())
-  ipAddress  String?
-
-  @@index([productId, gameUserId])
-}
-
-// Cache nickname akun game
-model GameNickname {
-  id         String   @id @default(cuid())
-  productId  String
-  gameUserId String
-  serverId   String?
-  nickname   String
-  cachedAt   DateTime @default(now())
-  expiresAt  DateTime
-
-  @@unique([productId, gameUserId, serverId])
-  @@index([productId, gameUserId])
-}
-
-// ============================================
-// ORDER & TRANSAKSI
-// ============================================
-
-model Order {
-  id           String     @id @default(cuid())
-  orderNumber  String     @unique // DP-20250101-XXXX
-  userId       String
-  user         User       @relation("OrderCustomer", fields: [userId], references: [id])
-  merchantId   String
-  merchant     Merchant   @relation(fields: [merchantId], references: [id])
-  productId    String
-  productSkuId String
-  productSku   ProductSku @relation(fields: [productSkuId], references: [id])
-
-  // Snapshot data saat transaksi (penting! harga bisa berubah)
-  productName    String
-  productSkuName String
-  priceTierUsed  PriceTier // tier harga yang dipakai saat transaksi
-  basePrice      Float // harga beli dari supplier saat itu
-  merchantModalPrice Float? // harga modal merchant sesuai plan saat itu
-  sellingPrice   Float // harga jual ke customer saat itu
-  totalPrice     Float
-
-  // Data game customer
-  gameUserId       String
-  gameUserServerId String?
-  gameUserName     String?
-
-  quantity Int @default(1)
-
-  // Promo
-  promoCodeId    String?
-  promoCode      PromoCode? @relation(fields: [promoCodeId], references: [id])
-  discountAmount Float      @default(0)
-
-  // Payment
-  paymentMethod PaymentMethod?
-  paymentStatus OrderPaymentStatus @default(PENDING)
-
-  // Fulfillment ke supplier
-  fulfillmentStatus OrderFulfillmentStatus @default(PENDING)
-  supplierId        String?
-  supplierRefId     String? // ref_id di Digiflazz
-  supplierResponse  Json? // response lengkap Digiflazz
-  serialNumber      String? // SN dari Digiflazz jika ada
-
-  note        String?
-  failReason  String?
-  paidAt      DateTime?
-  processedAt DateTime?
-  completedAt DateTime?
-  failedAt    DateTime?
-  expiredAt   DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  payment         Payment?
-  statusHistories OrderStatusHistory[]
-  commissions     Commission[]
-  fraudDetections FraudDetection[]
-  supplierLogs    SupplierLog[]
-  balanceTrx      BalanceTransaction[]
-  disputeCases    DisputeCase[]
-  mlmCommissions  MLMCommission[]
-
-  @@index([userId, merchantId, paymentStatus, fulfillmentStatus, createdAt])
-}
-
-model OrderStatusHistory {
-  id        String   @id @default(cuid())
-  orderId   String
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  status    String
-  note      String?
-  changedBy String // userId atau "SYSTEM"
-  createdAt DateTime @default(now())
-
-  @@index([orderId, createdAt])
-}
-
-// ============================================
-// PEMBAYARAN VIA TRIPAY
-// ============================================
-
-model Payment {
-  id         String @id @default(cuid())
-  orderId    String @unique
-  order      Order  @relation(fields: [orderId], references: [id])
-  userId     String
-  merchantId String
-
-  method      PaymentMethod
-  amount      Float
-  fee         Float         @default(0) // biaya payment gateway Tripay
-  totalAmount Float // amount + fee
-
-  status PaymentStatus @default(PENDING)
-
-  // Data dari Tripay
-  tripayReference   String? // nomor referensi Tripay
-  tripayMerchantRef String? // merchant_ref yang kita kirim ke Tripay
-  tripayPaymentUrl  String? // URL pembayaran untuk redirect
-  tripayQrUrl       String? // URL QR code jika QRIS
-  tripayVaNumber    String? // nomor Virtual Account
-  tripayExpiredTime DateTime? // batas waktu bayar dari Tripay
-  tripayResponse    Json? // full response dari Tripay
-
-  paidAt    DateTime?
-  expiredAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  @@index([orderId, userId, merchantId, status, tripayReference])
-}
-
-// Konfigurasi channel pembayaran per merchant
-// Merchant bisa aktif/nonaktif channel tertentu
-model PaymentChannel {
-  id         String        @id @default(cuid())
-  merchantId String? // null = setting global
-  merchant   Merchant?     @relation(fields: [merchantId], references: [id])
-  method     PaymentMethod
-  name       String // nama tampil ke customer
-  icon       String?
-  fee        Float         @default(0)
-  feeType    FeeType       @default(FLAT)
-  minAmount  Float?
-  maxAmount  Float?
-  isActive   Boolean       @default(true)
-  sortOrder  Int           @default(0)
-
-  // Konfigurasi Tripay per merchant (jika multi merchant key)
-  tripayConfig Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([merchantId, method, isActive])
-}
-
-// ============================================
-// SALDO & DEPOSIT
-// ============================================
-
-model Deposit {
-  id         String        @id @default(cuid())
-  userId     String
-  user       User          @relation(fields: [userId], references: [id])
-  merchantId String
-  merchant   Merchant      @relation(fields: [merchantId], references: [id])
-  amount     Float
-  method     PaymentMethod
-  status     DepositStatus @default(PENDING)
-
-  // Data Tripay untuk deposit
-  tripayReference   String?
-  tripayMerchantRef String?
-  tripayPaymentUrl  String?
-  tripayVaNumber    String?
-  tripayQrUrl       String?
-  tripayResponse    Json?
-
-  // Jika deposit manual transfer
-  receiptImage  String?
-  confirmedById String?
-  confirmedBy   User?     @relation("DepositConfirmedBy", fields: [confirmedById], references: [id])
-  confirmedAt   DateTime?
-  rejectedAt    DateTime?
-  note          String?
-  expiredAt     DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  balanceTransaction BalanceTransaction?
-
-  @@index([userId, merchantId, status, createdAt])
-}
-
-// Mutasi saldo
-model BalanceTransaction {
-  id            String         @id @default(cuid())
-  userId        String
-  user          User           @relation(fields: [userId], references: [id])
-  type          BalanceTrxType
-  amount        Float
-  balanceBefore Float
-  balanceAfter  Float
-  orderId       String?
-  order         Order?         @relation(fields: [orderId], references: [id])
-  depositId     String?        @unique
-  deposit       Deposit?       @relation(fields: [depositId], references: [id])
-  withdrawalId  String?        @unique
-  withdrawal    Withdrawal?    @relation(fields: [withdrawalId], references: [id])
-  description   String?
-  note          String?
-  createdAt     DateTime       @default(now())
-
-  @@index([userId, type, createdAt])
-}
-
-// Penarikan saldo
-model Withdrawal {
-  id                String           @id @default(cuid())
-  userId            String
-  user              User             @relation(fields: [userId], references: [id])
-  amount            Float
-  fee               Float            @default(0)
-  netAmount         Float
-  bankName          String
-  bankAccountNumber String
-  bankAccountName   String
-  status            WithdrawalStatus @default(PENDING)
-  processedById     String?
-  processedBy       User?            @relation("WithdrawalProcessedBy", fields: [processedById], references: [id])
-  processedAt       DateTime?
-  rejectedAt        DateTime?
-  note              String?
-  receiptImage      String?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-
-  balanceTransaction BalanceTransaction?
-
-  @@index([userId, status, createdAt])
-}
-
-// ============================================
-// KOMISI & REFERRAL
-// ============================================
-
-model CommissionRule {
-  id          String              @id @default(cuid())
-  merchantId  String?
-  name        String
-  description String?
-  type        CommissionType
-  value       Float
-  appliesTo   CommissionAppliesTo @default(ALL)
-  categoryId  String?
-  category    Category?           @relation(fields: [categoryId], references: [id])
-  productId   String?
-  product     Product?            @relation(fields: [productId], references: [id])
-  forRole     CommissionForRole
-  isActive    Boolean             @default(true)
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-
-  @@index([merchantId, forRole, isActive])
-}
-
-model Commission {
-  id        String           @id @default(cuid())
-  orderId   String
-  order     Order            @relation(fields: [orderId], references: [id])
-  userId    String
-  user      User             @relation(fields: [userId], references: [id])
-  type      String
-  amount    Float
-  status    CommissionStatus @default(PENDING)
-  settledAt DateTime?
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-
-  @@index([orderId, userId, status])
-}
-
-model ReferralReward {
-  id         String           @id @default(cuid())
-  referrerId String
-  referrer   User             @relation("ReferrerRewards", fields: [referrerId], references: [id])
-  referredId String
-  referred   User             @relation("ReferredRewards", fields: [referredId], references: [id])
-  orderId    String?
-  amount     Float
-  type       String
-  status     CommissionStatus @default(PENDING)
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-
-  @@index([referrerId, referredId, status])
-}
-
-// ============================================
-// MULTI-LEVEL RESELLER (MLM)
-// ============================================
-
-// End of Reseller models legacy
-
-
-model DownlineTree {
-  id        String   @id @default(cuid())
-  parentId  String
-  parent    User     @relation("DownlineParent", fields: [parentId], references: [id])
-  childId   String
-  child     User     @relation("DownlineChild", fields: [childId], references: [id])
-  level     Int      @default(1) // 1, 2, atau 3
-  createdAt DateTime @default(now())
-
-  @@unique([parentId, childId])
-  @@index([parentId, childId, level])
-}
-
-model MLMCommission {
-  id         String           @id @default(cuid())
-  orderId    String
-  order      Order            @relation(fields: [orderId], references: [id])
-  userId     String
-  user       User             @relation(fields: [userId], references: [id])
-  level      Int // 1, 2, atau 3
-  percentage Float
-  amount     Float
-  status     CommissionStatus @default(PENDING)
-  settledAt  DateTime?
-  createdAt  DateTime         @default(now())
-
-  @@index([orderId, userId, level, status])
-}
-
-// ============================================
-// PROMO & VOUCHER DISKON
-// ============================================
-
-model PromoCode {
-  id           String         @id @default(cuid())
-  merchantId   String?
-  merchant     Merchant?      @relation(fields: [merchantId], references: [id])
-  code         String         @unique
-  name         String
-  description  String?
-  type         PromoType
-  value        Float
-  maxDiscount  Float?
-  minPurchase  Float?
-  quota        Int?
-  usedCount    Int            @default(0)
-  startDate    DateTime?
-  endDate      DateTime?
-  isActive     Boolean        @default(true)
-  appliesTo    PromoAppliesTo @default(ALL)
-  categoryId   String?
-  productSkuId String?
-  productSku   ProductSku?    @relation(fields: [productSkuId], references: [id])
-  forRole      PromoForRole   @default(ALL)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-
-  usages   PromoUsage[]
-  orders   Order[]
-  category Category?    @relation(fields: [categoryId], references: [id])
-
-  @@index([code, merchantId, isActive])
-}
-
-model PromoUsage {
-  id             String    @id @default(cuid())
-  promoCodeId    String
-  promoCode      PromoCode @relation(fields: [promoCodeId], references: [id])
-  userId         String
-  user           User      @relation(fields: [userId], references: [id])
-  orderId        String
-  discountAmount Float
-  createdAt      DateTime  @default(now())
-
-  @@unique([promoCodeId, orderId])
-  @@index([promoCodeId, userId])
-}
-
-// ============================================
-// API KEY & WEBHOOK
-// ============================================
-
-model ApiKey {
-  id          String    @id @default(cuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  merchantId  String?
-  merchant    Merchant? @relation(fields: [merchantId], references: [id])
-  name        String
-  key         String    @unique
-  secret      String
-  permissions Json?
-  isActive    Boolean   @default(true)
-  lastUsedAt  DateTime?
-  expiresAt   DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@index([userId, merchantId, key])
-}
-
-model WebhookEndpoint {
-  id         String   @id @default(cuid())
-  merchantId String
-  merchant   Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
-  url        String
-  secret     String
-  events     Json // array WebhookEvent
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  logs WebhookLog[]
-
-  @@index([merchantId])
-}
-
-model WebhookLog {
-  id                String          @id @default(cuid())
-  webhookEndpointId String
-  webhookEndpoint   WebhookEndpoint @relation(fields: [webhookEndpointId], references: [id])
-  event             WebhookEvent
-  payload           Json
-  responseStatus    Int?
-  responseBody      String?
-  status            WebhookStatus   @default(PENDING)
-  retryCount        Int             @default(0)
-  nextRetryAt       DateTime?
-  sentAt            DateTime?
-  createdAt         DateTime        @default(now())
-
-  @@index([webhookEndpointId, status, event])
-}
-
-// ============================================
-// KEUANGAN LANJUT
-// ============================================
-
-// Invoice subscription SaaS merchant (dibayar via Tripay)
-model Invoice {
-  id          String        @id @default(cuid())
-  merchantId  String
-  merchant    Merchant      @relation(fields: [merchantId], references: [id])
-  invoiceNo   String        @unique
-  plan        MerchantPlan
-  amount      Float
-  tax         Float         @default(0)
-  totalAmount Float
-  status      InvoiceStatus @default(UNPAID)
-  dueDate     DateTime
-
-  // Tripay untuk bayar invoice subscription
-  tripayReference  String?
-  tripayPaymentUrl String?
-  tripayResponse   Json?
-
-  paidAt    DateTime?
-  proofUrl  String?
-  notes     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  @@index([merchantId, status, dueDate])
-}
-
-model SubscriptionHistory {
-  id         String        @id @default(cuid())
-  merchantId String
-  merchant   Merchant      @relation(fields: [merchantId], references: [id])
-  oldPlan    MerchantPlan?
-  newPlan    MerchantPlan
-  startDate  DateTime
-  endDate    DateTime
-  amount     Float
-  note       String?
-  createdAt  DateTime      @default(now())
-
-  @@index([merchantId, createdAt])
-}
-
-// ============================================
-// ANALYTICS & REPORTING
-// ============================================
-
-model DailySalesSnapshot {
-  id            String   @id @default(cuid())
-  merchantId    String
-  merchant      Merchant @relation(fields: [merchantId], references: [id])
-  date          DateTime
-  totalOrders   Int      @default(0)
-  successOrders Int      @default(0)
-  failedOrders  Int      @default(0)
-  totalRevenue  Float    @default(0)
-  totalProfit   Float    @default(0)
-  newCustomers  Int      @default(0)
-  createdAt     DateTime @default(now())
-
-  @@unique([merchantId, date])
-  @@index([merchantId, date])
-}
-
-model ProductSalesStats {
-  id           String   @id @default(cuid())
-  productId    String
-  product      Product  @relation(fields: [productId], references: [id])
-  categoryId   String
-  category     Category @relation(fields: [categoryId], references: [id])
-  date         DateTime
-  totalSold    Int      @default(0)
-  totalRevenue Float    @default(0)
-  createdAt    DateTime @default(now())
-
-  @@unique([productId, date])
-  @@index([productId, categoryId, date])
-}
-
-model UserActivityLog {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  action    String
-  page      String?
-  metadata  Json?
-  ipAddress String?
-  createdAt DateTime @default(now())
-
-  @@index([userId, action, createdAt])
-}
-
-// ============================================
-// NOTIFIKASI
-// ============================================
-
-model Notification {
-  id         String           @id @default(cuid())
-  userId     String
-  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  merchantId String?
-  merchant   Merchant?        @relation(fields: [merchantId], references: [id])
-  type       NotificationType
-  title      String
+  chatRoomId String
+  senderId   String
   message    String
-  imageUrl   String?
-  isRead     Boolean          @default(false)
-  readAt     DateTime?
-  data       Json?
-  createdAt  DateTime         @default(now())
+  isRead     Boolean  @default(false)
+  isAdmin    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id])
 
-  @@index([userId, merchantId, isRead, type, createdAt])
-}
-
-model NotificationTemplate {
-  id         String              @id @default(cuid())
-  merchantId String?
-  type       NotificationType
-  channel    NotificationChannel
-  subject    String?
-  body       String
-  isActive   Boolean             @default(true)
-  createdAt  DateTime            @default(now())
-  updatedAt  DateTime            @updatedAt
-
-  @@unique([merchantId, type, channel])
-}
-
-model PushNotificationLog {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  title     String
-  body      String
-  data      Json?
-  isSuccess Boolean
-  errorMsg  String?
-  sentAt    DateTime @default(now())
-
-  @@index([userId, isSuccess, sentAt])
-}
-
-model EmailCampaignLog {
-  id         String        @id @default(cuid())
-  campaignId String
-  campaign   EmailCampaign @relation(fields: [campaignId], references: [id])
-  userId     String
-  user       User          @relation(fields: [userId], references: [id])
-  isSuccess  Boolean
-  errorMsg   String?
-  sentAt     DateTime      @default(now())
-
-  @@index([campaignId, userId])
-}
-
-// ============================================
-// MARKETING & KONTEN
-// ============================================
-
-model Banner {
-  id         String         @id @default(cuid())
-  merchantId String?
-  merchant   Merchant?      @relation(fields: [merchantId], references: [id])
-  title      String
-  image      String
-  linkUrl    String?
-  position   BannerPosition @default(HERO)
-  sortOrder  Int            @default(0)
-  startDate  DateTime?
-  endDate    DateTime?
-  isActive   Boolean        @default(true)
-  clickCount Int            @default(0)
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
-
-  @@index([merchantId, position, isActive])
-}
-
-model Announcement {
-  id         String    @id @default(cuid())
-  merchantId String?
-  merchant   Merchant? @relation(fields: [merchantId], references: [id])
-  title      String
-  content    String
-  imageUrl   String?
-  isActive   Boolean   @default(true)
-  startDate  DateTime?
-  endDate    DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-
-  @@index([merchantId, isActive])
-}
-
-model PopupPromo {
-  id         String    @id @default(cuid())
-  merchantId String?
-  merchant   Merchant? @relation(fields: [merchantId], references: [id])
-  title      String
-  image      String?
-  content    String?
-  linkUrl    String?
-  startDate  DateTime?
-  endDate    DateTime?
-  isActive   Boolean   @default(true)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-}
-
-model EmailCampaign {
-  id          String    @id @default(cuid())
-  merchantId  String?
-  merchant    Merchant? @relation(fields: [merchantId], references: [id])
-  name        String
-  subject     String
-  body        String
-  targetRole  Role?
-  sentCount   Int       @default(0)
-  scheduledAt DateTime?
-  sentAt      DateTime?
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  logs EmailCampaignLog[]
-
-  @@index([merchantId, isActive])
-}
-
-model MarketingGuide {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String   @unique
-  content     String?  @db.Text
-  videoUrl    String?  // YouTube/Vimeo embed link
-  thumbnail   String?
-  category    String?  // e.g. "Ads", "Strategy", "Branding"
-  targetPlan  MerchantPlan @default(SUPREME) // Who can see this
-  isActive    Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([targetPlan, isActive])
-}
-
-model UserFavorite {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  productId String
-  product   Product  @relation(fields: [productId], references: [id])
-  createdAt DateTime @default(now())
-
-  @@unique([userId, productId])
-  @@index([userId])
-}
-
-// ============================================
-// SUPPORT TICKET
-// ============================================
-
-model SupportTicket {
-  id           String         @id @default(cuid())
-  userId       String
-  user         User           @relation("TicketUser", fields: [userId], references: [id])
-  merchantId   String
-  merchant     Merchant       @relation(fields: [merchantId], references: [id])
-  orderId      String?
-  subject      String
-  description  String
-  category     TicketCategory
-  priority     TicketPriority @default(MEDIUM)
-  status       TicketStatus   @default(OPEN)
-  assignedToId String?
-  assignedTo   User?          @relation("TicketAssigned", fields: [assignedToId], references: [id])
-  resolvedAt   DateTime?
-  closedAt     DateTime?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-
-  replies SupportTicketReply[]
-
-  @@index([userId, merchantId, status, priority, createdAt])
-}
-
-model SupportTicketReply {
-  id          String        @id @default(cuid())
-  ticketId    String
-  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User          @relation(fields: [userId], references: [id])
-  message     String
-  attachments Json?
-  isFromStaff Boolean       @default(false)
-  createdAt   DateTime      @default(now())
-
-  @@index([ticketId, userId])
-}
-
-// ============================================
-// REVIEW & RATING
-// ============================================
-
-model ProductReview {
-  id          String   @id @default(cuid())
-  productId   String
-  product     Product  @relation(fields: [productId], references: [id])
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  orderId     String   @unique
-  rating      Int // 1-5
-  comment     String?
-  images      Json?
-  isVerified  Boolean  @default(false)
-  isPublished Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([productId, userId, rating, isPublished])
-}
-
-// ============================================
-// OPERASIONAL
-// ============================================
-
-model MaintenanceSchedule {
-  id          String    @id @default(cuid())
-  supplierId  String?
-  supplier    Supplier? @relation(fields: [supplierId], references: [id])
-  productId   String?
-  product     Product?  @relation(fields: [productId], references: [id])
-  title       String
-  description String?
-  startTime   DateTime
-  endTime     DateTime
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@index([supplierId, productId, startTime, endTime])
-}
-
-model RefundPolicy {
-  id           String   @id @default(cuid())
-  productId    String   @unique
-  product      Product  @relation(fields: [productId], references: [id])
-  isRefundable Boolean  @default(true)
-  maxHours     Int      @default(24)
-  conditions   String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-
-model DisputeCase {
-  id         String        @id @default(cuid())
-  orderId    String
-  order      Order         @relation(fields: [orderId], references: [id])
-  userId     String
-  reason     String
-  evidence   Json?
-  status     DisputeStatus @default(OPEN)
-  resolution String?
-  resolvedBy String?
-  resolvedAt DateTime?
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
-
-  @@index([orderId, userId, status])
-}
-
-model JobQueue {
-  id          String    @id @default(cuid())
-  type        String
-  payload     Json
-  status      JobStatus @default(PENDING)
-  retryCount  Int       @default(0)
-  maxRetry    Int       @default(3)
-  error       String?
-  scheduledAt DateTime  @default(now())
-  startedAt   DateTime?
-  completedAt DateTime?
-  createdAt   DateTime  @default(now())
-
-  @@index([type, status, scheduledAt])
-}
-
-// ============================================
-// FRAUD & KEAMANAN LANJUT
-// ============================================
-
-model ApiRateLimit {
-  id          String   @id @default(cuid())
-  userId      String?
-  ipAddress   String
-  endpoint    String
-  hitCount    Int      @default(1)
-  windowStart DateTime
-  windowEnd   DateTime
-  isBlocked   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([userId, ipAddress, endpoint, windowStart])
-}
-
-// ============================================
-// PENGATURAN
-// ============================================
-
-model SystemSetting {
-  id          String      @id @default(cuid())
-  key         String      @unique
-  value       String
-  type        SettingType @default(STRING)
-  description String?
-  group       String?
-  updatedBy   String?
-  updatedAt   DateTime    @updatedAt
-}
-
-model MerchantSetting {
-  id         String      @id @default(cuid())
-  merchantId String
-  key        String
-  value      String
-  type       SettingType @default(STRING)
-  updatedAt  DateTime    @updatedAt
-  merchant   Merchant    @relation(fields: [merchantId], references: [id])
-
-  @@unique([merchantId, key])
-  @@index([merchantId])
-}
-
-// ============================================
-// AUDIT LOG
-// ============================================
-
-model AuditLog {
-  id         String    @id @default(cuid())
-  userId     String?
-  user       User?     @relation(fields: [userId], references: [id])
-  merchantId String?
-  merchant   Merchant? @relation(fields: [merchantId], references: [id])
-  action     String
-  entity     String
-  entityId   String?
-  oldData    Json?
-  newData    Json?
-  ipAddress  String?
-  userAgent  String?
-  createdAt  DateTime  @default(now())
-
-  @@index([userId, merchantId, action, entity, createdAt])
+  @@index([chatRoomId, createdAt])
 }

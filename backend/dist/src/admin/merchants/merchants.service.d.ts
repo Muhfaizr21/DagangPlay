@@ -44,8 +44,8 @@ export declare class MerchantsService {
         resellersCount: number;
         omset: number;
         _count: {
-            orders: number;
             deposits: number;
+            orders: number;
             supportTickets: number;
         };
         owner: {
