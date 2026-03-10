@@ -5,9 +5,9 @@ export declare class WithdrawalsController {
     requestWithdrawal(req: any, dto: any): Promise<any>;
     getHistory(req: any): Promise<{
         id: string;
+        status: import("@prisma/client").$Enums.WithdrawalStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.WithdrawalStatus;
         note: string | null;
         processedAt: Date | null;
         userId: string;
@@ -23,9 +23,9 @@ export declare class WithdrawalsController {
     }[]>;
     approve(id: string, req: any, body: any): Promise<{
         id: string;
+        status: import("@prisma/client").$Enums.WithdrawalStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.WithdrawalStatus;
         note: string | null;
         processedAt: Date | null;
         userId: string;

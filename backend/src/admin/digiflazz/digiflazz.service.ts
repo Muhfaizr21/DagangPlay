@@ -427,8 +427,8 @@ export class DigiflazzService {
                     orderId: order.id,
                     method: 'POST',
                     endpoint: `${url}/transaction`,
-                    requestBody: payload as any,
-                    responseBody: resJson as any,
+                    requestBody: this.maskSensitiveData(payload) as any,
+                    responseBody: this.maskSensitiveData(resJson) as any,
                     httpStatus: response.status,
                     isSuccess: resJson.data?.status === 'Sukses' || resJson.data?.status === 'Pending'
                 }
@@ -461,6 +461,7 @@ export class DigiflazzService {
                 // REVERSAL LOGIC: Jika Gagal, tarik kembali profit merchant yang sudah terlanjur masuk
                 if (fulfillmentStatus === 'FAILED') {
                     await this.handleCommissionReversal(order.id);
+                    await this.handleCustomerRefund(order.id);
                 }
 
                 return data;
@@ -474,6 +475,7 @@ export class DigiflazzService {
                     }
                 });
                 await this.handleCommissionReversal(order.id);
+                await this.handleCustomerRefund(order.id);
                 return resJson;
             }
         } catch (err: any) {
@@ -486,6 +488,7 @@ export class DigiflazzService {
                 }
             });
             await this.handleCommissionReversal(order.id);
+            await this.handleCustomerRefund(order.id);
             throw err;
         }
     }
@@ -512,8 +515,8 @@ export class DigiflazzService {
                         userId: comm.userId,
                         type: 'REFUND',
                         amount: -comm.amount,
-                        balanceBefore: user.balance + comm.amount,
-                        balanceAfter: user.balance,
+                        balanceBefore: Number(user.balance) + comm.amount,
+                        balanceAfter: Number(user.balance),
                         orderId,
                         description: `Reversal profit (Digiflazz Gagal): ${orderId}`
                     }
@@ -526,5 +529,106 @@ export class DigiflazzService {
             }
         });
         console.log(`[FinanceProtect] Automated reversal for ${orderId} completed.`);
+    }
+
+    /**
+     * Logic Refund to Customer (Buyer) saat fulfillment gagal total
+     */
+    private async handleCustomerRefund(orderId: string) {
+        const order = await this.prisma.order.findUnique({
+            where: { id: orderId },
+            include: { user: true }
+        });
+
+        if (!order || order.paymentStatus !== 'PAID') return;
+
+        // Cek apakah sudah pernah direfund sebelumnya
+        const existingRefund = await this.prisma.balanceTransaction.findFirst({
+            where: { orderId, type: 'REFUND', userId: order.userId, amount: { gt: 0 } }
+        });
+        if (existingRefund) return;
+
+        await this.prisma.$transaction(async (tx) => {
+            // 1. Credit balance to User
+            const user = await tx.user.update({
+                where: { id: order.userId },
+                data: { balance: { increment: order.totalPrice } }
+            });
+
+            // 2. Log Balance Transaction
+            await tx.balanceTransaction.create({
+                data: {
+                    userId: order.userId,
+                    type: 'REFUND',
+                    amount: order.totalPrice,
+                    balanceBefore: Number(user.balance) - order.totalPrice,
+                    balanceAfter: Number(user.balance),
+                    orderId: order.id,
+                    description: `Refund otomatis (Order Gagal): ${order.orderNumber}`
+                }
+            });
+
+            // 3. Mark Order as Refunded
+            await tx.order.update({
+                where: { id: order.id },
+                data: { paymentStatus: 'REFUNDED', fulfillmentStatus: 'REFUNDED' }
+            });
+        });
+
+        console.log(`[CustomerRefund] Order ${order.orderNumber} fully refunded to user ${order.user.name}.`);
+    }
+
+    /**
+     * Webhook Handler untuk Perubahan Harga (Negative Margin Protection)
+     */
+    async processPriceWebhook(payload: any) {
+        if (!Array.isArray(payload)) return;
+
+        for (const item of payload) {
+            const skuCode = item.buyer_sku_code;
+            const newPrice = Number(item.price);
+
+            // 1. Update our master price (ProductSku)
+            const skus = await this.prisma.productSku.findMany({
+                where: { supplierCode: skuCode, supplier: { code: 'DIGIFLAZZ' } }
+            });
+
+            for (const sku of skus) {
+                await this.prisma.$transaction(async (tx) => {
+                    // Update master base price
+                    await tx.productSku.update({
+                        where: { id: sku.id },
+                        data: { basePrice: newPrice }
+                    });
+
+                    // 2. CHECK ALL MERCHANT CUSTOM PRICES
+                    const merchantPrices = await tx.merchantProductPrice.findMany({
+                        where: { productSkuId: sku.id, isActive: true },
+                        include: { merchant: true }
+                    });
+
+                    for (const mp of merchantPrices) {
+                        const plan = mp.merchant.plan;
+                        let currentModalPrice = sku.priceNormal;
+
+                        if (plan === 'PRO') currentModalPrice = sku.pricePro;
+                        else if (plan === 'LEGEND') currentModalPrice = sku.priceLegend;
+                        else if (plan === 'SUPREME') currentModalPrice = sku.priceSupreme;
+
+                        // Force-deactivate if selling price < updated modal cost
+                        if (mp.customPrice < currentModalPrice) {
+                            await tx.merchantProductPrice.update({
+                                where: { id: mp.id },
+                                data: {
+                                    isActive: false,
+                                    reason: `Price Spike: Modal (${currentModalPrice}) > Jual (${mp.customPrice})`
+                                }
+                            });
+                            console.warn(`[AntiLoss] Merchant ${mp.merchant.name} - SKU ${skuCode} DEACTIVATED.`);
+                        }
+                    }
+                });
+            }
+        }
     }
 }

@@ -10,10 +10,10 @@ export declare class SubscriptionService {
         isActive: boolean;
         latestInvoice: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
             status: import("@prisma/client").$Enums.InvoiceStatus;
             plan: import("@prisma/client").$Enums.MerchantPlan;
+            createdAt: Date;
+            updatedAt: Date;
             merchantId: string;
             paidAt: Date | null;
             amount: number;
@@ -30,10 +30,10 @@ export declare class SubscriptionService {
     }>;
     getInvoiceHistory(merchantId: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         status: import("@prisma/client").$Enums.InvoiceStatus;
         plan: import("@prisma/client").$Enums.MerchantPlan;
+        createdAt: Date;
+        updatedAt: Date;
         merchantId: string;
         paidAt: Date | null;
         amount: number;
@@ -49,10 +49,10 @@ export declare class SubscriptionService {
     }[]>;
     createInvoice(merchantId: string, data: any): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         status: import("@prisma/client").$Enums.InvoiceStatus;
         plan: import("@prisma/client").$Enums.MerchantPlan;
+        createdAt: Date;
+        updatedAt: Date;
         merchantId: string;
         paidAt: Date | null;
         amount: number;
@@ -68,10 +68,10 @@ export declare class SubscriptionService {
     }>;
     uploadProof(merchantId: string, invoiceId: string, proofUrl: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         status: import("@prisma/client").$Enums.InvoiceStatus;
         plan: import("@prisma/client").$Enums.MerchantPlan;
+        createdAt: Date;
+        updatedAt: Date;
         merchantId: string;
         paidAt: Date | null;
         amount: number;

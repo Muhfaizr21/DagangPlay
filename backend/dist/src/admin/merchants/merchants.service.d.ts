@@ -18,13 +18,11 @@ export declare class MerchantsService {
         id: string;
         name: string;
         slug: string;
-        description: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
         domain: string | null;
+        description: string | null;
         tagline: string | null;
         contactEmail: string | null;
         contactPhone: string | null;
@@ -38,16 +36,13 @@ export declare class MerchantsService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
+        createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
     }>;
     getMerchantDetail(id: string): Promise<{
         resellersCount: number;
         omset: number;
-        _count: {
-            deposits: number;
-            orders: number;
-            supportTickets: number;
-        };
         owner: {
             id: string;
             name: string;
@@ -71,16 +66,19 @@ export declare class MerchantsService {
             userId: string;
             permissions: import("@prisma/client/runtime/client").JsonValue | null;
         })[];
+        _count: {
+            deposits: number;
+            orders: number;
+            supportTickets: number;
+        };
         id: string;
         name: string;
         slug: string;
-        description: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
         domain: string | null;
+        description: string | null;
         tagline: string | null;
         contactEmail: string | null;
         contactPhone: string | null;
@@ -94,19 +92,19 @@ export declare class MerchantsService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
+        createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
     }>;
     updateMerchantSettings(id: string, updateData: any): Promise<{
         id: string;
         name: string;
         slug: string;
-        description: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
         domain: string | null;
+        description: string | null;
         tagline: string | null;
         contactEmail: string | null;
         contactPhone: string | null;
@@ -120,6 +118,8 @@ export declare class MerchantsService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
+        createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
     }>;
     resetOwnerPassword(merchantId: string): Promise<{

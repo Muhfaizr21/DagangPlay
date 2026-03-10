@@ -32,7 +32,7 @@ export class PublicOrdersService {
         return mapping[code] || 'TRIPAY_QRIS';
     }
 
-    async createCheckout(body: any, host?: string, origin?: string) {
+    async createCheckout(body: any, host?: string, origin?: string, merchantSlug?: string) {
         const { skuId, gameId, serverId, whatsapp, paymentMethod } = body;
 
         // 1. Get the SKU details
@@ -59,9 +59,10 @@ export class PublicOrdersService {
         const targetMerchant = await this.prisma.merchant.findFirst({
             where: {
                 OR: [
+                    merchantSlug ? { slug: merchantSlug } : {},
                     { domain: host },
                     { slug: host?.split('.')[0] }
-                ]
+                ].filter(condition => Object.keys(condition).length > 0)
             }
         });
 
@@ -290,14 +291,15 @@ export class PublicOrdersService {
         return order;
     }
 
-    async getStoreConfig(host?: string) {
+    async getStoreConfig(host?: string, merchantSlug?: string) {
         // 1. Find Merchant
         const merchant = await this.prisma.merchant.findFirst({
             where: {
                 OR: [
+                    merchantSlug ? { slug: merchantSlug } : {},
                     { domain: host },
                     { slug: host?.split('.')[0] }
-                ]
+                ].filter(condition => Object.keys(condition).length > 0)
             }
         });
 
@@ -325,6 +327,7 @@ export class PublicOrdersService {
             tagline: targetMerchant.tagline,
             whiteLabel: features.whiteLabel || false,
             plan: targetMerchant.plan,
+            slug: targetMerchant.slug,
             isOfficial: targetMerchant.isOfficial,
             theme: (targetMerchant.settings as any)?.theme || { active: 'dark' }
         };

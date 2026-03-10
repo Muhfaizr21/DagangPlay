@@ -5,7 +5,7 @@ export declare class PublicOrdersController {
     private readonly tripayService;
     constructor(publicOrdersService: PublicOrdersService, tripayService: TripayService);
     getPaymentChannels(): Promise<any>;
-    getConfig(req: any): Promise<{
+    getConfig(req: any, merchantSlug?: string): Promise<{
         name: string;
         logo: null;
         whiteLabel: boolean;
@@ -13,6 +13,7 @@ export declare class PublicOrdersController {
         id?: undefined;
         banner?: undefined;
         tagline?: undefined;
+        slug?: undefined;
         isOfficial?: undefined;
         theme?: undefined;
     } | {
@@ -23,6 +24,7 @@ export declare class PublicOrdersController {
         tagline: string | null;
         whiteLabel: any;
         plan: import("@prisma/client").$Enums.MerchantPlan;
+        slug: string;
         isOfficial: boolean;
         theme: any;
     }>;
@@ -36,27 +38,28 @@ export declare class PublicOrdersController {
             product: {
                 category: {
                     id: string;
+                    name: string;
+                    sortOrder: number;
                     createdAt: Date;
                     updatedAt: Date;
-                    name: string;
                     slug: string;
-                    description: string | null;
-                    sortOrder: number;
-                    digiflazzCategory: string | null;
-                    isActive: boolean;
                     icon: string | null;
                     image: string | null;
+                    description: string | null;
+                    isActive: boolean;
                     parentId: string | null;
+                    digiflazzCategory: string | null;
                 };
             } & {
                 id: string;
-                createdAt: Date;
-                updatedAt: Date;
                 name: string;
                 status: import("@prisma/client").$Enums.ProductStatus;
+                sortOrder: number;
+                createdAt: Date;
+                updatedAt: Date;
                 slug: string;
                 description: string | null;
-                sortOrder: number;
+                digiflazzCategory: string | null;
                 categoryId: string;
                 thumbnail: string | null;
                 banner: string | null;
@@ -64,7 +67,6 @@ export declare class PublicOrdersController {
                 gameServerId: boolean;
                 serverLabel: string | null;
                 digiflazzBrand: string | null;
-                digiflazzCategory: string | null;
                 instruction: string | null;
                 isFeatured: boolean;
                 isPopular: boolean;
@@ -72,15 +74,12 @@ export declare class PublicOrdersController {
         } & {
             id: string;
             productId: string;
-            basePrice: number;
             supplierId: string;
-            createdAt: Date;
-            updatedAt: Date;
             name: string;
-            status: import("@prisma/client").$Enums.SkuStatus;
             supplierCode: string;
             backupSupplierId: string | null;
             backupSupplierCode: string | null;
+            basePrice: number;
             priceNormal: number;
             pricePro: number;
             priceLegend: number;
@@ -90,50 +89,60 @@ export declare class PublicOrdersController {
             marginLegend: number;
             marginSupreme: number;
             stock: number;
+            status: import("@prisma/client").$Enums.SkuStatus;
             sortOrder: number;
             metadata: import("@prisma/client/runtime/client").JsonValue | null;
+            createdAt: Date;
+            updatedAt: Date;
         };
         payment: {
+            method: import("@prisma/client").$Enums.PaymentMethod;
             id: string;
-            paidAt: Date | null;
-            expiredAt: Date | null;
+            status: import("@prisma/client").$Enums.PaymentStatus;
             createdAt: Date;
             updatedAt: Date;
             userId: string;
             merchantId: string;
-            status: import("@prisma/client").$Enums.PaymentStatus;
+            expiredAt: Date | null;
+            paidAt: Date | null;
             orderId: string;
-            method: import("@prisma/client").$Enums.PaymentMethod;
             amount: number;
-            fee: number;
-            totalAmount: number;
             tripayReference: string | null;
             tripayMerchantRef: string | null;
             tripayPaymentUrl: string | null;
-            tripayQrUrl: string | null;
             tripayVaNumber: string | null;
-            tripayExpiredTime: Date | null;
+            tripayQrUrl: string | null;
             tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
+            totalAmount: number;
+            fee: number;
+            tripayExpiredTime: Date | null;
         } | null;
     } & {
         id: string;
-        orderNumber: string;
         productId: string;
+        supplierId: string | null;
+        basePrice: number;
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string;
+        merchantId: string;
+        productSkuId: string;
+        expiredAt: Date | null;
+        orderNumber: string;
         productName: string;
         productSkuName: string;
         priceTierUsed: import("@prisma/client").$Enums.PriceTier;
-        basePrice: number;
         sellingPrice: number;
         totalPrice: number;
         gameUserId: string;
         gameUserServerId: string | null;
         gameUserName: string | null;
         quantity: number;
+        promoCodeId: string | null;
         discountAmount: number;
         paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
         paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
         fulfillmentStatus: import("@prisma/client").$Enums.OrderFulfillmentStatus;
-        supplierId: string | null;
         supplierRefId: string | null;
         supplierResponse: import("@prisma/client/runtime/client").JsonValue | null;
         serialNumber: string | null;
@@ -143,13 +152,6 @@ export declare class PublicOrdersController {
         processedAt: Date | null;
         completedAt: Date | null;
         failedAt: Date | null;
-        expiredAt: Date | null;
-        createdAt: Date;
-        updatedAt: Date;
         merchantModalPrice: number | null;
-        userId: string;
-        merchantId: string;
-        productSkuId: string;
-        promoCodeId: string | null;
     }>;
 }

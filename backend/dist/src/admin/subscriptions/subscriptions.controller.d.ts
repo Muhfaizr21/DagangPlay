@@ -10,10 +10,10 @@ export declare class SubscriptionsController {
         };
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         status: import("@prisma/client").$Enums.InvoiceStatus;
         plan: import("@prisma/client").$Enums.MerchantPlan;
+        createdAt: Date;
+        updatedAt: Date;
         merchantId: string;
         paidAt: Date | null;
         amount: number;
@@ -30,10 +30,10 @@ export declare class SubscriptionsController {
     confirmInvoice(id: string): Promise<any>;
     rejectInvoice(id: string, notes: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         status: import("@prisma/client").$Enums.InvoiceStatus;
         plan: import("@prisma/client").$Enums.MerchantPlan;
+        createdAt: Date;
+        updatedAt: Date;
         merchantId: string;
         paidAt: Date | null;
         amount: number;
@@ -67,10 +67,10 @@ export declare class SubscriptionsController {
     }>;
     createManualInvoice(merchantId: string, plan: any, amount: number, dueDate: Date): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         status: import("@prisma/client").$Enums.InvoiceStatus;
         plan: import("@prisma/client").$Enums.MerchantPlan;
+        createdAt: Date;
+        updatedAt: Date;
         merchantId: string;
         paidAt: Date | null;
         amount: number;

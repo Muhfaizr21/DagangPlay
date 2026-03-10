@@ -6,9 +6,9 @@ export declare class SuppliersController {
     getAllSuppliers(): Promise<{
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.SupplierStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.SupplierStatus;
         balance: number;
         code: import("@prisma/client").$Enums.SupplierCode;
         apiUrl: string;
@@ -19,9 +19,9 @@ export declare class SuppliersController {
     getSupplierById(id: string): Promise<{
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.SupplierStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.SupplierStatus;
         balance: number;
         code: import("@prisma/client").$Enums.SupplierCode;
         apiUrl: string;
@@ -38,9 +38,9 @@ export declare class SuppliersController {
     }): Promise<{
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.SupplierStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.SupplierStatus;
         balance: number;
         code: import("@prisma/client").$Enums.SupplierCode;
         apiUrl: string;

@@ -8,27 +8,27 @@ export declare class ChatController {
         messages: {
             id: string;
             createdAt: Date;
+            message: string;
             chatRoomId: string;
             senderId: string;
-            message: string;
             isRead: boolean;
             isAdmin: boolean;
         }[];
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         merchantId: string;
         lastMessage: string | null;
-        updatedAt: Date;
-        createdAt: Date;
     }>;
     sendMessageFromMerchant(req: any, body: {
         message: string;
     }): Promise<{
         id: string;
         createdAt: Date;
+        message: string;
         chatRoomId: string;
         senderId: string;
-        message: string;
         isRead: boolean;
         isAdmin: boolean;
     }>;
@@ -43,39 +43,39 @@ export declare class ChatController {
         };
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         merchantId: string;
         lastMessage: string | null;
-        updatedAt: Date;
-        createdAt: Date;
     })[]>;
     getRoomMessages(id: string): Promise<{
-        messages: {
-            id: string;
-            createdAt: Date;
-            chatRoomId: string;
-            senderId: string;
-            message: string;
-            isRead: boolean;
-            isAdmin: boolean;
-        }[];
         merchant: {
             name: string;
         };
+        messages: {
+            id: string;
+            createdAt: Date;
+            message: string;
+            chatRoomId: string;
+            senderId: string;
+            isRead: boolean;
+            isAdmin: boolean;
+        }[];
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         merchantId: string;
         lastMessage: string | null;
-        updatedAt: Date;
-        createdAt: Date;
     }>;
     sendMessageFromAdmin(req: any, id: string, body: {
         message: string;
     }): Promise<{
         id: string;
         createdAt: Date;
+        message: string;
         chatRoomId: string;
         senderId: string;
-        message: string;
         isRead: boolean;
         isAdmin: boolean;
     }>;

@@ -7,11 +7,11 @@ export declare class UsersService {
         data: {
             id: string;
             name: string;
+            status: import("@prisma/client").$Enums.UserStatus;
             createdAt: Date;
             _count: {
                 ordersAsCustomer: number;
             };
-            status: import("@prisma/client").$Enums.UserStatus;
             email: string | null;
             role: import("@prisma/client").$Enums.Role;
             isVerified: boolean;
@@ -31,13 +31,11 @@ export declare class UsersService {
                 id: string;
                 name: string;
                 slug: string;
-                description: string | null;
-                createdAt: Date;
-                updatedAt: Date;
                 logo: string | null;
                 favicon: string | null;
                 bannerImage: string | null;
                 domain: string | null;
+                description: string | null;
                 tagline: string | null;
                 contactEmail: string | null;
                 contactPhone: string | null;
@@ -51,6 +49,8 @@ export declare class UsersService {
                 isOfficial: boolean;
                 settings: import("@prisma/client/runtime/client").JsonValue | null;
                 ownerId: string;
+                createdAt: Date;
+                updatedAt: Date;
                 deletedAt: Date | null;
             };
         } & {
@@ -64,11 +64,11 @@ export declare class UsersService {
         })[];
         profile: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
             address: string | null;
             city: string | null;
             province: string | null;
+            createdAt: Date;
+            updatedAt: Date;
             userId: string;
             bankName: string | null;
             bankAccountNumber: string | null;
@@ -82,9 +82,9 @@ export declare class UsersService {
     } & {
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.UserStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.UserStatus;
         deletedAt: Date | null;
         merchantId: string | null;
         email: string | null;
@@ -104,9 +104,9 @@ export declare class UsersService {
     updateUserStatus(id: string, status: UserStatus, reason?: string): Promise<{
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.UserStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.UserStatus;
         deletedAt: Date | null;
         merchantId: string | null;
         email: string | null;

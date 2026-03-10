@@ -12,10 +12,92 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrdersService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma.service");
+const digiflazz_service_1 = require("../../admin/digiflazz/digiflazz.service");
+const subscriptions_service_1 = require("../../admin/subscriptions/subscriptions.service");
 let OrdersService = class OrdersService {
     prisma;
-    constructor(prisma) {
+    digiflazz;
+    subscriptionsService;
+    constructor(prisma, digiflazz, subscriptionsService) {
         this.prisma = prisma;
+        this.digiflazz = digiflazz;
+        this.subscriptionsService = subscriptionsService;
+    }
+    async createDirectOrder(merchantId, userId, body) {
+        const { skuId, gameId, serverId, whatsapp } = body;
+        const merchant = await this.prisma.merchant.findUnique({
+            where: { id: merchantId },
+            include: { owner: true }
+        });
+        if (!merchant)
+            throw new common_1.NotFoundException('Merchant not found');
+        const sku = await this.prisma.productSku.findUnique({
+            where: { id: skuId },
+            include: { product: { include: { category: true } } }
+        });
+        if (!sku)
+            throw new common_1.NotFoundException('Produk tidak ditemukan');
+        const mapping = await this.prisma.planTierMapping.findUnique({
+            where: { plan: merchant.plan }
+        });
+        const activeTier = mapping?.tier || 'NORMAL';
+        let modalPrice = Number(sku.priceNormal);
+        if (activeTier === 'PRO')
+            modalPrice = Number(sku.pricePro);
+        if (activeTier === 'LEGEND')
+            modalPrice = Number(sku.priceLegend);
+        if (activeTier === 'SUPREME')
+            modalPrice = Number(sku.priceSupreme);
+        if (merchant.owner.balance < modalPrice) {
+            throw new common_1.BadRequestException('Saldo Anda tidak mencukupi. Silakan top-up terlebih dahulu.');
+        }
+        const orderNumber = `DIR-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        return this.prisma.$transaction(async (tx) => {
+            const updatedUser = await tx.user.update({
+                where: { id: merchant.ownerId },
+                data: { balance: { decrement: modalPrice } }
+            });
+            await tx.balanceTransaction.create({
+                data: {
+                    userId: merchant.ownerId,
+                    type: 'ORDER',
+                    amount: -modalPrice,
+                    description: `Pembelian Produk: ${sku.product.name} - ${sku.name} (${orderNumber})`
+                }
+            });
+            const order = await tx.order.create({
+                data: {
+                    orderNumber,
+                    userId,
+                    merchantId,
+                    productId: sku.product.id,
+                    productSkuId: sku.id,
+                    productName: sku.product.name,
+                    productSkuName: sku.name,
+                    priceTierUsed: activeTier,
+                    basePrice: Number(sku.basePrice),
+                    merchantModalPrice: modalPrice,
+                    sellingPrice: modalPrice,
+                    totalPrice: modalPrice,
+                    paymentStatus: 'PAID',
+                    fulfillmentStatus: 'PENDING',
+                    paymentMethod: 'WALLET',
+                    gameUserId: gameId,
+                    gameUserServerId: serverId,
+                    whatsapp,
+                    paidAt: new Date(),
+                }
+            });
+            return order;
+        }).then(async (order) => {
+            try {
+                await this.digiflazz.placeOrder(order.id);
+            }
+            catch (err) {
+                console.error('[DirectOrder] Fulfillment failed, but order is paid. Merchant should retry manually.', err);
+            }
+            return order;
+        });
     }
     async getOrders(merchantId, filters) {
         const whereClause = { merchantId };
@@ -144,6 +226,8 @@ let OrdersService = class OrdersService {
 exports.OrdersService = OrdersService;
 exports.OrdersService = OrdersService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        digiflazz_service_1.DigiflazzService,
+        subscriptions_service_1.SubscriptionsService])
 ], OrdersService);
 //# sourceMappingURL=orders.service.js.map

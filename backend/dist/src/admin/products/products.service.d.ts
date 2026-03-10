@@ -177,27 +177,27 @@ export declare class ProductsService {
         stock: number;
         metadata: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
-    getPublicCategories(): Promise<any[]>;
-    getPublicCategoryBySlug(slug: string): Promise<{
+    getPublicCategories(merchantSlug?: string): Promise<any[]>;
+    getPublicCategoryBySlug(slug: string, merchantSlug?: string): Promise<{
         name: string;
         slug: string;
         products: {
+            skus: {
+                priceNormal: number | undefined;
+                id: string;
+                name: string;
+                status: import("@prisma/client").$Enums.SkuStatus;
+            }[];
             id: string;
             name: string;
             gameIdLabel: string | null;
             gameServerId: boolean;
             serverLabel: string | null;
-            skus: {
-                id: string;
-                name: string;
-                status: import("@prisma/client").$Enums.SkuStatus;
-                priceNormal: number;
-            }[];
         }[];
         id: string;
         image: string | null;
     } | null>;
-    getPublicContent(): Promise<{
+    getPublicContent(merchantSlug?: string): Promise<{
         banners: {
             id: string;
             image: string;
@@ -226,7 +226,7 @@ export declare class ProductsService {
             imageUrl: string | null;
         }[];
     }>;
-    getPublicResellerPrices(): Promise<{
+    getPublicResellerPrices(merchantSlug?: string): Promise<{
         name: string;
         normal: number;
         pro: number;
@@ -234,14 +234,16 @@ export declare class ProductsService {
         supreme: number;
         img: string;
     }[]>;
-    getPublicFullCatalog(): Promise<{
+    getPublicFullCatalog(merchantSlug?: string): Promise<{
         id: string;
         name: string;
+        slug: string;
         icon: string | null;
         image: string | null;
         products: {
             id: string;
             name: string;
+            slug: string;
             image: string | null;
             skus: {
                 id: string;

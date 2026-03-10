@@ -17,13 +17,13 @@ export declare class TicketsService {
             name: string;
         } | null;
     } & {
-        category: import("@prisma/client").$Enums.TicketCategory;
         id: string;
         description: string;
+        status: import("@prisma/client").$Enums.TicketStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.TicketStatus;
         merchantId: string;
+        category: import("@prisma/client").$Enums.TicketCategory;
         userId: string;
         orderId: string | null;
         subject: string;
@@ -59,13 +59,13 @@ export declare class TicketsService {
             ticketId: string;
         })[];
     } & {
-        category: import("@prisma/client").$Enums.TicketCategory;
         id: string;
         description: string;
+        status: import("@prisma/client").$Enums.TicketStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.TicketStatus;
         merchantId: string;
+        category: import("@prisma/client").$Enums.TicketCategory;
         userId: string;
         orderId: string | null;
         subject: string;
@@ -79,13 +79,13 @@ export declare class TicketsService {
         priority?: TicketPriority;
         assignedToId?: string;
     }): Promise<{
-        category: import("@prisma/client").$Enums.TicketCategory;
         id: string;
         description: string;
+        status: import("@prisma/client").$Enums.TicketStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.TicketStatus;
         merchantId: string;
+        category: import("@prisma/client").$Enums.TicketCategory;
         userId: string;
         orderId: string | null;
         subject: string;

@@ -3,22 +3,22 @@ export declare class PromosService {
     private prisma;
     constructor(prisma: PrismaService);
     getAllPromos(search?: string): Promise<({
-        category: {
+        merchant: {
             name: string;
         } | null;
-        merchant: {
+        category: {
             name: string;
         } | null;
     } & {
         id: string;
         name: string;
         description: string | null;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
+        isActive: boolean;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -35,12 +35,12 @@ export declare class PromosService {
         id: string;
         name: string;
         description: string | null;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
+        isActive: boolean;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -57,12 +57,12 @@ export declare class PromosService {
         id: string;
         name: string;
         description: string | null;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
+        isActive: boolean;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -79,12 +79,12 @@ export declare class PromosService {
         id: string;
         name: string;
         description: string | null;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
+        isActive: boolean;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -101,12 +101,12 @@ export declare class PromosService {
         id: string;
         name: string;
         description: string | null;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
+        isActive: boolean;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;
@@ -123,12 +123,12 @@ export declare class PromosService {
         id: string;
         name: string;
         description: string | null;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
         startDate: Date | null;
         endDate: Date | null;
+        isActive: boolean;
         categoryId: string | null;
         code: string;
         productSkuId: string | null;

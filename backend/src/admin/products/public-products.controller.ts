@@ -6,27 +6,27 @@ export class PublicProductsController {
     constructor(private readonly productsService: ProductsService) { }
 
     @Get('categories')
-    async getCategories() {
-        return this.productsService.getPublicCategories();
+    async getCategories(@Query('merchant') merchantSlug?: string) {
+        return this.productsService.getPublicCategories(merchantSlug);
     }
 
     @Get('categories/:slug')
-    async getCategoryBySlug(@Param('slug') slug: string) {
-        return this.productsService.getPublicCategoryBySlug(slug);
+    async getCategoryBySlug(@Param('slug') slug: string, @Query('merchant') merchantSlug?: string) {
+        return this.productsService.getPublicCategoryBySlug(slug, merchantSlug);
     }
 
     @Get('content')
-    async getContent() {
-        return this.productsService.getPublicContent();
+    async getContent(@Query('merchant') merchantSlug?: string) {
+        return this.productsService.getPublicContent(merchantSlug);
     }
 
     @Get('reseller-prices')
-    async getResellerPrices() {
-        return this.productsService.getPublicResellerPrices();
+    async getResellerPrices(@Query('merchant') merchantSlug?: string) {
+        return this.productsService.getPublicResellerPrices(merchantSlug);
     }
 
     @Get('full-catalog')
-    async getFullCatalog() {
-        return this.productsService.getPublicFullCatalog();
+    async getFullCatalog(@Query('merchant') merchantSlug?: string) {
+        return this.productsService.getPublicFullCatalog(merchantSlug);
     }
 }

@@ -7,11 +7,11 @@ export declare class ResellersService {
         totalOrders: number;
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.UserStatus;
         createdAt: Date;
         _count: {
             ordersAsCustomer: number;
         };
-        status: import("@prisma/client").$Enums.UserStatus;
         email: string | null;
         phone: string | null;
         balance: number;
@@ -19,9 +19,9 @@ export declare class ResellersService {
     updateStatus(merchantId: string, resellerId: string, status: UserStatus): Promise<{
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.UserStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.UserStatus;
         deletedAt: Date | null;
         merchantId: string | null;
         email: string | null;
@@ -42,9 +42,9 @@ export declare class ResellersService {
     createReseller(merchantId: string, data: any): Promise<{
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.UserStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.UserStatus;
         deletedAt: Date | null;
         merchantId: string | null;
         email: string | null;

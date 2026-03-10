@@ -16,9 +16,9 @@ export declare class SettingsService {
     createAdminStaff(data: any): Promise<{
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.UserStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.UserStatus;
         deletedAt: Date | null;
         merchantId: string | null;
         email: string | null;
@@ -38,9 +38,9 @@ export declare class SettingsService {
     updateAdminStaff(id: string, data: any): Promise<{
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.UserStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.UserStatus;
         deletedAt: Date | null;
         merchantId: string | null;
         email: string | null;
@@ -60,9 +60,9 @@ export declare class SettingsService {
     deleteAdminStaff(id: string): Promise<{
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.UserStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.UserStatus;
         deletedAt: Date | null;
         merchantId: string | null;
         email: string | null;
@@ -82,8 +82,8 @@ export declare class SettingsService {
     getJobQueues(status?: string): Promise<{
         error: string | null;
         id: string;
-        createdAt: Date;
         status: import("@prisma/client").$Enums.JobStatus;
+        createdAt: Date;
         completedAt: Date | null;
         type: string;
         scheduledAt: Date;
@@ -95,8 +95,8 @@ export declare class SettingsService {
     retryFailedJob(id: string): Promise<{
         error: string | null;
         id: string;
-        createdAt: Date;
         status: import("@prisma/client").$Enums.JobStatus;
+        createdAt: Date;
         completedAt: Date | null;
         type: string;
         scheduledAt: Date;

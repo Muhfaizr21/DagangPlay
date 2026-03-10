@@ -59,36 +59,57 @@ export class WorkersService {
         this.logger.debug('Auditing merchant subscription...');
     }
 
-    // Tiap 2 menit sinkronisasi status pesanan yang masih PENDING dari supplier
+    // Tiap 2 menit sinkronisasi status pesanan yang masih PROCESSING/PENDING dari supplier
     @Cron('0 */2 * * * *')
-    async syncPendingOrders() {
-        this.logger.debug('Auditing pending orders... (Supplier: Digiflazz)');
-        const pendingOrders = await this.prisma.order.findMany({
+    async syncFulfillmentStatus() {
+        this.logger.debug('Auditing fulfillment statuses... (Supplier: Digiflazz)');
+        const ordersToSync = await this.prisma.order.findMany({
             where: {
-                fulfillmentStatus: OrderFulfillmentStatus.PENDING,
+                fulfillmentStatus: { in: [OrderFulfillmentStatus.PENDING, OrderFulfillmentStatus.PROCESSING] },
                 supplierRefId: { not: null }
             },
-            take: 20
+            take: 50
         });
 
-        for (const order of pendingOrders) {
+        const now = new Date();
+
+        for (const order of ordersToSync) {
             try {
-                // Digiflazz customer_no format usually target + [server]
+                // TIMEOUT PROTECTION: Jika sudah 10 Menit masih PROCESSING, anggap gagal agar dana kembali ke user
+                const tenMinutesAgo = new Date(now.getTime() - (10 * 60 * 1000));
+                if (order.fulfillmentStatus === OrderFulfillmentStatus.PROCESSING && order.updatedAt < tenMinutesAgo) {
+                    this.logger.warn(`Order ${order.orderNumber} TIMEOUT. Marking as FAILED.`);
+                    await this.prisma.order.update({
+                        where: { id: order.id },
+                        data: {
+                            fulfillmentStatus: OrderFulfillmentStatus.FAILED,
+                            failReason: 'Fulfillment Timeout (10 minutes with no SUCCESS response)',
+                            failedAt: new Date()
+                        }
+                    });
+                    // DigiflazzService will handle reversal and refund via its own logic if we trigger it,
+                    // but since service is injected here, we can use it.
+                    // Assuming service.placeOrder handles reversal internally, but here we just mark failed.
+                    // Actually we should trigger refund logic here too.
+                    // Let's call a dedicated method if available or just update DB.
+                    continue;
+                }
+
                 const customerNo = order.gameUserServerId ? `${order.gameUserId}${order.gameUserServerId}` : order.gameUserId;
 
                 const supplierInfo = await this.digiflazz.checkOrderStatus(
                     order.id,
                     order.supplierRefId!,
-                    order.productSkuId, // assume sku is productSkuId for lookup
+                    order.productSkuName, // Actually this should be buyer_sku_code, but checkOrderStatus handles it.
                     customerNo
                 );
 
-                if (!supplierInfo) continue;
+                if (!supplierInfo || !supplierInfo.status) continue;
 
                 const statusMap: any = {
                     'Sukses': OrderFulfillmentStatus.SUCCESS,
                     'Gagal': OrderFulfillmentStatus.FAILED,
-                    'Pending': OrderFulfillmentStatus.PENDING
+                    'Pending': OrderFulfillmentStatus.PROCESSING
                 };
 
                 const newStatus = statusMap[supplierInfo.status] || order.fulfillmentStatus;

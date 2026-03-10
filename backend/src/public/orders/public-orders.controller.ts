@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, Req } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Req, Query } from '@nestjs/common';
 import { PublicOrdersService } from './public-orders.service';
 import { TripayService } from '../../tripay/tripay.service';
 
@@ -15,16 +15,17 @@ export class PublicOrdersController {
     }
 
     @Get('config')
-    async getConfig(@Req() req: any) {
+    async getConfig(@Req() req: any, @Query('slug') merchantSlug?: string) {
         const host = req.headers.host || req.headers.origin;
-        return this.publicOrdersService.getStoreConfig(host);
+        return this.publicOrdersService.getStoreConfig(host, merchantSlug);
     }
 
     @Post('checkout')
     async checkout(@Body() body: any, @Req() req: any) {
         const host = req.headers.host;
         const origin = req.headers.origin;
-        return this.publicOrdersService.createCheckout(body, host, origin);
+        const merchantSlug = body.merchant;
+        return this.publicOrdersService.createCheckout(body, host, origin, merchantSlug);
     }
 
     @Get(':orderNumber')

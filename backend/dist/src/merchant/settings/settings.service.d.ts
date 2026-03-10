@@ -8,13 +8,11 @@ export declare class SettingsService {
         id: string;
         name: string;
         slug: string;
-        description: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
         domain: string | null;
+        description: string | null;
         tagline: string | null;
         contactEmail: string | null;
         contactPhone: string | null;
@@ -28,19 +26,19 @@ export declare class SettingsService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
+        createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
     } | null>;
     updateProfile(merchantId: string, data: any): Promise<{
         id: string;
         name: string;
         slug: string;
-        description: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
         domain: string | null;
+        description: string | null;
         tagline: string | null;
         contactEmail: string | null;
         contactPhone: string | null;
@@ -54,19 +52,19 @@ export declare class SettingsService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
+        createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
     }>;
     updateDomain(merchantId: string, domain: string): Promise<{
         id: string;
         name: string;
         slug: string;
-        description: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
         domain: string | null;
+        description: string | null;
         tagline: string | null;
         contactEmail: string | null;
         contactPhone: string | null;
@@ -80,17 +78,19 @@ export declare class SettingsService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
+        createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
     }>;
     getPaymentChannels(merchantId: string): Promise<{
         id: string;
         name: string;
-        icon: string | null;
-        sortOrder: number;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        sortOrder: number;
+        isActive: boolean;
+        icon: string | null;
         method: import("@prisma/client").$Enums.PaymentMethod;
         fee: number;
         feeType: import("@prisma/client").$Enums.FeeType;
@@ -101,12 +101,12 @@ export declare class SettingsService {
     togglePaymentChannel(merchantId: string, channelId: string, isActive: boolean): Promise<{
         id: string;
         name: string;
-        icon: string | null;
-        sortOrder: number;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        sortOrder: number;
+        isActive: boolean;
+        icon: string | null;
         method: import("@prisma/client").$Enums.PaymentMethod;
         fee: number;
         feeType: import("@prisma/client").$Enums.FeeType;
@@ -117,20 +117,20 @@ export declare class SettingsService {
     getWebhooks(merchantId: string): Promise<{
         url: string;
         id: string;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
+        isActive: boolean;
         secret: string;
         events: import("@prisma/client/runtime/client").JsonValue;
     }[]>;
     updateWebhook(merchantId: string, data: any): Promise<{
         url: string;
         id: string;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
+        isActive: boolean;
         secret: string;
         events: import("@prisma/client/runtime/client").JsonValue;
     }>;

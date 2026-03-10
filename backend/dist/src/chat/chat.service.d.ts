@@ -6,25 +6,25 @@ export declare class ChatService {
         messages: {
             id: string;
             createdAt: Date;
+            message: string;
             chatRoomId: string;
             senderId: string;
-            message: string;
             isRead: boolean;
             isAdmin: boolean;
         }[];
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         merchantId: string;
         lastMessage: string | null;
-        updatedAt: Date;
-        createdAt: Date;
     }>;
     sendMessageFromMerchant(merchantId: string, userId: string, message: string): Promise<{
         id: string;
         createdAt: Date;
+        message: string;
         chatRoomId: string;
         senderId: string;
-        message: string;
         isRead: boolean;
         isAdmin: boolean;
     }>;
@@ -39,37 +39,37 @@ export declare class ChatService {
         };
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         merchantId: string;
         lastMessage: string | null;
-        updatedAt: Date;
-        createdAt: Date;
     })[]>;
     getRoomMessages(roomId: string): Promise<{
-        messages: {
-            id: string;
-            createdAt: Date;
-            chatRoomId: string;
-            senderId: string;
-            message: string;
-            isRead: boolean;
-            isAdmin: boolean;
-        }[];
         merchant: {
             name: string;
         };
+        messages: {
+            id: string;
+            createdAt: Date;
+            message: string;
+            chatRoomId: string;
+            senderId: string;
+            isRead: boolean;
+            isAdmin: boolean;
+        }[];
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         merchantId: string;
         lastMessage: string | null;
-        updatedAt: Date;
-        createdAt: Date;
     }>;
     sendMessageFromAdmin(roomId: string, adminId: string, message: string): Promise<{
         id: string;
         createdAt: Date;
+        message: string;
         chatRoomId: string;
         senderId: string;
-        message: string;
         isRead: boolean;
         isAdmin: boolean;
     }>;

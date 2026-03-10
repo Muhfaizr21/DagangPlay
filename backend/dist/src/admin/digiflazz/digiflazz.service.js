@@ -373,8 +373,8 @@ let DigiflazzService = class DigiflazzService {
                     orderId: order.id,
                     method: 'POST',
                     endpoint: `${url}/transaction`,
-                    requestBody: payload,
-                    responseBody: resJson,
+                    requestBody: this.maskSensitiveData(payload),
+                    responseBody: this.maskSensitiveData(resJson),
                     httpStatus: response.status,
                     isSuccess: resJson.data?.status === 'Sukses' || resJson.data?.status === 'Pending'
                 }
@@ -402,6 +402,7 @@ let DigiflazzService = class DigiflazzService {
                 });
                 if (fulfillmentStatus === 'FAILED') {
                     await this.handleCommissionReversal(order.id);
+                    await this.handleCustomerRefund(order.id);
                 }
                 return data;
             }
@@ -414,6 +415,7 @@ let DigiflazzService = class DigiflazzService {
                     }
                 });
                 await this.handleCommissionReversal(order.id);
+                await this.handleCustomerRefund(order.id);
                 return resJson;
             }
         }
@@ -427,6 +429,7 @@ let DigiflazzService = class DigiflazzService {
                 }
             });
             await this.handleCommissionReversal(order.id);
+            await this.handleCustomerRefund(order.id);
             throw err;
         }
     }
@@ -447,8 +450,8 @@ let DigiflazzService = class DigiflazzService {
                         userId: comm.userId,
                         type: 'REFUND',
                         amount: -comm.amount,
-                        balanceBefore: user.balance + comm.amount,
-                        balanceAfter: user.balance,
+                        balanceBefore: Number(user.balance) + comm.amount,
+                        balanceAfter: Number(user.balance),
                         orderId,
                         description: `Reversal profit (Digiflazz Gagal): ${orderId}`
                     }
@@ -460,6 +463,84 @@ let DigiflazzService = class DigiflazzService {
             }
         });
         console.log(`[FinanceProtect] Automated reversal for ${orderId} completed.`);
+    }
+    async handleCustomerRefund(orderId) {
+        const order = await this.prisma.order.findUnique({
+            where: { id: orderId },
+            include: { user: true }
+        });
+        if (!order || order.paymentStatus !== 'PAID')
+            return;
+        const existingRefund = await this.prisma.balanceTransaction.findFirst({
+            where: { orderId, type: 'REFUND', userId: order.userId, amount: { gt: 0 } }
+        });
+        if (existingRefund)
+            return;
+        await this.prisma.$transaction(async (tx) => {
+            const user = await tx.user.update({
+                where: { id: order.userId },
+                data: { balance: { increment: order.totalPrice } }
+            });
+            await tx.balanceTransaction.create({
+                data: {
+                    userId: order.userId,
+                    type: 'REFUND',
+                    amount: order.totalPrice,
+                    balanceBefore: Number(user.balance) - order.totalPrice,
+                    balanceAfter: Number(user.balance),
+                    orderId: order.id,
+                    description: `Refund otomatis (Order Gagal): ${order.orderNumber}`
+                }
+            });
+            await tx.order.update({
+                where: { id: order.id },
+                data: { paymentStatus: 'REFUNDED', fulfillmentStatus: 'REFUNDED' }
+            });
+        });
+        console.log(`[CustomerRefund] Order ${order.orderNumber} fully refunded to user ${order.user.name}.`);
+    }
+    async processPriceWebhook(payload) {
+        if (!Array.isArray(payload))
+            return;
+        for (const item of payload) {
+            const skuCode = item.buyer_sku_code;
+            const newPrice = Number(item.price);
+            const skus = await this.prisma.productSku.findMany({
+                where: { supplierCode: skuCode, supplier: { code: 'DIGIFLAZZ' } }
+            });
+            for (const sku of skus) {
+                await this.prisma.$transaction(async (tx) => {
+                    await tx.productSku.update({
+                        where: { id: sku.id },
+                        data: { basePrice: newPrice }
+                    });
+                    const merchantPrices = await tx.merchantProductPrice.findMany({
+                        where: { productSkuId: sku.id, isActive: true },
+                        include: { merchant: true }
+                    });
+                    for (const mp of merchantPrices) {
+                        const plan = mp.merchant.plan;
+                        let currentModalPrice = sku.priceNormal;
+                        if (plan === 'PRO')
+                            currentModalPrice = sku.pricePro;
+                        else if (plan === 'LEGEND')
+                            currentModalPrice = sku.priceLegend;
+                        else if (plan === 'SUPREME')
+                            currentModalPrice = sku.priceSupreme;
+                        if (mp.customPrice < currentModalPrice) {
+                            await tx.merchantProductPrice.update({
+                                where: { id: mp.id },
+                                data: {
+                                    isActive: false,
+                                    reason: `Price Spike: Modal (${currentModalPrice}) > Jual (${mp.customPrice})`
+                                }
+                            });
+                            console.warn(`[AntiLoss] Merchant ${mp.merchant.name} - SKU ${skuCode} DEACTIVATED.`);
+                        }
+                    }
+                });
+            }
+        }
     }
 };
 exports.DigiflazzService = DigiflazzService;

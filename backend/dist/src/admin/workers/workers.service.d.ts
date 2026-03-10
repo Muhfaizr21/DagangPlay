@@ -7,6 +7,6 @@ export declare class WorkersService {
     constructor(prisma: PrismaService, digiflazz: DigiflazzService);
     handleJobQueue(): Promise<void>;
     checkSubscriptions(): Promise<void>;
-    syncPendingOrders(): Promise<void>;
+    syncFulfillmentStatus(): Promise<void>;
     syncSupplierBalance(): Promise<void>;
 }

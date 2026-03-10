@@ -12,6 +12,7 @@ import {
 } from "@/data/constants";
 import BannerSlider from "@/components/BannerSlider";
 import AnnouncementBar from "@/components/AnnouncementBar";
+import MerchantStorefront from "@/components/MerchantStorefront";
 
 const fetcher = (url: string) => axios.get(url).then(res => res.data);
 
@@ -63,64 +64,8 @@ const Hero = ({ banners, theme }: { banners: any[], theme?: string }) => {
   );
 };
 
-// ─── Home Page ────────────────────────────────────────────────────
-export default function Home() {
-  const [mOpen, setMOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-
-  // Fetch Public Content
-  const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-  const { data: config } = useSWR(`${baseUrl}/public/orders/config?t=${new Date().getTime()}`, fetcher);
-  const { data: contentData } = useSWR(`${baseUrl}/public/products/content`, fetcher);
-  const { data: categories, error: categoriesError } = useSWR(`${baseUrl}/public/products/categories`, fetcher);
-  const banners = contentData?.banners || [];
-  const announcements = contentData?.announcements || [];
-
-  const activeTheme = config?.theme?.active || 'dark';
-
-  useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", fn);
-    return () => window.removeEventListener("scroll", fn);
-  }, []);
-
-  useEffect(() => {
-    if (config?.name) {
-      document.title = `${config.name} – ${config.tagline || 'Top Up Games Tercepat & Termurah'}`;
-    }
-  }, [config]);
-
-  // Dynamic Theme Styling
-  const themeClasses: Record<string, any> = {
-    dark: {
-      body: "bg-[#020818] text-white",
-      navbar: scrolled ? "bg-[#020818]/88 shadow-2xl shadow-black/50 nav-blur" : "bg-transparent",
-      featureSec: "bg-gradient-to-b from-navy-mid to-navy-dark",
-      productSec: "bg-navy-deep",
-      howSec: "bg-gradient-to-b from-navy-dark to-navy-deep",
-      testiSec: "bg-navy-mid",
-      ctaSec: "linear-gradient(135deg,#020818,#0a1a3a 50%,#020818)",
-      footer: "bg-navy-deep"
-    },
-    light: {
-      body: "bg-white text-slate-800",
-      navbar: scrolled ? "bg-white/90 shadow-lg nav-blur border-b border-slate-100" : "bg-transparent",
-      featureSec: "bg-slate-50",
-      productSec: "bg-white",
-      howSec: "bg-slate-50",
-      testiSec: "bg-white",
-      ctaSec: "linear-gradient(135deg,#f8fafc,#e2e8f0 50%,#f8fafc)",
-      footer: "bg-slate-50 text-slate-900 border-t border-slate-200"
-    }
-  };
-
-  const t = themeClasses[activeTheme] || themeClasses.dark;
-  const isLight = activeTheme === 'light';
-
-  useEffect(() => {
-    console.log(`[FRONTEND] Active Theme: ${activeTheme}, isLight: ${isLight}`);
-  }, [activeTheme, isLight]);
-
+// ─── Platform Landing Template (Official) ─────────────────────────
+const PlatformLanding = ({ config, contentData, categories, filteredProducts, search, setSearch, selectedCat, setSelectedCat, categoriesError, catalog, announcements, t, isLight, scrolled, setMOpen, mOpen }: any) => {
   return (
     <div id="top" className={`${t.body} min-h-screen overflow-x-hidden`}>
       {/* Dynamic Navbar */}
@@ -152,11 +97,11 @@ export default function Home() {
       </header>
 
       <div className="pt-16">
-        <AnnouncementBar announcements={announcements} theme={activeTheme} />
+        <AnnouncementBar announcements={announcements} theme={config?.theme?.active || 'dark'} />
       </div>
 
-      <Hero banners={banners} theme={activeTheme} />
-      <Stats theme={activeTheme} />
+      <Hero banners={contentData?.banners || []} theme={config?.theme?.active} />
+      <Stats theme={config?.theme?.active} />
 
       {/* Features Section */}
       <section id="tentang-kami" className={`py-24 relative ${t.featureSec}`}>
@@ -178,53 +123,117 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Products Catalog */}
+      {/* Products Catalog - PREMIUM UPGRADE */}
       <section id="produk" className={`py-24 relative ${t.productSec}`}>
-        <div className="container mx-auto px-6 relative z-10 text-center mb-16">
-          <p className="font-body text-cyan text-xs uppercase tracking-[.2em] mb-3">Koleksi Lengkap</p>
-          <h2 className={`font-heading text-4xl md:text-5xl lg:text-6xl mb-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
-            GAME <span className="text-gradient-gold">POPULER</span>
-          </h2>
-          <p className="font-body text-slate-500 text-sm">Top up langsung, proses instan</p>
-        </div>
-        <div className="container mx-auto px-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {categoriesError ? (
-            <div className="col-span-full text-center py-20">
-              <p className="text-red-500 font-bold mb-2">Gagal memuat produk ⚠️</p>
-              <button onClick={() => window.location.reload()} className="text-cyan underline text-sm border-none bg-transparent cursor-pointer">Coba Refresh</button>
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="text-center mb-12">
+            <p className="font-body text-cyan text-xs uppercase tracking-[.2em] mb-3">Koleksi Lengkap</p>
+            <h2 className={`font-heading text-4xl md:text-5xl lg:text-6xl mb-4 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              CARI GAME <span className="text-gradient-gold">KESAYANGANMU</span>
+            </h2>
+            <p className="font-body text-slate-500 text-sm italic">Top up cepat, harga hemat, proses kilat!</p>
+          </div>
+
+          {/* Search & Tabs */}
+          <div className="max-w-4xl mx-auto mb-16 space-y-6">
+            <div className={`relative group rounded-3xl overflow-hidden p-1 border transition-all ${isLight ? 'bg-slate-100 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-100 border-slate-200' : 'bg-white/5 focus-within:bg-white/10 border-white/10'}`}>
+              <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              </span>
+              <input
+                type="text"
+                placeholder="Ketuk di sini untuk cari Mobile Legends, Free Fire, atau lainnya..."
+                className="w-full pl-14 pr-6 py-4 bg-transparent border-none text-lg font-medium outline-none placeholder:text-slate-500"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
-          ) : !categories ? (
-            <div className={`col-span-full text-center py-20 flex flex-col items-center gap-3 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-              <div className="w-10 h-10 border-4 border-cyan/20 border-t-cyan rounded-full animate-spin"></div>
-              <span>Sedang menyiapkan katalog game terbaik untuk Anda...</span>
+
+            <div className="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-hide justify-center">
+              <button
+                onClick={() => setSelectedCat(null)}
+                className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all whitespace-nowrap border ${!selectedCat
+                  ? 'bg-mint text-navy-deep border-mint shadow-[0_0_15px_rgba(0,229,160,0.3)]'
+                  : `${isLight ? 'border-slate-200 text-slate-500 hover:border-indigo-400' : 'border-white/10 text-slate-400 hover:border-cyan/50 hover:text-cyan'}`}`}
+              >
+                SEMUA LAYANAN
+              </button>
+              {categories?.map((cat: any) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCat(cat.name)}
+                  className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all whitespace-nowrap border ${selectedCat === cat.name
+                    ? 'bg-gold text-navy-deep border-gold shadow-[0_0_15px_rgba(201,168,76,0.3)]'
+                    : `${isLight ? 'border-slate-200 text-slate-500 hover:border-indigo-400' : 'border-white/10 text-slate-400 hover:border-cyan/50 hover:text-cyan'}`}`}
+                >
+                  {cat.name.toUpperCase()}
+                </button>
+              ))}
             </div>
-          ) : categories.length === 0 ? (
-            <div className={`col-span-full text-center py-20 font-medium ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
-              Katalog produk sedang dalam pemeliharaan. Kembali sesaat lagi.
-            </div>
-          ) : categories.map((c: any, i: number) => (
-            <a href={`/produk/${c.slug}`} key={c.id} className="group rounded-2xl overflow-hidden cursor-pointer border border-transparent hover:border-cyan/40 hover:-translate-y-1 transition-all duration-300 block shadow-sm">
-              <div className="h-40 flex items-center justify-center relative overflow-hidden bg-slate-800">
-                {c.image ? (
-                  <img src={c.image} alt={c.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                ) : (
-                  <span className="font-heading text-4xl text-white opacity-40">{c.name.substring(0, 2)}</span>
-                )}
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            {categoriesError ? (
+              <div className="col-span-full text-center py-20">
+                <p className="text-red-500 font-bold mb-2">Gagal memuat produk ⚠️</p>
+                <button onClick={() => window.location.reload()} className="text-cyan underline text-sm border-none bg-transparent cursor-pointer">Coba Refresh</button>
               </div>
-              <div className={isLight ? "p-4 bg-white" : "p-4 bg-navy-mid"}>
-                <p className={`font-body text-sm font-bold truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>{c.name}</p>
-                <div className="flex justify-between items-center mt-1 text-[10px]">
-                  <span className="text-mint font-bold italic">✓ Instan</span>
-                  <span className="text-slate-400 font-bold">{c.skuCount || 0} Item</span>
+            ) : !catalog ? (
+              Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className={`rounded-3xl h-64 animate-pulse ${isLight ? 'bg-slate-100' : 'bg-white/5'}`}></div>
+              ))
+            ) : filteredProducts.length === 0 ? (
+              <div className="col-span-full text-center py-20">
+                <p className="text-slate-500 font-medium">Ops! Layanan yang Anda cari belum tersedia.</p>
+              </div>
+            ) : filteredProducts.map((p: any) => (
+              <a
+                href={`/produk/${p.slug}`}
+                key={p.id}
+                className="group relative rounded-[2.5rem] overflow-hidden cursor-pointer border-none transition-all duration-300 block shadow-xl hover:-translate-y-2"
+              >
+                <div className="aspect-[3/4] flex items-center justify-center relative overflow-hidden bg-slate-900">
+                  {p.image ? (
+                    <img
+                      src={p.image}
+                      alt={p.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-slate-800 text-slate-600">
+                      <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-navy-deep via-transparent to-transparent opacity-60"></div>
+
+                  {/* Category Tag */}
+                  <div className="absolute top-4 left-4">
+                    <span className="bg-black/40 backdrop-blur px-3 py-1 rounded-full text-[9px] font-bold text-cyan border border-cyan/20 uppercase tracking-widest">
+                      {p.categoryName}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </a>
-          ))}
+
+                <div className={`absolute inset-x-0 bottom-0 p-5 ${isLight ? "bg-white/95" : "bg-navy-mid/95"} backdrop-blur-md border-t border-white/5`}>
+                  <p className={`font-heading text-sm font-bold truncate mb-3 ${isLight ? 'text-slate-900' : 'text-white'}`}>{p.name}</p>
+                  <div className="flex justify-between items-center gap-2">
+                    <div className="bg-mint/10 text-mint text-[9px] font-extrabold px-2 py-1 rounded-lg uppercase tracking-wider">
+                      TERSEDIA
+                    </div>
+                    <div className="flex items-center gap-1 text-gold group-hover:gap-2 transition-all">
+                      <span className="text-[10px] font-bold">BELI</span>
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
+                    </div>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* How it Works */}
-      <section className={`py-24 overflow-hidden relative ${t.howSec}`}>
+      <section id="cara-beli" className={`py-24 overflow-hidden relative ${t.howSec}`}>
         <div className="container mx-auto px-6 text-center mb-20">
           <p className="font-body text-cyan text-xs uppercase tracking-[.2em] mb-3">Mudah & Cepat</p>
           <h2 className={`font-heading text-4xl md:text-5xl lg:text-6xl ${isLight ? 'text-slate-900' : 'text-white'}`}>CARA <span className="text-gradient-gold">TOP UP</span></h2>
@@ -242,7 +251,7 @@ export default function Home() {
       </section>
 
       {/* Testimonials */}
-      <section className={`py-24 ${t.testiSec}`}>
+      <section id="testimoni" className={`py-24 ${t.testiSec}`}>
         <div className="container mx-auto px-6 text-center mb-16">
           <p className="font-body text-cyan text-xs uppercase tracking-[.2em] mb-3">Testimoni</p>
           <h2 className={`font-heading text-4xl md:text-5xl lg:text-6xl ${isLight ? 'text-slate-900' : 'text-white'}`}>DIPERCAYA <span className="text-gradient-gold">RIBUAN GAMER</span></h2>
@@ -312,5 +321,125 @@ export default function Home() {
         </div>
       </footer>
     </div>
+  );
+};
+
+// ─── Home Page Switching Logic ────────────────────────────────────
+export default function Home() {
+  const [mOpen, setMOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  const [search, setSearch] = useState("");
+  const [selectedCat, setSelectedCat] = useState<string | null>(null);
+
+  // Fetch Public Content
+  const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+
+  // Dynamic Slug Support (Check search params for ?merchant=xxx)
+  const [slug, setSlug] = useState<string | null>(null);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setSlug(params.get('merchant'));
+  }, []);
+
+  const configUrl = slug ? `${baseUrl}/public/orders/config?slug=${slug}` : `${baseUrl}/public/orders/config`;
+
+  const { data: config, isLoading: configLoading } = useSWR(configUrl, fetcher);
+
+  const contentUrl = slug ? `${baseUrl}/public/products/content?merchant=${slug}` : `${baseUrl}/public/products/content`;
+  const categoriesUrl = slug ? `${baseUrl}/public/products/categories?merchant=${slug}` : `${baseUrl}/public/products/categories`;
+  const catalogUrl = slug ? `${baseUrl}/public/products/full-catalog?merchant=${slug}` : `${baseUrl}/public/products/full-catalog`;
+
+  const { data: contentData } = useSWR(contentUrl, fetcher);
+  const { data: categories, error: categoriesError } = useSWR(categoriesUrl, fetcher);
+  const { data: catalog } = useSWR(catalogUrl, fetcher);
+
+  const banners = contentData?.banners || [];
+  const announcements = contentData?.announcements || [];
+
+  const activeTheme = config?.theme?.active || 'dark';
+
+  // Flatten catalog into products for filtering
+  const allProducts = catalog?.flatMap((cat: any) =>
+    cat.products.map((p: any) => ({ ...p, categoryName: cat.name }))
+  ) || [];
+
+  const filteredProducts = allProducts.filter((p: any) => {
+    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.categoryName?.toLowerCase().includes(search.toLowerCase());
+    const matchesCat = !selectedCat || p.categoryName === selectedCat;
+    return matchesSearch && matchesCat;
+  });
+
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", fn);
+    return () => window.removeEventListener("scroll", fn);
+  }, []);
+
+  useEffect(() => {
+    if (config?.name) {
+      document.title = `${config.name} – ${config.tagline || 'Top Up Games Tercepat & Termurah'}`;
+    }
+  }, [config]);
+
+  // Dynamic Theme Styling
+  const themeClasses: Record<string, any> = {
+    dark: {
+      body: "bg-[#020818] text-white",
+      navbar: scrolled ? "bg-[#020818]/88 shadow-2xl shadow-black/50 nav-blur" : "bg-transparent",
+      featureSec: "bg-gradient-to-b from-navy-mid to-navy-dark",
+      productSec: "bg-navy-deep",
+      howSec: "bg-gradient-to-b from-navy-dark to-navy-deep",
+      testiSec: "bg-navy-mid",
+      ctaSec: "linear-gradient(135deg,#020818,#0a1a3a 50%,#020818)",
+      footer: "bg-navy-deep"
+    },
+    light: {
+      body: "bg-white text-slate-800",
+      navbar: scrolled ? "bg-white/90 shadow-lg nav-blur border-b border-slate-100" : "bg-transparent",
+      featureSec: "bg-slate-50",
+      productSec: "bg-white",
+      howSec: "bg-slate-50",
+      testiSec: "bg-white",
+      ctaSec: "linear-gradient(135deg,#f8fafc,#e2e8f0 50%,#f8fafc)",
+      footer: "bg-slate-50 text-slate-900 border-t border-slate-200"
+    }
+  };
+
+  const t = themeClasses[activeTheme] || themeClasses.dark;
+  const isLight = activeTheme === 'light';
+
+  if (configLoading) {
+    return (
+      <div className="min-h-screen bg-[#020818] flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Switch between Official Platform and Merchant Storefront
+  if (config && !config.isOfficial) {
+    return <MerchantStorefront config={config} />;
+  }
+
+  return (
+    <PlatformLanding
+      config={config}
+      contentData={contentData}
+      categories={categories}
+      filteredProducts={filteredProducts}
+      search={search}
+      setSearch={setSearch}
+      selectedCat={selectedCat}
+      setSelectedCat={setSelectedCat}
+      categoriesError={categoriesError}
+      catalog={catalog}
+      announcements={announcements}
+      t={t}
+      isLight={isLight}
+      scrolled={scrolled}
+      setMOpen={setMOpen}
+      mOpen={mOpen}
+    />
   );
 }

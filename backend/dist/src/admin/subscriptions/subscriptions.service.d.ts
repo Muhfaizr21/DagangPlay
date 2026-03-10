@@ -12,10 +12,10 @@ export declare class SubscriptionsService {
         };
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         status: import("@prisma/client").$Enums.InvoiceStatus;
         plan: import("@prisma/client").$Enums.MerchantPlan;
+        createdAt: Date;
+        updatedAt: Date;
         merchantId: string;
         paidAt: Date | null;
         amount: number;
@@ -32,10 +32,10 @@ export declare class SubscriptionsService {
     confirmInvoice(id: string, operator: string): Promise<any>;
     rejectInvoice(id: string, notes: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         status: import("@prisma/client").$Enums.InvoiceStatus;
         plan: import("@prisma/client").$Enums.MerchantPlan;
+        createdAt: Date;
+        updatedAt: Date;
         merchantId: string;
         paidAt: Date | null;
         amount: number;
@@ -72,10 +72,10 @@ export declare class SubscriptionsService {
     handleSaaSCron(): Promise<void>;
     createManualInvoice(merchantId: string, plan: MerchantPlan, amount: number, dueDate: Date, operator: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         status: import("@prisma/client").$Enums.InvoiceStatus;
         plan: import("@prisma/client").$Enums.MerchantPlan;
+        createdAt: Date;
+        updatedAt: Date;
         merchantId: string;
         paidAt: Date | null;
         amount: number;

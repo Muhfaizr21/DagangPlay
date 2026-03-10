@@ -23,10 +23,10 @@ export declare class ProductsService {
     }[]>;
     updateSkuPriceOverrides(merchantId: string, userId: string, skuId: string, customPrice: number, isActive: boolean): Promise<{
         id: string;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
+        isActive: boolean;
         expiredAt: Date | null;
         userId: string;
         productSkuId: string;

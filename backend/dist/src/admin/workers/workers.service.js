@@ -56,25 +56,39 @@ let WorkersService = WorkersService_1 = class WorkersService {
     async checkSubscriptions() {
         this.logger.debug('Auditing merchant subscription...');
     }
-    async syncPendingOrders() {
-        this.logger.debug('Auditing pending orders... (Supplier: Digiflazz)');
-        const pendingOrders = await this.prisma.order.findMany({
+    async syncFulfillmentStatus() {
+        this.logger.debug('Auditing fulfillment statuses... (Supplier: Digiflazz)');
+        const ordersToSync = await this.prisma.order.findMany({
             where: {
-                fulfillmentStatus: client_1.OrderFulfillmentStatus.PENDING,
+                fulfillmentStatus: { in: [client_1.OrderFulfillmentStatus.PENDING, client_1.OrderFulfillmentStatus.PROCESSING] },
                 supplierRefId: { not: null }
             },
-            take: 20
+            take: 50
         });
-        for (const order of pendingOrders) {
+        const now = new Date();
+        for (const order of ordersToSync) {
             try {
+                const tenMinutesAgo = new Date(now.getTime() - (10 * 60 * 1000));
+                if (order.fulfillmentStatus === client_1.OrderFulfillmentStatus.PROCESSING && order.updatedAt < tenMinutesAgo) {
+                    this.logger.warn(`Order ${order.orderNumber} TIMEOUT. Marking as FAILED.`);
+                    await this.prisma.order.update({
+                        where: { id: order.id },
+                        data: {
+                            fulfillmentStatus: client_1.OrderFulfillmentStatus.FAILED,
+                            failReason: 'Fulfillment Timeout (10 minutes with no SUCCESS response)',
+                            failedAt: new Date()
+                        }
+                    });
+                    continue;
+                }
                 const customerNo = order.gameUserServerId ? `${order.gameUserId}${order.gameUserServerId}` : order.gameUserId;
-                const supplierInfo = await this.digiflazz.checkOrderStatus(order.id, order.supplierRefId, order.productSkuId, customerNo);
-                if (!supplierInfo)
+                const supplierInfo = await this.digiflazz.checkOrderStatus(order.id, order.supplierRefId, order.productSkuName, customerNo);
+                if (!supplierInfo || !supplierInfo.status)
                     continue;
                 const statusMap = {
                     'Sukses': client_1.OrderFulfillmentStatus.SUCCESS,
                     'Gagal': client_1.OrderFulfillmentStatus.FAILED,
-                    'Pending': client_1.OrderFulfillmentStatus.PENDING
+                    'Pending': client_1.OrderFulfillmentStatus.PROCESSING
                 };
                 const newStatus = statusMap[supplierInfo.status] || order.fulfillmentStatus;
                 if (newStatus !== order.fulfillmentStatus) {
@@ -150,7 +164,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
-], WorkersService.prototype, "syncPendingOrders", null);
+], WorkersService.prototype, "syncFulfillmentStatus", null);
 __decorate([
     (0, schedule_1.Cron)(schedule_1.CronExpression.EVERY_HOUR),
     __metadata("design:type", Function),

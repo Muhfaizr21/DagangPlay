@@ -12,6 +12,13 @@ import { PrismaService } from '../../prisma.service';
 export class OrdersController {
     constructor(private readonly ordersService: OrdersService, private prisma: PrismaService) { }
 
+    @Post('create-direct')
+    async createDirectOrder(@Request() req, @Body() body: any) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant) throw new Error('Merchant not found');
+        return this.ordersService.createDirectOrder(merchant.id, req.user.id, body);
+    }
+
     @Get()
     async getOrders(@Request() req, @Query() filters: any) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });

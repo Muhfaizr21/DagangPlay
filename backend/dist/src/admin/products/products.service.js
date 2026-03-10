@@ -315,7 +315,7 @@ let ProductsService = class ProductsService {
             data: { status: status }
         });
     }
-    async getPublicCategories() {
+    async getPublicCategories(merchantSlug) {
         const categories = await this.prisma.category.findMany({
             where: {
                 isActive: true,
@@ -378,15 +378,36 @@ let ProductsService = class ProductsService {
                 });
             }
         }
-        return Array.from(mergedMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+        const fallbacks = {
+            'mobile-legends': 'https://img.df.sg/game/mlbb.png',
+            'free-fire': 'https://img.df.sg/game/ff.png',
+            'free-fire-max': 'https://img.df.sg/game/ffmax.png',
+            'pubg-mobile': 'https://img.df.sg/game/pubgm.png',
+            'genshin-impact': 'https://img.df.sg/game/genshin.png',
+            'valorant': 'https://img.df.sg/game/valorant.png',
+            'roblox': 'https://img.df.sg/game/roblox.png',
+            'starlight-princess': 'https://img.df.sg/game/starlight.png'
+        };
+        const result = Array.from(mergedMap.values());
+        for (const item of result) {
+            if (!item.image && fallbacks[item.slug]) {
+                item.image = fallbacks[item.slug];
+            }
+        }
+        return result.sort((a, b) => a.name.localeCompare(b.name));
     }
-    async getPublicCategoryBySlug(slug) {
+    async getPublicCategoryBySlug(slug, merchantSlug) {
+        let merchantId;
+        if (merchantSlug) {
+            const m = await this.prisma.merchant.findFirst({ where: { slug: merchantSlug } });
+            merchantId = m?.id;
+        }
         let slugsToFetch = [slug];
         if (slug === 'free-fire')
             slugsToFetch = ['free-fire', 'free-fire-max', 'free-fire-garena'];
         if (slug === 'mobile-legends')
             slugsToFetch = ['mobile-legend', 'mobile-legends', 'mlbb'];
-        const categories = await this.prisma.category.findMany({
+        let categories = await this.prisma.category.findMany({
             where: { slug: { in: slugsToFetch } },
             select: {
                 id: true,
@@ -415,10 +436,53 @@ let ProductsService = class ProductsService {
                 }
             }
         });
+        if (categories.length === 0) {
+            const catByProduct = await this.prisma.category.findFirst({
+                where: { products: { some: { slug: slug } } },
+                select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                    image: true,
+                    products: {
+                        where: { status: 'ACTIVE' },
+                        select: {
+                            id: true,
+                            name: true,
+                            gameIdLabel: true,
+                            gameServerId: true,
+                            serverLabel: true,
+                            skus: {
+                                where: { status: 'ACTIVE' },
+                                orderBy: { priceNormal: 'asc' },
+                                select: {
+                                    id: true,
+                                    name: true,
+                                    priceNormal: true,
+                                    status: true
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            if (catByProduct)
+                categories = [catByProduct];
+        }
         if (categories.length === 0)
             return null;
+        const merchantPrices = merchantId ? await this.prisma.merchantProductPrice.findMany({
+            where: { merchantId, isActive: true }
+        }) : [];
+        const priceMap = new Map(merchantPrices.map(mp => [mp.productSkuId, mp.customPrice]));
         const primary = categories[0];
-        const allProducts = categories.flatMap(c => c.products);
+        const allProducts = categories.flatMap(c => c.products.map(p => ({
+            ...p,
+            skus: p.skus.map(s => ({
+                ...s,
+                priceNormal: priceMap.has(s.id) ? priceMap.get(s.id) : s.priceNormal
+            }))
+        })));
         const mergedResult = {
             ...primary,
             name: slug === 'free-fire' ? 'Free Fire' : (slug === 'mobile-legends' ? 'Mobile Legends' : primary.name),
@@ -456,27 +520,47 @@ let ProductsService = class ProductsService {
                 gameServerId: false
             }));
         }
+        if (!mergedResult.image) {
+            const fallbacks = {
+                'mobile-legends': 'https://img.df.sg/game/mlbb.png',
+                'free-fire': 'https://img.df.sg/game/ff.png',
+                'pubg-mobile': 'https://img.df.sg/game/pubgm.png',
+                'genshin-impact': 'https://img.df.sg/game/genshin.png',
+                'valorant': 'https://img.df.sg/game/valorant.png'
+            };
+            if (fallbacks[mergedResult.slug]) {
+                mergedResult.image = fallbacks[mergedResult.slug];
+            }
+        }
         return mergedResult;
     }
-    async getPublicContent() {
-        const officialMerchant = await this.prisma.merchant.findFirst({
-            where: { isOfficial: true }
-        });
-        if (!officialMerchant)
+    async getPublicContent(merchantSlug) {
+        let targetMerchant;
+        if (merchantSlug) {
+            targetMerchant = await this.prisma.merchant.findFirst({
+                where: { slug: merchantSlug }
+            });
+        }
+        if (!targetMerchant) {
+            targetMerchant = await this.prisma.merchant.findFirst({
+                where: { isOfficial: true }
+            });
+        }
+        if (!targetMerchant)
             return { banners: [], announcements: [] };
         const [banners, announcements] = await Promise.all([
             this.prisma.banner.findMany({
-                where: { merchantId: officialMerchant.id, isActive: true },
+                where: { merchantId: targetMerchant.id, isActive: true },
                 orderBy: { sortOrder: 'asc' }
             }),
             this.prisma.announcement.findMany({
-                where: { merchantId: officialMerchant.id, isActive: true },
+                where: { merchantId: targetMerchant.id, isActive: true },
                 orderBy: { createdAt: 'desc' }
             })
         ]);
         return { banners, announcements };
     }
-    async getPublicResellerPrices() {
+    async getPublicResellerPrices(merchantSlug) {
         const sampleSkus = await this.prisma.productSku.findMany({
             where: {
                 OR: [
@@ -503,7 +587,7 @@ let ProductsService = class ProductsService {
             img: sku.product.category.image || 'https://via.placeholder.com/50'
         }));
     }
-    async getPublicFullCatalog() {
+    async getPublicFullCatalog(merchantSlug) {
         const categories = await this.prisma.category.findMany({
             include: {
                 products: {
@@ -520,11 +604,13 @@ let ProductsService = class ProductsService {
         return categories.map(cat => ({
             id: cat.id,
             name: cat.name,
+            slug: cat.slug,
             icon: cat.icon,
             image: cat.image,
             products: cat.products.map(p => ({
                 id: p.id,
                 name: p.name,
+                slug: p.slug,
                 image: p.thumbnail || cat.image,
                 skus: p.skus.map(s => ({
                     id: s.id,

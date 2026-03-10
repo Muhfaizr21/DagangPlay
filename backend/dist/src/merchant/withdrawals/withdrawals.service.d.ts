@@ -10,9 +10,9 @@ export declare class WithdrawalsService {
     }): Promise<any>;
     getMerchantWithdrawals(userId: string): Promise<{
         id: string;
+        status: import("@prisma/client").$Enums.WithdrawalStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.WithdrawalStatus;
         note: string | null;
         processedAt: Date | null;
         userId: string;
@@ -28,9 +28,9 @@ export declare class WithdrawalsService {
     }[]>;
     approveWithdrawal(withdrawalId: string, adminId: string, receiptImage?: string): Promise<{
         id: string;
+        status: import("@prisma/client").$Enums.WithdrawalStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.WithdrawalStatus;
         note: string | null;
         processedAt: Date | null;
         userId: string;

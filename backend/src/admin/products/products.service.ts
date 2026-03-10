@@ -323,7 +323,7 @@ export class ProductsService {
     }
 
     // Public API Methods 
-    async getPublicCategories() {
+    async getPublicCategories(merchantSlug?: string) {
         // Find categories that have at least one active product with active SKUs
         const categories = await this.prisma.category.findMany({
             where: {
@@ -391,16 +391,41 @@ export class ProductsService {
             }
         }
 
-        return Array.from(mergedMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+        const fallbacks: Record<string, string> = {
+            'mobile-legends': 'https://img.df.sg/game/mlbb.png',
+            'free-fire': 'https://img.df.sg/game/ff.png',
+            'free-fire-max': 'https://img.df.sg/game/ffmax.png',
+            'pubg-mobile': 'https://img.df.sg/game/pubgm.png',
+            'genshin-impact': 'https://img.df.sg/game/genshin.png',
+            'valorant': 'https://img.df.sg/game/valorant.png',
+            'roblox': 'https://img.df.sg/game/roblox.png',
+            'starlight-princess': 'https://img.df.sg/game/starlight.png'
+        };
+
+        const result = Array.from(mergedMap.values());
+        for (const item of result) {
+            if (!item.image && fallbacks[item.slug]) {
+                item.image = fallbacks[item.slug];
+            }
+        }
+
+        return result.sort((a, b) => a.name.localeCompare(b.name));
     }
 
-    async getPublicCategoryBySlug(slug: string) {
+    async getPublicCategoryBySlug(slug: string, merchantSlug?: string) {
+        // Find merchant if provided
+        let merchantId: string | undefined;
+        if (merchantSlug) {
+            const m = await this.prisma.merchant.findFirst({ where: { slug: merchantSlug } });
+            merchantId = m?.id;
+        }
+
         // Handle canonical slugs - if user asks for 'free-fire', fetch both 'free-fire' and 'free-fire-max'
         let slugsToFetch = [slug];
         if (slug === 'free-fire') slugsToFetch = ['free-fire', 'free-fire-max', 'free-fire-garena'];
         if (slug === 'mobile-legends') slugsToFetch = ['mobile-legend', 'mobile-legends', 'mlbb'];
 
-        const categories = await this.prisma.category.findMany({
+        let categories = await this.prisma.category.findMany({
             where: { slug: { in: slugsToFetch } },
             select: {
                 id: true,
@@ -430,11 +455,58 @@ export class ProductsService {
             }
         });
 
+        // If not found by category slug, try to find by product slug
+        if (categories.length === 0) {
+            const catByProduct = await this.prisma.category.findFirst({
+                where: { products: { some: { slug: slug } } },
+                select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                    image: true,
+                    products: {
+                        where: { status: 'ACTIVE' },
+                        select: {
+                            id: true,
+                            name: true,
+                            gameIdLabel: true,
+                            gameServerId: true,
+                            serverLabel: true,
+                            skus: {
+                                where: { status: 'ACTIVE' },
+                                orderBy: { priceNormal: 'asc' },
+                                select: {
+                                    id: true,
+                                    name: true,
+                                    priceNormal: true,
+                                    status: true
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            if (catByProduct) categories = [catByProduct as any];
+        }
+
         if (categories.length === 0) return null;
+
+        // If merchantId is provided, fetch custom prices
+        const merchantPrices = merchantId ? await this.prisma.merchantProductPrice.findMany({
+            where: { merchantId, isActive: true }
+        }) : [];
+
+        const priceMap = new Map(merchantPrices.map(mp => [mp.productSkuId, mp.customPrice]));
 
         // Merge results into a single object 
         const primary = categories[0];
-        const allProducts = categories.flatMap(c => c.products);
+        const allProducts = categories.flatMap(c => c.products.map(p => ({
+            ...p,
+            skus: p.skus.map(s => ({
+                ...s,
+                priceNormal: priceMap.has(s.id) ? priceMap.get(s.id) : s.priceNormal
+            }))
+        })));
 
         const mergedResult = {
             ...primary,
@@ -474,24 +546,47 @@ export class ProductsService {
             }));
         }
 
+        if (!mergedResult.image) {
+            const fallbacks: Record<string, string> = {
+                'mobile-legends': 'https://img.df.sg/game/mlbb.png',
+                'free-fire': 'https://img.df.sg/game/ff.png',
+                'pubg-mobile': 'https://img.df.sg/game/pubgm.png',
+                'genshin-impact': 'https://img.df.sg/game/genshin.png',
+                'valorant': 'https://img.df.sg/game/valorant.png'
+            };
+            if (fallbacks[mergedResult.slug]) {
+                mergedResult.image = fallbacks[mergedResult.slug];
+            }
+        }
+
         return mergedResult;
     }
 
     // 8. Get Public Content (Banners & Announcements) for Landing Page
-    async getPublicContent() {
-        const officialMerchant = await this.prisma.merchant.findFirst({
-            where: { isOfficial: true }
-        });
+    async getPublicContent(merchantSlug?: string) {
+        let targetMerchant;
 
-        if (!officialMerchant) return { banners: [], announcements: [] };
+        if (merchantSlug) {
+            targetMerchant = await this.prisma.merchant.findFirst({
+                where: { slug: merchantSlug }
+            });
+        }
+
+        if (!targetMerchant) {
+            targetMerchant = await this.prisma.merchant.findFirst({
+                where: { isOfficial: true }
+            });
+        }
+
+        if (!targetMerchant) return { banners: [], announcements: [] };
 
         const [banners, announcements] = await Promise.all([
             this.prisma.banner.findMany({
-                where: { merchantId: officialMerchant.id, isActive: true },
+                where: { merchantId: targetMerchant.id, isActive: true },
                 orderBy: { sortOrder: 'asc' }
             }),
             this.prisma.announcement.findMany({
-                where: { merchantId: officialMerchant.id, isActive: true },
+                where: { merchantId: targetMerchant.id, isActive: true },
                 orderBy: { createdAt: 'desc' }
             })
         ]);
@@ -500,7 +595,7 @@ export class ProductsService {
     }
 
     // 9. Get Public Reseller Sample Prices
-    async getPublicResellerPrices() {
+    async getPublicResellerPrices(merchantSlug?: string) {
         // Find a few sample popular products
         const sampleSkus = await this.prisma.productSku.findMany({
             where: {
@@ -531,7 +626,7 @@ export class ProductsService {
     }
 
     // 10. Get Full Public Catalog for Reseller Page
-    async getPublicFullCatalog() {
+    async getPublicFullCatalog(merchantSlug?: string) {
         const categories = await this.prisma.category.findMany({
             include: {
                 products: {
@@ -549,11 +644,13 @@ export class ProductsService {
         return categories.map(cat => ({
             id: cat.id,
             name: cat.name,
+            slug: cat.slug,
             icon: cat.icon,
             image: cat.image,
             products: cat.products.map(p => ({
                 id: p.id,
                 name: p.name,
+                slug: p.slug,
                 image: p.thumbnail || cat.image,
                 skus: p.skus.map(s => ({
                     id: s.id,

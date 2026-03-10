@@ -27,6 +27,12 @@ let OrdersController = class OrdersController {
         this.ordersService = ordersService;
         this.prisma = prisma;
     }
+    async createDirectOrder(req, body) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant)
+            throw new Error('Merchant not found');
+        return this.ordersService.createDirectOrder(merchant.id, req.user.id, body);
+    }
     async getOrders(req, filters) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
         if (!merchant)
@@ -53,6 +59,14 @@ let OrdersController = class OrdersController {
     }
 };
 exports.OrdersController = OrdersController;
+__decorate([
+    (0, common_1.Post)('create-direct'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], OrdersController.prototype, "createDirectOrder", null);
 __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Request)()),

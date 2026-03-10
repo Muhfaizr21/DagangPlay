@@ -17,9 +17,9 @@ export declare class SettingsController {
     createAdminStaff(data: CreateStaffDto): Promise<{
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.UserStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.UserStatus;
         deletedAt: Date | null;
         merchantId: string | null;
         email: string | null;
@@ -39,9 +39,9 @@ export declare class SettingsController {
     updateAdminStaff(id: string, data: UpdateStaffDto): Promise<{
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.UserStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.UserStatus;
         deletedAt: Date | null;
         merchantId: string | null;
         email: string | null;
@@ -61,9 +61,9 @@ export declare class SettingsController {
     deleteAdminStaff(id: string): Promise<{
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.UserStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.UserStatus;
         deletedAt: Date | null;
         merchantId: string | null;
         email: string | null;
@@ -83,8 +83,8 @@ export declare class SettingsController {
     getJobQueues(status?: string): Promise<{
         error: string | null;
         id: string;
-        createdAt: Date;
         status: import("@prisma/client").$Enums.JobStatus;
+        createdAt: Date;
         completedAt: Date | null;
         type: string;
         scheduledAt: Date;
@@ -96,8 +96,8 @@ export declare class SettingsController {
     retryFailedJob(id: string): Promise<{
         error: string | null;
         id: string;
-        createdAt: Date;
         status: import("@prisma/client").$Enums.JobStatus;
+        createdAt: Date;
         completedAt: Date | null;
         type: string;
         scheduledAt: Date;

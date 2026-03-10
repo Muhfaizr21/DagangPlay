@@ -17,9 +17,9 @@ export declare class CommissionsService {
         };
     } & {
         id: string;
+        status: import("@prisma/client").$Enums.CommissionStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.CommissionStatus;
         userId: string;
         orderId: string;
         type: string;
@@ -43,8 +43,8 @@ export declare class CommissionsService {
         };
     } & {
         id: string;
-        parentId: string;
         createdAt: Date;
+        parentId: string;
         childId: string;
         level: number;
     })[]>;

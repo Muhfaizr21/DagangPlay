@@ -29,9 +29,9 @@ export declare class FinanceController {
         } | null;
     } & {
         id: string;
+        status: import("@prisma/client").$Enums.DepositStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.DepositStatus;
         merchantId: string;
         note: string | null;
         expiredAt: Date | null;
@@ -64,9 +64,9 @@ export declare class FinanceController {
         } | null;
     } & {
         id: string;
+        status: import("@prisma/client").$Enums.WithdrawalStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.WithdrawalStatus;
         note: string | null;
         processedAt: Date | null;
         userId: string;

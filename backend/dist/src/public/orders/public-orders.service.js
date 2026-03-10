@@ -43,7 +43,7 @@ let PublicOrdersService = class PublicOrdersService {
         };
         return mapping[code] || 'TRIPAY_QRIS';
     }
-    async createCheckout(body, host, origin) {
+    async createCheckout(body, host, origin, merchantSlug) {
         const { skuId, gameId, serverId, whatsapp, paymentMethod } = body;
         const sku = await this.prisma.productSku.findUnique({
             where: { id: skuId },
@@ -62,9 +62,10 @@ let PublicOrdersService = class PublicOrdersService {
         const targetMerchant = await this.prisma.merchant.findFirst({
             where: {
                 OR: [
+                    merchantSlug ? { slug: merchantSlug } : {},
                     { domain: host },
                     { slug: host?.split('.')[0] }
-                ]
+                ].filter(condition => Object.keys(condition).length > 0)
             }
         });
         let merchant = targetMerchant;
@@ -247,13 +248,14 @@ let PublicOrdersService = class PublicOrdersService {
             throw new common_1.BadRequestException('Pesanan tidak ditemukan');
         return order;
     }
-    async getStoreConfig(host) {
+    async getStoreConfig(host, merchantSlug) {
         const merchant = await this.prisma.merchant.findFirst({
             where: {
                 OR: [
+                    merchantSlug ? { slug: merchantSlug } : {},
                     { domain: host },
                     { slug: host?.split('.')[0] }
-                ]
+                ].filter(condition => Object.keys(condition).length > 0)
             }
         });
         const targetMerchant = merchant || await this.prisma.merchant.findFirst({ where: { isOfficial: true, status: 'ACTIVE' } });
@@ -275,6 +277,7 @@ let PublicOrdersService = class PublicOrdersService {
             tagline: targetMerchant.tagline,
             whiteLabel: features.whiteLabel || false,
             plan: targetMerchant.plan,
+            slug: targetMerchant.slug,
             isOfficial: targetMerchant.isOfficial,
             theme: targetMerchant.settings?.theme || { active: 'dark' }
         };

@@ -17,9 +17,9 @@ export declare class CommissionsController {
         };
     } & {
         id: string;
+        status: import("@prisma/client").$Enums.CommissionStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.CommissionStatus;
         userId: string;
         orderId: string;
         type: string;

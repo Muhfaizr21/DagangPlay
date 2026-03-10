@@ -11,13 +11,13 @@ export declare class SupportController {
             email: string | null;
         };
     } & {
-        category: import("@prisma/client").$Enums.TicketCategory;
         id: string;
         description: string;
+        status: import("@prisma/client").$Enums.TicketStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.TicketStatus;
         merchantId: string;
+        category: import("@prisma/client").$Enums.TicketCategory;
         userId: string;
         orderId: string | null;
         subject: string;
@@ -48,13 +48,13 @@ export declare class SupportController {
             ticketId: string;
         })[];
     } & {
-        category: import("@prisma/client").$Enums.TicketCategory;
         id: string;
         description: string;
+        status: import("@prisma/client").$Enums.TicketStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.TicketStatus;
         merchantId: string;
+        category: import("@prisma/client").$Enums.TicketCategory;
         userId: string;
         orderId: string | null;
         subject: string;
@@ -73,13 +73,13 @@ export declare class SupportController {
         ticketId: string;
     }>;
     updateTicket(req: any, id: string, body: any): Promise<{
-        category: import("@prisma/client").$Enums.TicketCategory;
         id: string;
         description: string;
+        status: import("@prisma/client").$Enums.TicketStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.TicketStatus;
         merchantId: string;
+        category: import("@prisma/client").$Enums.TicketCategory;
         userId: string;
         orderId: string | null;
         subject: string;

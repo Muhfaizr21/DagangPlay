@@ -20,52 +20,57 @@ let PublicProductsController = class PublicProductsController {
     constructor(productsService) {
         this.productsService = productsService;
     }
-    async getCategories() {
-        return this.productsService.getPublicCategories();
+    async getCategories(merchantSlug) {
+        return this.productsService.getPublicCategories(merchantSlug);
     }
-    async getCategoryBySlug(slug) {
-        return this.productsService.getPublicCategoryBySlug(slug);
+    async getCategoryBySlug(slug, merchantSlug) {
+        return this.productsService.getPublicCategoryBySlug(slug, merchantSlug);
     }
-    async getContent() {
-        return this.productsService.getPublicContent();
+    async getContent(merchantSlug) {
+        return this.productsService.getPublicContent(merchantSlug);
     }
-    async getResellerPrices() {
-        return this.productsService.getPublicResellerPrices();
+    async getResellerPrices(merchantSlug) {
+        return this.productsService.getPublicResellerPrices(merchantSlug);
     }
-    async getFullCatalog() {
-        return this.productsService.getPublicFullCatalog();
+    async getFullCatalog(merchantSlug) {
+        return this.productsService.getPublicFullCatalog(merchantSlug);
     }
 };
 exports.PublicProductsController = PublicProductsController;
 __decorate([
     (0, common_1.Get)('categories'),
+    __param(0, (0, common_1.Query)('merchant')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], PublicProductsController.prototype, "getCategories", null);
 __decorate([
     (0, common_1.Get)('categories/:slug'),
     __param(0, (0, common_1.Param)('slug')),
+    __param(1, (0, common_1.Query)('merchant')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], PublicProductsController.prototype, "getCategoryBySlug", null);
 __decorate([
     (0, common_1.Get)('content'),
+    __param(0, (0, common_1.Query)('merchant')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], PublicProductsController.prototype, "getContent", null);
 __decorate([
     (0, common_1.Get)('reseller-prices'),
+    __param(0, (0, common_1.Query)('merchant')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], PublicProductsController.prototype, "getResellerPrices", null);
 __decorate([
     (0, common_1.Get)('full-catalog'),
+    __param(0, (0, common_1.Query)('merchant')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], PublicProductsController.prototype, "getFullCatalog", null);
 exports.PublicProductsController = PublicProductsController = __decorate([

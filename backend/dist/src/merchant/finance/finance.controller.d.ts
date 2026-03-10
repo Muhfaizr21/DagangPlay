@@ -9,9 +9,9 @@ export declare class FinanceController {
         revenue: number;
         deposits: {
             id: string;
+            status: import("@prisma/client").$Enums.DepositStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.DepositStatus;
             merchantId: string;
             note: string | null;
             expiredAt: Date | null;
@@ -31,9 +31,9 @@ export declare class FinanceController {
         }[];
         withdrawals: {
             id: string;
+            status: import("@prisma/client").$Enums.WithdrawalStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.WithdrawalStatus;
             note: string | null;
             processedAt: Date | null;
             userId: string;
@@ -50,9 +50,9 @@ export declare class FinanceController {
     }>;
     requestWithdrawal(req: any, body: any): Promise<{
         id: string;
+        status: import("@prisma/client").$Enums.WithdrawalStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.WithdrawalStatus;
         note: string | null;
         processedAt: Date | null;
         userId: string;
@@ -69,9 +69,9 @@ export declare class FinanceController {
     requestDeposit(req: any, body: any): Promise<{
         checkoutUrl: any;
         id: string;
+        status: import("@prisma/client").$Enums.DepositStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.DepositStatus;
         merchantId: string;
         note: string | null;
         expiredAt: Date | null;

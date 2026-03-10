@@ -81,4 +81,6 @@ export declare class DigiflazzService {
     }>;
     placeOrder(orderId: string): Promise<any>;
     private handleCommissionReversal;
+    private handleCustomerRefund;
+    processPriceWebhook(payload: any): Promise<void>;
 }

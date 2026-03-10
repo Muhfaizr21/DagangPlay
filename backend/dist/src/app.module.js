@@ -34,12 +34,13 @@ const digiflazz_module_1 = require("./admin/digiflazz/digiflazz.module");
 const withdrawals_module_1 = require("./merchant/withdrawals/withdrawals.module");
 const marketing_module_1 = require("./admin/marketing/marketing.module");
 const chat_module_1 = require("./chat/chat.module");
+const public_digiflazz_module_1 = require("./public/digiflazz/public-digiflazz.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [schedule_1.ScheduleModule.forRoot(), dashboard_module_1.DashboardModule, merchants_module_1.MerchantsModule, products_module_1.ProductsModule, suppliers_module_1.SuppliersModule, users_module_1.UsersModule, transactions_module_1.TransactionsModule, finance_module_1.FinanceModule, commissions_module_1.CommissionsModule, promos_module_1.PromosModule, subscriptions_module_1.SubscriptionsModule, content_module_1.ContentModule, security_module_1.SecurityModule, tickets_module_1.TicketsModule, settings_module_1.SettingsModule, auth_module_1.AuthModule, upload_module_1.UploadModule, workers_module_1.WorkersModule, merchant_module_1.MerchantModule, digiflazz_module_1.DigiflazzModule, tripay_module_1.TripayModule, public_orders_module_1.PublicOrdersModule, withdrawals_module_1.WithdrawalsModule, marketing_module_1.MarketingModule, chat_module_1.ChatModule],
+        imports: [schedule_1.ScheduleModule.forRoot(), dashboard_module_1.DashboardModule, merchants_module_1.MerchantsModule, products_module_1.ProductsModule, suppliers_module_1.SuppliersModule, users_module_1.UsersModule, transactions_module_1.TransactionsModule, finance_module_1.FinanceModule, commissions_module_1.CommissionsModule, promos_module_1.PromosModule, subscriptions_module_1.SubscriptionsModule, content_module_1.ContentModule, security_module_1.SecurityModule, tickets_module_1.TicketsModule, settings_module_1.SettingsModule, auth_module_1.AuthModule, upload_module_1.UploadModule, workers_module_1.WorkersModule, merchant_module_1.MerchantModule, digiflazz_module_1.DigiflazzModule, tripay_module_1.TripayModule, public_orders_module_1.PublicOrdersModule, withdrawals_module_1.WithdrawalsModule, marketing_module_1.MarketingModule, chat_module_1.ChatModule, public_digiflazz_module_1.PublicDigiflazzModule],
         controllers: [],
         providers: [prisma_service_1.PrismaService],
     })
