@@ -14,7 +14,8 @@ export class AuthService {
         console.log('Email:', data.email);
 
         const user = await this.prisma.user.findUnique({
-            where: { email: data.email }
+            where: { email: data.email },
+            include: { ownedMerchant: true }
         });
 
         if (!user) {
@@ -64,7 +65,8 @@ export class AuthService {
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                adminPermissions: (user as any).adminPermissions || []
+                adminPermissions: (user as any).adminPermissions || [],
+                plan: user.ownedMerchant ? user.ownedMerchant.plan : 'PRO'
             }
         };
     }

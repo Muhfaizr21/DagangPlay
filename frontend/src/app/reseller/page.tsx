@@ -15,8 +15,11 @@ import {
     ChevronDown,
     Star,
     XCircle,
-    Check
+    Check,
+    Gamepad2
 } from 'lucide-react';
+import PriceCatalog from '@/components/PriceCatalog';
+
 
 // --- MOCK DATA FOR PLANS ---
 // Nanti ini bisa diambil dari API settingan Super Admin
@@ -56,8 +59,25 @@ export default function ResellerLandingPage() {
     const [hargaModal, setHargaModal] = useState(37500);
     const [hargaJual, setHargaJual] = useState(40000);
     const [jumlahPenjualan, setJumlahPenjualan] = useState(20);
+    const [sampleProducts, setSampleProducts] = useState<any[]>([]);
 
     const [billingCycle, setBillingCycle] = useState<'yearly' | 'quarterly'>('yearly');
+
+    const MLBB_148_PRICES: any = {
+        pro: 39709,
+        legend: 38773,
+        supreme: 38023,
+        normal: 40646
+    };
+
+    // Auto update hargaModal when plan changes (Fixed to MLBB 148)
+    useEffect(() => {
+        const modal = MLBB_148_PRICES[selectedPlan.toLowerCase()] || MLBB_148_PRICES.pro;
+        setHargaModal(modal);
+        // Set harga jual default untung dikit biar kalkulator ga kosong
+        setHargaJual(Math.ceil(modal * 1.08 / 500) * 500); // Bulatin ke 500 terdekat
+    }, [selectedPlan]);
+
 
     const [plansConfig, setPlansConfig] = useState<any>({
         PRO: { price: 74917, maxProducts: 50, customDomain: true, multiUser: false, whiteLabel: false, customFeatures: [] },
@@ -109,7 +129,36 @@ export default function ResellerLandingPage() {
                 }
             })
             .catch(() => console.log('Using default plan configuration fallback.'));
+
+        // Fetch sample products
+        fetch('http://localhost:3001/public/products/reseller-prices')
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data) && data.length > 0) {
+                    setSampleProducts(data);
+                    // Set initial harga modal ke produk pertama
+                    const first = data[0];
+                    const initialModal = first.pro || first.normal || 0;
+                    setHargaModal(initialModal);
+                    setHargaJual(Math.ceil(initialModal * 1.1 / 100) * 100);
+                } else {
+                    // Fallback
+                    setSampleProducts([
+                        { name: 'Mobile Legends 86 Diamonds', normal: 19500, pro: 18800, legend: 18500, supreme: 18100, img: 'https://cdn.unipin.com/images/icon_product_channels/1592285005-icon-ml.png' },
+                        { name: 'Free Fire 70 Diamonds', normal: 10000, pro: 9500, legend: 9300, supreme: 9000, img: 'https://cdn.unipin.com/images/icon_product_channels/1598282333-icon-ff.png' },
+                        { name: 'PUBG M 60 UC', normal: 14000, pro: 13500, legend: 13200, supreme: 12800, img: 'https://cdn.unipin.com/images/icon_product_channels/1593414902-icon-pubgm.png' },
+                    ]);
+                }
+            })
+            .catch(() => {
+                setSampleProducts([
+                    { name: 'Mobile Legends 86 Diamonds', normal: 19500, pro: 18800, legend: 18500, supreme: 18100, img: 'https://cdn.unipin.com/images/icon_product_channels/1592285005-icon-ml.png' },
+                    { name: 'Free Fire 70 Diamonds', normal: 10000, pro: 9500, legend: 9300, supreme: 9000, img: 'https://cdn.unipin.com/images/icon_product_channels/1598282333-icon-ff.png' },
+                    { name: 'PUBG M 60 UC', normal: 14000, pro: 13500, legend: 13200, supreme: 12800, img: 'https://cdn.unipin.com/images/icon_product_channels/1593414902-icon-pubgm.png' },
+                ]);
+            });
     }, []);
+
 
     // Hitung Estimasi Keuntungan
     const profitPerTrx = hargaJual - hargaModal;
@@ -371,45 +420,48 @@ export default function ResellerLandingPage() {
                             </div>
 
                             <div className="space-y-6">
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">Harga Modal</label>
-                                    <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium">Rp</span>
-                                        <input
-                                            type="number"
-                                            value={hargaModal}
-                                            onChange={(e) => setHargaModal(Number(e.target.value))}
-                                            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-slate-900 font-medium"
-                                        />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-2">Harga Modal Tier {selectedPlan}</label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium text-xs">Rp</span>
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                value={hargaModal.toLocaleString('id-ID')}
+                                                className="w-full pl-10 pr-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-600 font-bold"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-2">Harga Jual Kamu</label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium text-xs">Rp</span>
+                                            <input
+                                                type="number"
+                                                value={hargaJual}
+                                                onChange={(e) => setHargaJual(Number(e.target.value))}
+                                                className="w-full pl-10 pr-4 py-3 bg-white border border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 text-slate-900 font-bold"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">Harga Jual</label>
-                                    <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium">Rp</span>
-                                        <input
-                                            type="number"
-                                            value={hargaJual}
-                                            onChange={(e) => setHargaJual(Number(e.target.value))}
-                                            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-slate-900 font-medium"
-                                        />
-                                    </div>
-                                </div>
+
                                 <div>
                                     <label className="flex justify-between text-sm font-bold text-slate-700 mb-2">
-                                        <span>Jumlah Penjualan Perhari</span>
-                                        <span className="text-indigo-600">{jumlahPenjualan}</span>
+                                        <span>Target Penjualan Perhari</span>
+                                        <span className="text-indigo-600 font-black px-3 py-1 bg-indigo-50 rounded-lg">{jumlahPenjualan} Order</span>
                                     </label>
                                     <input
                                         type="range"
                                         min="1" max="500"
                                         value={jumlahPenjualan}
                                         onChange={(e) => setJumlahPenjualan(Number(e.target.value))}
-                                        className="w-full accent-indigo-600"
+                                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                                     />
-                                    <div className="flex justify-between text-xs text-slate-400 mt-2">
-                                        <span>1</span>
-                                        <span>500</span>
+                                    <div className="flex justify-between text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-wider">
+                                        <span>Santai (1)</span>
+                                        <span>Maksimal (500)</span>
                                     </div>
                                 </div>
                             </div>
@@ -615,52 +667,10 @@ export default function ResellerLandingPage() {
                 </div>
             </section>
 
-            {/* Pricing Section (Harga Modal) */}
-            <section id="pricing" className="py-24 bg-slate-50 px-6">
-                <div className="max-w-5xl mx-auto">
-                    <div className="text-center mb-16">
-                        <p className="text-indigo-600 font-bold tracking-wider uppercase text-sm mb-2">HARGA MODAL TERMURAH</p>
-                        <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-4">Modal Minimal, Profit Maksimal</h2>
-                        <p className="text-lg text-slate-500">Bandingkan sendiri harga modal kami. Semakin tinggi Plan-mu, semakin murah harganya.</p>
-                    </div>
-
-                    <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm text-slate-600">
-                                <thead className="bg-slate-900 text-white text-xs uppercase font-bold sticky top-0">
-                                    <tr>
-                                        <th className="px-6 py-4 rounded-tl-lg">Produk (Sample MLBB)</th>
-                                        <th className="px-6 py-4 text-center">NORMAL</th>
-                                        <th className="px-6 py-4 text-center text-indigo-300">PRO</th>
-                                        <th className="px-6 py-4 text-center text-fuchsia-300">LEGEND</th>
-                                        <th className="px-6 py-4 text-center text-amber-300 rounded-tr-lg">SUPREME</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {SAMPLE_PRODUCTS.map((prod, i) => (
-                                        <tr key={i} className="hover:bg-slate-50 transition-colors">
-                                            <td className="px-6 py-4 font-semibold text-slate-800 flex items-center gap-3">
-                                                <img src={prod.img} alt={prod.name} className="w-8 h-8 rounded-full bg-slate-100" />
-                                                {prod.name}
-                                            </td>
-                                            <td className="px-6 py-4 text-center">Rp {prod.normal.toLocaleString('id-ID')}</td>
-                                            <td className="px-6 py-4 text-center font-bold text-indigo-600">Rp {prod.pro.toLocaleString('id-ID')}</td>
-                                            <td className="px-6 py-4 text-center font-bold text-fuchsia-600">Rp {prod.legend.toLocaleString('id-ID')}</td>
-                                            <td className="px-6 py-4 text-center font-bold text-amber-600">Rp {prod.supreme.toLocaleString('id-ID')}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div className="bg-slate-50 p-4 border-t border-slate-200 text-center">
-                            <p className="text-sm text-slate-500 mb-4">*Ini hanya contoh beberapa produk. Terdapat 500+ game lainnya di dalam dashboard.</p>
-                            <Link href="/reseller/register" className="inline-flex py-3 px-8 rounded-full bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-colors">
-                                Daftar Untuk Lihat Semua Harga
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            {/* Dynamic Catalog Section */}
+            <div id="pricing" className="bg-slate-50 relative">
+                <PriceCatalog />
+            </div>
 
             {/* Amankan Domain Kamu */}
             <section className="py-24 bg-gradient-to-b from-indigo-50 to-white px-6">

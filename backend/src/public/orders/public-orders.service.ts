@@ -48,11 +48,27 @@ export class PublicOrdersService {
         const basePrice = Number(sku.basePrice);
         const sellPrice = Number(sku.priceNormal);
 
+        // 2.5 Ensure Guest User Exists
+        let guestUser = await this.prisma.user.findFirst({
+            where: { phone: whatsapp }
+        });
+
+        if (!guestUser) {
+            guestUser = await this.prisma.user.create({
+                data: {
+                    name: `Guest ${whatsapp}`,
+                    phone: whatsapp,
+                    password: 'GUEST_NO_LOGIN',
+                    referralCode: `GUEST-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+                }
+            });
+        }
+
         // 3. Create Order in DB (Pending Tripay Transaction)
         const order = await this.prisma.order.create({
             data: {
                 orderNumber,
-                userId: 'guest', // Can be handled better later
+                userId: guestUser.id,
                 merchantId,
                 productId: sku.product.id,
                 productSkuId: sku.id,
@@ -96,7 +112,7 @@ export class PublicOrdersService {
         await this.prisma.payment.create({
             data: {
                 orderId: order.id,
-                userId: 'guest',
+                userId: guestUser.id,
                 merchantId: merchantId,
                 method: this.mapPaymentMethod(paymentMethod),
                 amount: sellPrice,

@@ -21,7 +21,8 @@ export class FinanceController {
 
     @Post('withdraw')
     async requestWithdrawal(@Request() req, @Body() body: any) {
-        return this.financeService.requestWithdrawal(req.user.id, body.amount, body.bankName, body.bankAccountName, body.bankAccountNumber);
+        const isInstant = body.type === 'INSTANT';
+        return this.financeService.requestWithdrawal(req.user.id, body.amount, body.bankName, body.bankAccountName, body.bankAccountNumber, isInstant);
     }
 
     @Post('deposit')

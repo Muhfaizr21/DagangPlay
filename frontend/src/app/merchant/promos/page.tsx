@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import MerchantLayout from '../../../components/merchant/MerchantLayout';
 import useSWR from 'swr';
 import axios from 'axios';
-import { Tag, Plus, Trash2, Power, Search } from 'lucide-react';
+import { Tag, Plus, Trash2, Power, Search, Zap, Lock } from 'lucide-react';
 
 const fetcher = (url: string) => {
     const token = localStorage.getItem('admin_token');
@@ -13,6 +13,17 @@ const fetcher = (url: string) => {
 
 export default function MerchantPromosPage() {
     const { data: promos, mutate, error } = useSWR('http://localhost:3001/merchant/promos', fetcher);
+
+    const [activeTab, setActiveTab] = useState('vouchers');
+    const [merchantPlan, setMerchantPlan] = useState('PRO');
+
+    React.useEffect(() => {
+        const userData = localStorage.getItem('admin_user');
+        if (userData) {
+            const parsed = JSON.parse(userData);
+            setMerchantPlan(parsed.plan || 'PRO');
+        }
+    }, []);
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [form, setForm] = useState({
@@ -74,95 +85,155 @@ export default function MerchantPromosPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800">Promo & Voucher</h1>
-                    <p className="text-slate-500 text-sm mt-1">Buat kode voucher untuk pembeli dan reseller Anda.</p>
+                    <p className="text-slate-500 text-sm mt-1">Buat kode voucher untuk pembeli dan tingkatkan konversi penjualan Anda.</p>
                 </div>
 
-                <button onClick={() => setIsAddModalOpen(true)} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[13px] rounded-xl shadow-[0_4px_14px_0_rgba(99,102,241,0.39)] transition-all hover:-translate-y-0.5 flex items-center gap-2">
-                    <Plus className="w-4 h-4" /> Bikin Promo Baru
+                {activeTab === 'vouchers' && (
+                    <button onClick={() => setIsAddModalOpen(true)} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[13px] rounded-xl shadow-[0_4px_14px_0_rgba(99,102,241,0.39)] transition-all hover:-translate-y-0.5 flex items-center gap-2">
+                        <Plus className="w-4 h-4" /> Bikin Promo Baru
+                    </button>
+                )}
+            </div>
+
+            {/* TAB MENU */}
+            <div className="flex items-center gap-2 mb-6 border-b border-slate-200">
+                <button
+                    onClick={() => setActiveTab('vouchers')}
+                    className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'vouchers' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+                >
+                    <div className="flex items-center gap-2">
+                        <Tag className="w-4 h-4" /> Kode Voucher
+                    </div>
+                </button>
+                <button
+                    onClick={() => setActiveTab('flashsale')}
+                    className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'flashsale' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+                >
+                    <div className="flex items-center gap-2">
+                        <Zap className="w-4 h-4" /> Flash Sale Event
+                    </div>
                 </button>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center w-full md:w-auto">
-                    <div className="relative w-full max-w-xs">
-                        <Search className="w-5 h-5 text-slate-400 absolute left-3 top-2.5" />
-                        <input
-                            type="text"
-                            placeholder="Cari voucher..."
-                            className="pl-10 pr-4 py-2.5 w-full bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all"
-                        />
+            {/* VOUCHER TAB CONTENT */}
+            {activeTab === 'vouchers' && (
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center w-full md:w-auto">
+                        <div className="relative w-full max-w-xs">
+                            <Search className="w-5 h-5 text-slate-400 absolute left-3 top-2.5" />
+                            <input
+                                type="text"
+                                placeholder="Cari voucher..."
+                                className="pl-10 pr-4 py-2.5 w-full bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all"
+                            />
+                        </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse min-w-[700px]">
+                            <thead>
+                                <tr className="bg-white border-b border-slate-100">
+                                    <th className="p-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Kode & Nama</th>
+                                    <th className="p-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Tipe & Nilai</th>
+                                    <th className="p-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Target</th>
+                                    <th className="p-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Kuota / Dipakai</th>
+                                    <th className="p-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {!promos ? (
+                                    <tr><td colSpan={5} className="p-8 text-center text-slate-500">Memuat...</td></tr>
+                                ) : promos.length === 0 ? (
+                                    <tr><td colSpan={5} className="p-12 text-center text-slate-500">
+                                        <Tag className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                                        Belum ada kode promo.
+                                    </td></tr>
+                                ) : (
+                                    promos.map((p: any) => (
+                                        <tr key={p.id} className={`hover:bg-slate-50/50 transition-colors ${!p.isActive && 'opacity-60'}`}>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="px-2.5 py-1 bg-amber-100 text-amber-800 font-bold rounded-lg text-sm border border-amber-200 uppercase tracking-wider">
+                                                        {p.code}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-slate-500 mt-2">{p.name}</p>
+                                            </td>
+                                            <td className="p-4">
+                                                <p className="text-sm font-bold text-slate-800">
+                                                    {p.type === 'DISCOUNT_FLAT' ? 'Diskon Rupiah' :
+                                                        p.type === 'DISCOUNT_PERCENTAGE' ? 'Diskon %' : 'Cashback'}
+                                                </p>
+                                                <p className="text-xs font-bold text-emerald-600 mt-1">
+                                                    {p.type === 'DISCOUNT_PERCENTAGE' ? `${Number(p.value)}%` : `Rp ${Number(p.value).toLocaleString('id-ID')}`}
+                                                </p>
+                                            </td>
+                                            <td className="p-4">
+                                                <span className="px-2 py-1 bg-slate-100 rounded text-[10px] font-bold text-slate-600">
+                                                    {p.forRole === 'ALL' ? 'Semua User' : p.forRole === 'CUSTOMER' ? 'Customer Saja' : 'Reseller Saja'}
+                                                </span>
+                                            </td>
+                                            <td className="p-4">
+                                                <p className="text-sm text-slate-700 font-bold">{p.usedCount} <span className="text-slate-400 font-normal">/ {p.quota || '∞'}</span></p>
+                                            </td>
+                                            <td className="p-4 flex gap-2 justify-end">
+                                                <button
+                                                    onClick={() => handleToggle(p.id, p.isActive)}
+                                                    className={`p-2 rounded-lg transition-colors border ${p.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'}`}
+                                                    title={p.isActive ? 'Nonaktifkan' : 'Aktifkan'}
+                                                >
+                                                    <Power className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(p.id)}
+                                                    className="p-2 bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 rounded-lg transition-colors"
+                                                    title="Hapus Promo"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse min-w-[700px]">
-                        <thead>
-                            <tr className="bg-white border-b border-slate-100">
-                                <th className="p-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Kode & Nama</th>
-                                <th className="p-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Tipe & Nilai</th>
-                                <th className="p-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Target</th>
-                                <th className="p-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Kuota / Dipakai</th>
-                                <th className="p-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {!promos ? (
-                                <tr><td colSpan={5} className="p-8 text-center text-slate-500">Memuat...</td></tr>
-                            ) : promos.length === 0 ? (
-                                <tr><td colSpan={5} className="p-12 text-center text-slate-500">
-                                    <Tag className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                                    Belum ada kode promo.
-                                </td></tr>
-                            ) : (
-                                promos.map((p: any) => (
-                                    <tr key={p.id} className={`hover:bg-slate-50/50 transition-colors ${!p.isActive && 'opacity-60'}`}>
-                                        <td className="p-4">
-                                            <div className="flex items-center gap-2">
-                                                <span className="px-2.5 py-1 bg-amber-100 text-amber-800 font-bold rounded-lg text-sm border border-amber-200 uppercase tracking-wider">
-                                                    {p.code}
-                                                </span>
-                                            </div>
-                                            <p className="text-xs text-slate-500 mt-2">{p.name}</p>
-                                        </td>
-                                        <td className="p-4">
-                                            <p className="text-sm font-bold text-slate-800">
-                                                {p.type === 'DISCOUNT_FLAT' ? 'Diskon Rupiah' :
-                                                    p.type === 'DISCOUNT_PERCENTAGE' ? 'Diskon %' : 'Cashback'}
-                                            </p>
-                                            <p className="text-xs font-bold text-emerald-600 mt-1">
-                                                {p.type === 'DISCOUNT_PERCENTAGE' ? `${Number(p.value)}%` : `Rp ${Number(p.value).toLocaleString('id-ID')}`}
-                                            </p>
-                                        </td>
-                                        <td className="p-4">
-                                            <span className="px-2 py-1 bg-slate-100 rounded text-[10px] font-bold text-slate-600">
-                                                {p.forRole === 'ALL' ? 'Semua User' : p.forRole === 'CUSTOMER' ? 'Customer Saja' : 'Reseller Saja'}
-                                            </span>
-                                        </td>
-                                        <td className="p-4">
-                                            <p className="text-sm text-slate-700 font-bold">{p.usedCount} <span className="text-slate-400 font-normal">/ {p.quota || '∞'}</span></p>
-                                        </td>
-                                        <td className="p-4 flex gap-2 justify-end">
-                                            <button
-                                                onClick={() => handleToggle(p.id, p.isActive)}
-                                                className={`p-2 rounded-lg transition-colors border ${p.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'}`}
-                                                title={p.isActive ? 'Nonaktifkan' : 'Aktifkan'}
-                                            >
-                                                <Power className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(p.id)}
-                                                className="p-2 bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 rounded-lg transition-colors"
-                                                title="Hapus Promo"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+            )}
+
+            {/* FLASHSALE TAB CONTENT */}
+            {activeTab === 'flashsale' && (
+                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                    <div className="max-w-2xl mx-auto text-center py-10">
+                        {merchantPlan !== 'SUPREME' ? (
+                            <>
+                                <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-red-100">
+                                    <Lock className="w-10 h-10" />
+                                </div>
+                                <h2 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">Eksklusif Tier SUPREME</h2>
+                                <p className="text-slate-500 leading-relaxed max-w-md mx-auto mb-8">
+                                    Fitur <b className="text-indigo-600">Flash Sale Countdown Real-time</b> ini dikhususkan bagi Merchant prioritas kami. Upgrade rencana Anda sekarang untuk meningkatkan fear-of-missing-out (FOMO) pembeli dan ciptakan ledakan orderan!
+                                </p>
+                                <button className="px-8 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all hover:-translate-y-1">
+                                    🚀 Upgrade ke SUPREME Sekarang
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-indigo-100">
+                                    <Zap className="w-10 h-10 fill-indigo-600/20" />
+                                </div>
+                                <h2 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">Flash Sale Manager</h2>
+                                <p className="text-slate-500 leading-relaxed max-w-md mx-auto mb-8">
+                                    Status <b>SUPREME</b> Anda tervalidasi. Fitur Flash Sale saat ini sedang dalam persiapan Engine v2 (segera hadir bulan depan). Persiapkan produk unggulan Anda!
+                                </p>
+                                <button disabled className="px-8 py-3.5 bg-slate-100 text-slate-400 font-bold rounded-xl cursor-not-allowed">
+                                    Belum Tersedia
+                                </button>
+                            </>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Modal Tambah Promo */}
             {isAddModalOpen && (

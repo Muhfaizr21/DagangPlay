@@ -46,17 +46,17 @@ export default function MerchantDashboard() {
         );
     }
 
-    const { merchant, revenue, transactionsToday, users, recentOrders, topResellers, alerts, chartData } = dashboard;
+    const { merchant, revenue, transactionsToday, users, recentOrders, topCustomers, alerts, chartData } = dashboard;
 
     const stats = [
-        { title: 'Total Pendapatan (Bln Ini)', value: `Rp ${revenue.month.toLocaleString('id-ID')}`, trend: `${revenue.trendPercentage > 0 ? '+' : ''}${revenue.trendPercentage.toFixed(1)}%`, isPositive: revenue.trendPercentage >= 0, icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50 text-emerald-500' },
-        { title: 'Reseller Aktif', value: users.activeResellers.toLocaleString('id-ID'), trend: '', isPositive: true, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50 text-indigo-500' },
-        { title: 'Trx Hari Ini (Sukses)', value: transactionsToday.success.toLocaleString('id-ID'), trend: `${transactionsToday.failed} Gagal`, isPositive: transactionsToday.failed === 0, icon: Receipt, color: 'text-amber-600', bg: 'bg-amber-50 text-amber-500' },
-        { title: 'Pendapatan Hari Ini', value: `Rp ${revenue.today.toLocaleString('id-ID')}`, trend: '', isPositive: true, icon: TrendingUp, color: 'text-purple-600', bg: 'bg-purple-50 text-purple-500' },
+        { title: 'Total Pendapatan (Bln Ini)', value: `Rp ${(revenue?.month || 0).toLocaleString('id-ID')}`, trend: `${(revenue?.trendPercentage || 0) > 0 ? '+' : ''}${(revenue?.trendPercentage || 0).toFixed(1)}%`, isPositive: (revenue?.trendPercentage || 0) >= 0, icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50 text-emerald-500' },
+        { title: 'Pelanggan Aktif', value: (users?.activeCustomers || 0).toLocaleString('id-ID'), trend: '', isPositive: true, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50 text-indigo-500' },
+        { title: 'Trx Hari Ini (Sukses)', value: (transactionsToday?.success || 0).toLocaleString('id-ID'), trend: `${transactionsToday?.failed || 0} Gagal`, isPositive: (transactionsToday?.failed || 0) === 0, icon: Receipt, color: 'text-amber-600', bg: 'bg-amber-50 text-amber-500' },
+        { title: 'Pendapatan Hari Ini', value: `Rp ${(revenue?.today || 0).toLocaleString('id-ID')}`, trend: '', isPositive: true, icon: TrendingUp, color: 'text-purple-600', bg: 'bg-purple-50 text-purple-500' },
     ];
 
     // Find max value for chart scaling
-    const maxChartValue = Math.max(...chartData.map((d: any) => d.value), 100000);
+    const maxChartValue = Math.max(...(chartData || []).map((d: any) => d.value), 100000);
 
     return (
         <MerchantLayout>
@@ -122,14 +122,14 @@ export default function MerchantDashboard() {
                     <div className="p-6 border-b border-slate-100/50 flex items-center justify-between">
                         <div>
                             <h3 className="text-[16px] font-bold text-slate-800">Analitik Omset 30 Hari Terakhir</h3>
-                            <p className="text-[12px] text-slate-500">Total Rp {revenue.month.toLocaleString('id-ID')}</p>
+                            <p className="text-[12px] text-slate-500">Total Rp {(revenue?.month || 0).toLocaleString('id-ID')}</p>
                         </div>
                         <button className="text-[12px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-3 py-1.5 rounded-lg">Lihat Detail</button>
                     </div>
                     <div className="flex-1 p-6 relative min-h-[300px] flex items-end justify-center">
                         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
                         <div className="relative w-full h-48 flex items-end justify-between px-2 gap-1 sm:gap-2 opacity-80">
-                            {chartData.map((d: any, i: number) => {
+                            {(chartData || []).map((d: any, i: number) => {
                                 const hPercent = Math.max((d.value / maxChartValue) * 100, 5); // min 5% height
                                 return (
                                     <div key={i} className="w-full bg-gradient-to-t from-indigo-500 to-cyan-400 rounded-t-sm hover:opacity-100 transition-opacity cursor-pointer group relative" style={{ height: `${hPercent}%` }}>
@@ -151,15 +151,15 @@ export default function MerchantDashboard() {
                         <Activity className="w-5 h-5 text-slate-400" />
                     </div>
                     <div className="flex-1 p-2">
-                        {recentOrders.length === 0 ? (
+                        {(!recentOrders || recentOrders.length === 0) ? (
                             <div className="h-full flex items-center justify-center text-slate-400 text-sm font-medium py-10">Belum ada transaksi</div>
                         ) : (
                             <div className="space-y-1">
                                 {recentOrders.map((order: any, i: number) => (
                                     <div key={i} className="flex items-center gap-4 p-4 hover:bg-slate-50 rounded-2xl cursor-pointer transition-colors">
                                         <div className={`w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm shrink-0 ${order.status === 'PAID' ? 'bg-gradient-to-br from-emerald-400 to-teal-500' :
-                                                order.status === 'PENDING' ? 'bg-gradient-to-br from-amber-400 to-orange-500' :
-                                                    'bg-gradient-to-br from-red-400 to-rose-500'
+                                            order.status === 'PENDING' ? 'bg-gradient-to-br from-amber-400 to-orange-500' :
+                                                'bg-gradient-to-br from-red-400 to-rose-500'
                                             }`}>
                                             {order.customerName.charAt(0).toUpperCase()}
                                         </div>
@@ -177,8 +177,8 @@ export default function MerchantDashboard() {
                                         <div className="text-right shrink-0">
                                             <p className="text-sm font-black text-slate-800">Rp {Number(order.amount).toLocaleString('id-ID')}</p>
                                             <p className={`text-[10px] uppercase tracking-wider font-bold mt-1 ${order.status === 'PAID' ? 'text-emerald-500' :
-                                                    order.status === 'PENDING' ? 'text-amber-500' :
-                                                        'text-red-500'
+                                                order.status === 'PENDING' ? 'text-amber-500' :
+                                                    'text-red-500'
                                                 }`}>{order.status}</p>
                                         </div>
                                     </div>
@@ -193,10 +193,10 @@ export default function MerchantDashboard() {
                     </div>
                 </div>
 
-                {/* Top Resellers Table */}
+                {/* Top Customers Table */}
                 <div className="col-span-1 lg:col-span-3 bg-white rounded-3xl border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.01)] flex flex-col mb-10 overflow-hidden">
                     <div className="p-6 border-b border-slate-100/50 flex items-center justify-between">
-                        <h3 className="text-[16px] font-bold text-slate-800">Top Reseller Bulan Ini</h3>
+                        <h3 className="text-[16px] font-bold text-slate-800">Top Pelanggan Bulan Ini</h3>
                         <Activity className="w-5 h-5 text-slate-400" />
                     </div>
                     <div className="overflow-x-auto">
@@ -209,18 +209,18 @@ export default function MerchantDashboard() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
-                                {topResellers.length === 0 ? (
+                                {(!topCustomers || topCustomers.length === 0) ? (
                                     <tr>
-                                        <td colSpan={3} className="px-6 py-10 text-center text-slate-400 font-medium text-sm">Belum ada data reseller</td>
+                                        <td colSpan={3} className="px-6 py-10 text-center text-slate-400 font-medium text-sm">Belum ada data pelanggan</td>
                                     </tr>
-                                ) : topResellers.map((r: any, i: number) => (
+                                ) : topCustomers.map((r: any, i: number) => (
                                     <tr key={i} className="hover:bg-slate-50/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${i === 0 ? 'bg-amber-100 text-amber-600' :
-                                                        i === 1 ? 'bg-slate-200 text-slate-600' :
-                                                            i === 2 ? 'bg-orange-100 text-orange-600' :
-                                                                'bg-indigo-50 text-indigo-500'
+                                                    i === 1 ? 'bg-slate-200 text-slate-600' :
+                                                        i === 2 ? 'bg-orange-100 text-orange-600' :
+                                                            'bg-indigo-50 text-indigo-500'
                                                     }`}>
                                                     #{i + 1}
                                                 </div>

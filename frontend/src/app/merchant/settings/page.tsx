@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import MerchantLayout from '../../../components/merchant/MerchantLayout';
 import useSWR from 'swr';
 import axios from 'axios';
-import { Settings, Globe, CreditCard, Webhook, Save, ShieldAlert } from 'lucide-react';
+import { Settings, Globe, CreditCard, Webhook, Save, ShieldAlert, BarChart2, Lock } from 'lucide-react';
 
 const fetcher = (url: string) => {
     const token = localStorage.getItem('admin_token');
@@ -22,9 +22,19 @@ export default function MerchantSettingsPage() {
     // Form States
     const [profileForm, setProfileForm] = useState({ name: '', tagline: '', description: '', contactEmail: '', contactPhone: '', contactWhatsapp: '', address: '' });
     const [domainForm, setDomainForm] = useState({ domain: '' });
+    const [seoForm, setSeoForm] = useState({ googleAnalytics: '', facebookPixel: '', tiktokPixel: '' });
+
+    // Merchant Plan
+    const [merchantPlan, setMerchantPlan] = useState('PRO');
 
     // Populate on load
     React.useEffect(() => {
+        const userData = localStorage.getItem('admin_user');
+        if (userData) {
+            const parsed = JSON.parse(userData);
+            setMerchantPlan(parsed.plan || 'PRO');
+        }
+
         if (settings) {
             setProfileForm({
                 name: settings.name || '',
@@ -36,6 +46,7 @@ export default function MerchantSettingsPage() {
                 address: settings.address || '',
             });
             setDomainForm({ domain: settings.domain || '' });
+            setSeoForm({ googleAnalytics: settings.googleAnalytics || '', facebookPixel: settings.facebookPixel || '', tiktokPixel: settings.tiktokPixel || '' });
         }
     }, [settings]);
 
@@ -63,6 +74,18 @@ export default function MerchantSettingsPage() {
         }
     };
 
+    const handleSaveSeo = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem('admin_token');
+            // Assuming endpoint exists or will exist
+            // await axios.put('http://localhost:3001/merchant/settings/seo', seoForm, { headers: { Authorization: `Bearer ${token}` } });
+            alert('Pengaturan SEO & Pixel berhasil disimpan! (Mockup)');
+        } catch (err: any) {
+            alert('Gagal menyimpan pengaturan SEO & Pixel');
+        }
+    };
+
     return (
         <MerchantLayout>
             <div className="mb-6">
@@ -82,6 +105,9 @@ export default function MerchantSettingsPage() {
                         </button>
                         <button onClick={() => setActiveTab('payment')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'payment' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
                             <CreditCard className="w-4 h-4" /> Metode Pembayaran
+                        </button>
+                        <button onClick={() => setActiveTab('seo')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'seo' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
+                            <BarChart2 className="w-4 h-4" /> SEO & Meta Pixel
                         </button>
                         <button onClick={() => setActiveTab('webhook')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'webhook' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
                             <Webhook className="w-4 h-4" /> Webhook & API
@@ -142,11 +168,23 @@ export default function MerchantSettingsPage() {
                                 <Globe className="w-5 h-5 text-indigo-600" /> Custom Domain
                             </h3>
                             <div className="mb-6 mt-4 p-4 bg-blue-50/50 border border-blue-100 rounded-xl">
-                                <p className="text-sm text-blue-800 leading-relaxed">
+                                <p className="text-sm text-blue-800 leading-relaxed mb-3">
                                     Untuk menggunakan domain Anda sendiri (contoh: <b>topupdewa.com</b>), silakan arahkan DNS record dari penyedia domain Anda: <br />
                                     - <b>A Record:</b> Arahkan ke IP <code>103.145.226.12</code><br />
                                     - <b>CNAME:</b> Arahkan <code>www</code> ke domain utama Anda.
                                 </p>
+
+                                {merchantPlan !== 'SUPREME' ? (
+                                    <div className="p-3 bg-red-50 text-red-700 rounded-lg text-[13px] font-bold border border-red-200 flex items-start gap-2">
+                                        <Lock className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                        <span>Plan Anda ({merchantPlan}) hanya mendukung klaim domain akhiran .my.id atau .biz.id. Upgrade ke SUPREME untuk bebas pakai domain Premium TLD (.com, .id, dll).</span>
+                                    </div>
+                                ) : (
+                                    <div className="p-3 bg-emerald-50 text-emerald-700 rounded-lg text-[13px] font-bold border border-emerald-200 flex items-start gap-2">
+                                        <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                        <span>Status SUPREME: Anda bebas menghubungkan Custom Domain Premium TLD (.com, .net, dll).</span>
+                                    </div>
+                                )}
                             </div>
                             <form onSubmit={handleSaveDomain}>
                                 <div className="mb-6">
@@ -166,6 +204,38 @@ export default function MerchantSettingsPage() {
                             <ShieldAlert className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                             <h3 className="text-lg font-bold text-slate-800 mb-2">Modul Payment Channels</h3>
                             <p className="text-slate-500 px-8 text-sm max-w-md mx-auto">Pengaturan aktif/non-aktifkan payment gateway seperti QRIS, Virtual Account, Retail, dan E-Wallet akan tersedia di sini.</p>
+                        </div>
+                    )}
+
+                    {/* Seo & Meta Pixel */}
+                    {activeTab === 'seo' && (
+                        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+                            <h3 className="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2">
+                                <BarChart2 className="w-5 h-5 text-indigo-600" /> SEO & Meta Pixel
+                            </h3>
+                            <div className="mb-6 flex items-center gap-3 p-4 bg-indigo-50 border border-indigo-100 rounded-xl">
+                                <ShieldAlert className="w-5 h-5 text-indigo-600" />
+                                <p className="text-sm text-indigo-800">Tambahkan ID Pixel untuk melacak aktivitas kunjungan dan konversi di web toko Anda. Fitur ini tersedia untuk semua Tier (Pro, Legend, Supreme).</p>
+                            </div>
+                            <form onSubmit={handleSaveSeo} className="space-y-5">
+                                <div>
+                                    <label className="block text-[12px] font-bold text-slate-500 mb-2">Google Analytics (G-XXXXX)</label>
+                                    <input type="text" value={seoForm.googleAnalytics} onChange={e => setSeoForm({ ...seoForm, googleAnalytics: e.target.value })} placeholder="Contoh: G-12345ABCDE" className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all font-mono text-sm" />
+                                </div>
+                                <div>
+                                    <label className="block text-[12px] font-bold text-slate-500 mb-2">Facebook Pixel ID</label>
+                                    <input type="text" value={seoForm.facebookPixel} onChange={e => setSeoForm({ ...seoForm, facebookPixel: e.target.value })} placeholder="Contoh: 123456789012345" className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all font-mono text-sm" />
+                                </div>
+                                <div>
+                                    <label className="block text-[12px] font-bold text-slate-500 mb-2">TikTok Pixel ID</label>
+                                    <input type="text" value={seoForm.tiktokPixel} onChange={e => setSeoForm({ ...seoForm, tiktokPixel: e.target.value })} placeholder="Contoh: CE123ABCDEF456" className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all font-mono text-sm" />
+                                </div>
+                                <div className="flex justify-end pt-4 border-t border-slate-100 mt-6">
+                                    <button type="submit" className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-md flex items-center gap-2">
+                                        <Save className="w-4 h-4" /> Simpan Pengaturan SEO
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     )}
 

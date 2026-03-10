@@ -10,6 +10,9 @@ import {
 import {
   NAV, HERO_CARDS, PRODUCTS, FEATURES, STEPS, TESTI, FOOTCOLS, SOCIALS
 } from "@/data/constants";
+import BannerSlider from "@/components/BannerSlider";
+import AnnouncementBar from "@/components/AnnouncementBar";
+
 
 // ─── Navbar ────────────────────────────────────────────────────────
 const Navbar = ({ scrolled, mOpen, setMOpen }: { scrolled: boolean, mOpen: boolean, setMOpen: (v: boolean) => void }) => (
@@ -62,28 +65,28 @@ const Navbar = ({ scrolled, mOpen, setMOpen }: { scrolled: boolean, mOpen: boole
 );
 
 // ─── Hero ──────────────────────────────────────────────────────────
-const Hero = () => {
+const Hero = ({ banners }: { banners: any[] }) => {
   const { ref, v } = useReveal();
   return (
-    <section id="beranda" className="grid-bg relative min-h-screen flex items-center overflow-hidden pt-16">
+    <section id="beranda" className="grid-bg relative min-h-[85vh] flex items-center overflow-hidden">
       <div className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full opacity-[.17] pointer-events-none"
         style={{ background: "radial-gradient(circle,#38D9F5,transparent 70%)", filter: "blur(80px)" }} />
       <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full opacity-[.12] pointer-events-none"
         style={{ background: "radial-gradient(circle,#C9A84C,transparent 70%)", filter: "blur(80px)" }} />
 
-      <div className="container mx-auto px-6 py-24 grid md:grid-cols-2 gap-16 items-center relative z-10">
+      <div className="container mx-auto px-6 py-12 md:py-24 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center relative z-10">
         <div ref={ref} className={`reveal ${v ? "visible" : ""}`}>
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-6 border border-cyan/30 bg-cyan/[.08]">
             <span className="w-2 h-2 rounded-full bg-mint animate-pulse" />
             <span className="font-body text-cyan text-xs">Platform Top Up #1 Terpercaya</span>
           </div>
-          <h1 className="font-heading leading-[.95] mb-3 text-shadow-cyan" style={{ fontSize: "clamp(3.5rem,7vw,5.5rem)" }}>
+          <h1 className="font-heading leading-[.95] mb-3 text-shadow-cyan" style={{ fontSize: "clamp(3rem,6vw,4.5rem)" }}>
             <span className="text-white block">TOP UP GAMES</span>
           </h1>
-          <h2 className="font-heading text-gradient-gold leading-[.95] mb-6" style={{ fontSize: "clamp(2rem,4.5vw,3.5rem)" }}>
+          <h2 className="font-heading text-gradient-gold leading-[.95] mb-6" style={{ fontSize: "clamp(1.8rem,4vw,3rem)" }}>
             TERCEPAT & TERMURAH
           </h2>
-          <p className="font-body text-slate-400 text-base md:text-lg leading-relaxed max-w-lg mb-8">
+          <p className="font-body text-slate-400 text-base leading-relaxed max-w-lg mb-8">
             Ribuan produk voucher & top up untuk <span className="text-cyan font-semibold">100+ game populer</span>. Proses otomatis nonstop 24 jam.
           </p>
           <div className="flex flex-wrap gap-4">
@@ -92,34 +95,12 @@ const Hero = () => {
           </div>
         </div>
 
-        <div className="relative h-[460px] hidden md:block">
-          {HERO_CARDS.map((c, i) => (
-            <div key={c.name} className="tilt-card glass-card absolute rounded-2xl p-4 flex items-center gap-3 w-52"
-              style={{
-                top: `${[8, 22, 42, 60, 76][i]}%`,
-                left: `${[0, 42, 5, 44, 18][i]}%`,
-                animationName: c.anim, animationDuration: `${3.5 + i * .5}s`,
-                animationTimingFunction: "ease-in-out", animationIterationCount: "infinite",
-                animationDelay: c.delay,
-              }}>
-              <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 font-heading text-base"
-                style={{ background: `linear-gradient(135deg,${c.bg},${c.accent}33)`, border: `1px solid ${c.accent}44`, color: c.accent }}>
-                {c.abbr}
-              </div>
-              <div className="overflow-hidden">
-                <p className="font-body text-white text-sm font-semibold truncate">{c.name}</p>
-                <span className="font-body inline-flex items-center gap-1 text-[10px] text-mint bg-mint/10 px-2 py-0.5 rounded-full mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-mint animate-pulse" />
-                  Tersedia
-                </span>
-              </div>
-            </div>
-          ))}
+        <div className={`reveal flex justify-center w-full lg:max-w-none ${v ? "visible" : ""}`}>
+          <BannerSlider banners={banners} />
         </div>
       </div>
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-40">
-        <div className="w-px h-10 bg-gradient-to-b from-transparent via-cyan to-transparent animate-pulse" />
-        <p className="font-body text-cyan text-[10px] tracking-[.25em]">SCROLL</p>
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-20">
+        <div className="w-px h-8 bg-gradient-to-b from-transparent via-cyan to-transparent animate-pulse" />
       </div>
     </section>
   );
@@ -301,6 +282,11 @@ export default function Home() {
   const [mOpen, setMOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
+  // Fetch Public Content (Banners & Announcements)
+  const { data: contentData } = useSWR('http://localhost:3001/public/products/content', fetcher);
+  const banners = contentData?.banners || [];
+  const announcements = contentData?.announcements || [];
+
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", fn);
@@ -310,8 +296,15 @@ export default function Home() {
   return (
     <div id="top" className="bg-navy-deep text-white overflow-x-hidden">
       <Navbar scrolled={scrolled} mOpen={mOpen} setMOpen={setMOpen} />
-      <Hero />
+
+      {/* Spacer for navbar height if needed, OR we put announcements below navbar */}
+      <div className="pt-16">
+        <AnnouncementBar announcements={announcements} />
+      </div>
+
+      <Hero banners={banners} />
       <Stats />
+
       <Features />
       <ProductsList />
       <HowItWorks />

@@ -146,7 +146,7 @@ export class DashboardService {
                 total: trxSuccess + trxFailed + trxPending
             },
             users: {
-                registeredCustomers
+                activeResellers: registeredCustomers
             },
             recentOrders: recentOrders.map((o: any) => ({
                 id: o.orderNumber || o.id,
@@ -156,7 +156,7 @@ export class DashboardService {
                 productName: o.productSku?.product?.name || 'Voucher',
                 createdAt: o.createdAt
             })),
-            topCustomers: topCustomers,
+            topResellers: topCustomers,
             alerts,
             chartData
         };

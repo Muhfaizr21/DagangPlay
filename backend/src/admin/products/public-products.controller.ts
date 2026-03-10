@@ -14,4 +14,19 @@ export class PublicProductsController {
     async getCategoryBySlug(@Param('slug') slug: string) {
         return this.productsService.getPublicCategoryBySlug(slug);
     }
+
+    @Get('content')
+    async getContent() {
+        return this.productsService.getPublicContent();
+    }
+
+    @Get('reseller-prices')
+    async getResellerPrices() {
+        return this.productsService.getPublicResellerPrices();
+    }
+
+    @Get('full-catalog')
+    async getFullCatalog() {
+        return this.productsService.getPublicFullCatalog();
+    }
 }

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import MerchantLayout from '../../../components/merchant/MerchantLayout';
 import useSWR from 'swr';
 import axios from 'axios';
-import { Palette, Image as ImageIcon, MessageSquare, Plus, Trash2, Power } from 'lucide-react';
+import { Palette, Image as ImageIcon, MessageSquare, Plus, Trash2, Power, Lock, CheckCircle2 } from 'lucide-react';
 
 const fetcher = (url: string) => {
     const token = localStorage.getItem('admin_token');
@@ -20,6 +20,18 @@ export default function MerchantContentPage() {
 
     const [isAddBannerModal, setIsAddBannerModal] = useState(false);
     const [bannerForm, setBannerForm] = useState({ title: '', imageUrl: '', linkUrl: '', location: 'HERO' });
+
+    // Merchant Plan
+    const [merchantPlan, setMerchantPlan] = useState('PRO');
+    const [activeTheme, setActiveTheme] = useState('light');
+
+    React.useEffect(() => {
+        const userData = localStorage.getItem('admin_user');
+        if (userData) {
+            const parsed = JSON.parse(userData);
+            setMerchantPlan(parsed.plan || 'PRO');
+        }
+    }, []);
 
     const handleCreateBanner = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -143,10 +155,67 @@ export default function MerchantContentPage() {
 
                     {/* Theme Mockup */}
                     {activeTab === 'theme' && (
-                        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 text-center py-16">
-                            <Palette className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                            <h3 className="text-lg font-bold text-slate-800 mb-2">Tema & Warna</h3>
-                            <p className="text-slate-500 px-8 text-sm max-w-md mx-auto">Ubah warna primary dan secondary toko Anda. Editor tampilan sedang dalam pembaruan V2.</p>
+                        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+                            <h3 className="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2">
+                                <Palette className="w-5 h-5 text-indigo-600" /> Pilihan Template & Tema
+                            </h3>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Basic Theme */}
+                                <div className={`border-2 rounded-2xl p-5 relative transition-all ${activeTheme === 'light' ? 'border-indigo-500 bg-indigo-50/30' : 'border-slate-200 hover:border-indigo-300'}`}>
+                                    {activeTheme === 'light' && (
+                                        <div className="absolute top-4 right-4 text-indigo-600">
+                                            <CheckCircle2 className="w-6 h-6" />
+                                        </div>
+                                    )}
+                                    <div className="w-full h-32 bg-slate-100 rounded-xl mb-4 border border-slate-200 flex flex-col items-center justify-center gap-2">
+                                        <div className="w-16 h-2 bg-slate-300 rounded-full"></div>
+                                        <div className="w-24 h-2 bg-slate-200 rounded-full"></div>
+                                        <div className="w-20 h-2 bg-slate-200 rounded-full"></div>
+                                    </div>
+                                    <h4 className="font-bold text-slate-800 text-lg mb-1">Tema Dasar (Light)</h4>
+                                    <p className="text-slate-500 text-xs mb-4">Tampilan default yang bersih dan cepat, tersedia untuk seluruh level akun merchant.</p>
+
+                                    <button onClick={() => setActiveTheme('light')} className={`w-full py-2.5 rounded-xl font-bold text-sm transition-colors ${activeTheme === 'light' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}>
+                                        {activeTheme === 'light' ? 'Tema Aktif' : 'Gunakan Tema Ini'}
+                                    </button>
+                                </div>
+
+                                {/* Premium Theme */}
+                                <div className={`border-2 rounded-2xl p-5 relative transition-all ${(merchantPlan === 'PRO') ? 'border-slate-200 bg-slate-50 opacity-80' : activeTheme === 'dark' ? 'border-indigo-500 bg-indigo-50/30' : 'border-slate-200 hover:border-indigo-300'}`}>
+                                    {activeTheme === 'dark' && merchantPlan !== 'PRO' && (
+                                        <div className="absolute top-4 right-4 text-indigo-600">
+                                            <CheckCircle2 className="w-6 h-6" />
+                                        </div>
+                                    )}
+                                    {(merchantPlan === 'PRO') && (
+                                        <div className="absolute top-4 right-4 text-red-500 bg-red-50 p-1.5 rounded-lg border border-red-100">
+                                            <Lock className="w-4 h-4" />
+                                        </div>
+                                    )}
+
+                                    <div className="w-full h-32 bg-slate-800 rounded-xl mb-4 border border-slate-700 flex flex-col items-center justify-center gap-2">
+                                        <div className="w-16 h-2 bg-slate-600 rounded-full"></div>
+                                        <div className="w-24 h-2 bg-slate-700 rounded-full"></div>
+                                        <div className="w-20 h-2 bg-slate-700 rounded-full"></div>
+                                    </div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <h4 className="font-bold text-slate-800 text-lg">Tema Premium (Dark)</h4>
+                                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">💎 LEGEND & UP</span>
+                                    </div>
+                                    <p className="text-slate-500 text-xs mb-4">Tampilan elegan mode gelap untuk meningkatkan konversi dan kenyamanan mata.</p>
+
+                                    {merchantPlan === 'PRO' ? (
+                                        <button onClick={() => alert('Fitur ini khusus akun LEGEND dan SUPREME. Silakan upgrade tier merchant Anda.')} className="w-full py-2.5 rounded-xl font-bold text-sm bg-slate-200 text-slate-500 cursor-not-allowed flex items-center justify-center gap-2">
+                                            <Lock className="w-4 h-4" /> Terkunci (Upgrade Required)
+                                        </button>
+                                    ) : (
+                                        <button onClick={() => setActiveTheme('dark')} className={`w-full py-2.5 rounded-xl font-bold text-sm transition-colors ${activeTheme === 'dark' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}>
+                                            {activeTheme === 'dark' ? 'Tema Aktif' : 'Gunakan Tema Ini'}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>

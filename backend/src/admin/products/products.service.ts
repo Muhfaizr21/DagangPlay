@@ -475,4 +475,94 @@ export class ProductsService {
 
         return mergedResult;
     }
+
+    // 8. Get Public Content (Banners & Announcements) for Landing Page
+    async getPublicContent() {
+        const officialMerchant = await this.prisma.merchant.findFirst({
+            where: { isOfficial: true }
+        });
+
+        if (!officialMerchant) return { banners: [], announcements: [] };
+
+        const [banners, announcements] = await Promise.all([
+            this.prisma.banner.findMany({
+                where: { merchantId: officialMerchant.id, isActive: true },
+                orderBy: { sortOrder: 'asc' }
+            }),
+            this.prisma.announcement.findMany({
+                where: { merchantId: officialMerchant.id, isActive: true },
+                orderBy: { createdAt: 'desc' }
+            })
+        ]);
+
+        return { banners, announcements };
+    }
+
+    // 9. Get Public Reseller Sample Prices
+    async getPublicResellerPrices() {
+        // Find a few sample popular products
+        const sampleSkus = await this.prisma.productSku.findMany({
+            where: {
+                OR: [
+                    { name: { contains: 'Diamonds', mode: 'insensitive' } },
+                    { name: { contains: 'UC', mode: 'insensitive' } },
+                    { name: { contains: 'Vouchers', mode: 'insensitive' } },
+                ],
+                status: 'ACTIVE'
+            },
+            include: {
+                product: {
+                    include: { category: true }
+                }
+            },
+            take: 3,
+            orderBy: { basePrice: 'asc' }
+        });
+
+        return sampleSkus.map(sku => ({
+            name: `${sku.product.name} ${sku.name}`,
+            normal: Number(sku.priceNormal),
+            pro: Number(sku.pricePro),
+            legend: Number(sku.priceLegend),
+            supreme: Number(sku.priceSupreme),
+            img: sku.product.category.image || 'https://via.placeholder.com/50'
+        }));
+    }
+
+    // 10. Get Full Public Catalog for Reseller Page
+    async getPublicFullCatalog() {
+        const categories = await this.prisma.category.findMany({
+            include: {
+                products: {
+                    include: {
+                        skus: {
+                            where: { status: 'ACTIVE' },
+                            orderBy: { basePrice: 'asc' }
+                        }
+                    }
+                }
+            },
+            orderBy: { name: 'asc' }
+        });
+
+        return categories.map(cat => ({
+            id: cat.id,
+            name: cat.name,
+            icon: cat.icon,
+            image: cat.image,
+            products: cat.products.map(p => ({
+                id: p.id,
+                name: p.name,
+                image: p.thumbnail || cat.image,
+                skus: p.skus.map(s => ({
+                    id: s.id,
+                    name: s.name,
+                    normal: Number(s.priceNormal),
+                    pro: Number(s.pricePro),
+                    legend: Number(s.priceLegend),
+                    supreme: Number(s.priceSupreme)
+                }))
+            }))
+        }));
+    }
 }

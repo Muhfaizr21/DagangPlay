@@ -27,7 +27,6 @@ const MENU_ITEMS = [
     { label: 'Keuangan & Saldo', icon: CreditCard, href: '/merchant/finance' },
     { label: 'Promo & Voucher', icon: Tag, href: '/merchant/promos' },
     { label: 'Tampilan Toko', icon: Palette, href: '/merchant/content' },
-    { label: 'Kelola Reseller', icon: Users, href: '/merchant/resellers' },
     { label: 'Tim / Staff', icon: Users, href: '/merchant/team' },
     { label: 'Support & Tiket', icon: Ticket, href: '/merchant/support' },
     { label: 'Subscription & Billing', icon: Zap, href: '/merchant/subscription' },
