@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import MerchantLayout from '../../../components/merchant/MerchantLayout';
 import useSWR from 'swr';
 import axios from 'axios';
-import { CreditCard, Wallet, ArrowDownToLine, ArrowUpToLine, Gift, RefreshCcw, Lock, Zap, Clock } from 'lucide-react';
+import { CreditCard, Wallet, ArrowDownToLine, ArrowUpToLine, Gift, RefreshCcw, Lock, Zap, Clock, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 const fetcher = (url: string) => {
     const token = localStorage.getItem('admin_token');
@@ -133,19 +133,78 @@ export default function MerchantFinancePage() {
                                     <tr><td className="p-6 text-center text-slate-400 text-sm">Belum ada deposit</td></tr>
                                 ) : (
                                     financeData?.deposits?.map((d: any) => (
-                                        <tr key={d.id} className="hover:bg-slate-50">
-                                            <td className="p-4">
-                                                <p className="font-bold text-sm text-slate-700">Rp {Number(d.amount).toLocaleString('id-ID')}</p>
-                                                <p className="text-xs text-slate-500 mt-1">{new Date(d.createdAt).toLocaleDateString()}</p>
-                                            </td>
-                                            <td className="p-4 text-right">
-                                                <span className={`px-2 py-1 rounded text-[10px] font-bold ${d.status === 'SUCCESS' ? 'bg-emerald-100 text-emerald-700' :
-                                                    d.status === 'PENDING' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
-                                                    }`}>
-                                                    {d.status}
-                                                </span>
-                                            </td>
-                                        </tr>
+                                        <React.Fragment key={d.id}>
+                                            <tr className="hover:bg-slate-50 border-b border-slate-50 last:border-0">
+                                                <td className="p-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`p-2 rounded-lg ${d.status === 'CONFIRMED' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-400'}`}>
+                                                            <ArrowDownToLine className="w-4 h-4" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-bold text-sm text-slate-700">Rp {Number(d.amount).toLocaleString('id-ID')}</p>
+                                                            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{d.method.replace('TRIPAY_', '').replace('_', ' ')}</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 text-xs text-slate-500 font-medium hidden md:table-cell">
+                                                    {new Date(d.createdAt).toLocaleDateString()}
+                                                </td>
+                                                <td className="p-4 text-right">
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${d.status === 'CONFIRMED' ? 'bg-emerald-100 text-emerald-700' :
+                                                            d.status === 'PENDING' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                                                            }`}>
+                                                            {d.status}
+                                                        </span>
+                                                        {d.status === 'PENDING' && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    const win = window.open(d.tripayPaymentUrl, '_blank');
+                                                                    if (!win) alert('Bayar: ' + d.tripayPaymentUrl);
+                                                                }}
+                                                                className="text-[10px] text-indigo-600 font-bold hover:underline"
+                                                            >
+                                                                Bayar Sekarang &rarr;
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {/* Show Instructions Inline if PENDING */}
+                                            {d.status === 'PENDING' && d.tripayResponse?.instructions && (
+                                                <tr>
+                                                    <td colSpan={3} className="p-0">
+                                                        <details className="group bg-slate-50/50">
+                                                            <summary className="p-3 text-[11px] font-bold text-slate-500 cursor-pointer list-none flex items-center gap-2 hover:bg-slate-100 transition-colors">
+                                                                <HelpCircle className="w-3 h-3 text-indigo-400" /> Lihat Cara Bayar
+                                                                <span className="bg-white border border-slate-200 px-2 py-0.5 rounded ml-2 font-mono text-indigo-600">{d.tripayVaNumber || 'Kode Bayar'}</span>
+                                                            </summary>
+                                                            <div className="p-4 pt-0 space-y-4 max-h-[300px] overflow-y-auto">
+                                                                {d.tripayQrUrl && (
+                                                                    <div className="text-center py-2">
+                                                                        <img src={d.tripayQrUrl} alt="QR Code" className="w-32 h-32 mx-auto mb-2 bg-white p-2 rounded-xl border" />
+                                                                        <p className="text-[10px] text-slate-400 italic">Scan QR di atas</p>
+                                                                    </div>
+                                                                )}
+                                                                {d.tripayResponse.instructions.map((ins: any, i: number) => (
+                                                                    <div key={i} className="bg-white p-3 rounded-xl border border-slate-100">
+                                                                        <p className="text-[11px] font-black text-slate-800 mb-2 flex items-center gap-2">
+                                                                            <span className="w-4 h-4 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center text-[10px]">{i + 1}</span>
+                                                                            {ins.title}
+                                                                        </p>
+                                                                        <ul className="space-y-2">
+                                                                            {ins.steps.map((st: string, si: number) => (
+                                                                                <li key={si} className="text-[11px] text-slate-600 list-disc list-inside leading-relaxed" dangerouslySetInnerHTML={{ __html: st }} />
+                                                                            ))}
+                                                                        </ul>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </details>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </React.Fragment>
                                     ))
                                 )}
                             </tbody>

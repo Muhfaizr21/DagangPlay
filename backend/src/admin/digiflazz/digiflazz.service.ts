@@ -329,4 +329,103 @@ export class DigiflazzService {
         }
         throw new Error('Gagal ambil saldo: ' + JSON.stringify(resJson));
     }
+
+    /**
+     * Place Order to Digiflazz (Automated Fulfillment)
+     */
+    async placeOrder(orderId: string) {
+        const order = await this.prisma.order.findUnique({
+            where: { id: orderId },
+            include: { productSku: true }
+        });
+
+        if (!order) throw new NotFoundException('Order not found for fulfillment');
+        if (order.fulfillmentStatus === 'SUCCESS') return;
+
+        const { username, key, url } = this.getDigiflazzConfig();
+        // Sign: md5(username + apikey + ref_id)
+        const sign = crypto.createHash('md5').update(username + key + order.orderNumber).digest('hex');
+
+        // Prepare customer number (standard format for ML/FF etc)
+        const customerNo = order.gameUserServerId ? `${order.gameUserId}${order.gameUserServerId}` : order.gameUserId;
+
+        const payload = {
+            username,
+            buyer_sku_code: order.productSku.supplierCode,
+            customer_no: customerNo,
+            ref_id: order.orderNumber,
+            testing: process.env.NODE_ENV !== 'production', // Sandbox mode if not prod
+            sign
+        };
+
+        let resJson: any;
+        try {
+            const response = await fetch(`${url}/transaction`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            resJson = await response.json() as any;
+
+            // Log fulfillment attempt
+            await this.prisma.supplierLog.create({
+                data: {
+                    supplierId: order.productSku.supplierId,
+                    orderId: order.id,
+                    method: 'POST',
+                    endpoint: `${url}/transaction`,
+                    requestBody: payload as any,
+                    responseBody: resJson as any,
+                    httpStatus: response.status,
+                    isSuccess: resJson.data?.status === 'Sukses' || resJson.data?.status === 'Pending'
+                }
+            });
+
+            if (resJson.data) {
+                const data = resJson.data;
+                const statusMap: any = {
+                    'Sukses': 'SUCCESS',
+                    'Gagal': 'FAILED',
+                    'Pending': 'PROCESSING'
+                };
+
+                await this.prisma.order.update({
+                    where: { id: order.id },
+                    data: {
+                        fulfillmentStatus: statusMap[data.status] || 'PROCESSING',
+                        supplierRefId: data.ref_id,
+                        serialNumber: data.sn,
+                        supplierResponse: data,
+                        processedAt: new Date(),
+                        completedAt: data.status === 'Sukses' ? new Date() : null,
+                        failedAt: data.status === 'Gagal' ? new Date() : null,
+                        failReason: data.status === 'Gagal' ? data.message : null
+                    }
+                });
+
+                return data;
+            } else {
+                // Digiflazz failed at API level
+                await this.prisma.order.update({
+                    where: { id: order.id },
+                    data: {
+                        fulfillmentStatus: 'FAILED',
+                        failReason: resJson.data?.message || 'Digiflazz API connection error'
+                    }
+                });
+                return resJson;
+            }
+        } catch (err: any) {
+            console.error('[DigiflazzService] Fulfillment Error:', err);
+            await this.prisma.order.update({
+                where: { id: order.id },
+                data: {
+                    fulfillmentStatus: 'FAILED',
+                    failReason: err.message || 'System error'
+                }
+            });
+            throw err;
+        }
+    }
 }

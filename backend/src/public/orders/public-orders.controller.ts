@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { PublicOrdersService } from './public-orders.service';
 import { TripayService } from '../../tripay/tripay.service';
 
@@ -17,5 +17,10 @@ export class PublicOrdersController {
     @Post('checkout')
     async checkout(@Body() body: any) {
         return this.publicOrdersService.createCheckout(body);
+    }
+
+    @Get(':orderNumber')
+    async getOrder(@Param('orderNumber') orderNumber: string) {
+        return this.publicOrdersService.getOrderDetails(orderNumber);
     }
 }

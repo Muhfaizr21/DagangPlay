@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import MerchantLayout from '../../../components/merchant/MerchantLayout';
 import useSWR from 'swr';
 import axios from 'axios';
-import { CreditCard, CheckCircle, Clock, Search, Zap, Check, ArrowRight, Shield, Download } from 'lucide-react';
+import { CreditCard, CheckCircle, Clock, Search, Zap, Check, ArrowRight, Shield, Download, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 const fetcher = (url: string) => {
     const token = localStorage.getItem('admin_token');
@@ -22,13 +22,23 @@ export default function MerchantSubscriptionPage() {
     const handleCreateInvoice = async () => {
         try {
             const token = localStorage.getItem('admin_token');
-            // Assuming default upgrade to PRO plan
-            await axios.post('http://localhost:3001/merchant/subscription/invoices', { plan: 'PRO', amount: 250000 }, { headers: { Authorization: `Bearer ${token}` } });
-            alert('Tagihan pembayaran berhasil dibuat!');
+            // Default to PRO for now, but in real app would show a plan selector
+            const res = await axios.post('http://localhost:3001/merchant/subscription/invoices',
+                { plan: 'PRO', amount: 250000, method: 'QRIS' },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (res.data.tripayPaymentUrl) {
+                window.open(res.data.tripayPaymentUrl, '_blank');
+                alert('Tagihan pembayaran berhasil dibuat! Silakan selesaikan pembayaran di tab baru yang terbuka.');
+            } else {
+                alert('Tagihan pembayaran berhasil dibuat!');
+            }
+
             mutateStatus();
             mutateInvoices();
         } catch (err: any) {
-            alert('Gagal membuat tagihan');
+            alert(err.response?.data?.message || 'Gagal membuat tagihan');
         }
     };
 
@@ -130,39 +140,93 @@ export default function MerchantSubscriptionPage() {
                                             <tr><td colSpan={4} className="p-12 text-center text-slate-400">Belum ada riwayat tagihan.</td></tr>
                                         ) : (
                                             invoices.map((inv: any) => (
-                                                <tr key={inv.id} className="hover:bg-slate-50 transition-colors">
-                                                    <td className="p-4">
-                                                        <p className="font-bold text-slate-700">{inv.invoiceNo}</p>
-                                                        <p className="text-xs text-slate-500 mt-1">{new Date(inv.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long' })}</p>
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <p className="font-bold text-slate-700 text-sm">Paket {inv.plan}</p>
-                                                        <p className="text-xs font-medium text-emerald-600 mt-1">Rp {Number(inv.totalAmount).toLocaleString('id-ID')}</p>
-                                                    </td>
-                                                    <td className="p-4 text-center">
-                                                        {inv.status === 'PAID' ? (
-                                                            <span className="inline-block px-3 py-1 bg-emerald-50 border border-emerald-100 text-emerald-600 text-xs font-bold rounded-lg uppercase tracking-wider"><CheckCircle className="w-3 h-3 inline mr-1" /> PAID</span>
-                                                        ) : inv.status === 'PENDING' ? (
-                                                            <span className="inline-block px-3 py-1 bg-amber-50 border border-amber-100 text-amber-600 text-xs font-bold rounded-lg uppercase tracking-wider"><Clock className="w-3 h-3 inline mr-1" /> DIPROSES</span>
-                                                        ) : (
-                                                            <span className="inline-block px-3 py-1 bg-rose-50 border border-rose-100 text-rose-600 text-xs font-bold rounded-lg uppercase tracking-wider">BELUM BAYAR</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="p-4 flex gap-2 justify-end">
-                                                        <button className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold transition-colors" title="Download PDF">
-                                                            <Download className="w-4 h-4" />
-                                                        </button>
-
-                                                        {inv.status === 'UNPAID' && (
-                                                            <button
-                                                                onClick={() => { setSelectedInvoice(inv); setIsUploadModalOpen(true); }}
-                                                                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-indigo-500/20"
-                                                            >
-                                                                Upload Bukti
-                                                            </button>
-                                                        )}
-                                                    </td>
-                                                </tr>
+                                                <React.Fragment key={inv.id}>
+                                                    <tr className="hover:bg-slate-50 transition-colors">
+                                                        <td className="p-4">
+                                                            <p className="font-bold text-slate-700">{inv.invoiceNo}</p>
+                                                            <p className="text-xs text-slate-500 mt-1">{new Date(inv.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long' })}</p>
+                                                        </td>
+                                                        <td className="p-4">
+                                                            <p className="font-bold text-slate-700 text-sm">Paket {inv.plan}</p>
+                                                            <p className="text-xs font-medium text-emerald-600 mt-1">Rp {Number(inv.totalAmount).toLocaleString('id-ID')}</p>
+                                                        </td>
+                                                        <td className="p-4 text-center">
+                                                            <div className="flex flex-col items-center gap-1">
+                                                                {inv.status === 'PAID' ? (
+                                                                    <span className="inline-block px-3 py-1 bg-emerald-50 border border-emerald-100 text-emerald-600 text-xs font-bold rounded-lg uppercase tracking-wider"><CheckCircle className="w-3 h-3 inline mr-1" /> PAID</span>
+                                                                ) : inv.status === 'PENDING' ? (
+                                                                    <span className="inline-block px-3 py-1 bg-amber-50 border border-amber-100 text-amber-600 text-xs font-bold rounded-lg uppercase tracking-wider"><Clock className="w-3 h-3 inline mr-1" /> DIPROSES</span>
+                                                                ) : (
+                                                                    <span className="inline-block px-3 py-1 bg-rose-50 border border-rose-100 text-rose-600 text-xs font-bold rounded-lg uppercase tracking-wider">BELUM BAYAR</span>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-4 text-right">
+                                                            <div className="flex gap-2 justify-end">
+                                                                {inv.status === 'UNPAID' && inv.tripayPaymentUrl && (
+                                                                    <button
+                                                                        onClick={() => window.open(inv.tripayPaymentUrl, '_blank')}
+                                                                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-indigo-500/20"
+                                                                    >
+                                                                        Bayar Sekarang
+                                                                    </button>
+                                                                )}
+                                                                {inv.status === 'UNPAID' && !inv.tripayPaymentUrl && (
+                                                                    <button
+                                                                        onClick={() => { setSelectedInvoice(inv); setIsUploadModalOpen(true); }}
+                                                                        className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition-all"
+                                                                    >
+                                                                        Upload Bukti
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    {/* Inline Instructions for Unpaid Invoices */}
+                                                    {inv.status === 'UNPAID' && inv.tripayResponse?.instructions && (
+                                                        <tr>
+                                                            <td colSpan={4} className="p-0 border-b border-slate-100 bg-slate-50/30">
+                                                                <details className="group">
+                                                                    <summary className="p-4 text-[11px] font-bold text-indigo-600 cursor-pointer list-none flex items-center justify-center gap-2 hover:bg-indigo-50/50">
+                                                                        <HelpCircle className="w-3 h-3" /> Tampilkan Instruksi & Kode Pembayaran
+                                                                    </summary>
+                                                                    <div className="p-6 bg-white border-t border-slate-100">
+                                                                        <div className="flex flex-col md:flex-row gap-8">
+                                                                            <div className="flex-1 space-y-4">
+                                                                                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                                                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Kode Pembayaran / VA</p>
+                                                                                    <p className="text-2xl font-black text-slate-800 tracking-wider">{inv.tripayResponse.pay_code}</p>
+                                                                                </div>
+                                                                                <div className="grid grid-cols-1 gap-2">
+                                                                                    {inv.tripayResponse.instructions.map((ins: any, i: number) => (
+                                                                                        <div key={i} className="border border-slate-100 rounded-xl overflow-hidden">
+                                                                                            <details className="group/step">
+                                                                                                <summary className="p-3 text-[11px] font-bold text-slate-600 cursor-pointer list-none flex justify-between items-center bg-slate-50/50 group-open/step:bg-slate-100">
+                                                                                                    {ins.title} <ChevronDown className="w-3 h-3 transition-transform group-open/step:rotate-180" />
+                                                                                                </summary>
+                                                                                                <ul className="p-4 space-y-2 bg-white">
+                                                                                                    {ins.steps.map((st: string, si: number) => (
+                                                                                                        <li key={si} className="text-[11px] text-slate-500 list-disc list-inside leading-relaxed" dangerouslySetInnerHTML={{ __html: st }} />
+                                                                                                    ))}
+                                                                                                </ul>
+                                                                                            </details>
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            </div>
+                                                                            {inv.tripayResponse.qr_url && (
+                                                                                <div className="w-full md:w-auto text-center">
+                                                                                    <img src={inv.tripayResponse.qr_url} alt="QR" className="w-32 h-32 mx-auto border p-2 bg-white rounded-xl mb-2" />
+                                                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Scan QRIS</p>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </details>
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </React.Fragment>
                                             ))
                                         )}
                                     </tbody>

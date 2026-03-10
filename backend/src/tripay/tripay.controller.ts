@@ -3,9 +3,15 @@ import { TripayService } from './tripay.service';
 import type { Request, Response } from 'express';
 import { PrismaService } from '../prisma.service';
 
+import { DigiflazzService } from '../admin/digiflazz/digiflazz.service';
+
 @Controller('tripay')
 export class TripayController {
-    constructor(private readonly tripayService: TripayService, private prisma: PrismaService) { }
+    constructor(
+        private readonly tripayService: TripayService,
+        private prisma: PrismaService,
+        private digiflazz: DigiflazzService
+    ) { }
 
     /**
      * Get available payment channels for checkout page
@@ -25,63 +31,157 @@ export class TripayController {
         @Res() res: Response
     ) {
         try {
-            const rawBody = JSON.stringify(req.body); // Ensure raw body string based on body parser if needed
-            // Actually, we should get raw body for signature verification accurately.
-            // For now, let's just use JSON.stringify(req.body) as a decent approximation if raw body is not setup.
+            // Raw body should be used for accurate signature verification
+            // In NestJS, we often need a custom middleware or pipe to get rawBody.
+            // Using JSON.stringify(req.body) as a fallback if request is already parsed.
+            const rawBody = JSON.stringify(req.body);
 
             const isValid = this.tripayService.verifySignature(signature, rawBody);
 
             if (!isValid) {
+                console.warn('[TripayCallback] Invalid signature from', req.ip);
                 return res.status(HttpStatus.FORBIDDEN).json({ success: false, message: 'Invalid signature' });
             }
 
             const data = req.body;
+            const ref = data.merchant_ref;
 
-            // Handle Payment Status here
-            // e.g. PAID, FAILED, EXPIRED
-            console.log('Tripay Callback Data:', data);
+            console.log(`[TripayCallback] Received ${data.status} for Ref: ${ref}`);
 
             if (data.status === 'PAID') {
-                const isDeposit = await this.prisma.deposit.findUnique({
-                    where: { id: data.merchant_ref }
-                });
-
-                if (isDeposit && isDeposit.status !== 'SUCCESS') {
-                    // It's a deposit topup
-                    await this.prisma.deposit.update({
-                        where: { id: isDeposit.id },
-                        data: { status: 'SUCCESS' }
+                // 1. Check if it's an ORDER (Ref: ORD-...)
+                if (ref.startsWith('ORD-')) {
+                    const order = await this.prisma.order.findUnique({
+                        where: { orderNumber: ref }
                     });
 
-                    // Add balance to merchant
-                    await this.prisma.user.update({
-                        where: { id: isDeposit.userId },
-                        data: { balance: { increment: isDeposit.amount } }
-                    });
+                    if (order && order.paymentStatus !== 'PAID') {
+                        await this.prisma.$transaction([
+                            this.prisma.order.update({
+                                where: { id: order.id },
+                                data: {
+                                    paymentStatus: 'PAID',
+                                    paidAt: new Date()
+                                }
+                            }),
+                            this.prisma.payment.update({
+                                where: { orderId: order.id },
+                                data: {
+                                    status: 'PAID',
+                                    paidAt: new Date(),
+                                    tripayResponse: data as any
+                                }
+                            })
+                        ]);
 
-                    // Deduct balance from Super Admin conceptually (assuming Central Balance model)
-                    const superAdmin = await this.prisma.user.findFirst({
-                        where: { role: 'SUPER_ADMIN' }
-                    });
-                    if (superAdmin) {
-                        await this.prisma.user.update({
-                            where: { id: superAdmin.id },
-                            data: { balance: { decrement: isDeposit.amount } }
-                        });
+                        // TRIGGER FULFILLMENT AUTOMATICALLY
+                        try {
+                            console.log(`[TripayCallback] Triggering fulfillment for order: ${order.orderNumber}`);
+                            await this.digiflazz.placeOrder(order.id);
+                        } catch (fulfillErr: any) {
+                            console.error(`[TripayCallback] Fulfillment failed for ${order.orderNumber}:`, fulfillErr.message);
+                        }
                     }
-
-                    console.log(`Deposit ${isDeposit.id} success! Merchanct Top-Up Rp ${isDeposit.amount}.`);
                 }
 
-                // TODO: Update order status based on data.reference or data.merchant_ref
-                // if (data.status === 'PAID') {
-                //      process top-up with Digiflazz
-                // }
+                // 2. Check if it's a DEPOSIT (Ref: DEP-...)
+                else if (ref.startsWith('DEP-')) {
+                    const depositId = ref.replace('DEP-', '');
+                    const deposit = await this.prisma.deposit.findUnique({
+                        where: { id: depositId }
+                    });
+
+                    if (deposit && deposit.status !== 'CONFIRMED') {
+                        await this.prisma.$transaction(async (tx) => {
+                            await tx.deposit.update({
+                                where: { id: deposit.id },
+                                data: {
+                                    status: 'CONFIRMED',
+                                    tripayResponse: data as any
+                                }
+                            });
+
+                            // Add balance to merchant
+                            const user = await tx.user.update({
+                                where: { id: deposit.userId },
+                                data: { balance: { increment: deposit.amount } }
+                            });
+
+                            // Create Balance Transaction Record
+                            await tx.balanceTransaction.create({
+                                data: {
+                                    userId: deposit.userId,
+                                    type: 'DEPOSIT',
+                                    amount: deposit.amount,
+                                    balanceBefore: user.balance - deposit.amount,
+                                    balanceAfter: user.balance,
+                                    depositId: deposit.id,
+                                    description: `Deposit via Tripay (${data.payment_name})`
+                                }
+                            });
+
+                            // Deduct conceptual balance from Super Admin
+                            const superAdmin = await tx.user.findFirst({
+                                where: { role: 'SUPER_ADMIN' }
+                            });
+                            if (superAdmin) {
+                                await tx.user.update({
+                                    where: { id: superAdmin.id },
+                                    data: { balance: { decrement: deposit.amount } }
+                                });
+                            }
+                        });
+                        console.log(`[TripayCallback] Deposit ${depositId} confirmed.`);
+                    }
+                }
+
+                // 3. Check if it's a SUBSCRIPTION INVOICE (Ref: INV-...)
+                else if (ref.startsWith('INV-')) {
+                    const invoice = await this.prisma.invoice.findUnique({
+                        where: { invoiceNo: ref }
+                    });
+
+                    if (invoice && invoice.status !== 'PAID') {
+                        await this.prisma.$transaction(async (tx) => {
+                            await tx.invoice.update({
+                                where: { id: invoice.id },
+                                data: { status: 'PAID', paidAt: new Date(), tripayResponse: data as any }
+                            });
+
+                            // Calculate Expiry (usually +30 days)
+                            const expireAt = new Date();
+                            expireAt.setDate(expireAt.getDate() + 30);
+
+                            // Update Merchant Plan
+                            await tx.merchant.update({
+                                where: { id: invoice.merchantId },
+                                data: {
+                                    plan: invoice.plan,
+                                    planExpiredAt: expireAt,
+                                    status: 'ACTIVE'
+                                }
+                            });
+
+                            // Log History
+                            await tx.subscriptionHistory.create({
+                                data: {
+                                    merchantId: invoice.merchantId,
+                                    newPlan: invoice.plan,
+                                    amount: invoice.totalAmount,
+                                    startDate: new Date(),
+                                    endDate: expireAt,
+                                    note: `Subscription via Tripay (${ref})`
+                                }
+                            });
+                        });
+                        console.log(`[TripayCallback] Invoice ${ref} paid. Merchant plan upgraded.`);
+                    }
+                }
             }
 
             return res.status(HttpStatus.OK).json({ success: true });
         } catch (error: any) {
-            console.error('Tripay callback error:', error.message);
+            console.error('[TripayCallback] Error:', error.message);
             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message: error.message });
         }
     }

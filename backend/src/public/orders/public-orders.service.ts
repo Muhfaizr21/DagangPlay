@@ -103,7 +103,7 @@ export class PublicOrdersService {
                     quantity: 1
                 }
             ],
-            return_url: `http://localhost:3000/invoice/${order.orderNumber}`
+            return_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/invoice/${order.orderNumber}`
         };
 
         const tripayRes = await this.tripay.requestTransaction(tripayPayload);
@@ -119,6 +119,9 @@ export class PublicOrdersService {
                 totalAmount: sellPrice,
                 status: 'PENDING',
                 tripayReference: tripayRes.data.reference,
+                tripayMerchantRef: order.orderNumber,
+                tripayPaymentUrl: tripayRes.data.checkout_url,
+                tripayResponse: tripayRes.data as any, // Storing everything!
             }
         });
 
@@ -127,5 +130,21 @@ export class PublicOrdersService {
             orderNumber: order.orderNumber,
             checkoutUrl: tripayRes.data.checkout_url
         };
+    }
+
+    async getOrderDetails(orderNumber: string) {
+        const order = await this.prisma.order.findUnique({
+            where: { orderNumber },
+            include: {
+                productSku: {
+                    include: { product: { include: { category: true } } }
+                },
+                payment: true
+            }
+        });
+
+        if (!order) throw new BadRequestException('Pesanan tidak ditemukan');
+
+        return order;
     }
 }

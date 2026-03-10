@@ -74,38 +74,37 @@ export class FinanceService {
         return withdrawal;
     }
 
-    async requestDeposit(merchantId: string, ownerId: string, amount: number, method: PaymentMethod) {
+    async requestDeposit(merchantId: string, ownerId: string, amount: number, method: string) {
         if (amount <= 0) throw new BadRequestException('Amount must be greater than 0');
 
-        let mappedMethod: PaymentMethod = 'TRIPAY_QRIS';
-        let tripayMethod = 'QRISC';
+        // Map frontend method code to Tripay code & Prisma enum
+        const methodMapping: Record<string, { tripay: string, prisma: PaymentMethod }> = {
+            'QRIS': { tripay: 'QRISC', prisma: 'TRIPAY_QRIS' },
+            'BCAVA': { tripay: 'BCAVA', prisma: 'TRIPAY_VA_BCA' },
+            'BNIVA': { tripay: 'BNIVA', prisma: 'TRIPAY_VA_BNI' },
+            'BRIVA': { tripay: 'BRIVA', prisma: 'TRIPAY_VA_BRI' },
+            'MANDIRIVA': { tripay: 'MANDIRIVA', prisma: 'TRIPAY_VA_MANDIRI' },
+            'PERMATAVA': { tripay: 'PERMATAVA', prisma: 'TRIPAY_VA_PERMATA' },
+            'OVO': { tripay: 'OVO', prisma: 'TRIPAY_OVO' },
+            'DANA': { tripay: 'DANA', prisma: 'TRIPAY_DANA' },
+            'SHOPEEPAY': { tripay: 'SHOPEEPAY', prisma: 'TRIPAY_SHOPEEPAY' },
+        };
 
-        // Handle incoming method string from frontend which might not match prisma exactly
-        const methodStr = method as string;
-        if (methodStr === 'BANK_TRANSFER' || methodStr === 'TRIPAY_VA_BCA') {
-            mappedMethod = 'TRIPAY_VA_BCA';
-            tripayMethod = 'BCAVA';
-        } else if (methodStr === 'EWALLET' || methodStr === 'TRIPAY_OVO') {
-            mappedMethod = 'TRIPAY_OVO';
-            tripayMethod = 'OVO';
-        } else if (methodStr === 'QRIS' || methodStr === 'TRIPAY_QRIS') {
-            mappedMethod = 'TRIPAY_QRIS';
-            tripayMethod = 'QRISC';
-        }
+        const mapped = methodMapping[method] || methodMapping['QRIS'];
 
         const deposit = await this.prisma.deposit.create({
             data: {
                 userId: ownerId,
                 merchantId,
                 amount,
-                method: mappedMethod,
+                method: mapped.prisma,
                 status: 'PENDING'
             }
         });
 
         const tripayPayload = {
-            method: tripayMethod,
-            merchant_ref: deposit.id,
+            method: mapped.tripay,
+            merchant_ref: `DEP-${deposit.id}`,
             amount: amount,
             customer_name: 'Merchant DagangPlay',
             customer_email: 'merchant@dagangplay.com',
@@ -117,7 +116,7 @@ export class FinanceService {
                     quantity: 1
                 }
             ],
-            return_url: `http://localhost:3000/admin/dashboard`
+            return_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/merchant/finance`
         };
 
         try {
@@ -126,7 +125,11 @@ export class FinanceService {
                 where: { id: deposit.id },
                 data: {
                     tripayReference: tripayRes.data.reference,
-                    tripayPaymentUrl: tripayRes.data.checkout_url
+                    tripayPaymentUrl: tripayRes.data.checkout_url,
+                    tripayMerchantRef: `DEP-${deposit.id}`,
+                    tripayResponse: tripayRes.data as any,
+                    tripayVaNumber: tripayRes.data.pay_code,
+                    tripayQrUrl: tripayRes.data.qr_url
                 }
             });
             return {
@@ -134,7 +137,7 @@ export class FinanceService {
                 checkoutUrl: tripayRes.data.checkout_url
             };
         } catch (e) {
-            console.error(e);
+            console.error('[FinanceService] Tripay Deposit Error:', e);
             throw new BadRequestException('Gagal menghubungi Tripay untuk Topup');
         }
     }
