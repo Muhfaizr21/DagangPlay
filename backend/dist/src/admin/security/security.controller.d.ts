@@ -18,8 +18,8 @@ export declare class SecurityController {
         createdAt: Date;
         metadata: import("@prisma/client/runtime/client").JsonValue | null;
         userId: string;
-        orderId: string | null;
         reason: string;
+        orderId: string | null;
         riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
         isResolved: boolean;
         resolvedBy: string | null;
@@ -30,8 +30,8 @@ export declare class SecurityController {
         createdAt: Date;
         metadata: import("@prisma/client/runtime/client").JsonValue | null;
         userId: string;
-        orderId: string | null;
         reason: string;
+        orderId: string | null;
         riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
         isResolved: boolean;
         resolvedBy: string | null;

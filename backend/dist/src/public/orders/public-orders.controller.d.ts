@@ -5,7 +5,7 @@ export declare class PublicOrdersController {
     private readonly tripayService;
     constructor(publicOrdersService: PublicOrdersService, tripayService: TripayService);
     getPaymentChannels(): Promise<any>;
-    checkout(body: any): Promise<{
+    checkout(body: any, req: any): Promise<{
         success: boolean;
         orderNumber: string;
         checkoutUrl: any;
@@ -22,9 +22,9 @@ export declare class PublicOrdersController {
                     description: string | null;
                     sortOrder: number;
                     digiflazzCategory: string | null;
+                    isActive: boolean;
                     icon: string | null;
                     image: string | null;
-                    isActive: boolean;
                     parentId: string | null;
                 };
             } & {
@@ -102,6 +102,7 @@ export declare class PublicOrdersController {
         productSkuName: string;
         priceTierUsed: import("@prisma/client").$Enums.PriceTier;
         basePrice: number;
+        merchantModalPrice: number | null;
         sellingPrice: number;
         totalPrice: number;
         gameUserId: string;

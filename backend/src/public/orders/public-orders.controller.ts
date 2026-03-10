@@ -15,8 +15,9 @@ export class PublicOrdersController {
     }
 
     @Post('checkout')
-    async checkout(@Body() body: any) {
-        return this.publicOrdersService.createCheckout(body);
+    async checkout(@Body() body: any, @Req() req: any) {
+        const host = req.headers.host || req.headers.origin;
+        return this.publicOrdersService.createCheckout(body, host);
     }
 
     @Get(':orderNumber')

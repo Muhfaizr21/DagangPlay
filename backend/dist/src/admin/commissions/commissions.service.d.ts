@@ -21,8 +21,8 @@ export declare class CommissionsService {
         updatedAt: Date;
         status: import("@prisma/client").$Enums.CommissionStatus;
         userId: string;
-        amount: number;
         orderId: string;
+        amount: number;
         type: string;
         settledAt: Date | null;
     })[]>;

@@ -43,14 +43,43 @@ let PublicOrdersService = class PublicOrdersService {
             where: { id: skuId },
             include: { product: { include: { category: true } } }
         });
-        if (!sku || sku.status !== 'ACTIVE') {
-            throw new common_1.BadRequestException('Produk tidak tersedia');
+        if (!sku || sku.status !== 'ACTIVE' || sku.product.status !== 'ACTIVE') {
+            const reason = sku?.product.status === 'MAINTENANCE'
+                ? 'Produk sedang dalam pemeliharaan (Master Maintenance)'
+                : 'Produk tidak tersedia atau sedang dinonaktifkan oleh pusat';
+            throw new common_1.BadRequestException(reason);
         }
         const merchant = await this.prisma.merchant.findFirst();
         const merchantId = merchant?.id || 'sys-merchant';
-        const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const merchantPlan = merchant?.plan || 'FREE';
+        const merchantOverride = await this.prisma.merchantProductPrice.findUnique({
+            where: {
+                merchantId_productSkuId: {
+                    merchantId,
+                    productSkuId: sku.id
+                }
+            }
+        });
+        if (merchantOverride && !merchantOverride.isActive) {
+            throw new common_1.BadRequestException('Produk ini sedang dinonaktifkan oleh pemilik toko');
+        }
         const basePrice = Number(sku.basePrice);
-        const sellPrice = Number(sku.priceNormal);
+        const sellPrice = merchantOverride ? Number(merchantOverride.customPrice) : Number(sku.priceNormal);
+        let modalPrice = Number(sku.priceNormal);
+        let tier = 'NORMAL';
+        if (merchantPlan === 'PRO') {
+            modalPrice = Number(sku.pricePro);
+            tier = 'PRO';
+        }
+        else if (merchantPlan === 'LEGEND') {
+            modalPrice = Number(sku.priceLegend);
+            tier = 'LEGEND';
+        }
+        else if (merchantPlan === 'SUPREME') {
+            modalPrice = Number(sku.priceSupreme);
+            tier = 'SUPREME';
+        }
+        const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         let guestUser = await this.prisma.user.findFirst({
             where: { phone: whatsapp }
         });
@@ -73,8 +102,9 @@ let PublicOrdersService = class PublicOrdersService {
                 productSkuId: sku.id,
                 productName: sku.product.name,
                 productSkuName: sku.name,
-                priceTierUsed: 'NORMAL',
+                priceTierUsed: tier,
                 basePrice: basePrice,
+                merchantModalPrice: modalPrice,
                 sellingPrice: sellPrice,
                 totalPrice: sellPrice,
                 paymentStatus: 'PENDING',

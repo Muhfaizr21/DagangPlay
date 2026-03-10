@@ -23,18 +23,18 @@ export declare class TransactionsController {
                 paidAt: Date | null;
                 expiredAt: Date | null;
                 userId: string;
-                amount: number;
                 method: import("@prisma/client").$Enums.PaymentMethod;
+                orderId: string;
+                amount: number;
                 tripayReference: string | null;
                 tripayMerchantRef: string | null;
                 tripayPaymentUrl: string | null;
                 tripayVaNumber: string | null;
                 tripayQrUrl: string | null;
                 tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
-                fee: number;
                 totalAmount: number;
+                fee: number;
                 tripayExpiredTime: Date | null;
-                orderId: string;
             } | null;
         } & {
             id: string;
@@ -48,6 +48,7 @@ export declare class TransactionsController {
             productName: string;
             productSkuName: string;
             priceTierUsed: import("@prisma/client").$Enums.PriceTier;
+            merchantModalPrice: number | null;
             sellingPrice: number;
             totalPrice: number;
             gameUserId: string;
@@ -89,8 +90,8 @@ export declare class TransactionsController {
             createdAt: Date;
             metadata: import("@prisma/client/runtime/client").JsonValue | null;
             userId: string;
-            orderId: string | null;
             reason: string;
+            orderId: string | null;
             riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
             isResolved: boolean;
             resolvedBy: string | null;
@@ -106,13 +107,13 @@ export declare class TransactionsController {
             createdAt: Date;
             supplierId: string;
             method: string;
-            orderId: string | null;
             endpoint: string;
             requestBody: import("@prisma/client/runtime/client").JsonValue | null;
             responseBody: import("@prisma/client/runtime/client").JsonValue | null;
             httpStatus: number | null;
             duration: number | null;
             isSuccess: boolean;
+            orderId: string | null;
         }[];
         payment: {
             id: string;
@@ -123,18 +124,18 @@ export declare class TransactionsController {
             paidAt: Date | null;
             expiredAt: Date | null;
             userId: string;
-            amount: number;
             method: import("@prisma/client").$Enums.PaymentMethod;
+            orderId: string;
+            amount: number;
             tripayReference: string | null;
             tripayMerchantRef: string | null;
             tripayPaymentUrl: string | null;
             tripayVaNumber: string | null;
             tripayQrUrl: string | null;
             tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
-            fee: number;
             totalAmount: number;
+            fee: number;
             tripayExpiredTime: Date | null;
-            orderId: string;
         } | null;
         statusHistories: {
             id: string;
@@ -156,6 +157,7 @@ export declare class TransactionsController {
         productName: string;
         productSkuName: string;
         priceTierUsed: import("@prisma/client").$Enums.PriceTier;
+        merchantModalPrice: number | null;
         sellingPrice: number;
         totalPrice: number;
         gameUserId: string;

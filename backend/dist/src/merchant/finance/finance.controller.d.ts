@@ -9,15 +9,15 @@ export declare class FinanceController {
         revenue: number;
         deposits: {
             id: string;
-            status: import("@prisma/client").$Enums.DepositStatus;
-            merchantId: string;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
+            status: import("@prisma/client").$Enums.DepositStatus;
+            merchantId: string;
             note: string | null;
             expiredAt: Date | null;
-            amount: number;
+            userId: string;
             method: import("@prisma/client").$Enums.PaymentMethod;
+            amount: number;
             tripayReference: string | null;
             tripayMerchantRef: string | null;
             tripayPaymentUrl: string | null;
@@ -31,12 +31,12 @@ export declare class FinanceController {
         }[];
         withdrawals: {
             id: string;
-            status: import("@prisma/client").$Enums.WithdrawalStatus;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
+            status: import("@prisma/client").$Enums.WithdrawalStatus;
             note: string | null;
             processedAt: Date | null;
+            userId: string;
             amount: number;
             receiptImage: string | null;
             rejectedAt: Date | null;
@@ -50,12 +50,12 @@ export declare class FinanceController {
     }>;
     requestWithdrawal(req: any, body: any): Promise<{
         id: string;
-        status: import("@prisma/client").$Enums.WithdrawalStatus;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
+        status: import("@prisma/client").$Enums.WithdrawalStatus;
         note: string | null;
         processedAt: Date | null;
+        userId: string;
         amount: number;
         receiptImage: string | null;
         rejectedAt: Date | null;
@@ -69,15 +69,15 @@ export declare class FinanceController {
     requestDeposit(req: any, body: any): Promise<{
         checkoutUrl: any;
         id: string;
-        status: import("@prisma/client").$Enums.DepositStatus;
-        merchantId: string;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
+        status: import("@prisma/client").$Enums.DepositStatus;
+        merchantId: string;
         note: string | null;
         expiredAt: Date | null;
-        amount: number;
+        userId: string;
         method: import("@prisma/client").$Enums.PaymentMethod;
+        amount: number;
         tripayReference: string | null;
         tripayMerchantRef: string | null;
         tripayPaymentUrl: string | null;

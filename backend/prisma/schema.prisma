@@ -831,7 +831,8 @@ model MerchantProductPrice {
   productSku   ProductSku @relation(fields: [productSkuId], references: [id])
   userId       String // Super Admin yang set
   user         User       @relation(fields: [userId], references: [id])
-  customPrice  Float // harga khusus untuk merchant ini
+  customPrice  Float // harga jual kustom yang diset merchant untuk customer
+  customModalPrice Float? // harga modal kustom yang diset Super Admin untuk merchant
   isActive     Boolean    @default(true)
   reason       String? // alasan diberi harga khusus
   expiredAt    DateTime? // batas waktu harga khusus berlaku
@@ -907,6 +908,7 @@ model Order {
   productSkuName String
   priceTierUsed  PriceTier // tier harga yang dipakai saat transaksi
   basePrice      Float // harga beli dari supplier saat itu
+  merchantModalPrice Float? // harga modal merchant sesuai plan saat itu
   sellingPrice   Float // harga jual ke customer saat itu
   totalPrice     Float
 

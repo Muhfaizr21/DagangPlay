@@ -12,7 +12,8 @@ const fetcher = (url: string) => {
 };
 
 export default function MerchantFinancePage() {
-    const { data: financeData, mutate: mutateFinance } = useSWR('http://localhost:3001/merchant/finance', fetcher, { refreshInterval: 10000 });
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const { data: financeData, mutate: mutateFinance } = useSWR(`${baseUrl}/merchant/finance`, fetcher, { refreshInterval: 10000 });
 
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
     const [withdrawForm, setWithdrawForm] = useState({ amount: '', bankName: '', bankAccountNumber: '', bankAccountName: '' });
@@ -35,7 +36,7 @@ export default function MerchantFinancePage() {
         e.preventDefault();
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.post('http://localhost:3001/merchant/finance/withdraw', {
+            await axios.post(`${baseUrl}/merchant/finance/withdraw`, {
                 ...withdrawForm, amount: Number(withdrawForm.amount), type: withdrawType
             }, { headers: { Authorization: `Bearer ${token}` } });
 
@@ -57,7 +58,7 @@ export default function MerchantFinancePage() {
         e.preventDefault();
         try {
             const token = localStorage.getItem('admin_token');
-            const res = await axios.post('http://localhost:3001/merchant/finance/deposit', {
+            const res = await axios.post(`${baseUrl}/merchant/finance/deposit`, {
                 ...depositForm, amount: Number(depositForm.amount)
             }, { headers: { Authorization: `Bearer ${token}` } });
 

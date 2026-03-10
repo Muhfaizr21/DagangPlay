@@ -12,8 +12,9 @@ const fetcher = (url: string) => {
 };
 
 export default function MerchantSubscriptionPage() {
-    const { data: status, mutate: mutateStatus } = useSWR('http://localhost:3001/merchant/subscription', fetcher);
-    const { data: invoices, mutate: mutateInvoices } = useSWR('http://localhost:3001/merchant/subscription/invoices', fetcher);
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const { data: status, mutate: mutateStatus } = useSWR(`${baseUrl}/merchant/subscription`, fetcher);
+    const { data: invoices, mutate: mutateInvoices } = useSWR(`${baseUrl}/merchant/subscription/invoices`, fetcher);
 
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
@@ -23,7 +24,7 @@ export default function MerchantSubscriptionPage() {
         try {
             const token = localStorage.getItem('admin_token');
             // Default to PRO for now, but in real app would show a plan selector
-            const res = await axios.post('http://localhost:3001/merchant/subscription/invoices',
+            const res = await axios.post(`${baseUrl}/merchant/subscription/invoices`,
                 { plan: 'PRO', amount: 250000, method: 'QRIS' },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -46,7 +47,7 @@ export default function MerchantSubscriptionPage() {
         e.preventDefault();
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.put(`http://localhost:3001/merchant/subscription/invoices/${selectedInvoice.id}/proof`, { proofUrl }, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.put(`${baseUrl}/merchant/subscription/invoices/${selectedInvoice.id}/proof`, { proofUrl }, { headers: { Authorization: `Bearer ${token}` } });
             alert('Bukti transfer berhasil diupload. Harap tunggu konfirmasi admin.');
             setIsUploadModalOpen(false);
             setProofUrl('');

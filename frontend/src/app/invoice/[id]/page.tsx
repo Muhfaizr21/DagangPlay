@@ -27,8 +27,9 @@ export default function InvoicePage() {
 
     useEffect(() => {
         const fetchOrder = async () => {
+            const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
             try {
-                const res = await axios.get(`http://localhost:3001/public/orders/${id}`);
+                const res = await axios.get(`${baseUrl}/public/orders/${id}`);
                 setOrder(res.data);
             } catch (err: any) {
                 setError(err.response?.data?.message || 'Gagal memuat pesanan');
@@ -106,8 +107,8 @@ export default function InvoicePage() {
 
                         {/* Status Card */}
                         <div className={`p-6 rounded-3xl border shadow-sm flex items-center gap-5 ${order.paymentStatus === 'PAID'
-                                ? 'bg-emerald-50 border-emerald-100'
-                                : 'bg-white border-slate-100'
+                            ? 'bg-emerald-50 border-emerald-100'
+                            : 'bg-white border-slate-100'
                             }`}>
                             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${order.paymentStatus === 'PAID' ? 'bg-emerald-500 text-white' : 'bg-amber-100 text-amber-600'
                                 }`}>

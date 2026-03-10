@@ -27,8 +27,8 @@ export declare class FinanceService {
         note: string | null;
         expiredAt: Date | null;
         userId: string;
-        amount: number;
         method: import("@prisma/client").$Enums.PaymentMethod;
+        amount: number;
         tripayReference: string | null;
         tripayMerchantRef: string | null;
         tripayPaymentUrl: string | null;

@@ -22,9 +22,9 @@ export declare class SubscriptionsService {
         tripayReference: string | null;
         tripayPaymentUrl: string | null;
         tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
-        totalAmount: number;
         invoiceNo: string;
         tax: number;
+        totalAmount: number;
         dueDate: Date;
         proofUrl: string | null;
         notes: string | null;
@@ -42,9 +42,9 @@ export declare class SubscriptionsService {
         tripayReference: string | null;
         tripayPaymentUrl: string | null;
         tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
-        totalAmount: number;
         invoiceNo: string;
         tax: number;
+        totalAmount: number;
         dueDate: Date;
         proofUrl: string | null;
         notes: string | null;
@@ -55,9 +55,9 @@ export declare class SubscriptionsService {
         id: string;
         description: string | null;
         updatedAt: Date;
+        key: string;
         type: import("@prisma/client").$Enums.SettingType;
         value: string;
-        key: string;
         group: string | null;
         updatedBy: string | null;
     }>;
@@ -80,9 +80,9 @@ export declare class SubscriptionsService {
         tripayReference: string | null;
         tripayPaymentUrl: string | null;
         tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
-        totalAmount: number;
         invoiceNo: string;
         tax: number;
+        totalAmount: number;
         dueDate: Date;
         proofUrl: string | null;
         notes: string | null;

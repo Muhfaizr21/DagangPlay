@@ -28,8 +28,9 @@ export declare class ProductsService {
         expiredAt: Date | null;
         userId: string;
         productSkuId: string;
-        reason: string | null;
         customPrice: number;
+        customModalPrice: number | null;
+        reason: string | null;
     }>;
     bulkUpdateMargin(merchantId: string, userId: string, markupPercentage: number, categoryId?: string): Promise<{
         success: boolean;

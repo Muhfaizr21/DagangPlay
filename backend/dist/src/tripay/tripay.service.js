@@ -70,19 +70,32 @@ let TripayService = TripayService_1 = class TripayService {
     }
     async requestTransaction(payload) {
         try {
-            const signatureStr = `${this.merchantCode}${payload.merchant_ref}${payload.amount}`;
+            const amount = Math.floor(Number(payload.amount));
+            const signatureStr = `${this.merchantCode}${payload.merchant_ref}${amount}`;
+            this.logger.debug(`Signature Debug:`);
+            this.logger.debug(`- Merchant Code: [${this.merchantCode}]`);
+            this.logger.debug(`- Merchant Ref: [${payload.merchant_ref}]`);
+            this.logger.debug(`- Amount: [${amount}]`);
+            this.logger.debug(`- Full Signature String: [${signatureStr}]`);
+            this.logger.debug(`- Private Key used (ends with): ...${this.privateKey.slice(-5)}`);
             const signature = crypto.createHmac('sha256', this.privateKey)
                 .update(signatureStr)
                 .digest('hex');
+            this.logger.debug(`- Generated Signature: [${signature}]`);
+            const items = (payload.order_items || []).map((item) => ({
+                ...item,
+                subtotal: item.subtotal || (item.price * item.quantity)
+            }));
             const data = {
                 method: payload.method,
                 merchant_ref: payload.merchant_ref,
-                amount: payload.amount,
+                amount: amount,
                 customer_name: payload.customer_name || 'Pelanggan DagangPlay',
                 customer_email: payload.customer_email || 'guest@dagangplay.com',
                 customer_phone: payload.customer_phone,
-                order_items: payload.order_items,
-                return_url: payload.return_url || 'http://localhost:3000',
+                order_items: items,
+                callback_url: process.env.TRIPAY_CALLBACK_URL,
+                return_url: payload.return_url || process.env.FRONTEND_URL || 'http://localhost:3000',
                 expired_time: payload.expired_time || (Math.floor(Date.now() / 1000) + (24 * 60 * 60)),
                 signature
             };

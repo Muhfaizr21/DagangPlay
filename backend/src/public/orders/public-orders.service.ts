@@ -36,17 +36,54 @@ export class PublicOrdersService {
             include: { product: { include: { category: true } } }
         });
 
-        if (!sku || sku.status !== 'ACTIVE') {
-            throw new BadRequestException('Produk tidak tersedia');
+        if (!sku || sku.status !== 'ACTIVE' || sku.product.status !== 'ACTIVE') {
+            const reason = sku?.product.status === 'MAINTENANCE'
+                ? 'Produk sedang dalam pemeliharaan (Master Maintenance)'
+                : 'Produk tidak tersedia atau sedang dinonaktifkan oleh pusat';
+            throw new BadRequestException(reason);
         }
 
-        // 2. Generate Order Number
+        // 2. Get Merchant info & plan
         const merchant = await this.prisma.merchant.findFirst(); // Using default merchant for now
         const merchantId = merchant?.id || 'sys-merchant';
-        const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const merchantPlan = merchant?.plan || 'FREE';
+
+        // 2.1 CHECK MERCHANT CUSTOM PRICING & VISIBILITY
+        const merchantOverride = await this.prisma.merchantProductPrice.findUnique({
+            where: {
+                merchantId_productSkuId: {
+                    merchantId,
+                    productSkuId: sku.id
+                }
+            }
+        });
+
+        // Visibility Boundary check: If merchant manually deactivated this 
+        if (merchantOverride && !merchantOverride.isActive) {
+            throw new BadRequestException('Produk ini sedang dinonaktifkan oleh pemilik toko');
+        }
 
         const basePrice = Number(sku.basePrice);
-        const sellPrice = Number(sku.priceNormal);
+
+        // Price Leakage fix: Use merchant's custom price if available, otherwise fallback to platform default (priceNormal)
+        const sellPrice = merchantOverride ? Number(merchantOverride.customPrice) : Number(sku.priceNormal);
+
+        // 2.2 Calculate Modal Price for Merchant (What they owe DagangPlay / Super Admin)
+        let modalPrice = Number(sku.priceNormal);
+        let tier: any = 'NORMAL';
+
+        if (merchantPlan === 'PRO') {
+            modalPrice = Number(sku.pricePro);
+            tier = 'PRO';
+        } else if (merchantPlan === 'LEGEND') {
+            modalPrice = Number(sku.priceLegend);
+            tier = 'LEGEND';
+        } else if (merchantPlan === 'SUPREME') {
+            modalPrice = Number(sku.priceSupreme);
+            tier = 'SUPREME';
+        }
+
+        const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
         // 2.5 Ensure Guest User Exists
         let guestUser = await this.prisma.user.findFirst({
@@ -74,8 +111,9 @@ export class PublicOrdersService {
                 productSkuId: sku.id,
                 productName: sku.product.name,
                 productSkuName: sku.name,
-                priceTierUsed: 'NORMAL',
+                priceTierUsed: tier,
                 basePrice: basePrice,
+                merchantModalPrice: modalPrice,
                 sellingPrice: sellPrice,
                 totalPrice: sellPrice,
                 paymentStatus: 'PENDING',

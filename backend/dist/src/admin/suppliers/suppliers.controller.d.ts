@@ -62,13 +62,13 @@ export declare class SuppliersController {
         createdAt: Date;
         supplierId: string;
         method: string;
-        orderId: string | null;
         endpoint: string;
         requestBody: import("@prisma/client/runtime/client").JsonValue | null;
         responseBody: import("@prisma/client/runtime/client").JsonValue | null;
         httpStatus: number | null;
         duration: number | null;
         isSuccess: boolean;
+        orderId: string | null;
     }[]>;
     getBalanceHistory(id: string): Promise<{
         id: string;

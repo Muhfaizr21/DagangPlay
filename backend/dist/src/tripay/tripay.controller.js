@@ -46,23 +46,48 @@ let TripayController = class TripayController {
                         where: { orderNumber: ref }
                     });
                     if (order && order.paymentStatus !== 'PAID') {
-                        await this.prisma.$transaction([
-                            this.prisma.order.update({
+                        const modalPrice = order.merchantModalPrice || order.sellingPrice;
+                        const profit = order.sellingPrice - modalPrice;
+                        await this.prisma.$transaction(async (tx) => {
+                            await tx.order.update({
                                 where: { id: order.id },
                                 data: {
                                     paymentStatus: 'PAID',
                                     paidAt: new Date()
                                 }
-                            }),
-                            this.prisma.payment.update({
+                            });
+                            await tx.payment.update({
                                 where: { orderId: order.id },
                                 data: {
                                     status: 'PAID',
                                     paidAt: new Date(),
                                     tripayResponse: data
                                 }
-                            })
-                        ]);
+                            });
+                            if (profit > 0) {
+                                const merchant = await tx.merchant.findUnique({
+                                    where: { id: order.merchantId },
+                                    select: { ownerId: true }
+                                });
+                                if (merchant) {
+                                    const user = await tx.user.update({
+                                        where: { id: merchant.ownerId },
+                                        data: { balance: { increment: profit } }
+                                    });
+                                    await tx.balanceTransaction.create({
+                                        data: {
+                                            userId: merchant.ownerId,
+                                            type: 'COMMISSION',
+                                            amount: profit,
+                                            balanceBefore: user.balance - profit,
+                                            balanceAfter: user.balance,
+                                            orderId: order.id,
+                                            description: `Profit penjualan ${order.orderNumber}`
+                                        }
+                                    });
+                                }
+                            }
+                        });
                         try {
                             console.log(`[TripayCallback] Triggering fulfillment for order: ${order.orderNumber}`);
                             await this.digiflazz.placeOrder(order.id);

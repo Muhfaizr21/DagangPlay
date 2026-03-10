@@ -113,22 +113,22 @@ export declare class SettingsService {
         tripayConfig: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     getWebhooks(merchantId: string): Promise<{
-        url: string;
         id: string;
         isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
+        url: string;
         secret: string;
         events: import("@prisma/client/runtime/client").JsonValue;
     }[]>;
     updateWebhook(merchantId: string, data: any): Promise<{
-        url: string;
         id: string;
         isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
+        url: string;
         secret: string;
         events: import("@prisma/client/runtime/client").JsonValue;
     }>;

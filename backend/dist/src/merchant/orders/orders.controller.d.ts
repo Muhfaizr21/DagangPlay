@@ -30,6 +30,7 @@ export declare class OrdersController {
             productName: string;
             productSkuName: string;
             priceTierUsed: import("@prisma/client").$Enums.PriceTier;
+            merchantModalPrice: number | null;
             sellingPrice: number;
             totalPrice: number;
             gameUserId: string;
@@ -93,6 +94,7 @@ export declare class OrdersController {
         productName: string;
         productSkuName: string;
         priceTierUsed: import("@prisma/client").$Enums.PriceTier;
+        merchantModalPrice: number | null;
         sellingPrice: number;
         totalPrice: number;
         gameUserId: string;
@@ -131,6 +133,7 @@ export declare class OrdersController {
             productName: string;
             productSkuName: string;
             priceTierUsed: import("@prisma/client").$Enums.PriceTier;
+            merchantModalPrice: number | null;
             sellingPrice: number;
             totalPrice: number;
             gameUserId: string;

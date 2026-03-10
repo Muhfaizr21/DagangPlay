@@ -5,7 +5,9 @@ const common_1 = require("@nestjs/common");
 const path_1 = require("path");
 const app_module_1 = require("./app.module");
 async function bootstrap() {
-    const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    const app = await core_1.NestFactory.create(app_module_1.AppModule, {
+        rawBody: true,
+    });
     app.enableCors();
     app.useStaticAssets((0, path_1.join)(__dirname, '..', 'public'));
     app.useGlobalPipes(new common_1.ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));

@@ -252,6 +252,35 @@ export class DigiflazzService {
                 });
             }
 
+            // 3. NEGATIVE MARGIN PROTECTION (Auto-deactivate if merchant loses money)
+            // Fetch all merchants who have customized prices for this SKU
+            const merchantPrices = await this.prisma.merchantProductPrice.findMany({
+                where: { productSkuId: savedSku.id, isActive: true },
+                include: { merchant: true }
+            });
+
+            for (const mp of merchantPrices) {
+                const plan = mp.merchant.plan;
+                let currentModalPrice = savedSku.priceNormal;
+
+                if (plan === 'PRO') currentModalPrice = savedSku.pricePro;
+                else if (plan === 'LEGEND') currentModalPrice = savedSku.priceLegend;
+                else if (plan === 'SUPREME') currentModalPrice = savedSku.priceSupreme;
+
+                // If Merchant Modal Cost > Merchant Selling Price
+                if (currentModalPrice > mp.customPrice) {
+                    await this.prisma.merchantProductPrice.update({
+                        where: { id: mp.id },
+                        data: {
+                            isActive: false,
+                            reason: `Negative Margin: Modal (${currentModalPrice}) > Jual (${mp.customPrice})`
+                        }
+                    });
+
+                    console.log(`[NegativeMarginAlert] Product ${savedSku.supplierCode} deactivated for Merchant ${mp.merchant.name}`);
+                }
+            }
+
             return { success: true, message: 'Produk berhasil di-sync dan di-mapping', sku: savedSku };
         } catch (err: any) {
             console.error('[DigiflazzService] Error syncing product:', err);

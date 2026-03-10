@@ -79,7 +79,8 @@ signature	string	✅ Ya	Hash HMAC-SHA256 (lihat Section 4)
       "sku": "PROD-001",
       "name": "Paket Premium 1 Bulan",
       "price": 150000,
-      "quantity": 1
+      "quantity": 1,
+      "subtotal": 150000
     }
   ],
   "callback_url": "https://situmu.com/callback/tripay",
@@ -174,8 +175,9 @@ export class TripayService {
     customerEmail: string;
     items: { sku: string; name: string; price: number; quantity: number }[];
   }) {
+    const amount = Math.floor(payload.amount); // Pastikan integer
     const signature = createHmac('sha256', this.privateKey)
-      .update(this.merchantCode + payload.merchantRef + payload.amount)
+      .update(this.merchantCode + payload.merchantRef + amount)
       .digest('hex');
 
     const body = {
@@ -189,7 +191,7 @@ export class TripayService {
     };
 
     const res = await fetch(
-      'https://payment.tripay.co.id/api/transaction/create',
+      'https://payment.tripay.co.id/api-sandbox/transaction/create',
       {
         method: 'POST',
         headers: {
