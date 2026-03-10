@@ -138,8 +138,8 @@ export declare class UsersController {
         note: string | null;
         userId: string;
         orderId: string | null;
-        amount: number;
         type: import("@prisma/client").$Enums.BalanceTrxType;
+        amount: number;
         balanceBefore: number;
         balanceAfter: number;
         depositId: string | null;

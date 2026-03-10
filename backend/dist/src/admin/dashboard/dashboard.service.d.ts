@@ -1,7 +1,9 @@
 import { PrismaService } from '../../prisma.service';
+import { DigiflazzService } from '../digiflazz/digiflazz.service';
 export declare class DashboardService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private digiflazz;
+    constructor(prisma: PrismaService, digiflazz: DigiflazzService);
     getDashboardSummary(): Promise<{
         stats: {
             label: string;
@@ -9,6 +11,10 @@ export declare class DashboardService {
             change: string;
             isUp: boolean;
         }[];
+        systemHealth: {
+            supplierBalance: number;
+            isLow: boolean;
+        };
         weeklyChart: {
             day: string;
             value: number;

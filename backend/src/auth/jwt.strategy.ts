@@ -27,6 +27,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
             throw new UnauthorizedException('Akun ini sedang dalam status tidak aktif / disuspend.');
         }
 
-        return { id: user.id, email: user.email, role: user.role, name: user.name };
+        return { id: user.id, email: user.email, role: user.role, name: user.name, merchantId: user.merchantId };
     }
 }

@@ -325,6 +325,20 @@ let DigiflazzService = class DigiflazzService {
         }
         throw new Error('Gagal ambil saldo: ' + JSON.stringify(resJson));
     }
+    async checkAvailability(skuCode) {
+        const products = await this.getDigiflazzProducts();
+        const item = products.find((p) => p.buyer_sku_code === skuCode);
+        if (!item) {
+            return { isAvailable: false, reason: 'Produk tidak ditemukan di supplier' };
+        }
+        if (item.buyer_product_status === false || item.seller_product_status === false) {
+            return {
+                isAvailable: false,
+                reason: item.message || 'Produk sedang gangguan atau stok kosong di supplier'
+            };
+        }
+        return { isAvailable: true, item };
+    }
     async placeOrder(orderId) {
         const order = await this.prisma.order.findUnique({
             where: { id: orderId },
@@ -372,10 +386,11 @@ let DigiflazzService = class DigiflazzService {
                     'Gagal': 'FAILED',
                     'Pending': 'PROCESSING'
                 };
+                const fulfillmentStatus = statusMap[data.status] || 'PROCESSING';
                 await this.prisma.order.update({
                     where: { id: order.id },
                     data: {
-                        fulfillmentStatus: statusMap[data.status] || 'PROCESSING',
+                        fulfillmentStatus,
                         supplierRefId: data.ref_id,
                         serialNumber: data.sn,
                         supplierResponse: data,
@@ -385,6 +400,9 @@ let DigiflazzService = class DigiflazzService {
                         failReason: data.status === 'Gagal' ? data.message : null
                     }
                 });
+                if (fulfillmentStatus === 'FAILED') {
+                    await this.handleCommissionReversal(order.id);
+                }
                 return data;
             }
             else {
@@ -395,6 +413,7 @@ let DigiflazzService = class DigiflazzService {
                         failReason: resJson.data?.message || 'Digiflazz API connection error'
                     }
                 });
+                await this.handleCommissionReversal(order.id);
                 return resJson;
             }
         }
@@ -407,8 +426,40 @@ let DigiflazzService = class DigiflazzService {
                     failReason: err.message || 'System error'
                 }
             });
+            await this.handleCommissionReversal(order.id);
             throw err;
         }
+    }
+    async handleCommissionReversal(orderId) {
+        const commissions = await this.prisma.commission.findMany({
+            where: { orderId, status: 'SETTLED' }
+        });
+        if (commissions.length === 0)
+            return;
+        await this.prisma.$transaction(async (tx) => {
+            for (const comm of commissions) {
+                const user = await tx.user.update({
+                    where: { id: comm.userId },
+                    data: { balance: { decrement: comm.amount } }
+                });
+                await tx.balanceTransaction.create({
+                    data: {
+                        userId: comm.userId,
+                        type: 'REFUND',
+                        amount: -comm.amount,
+                        balanceBefore: user.balance + comm.amount,
+                        balanceAfter: user.balance,
+                        orderId,
+                        description: `Reversal profit (Digiflazz Gagal): ${orderId}`
+                    }
+                });
+                await tx.commission.update({
+                    where: { id: comm.id },
+                    data: { status: 'REFUNDED' }
+                });
+            }
+        });
+        console.log(`[FinanceProtect] Automated reversal for ${orderId} completed.`);
     }
 };
 exports.DigiflazzService = DigiflazzService;

@@ -9,6 +9,10 @@ export declare class DashboardController {
             change: string;
             isUp: boolean;
         }[];
+        systemHealth: {
+            supplierBalance: number;
+            isLow: boolean;
+        };
         weeklyChart: {
             day: string;
             value: number;

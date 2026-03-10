@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -19,7 +19,8 @@ import {
     CheckCircle2,
     Eye,
     Settings,
-    KeyRound
+    KeyRound,
+    Trash2
 } from 'lucide-react';
 
 const fetcher = (url: string) => {
@@ -36,11 +37,13 @@ export default function MerchantManagementPage() {
     const [toastMsg, setToastMsg] = useState<{ title: string, desc: string, type: 'success' | 'error' } | null>(null);
 
     const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
-    const [settingsForm, setSettingsForm] = useState<any>({
+    const [settingsForm, setSettingsForm] = useState({
         platformFee: 0,
         allowCustomDomain: false,
+        customDomainStatus: 'NONE',
         isMaintenance: false,
-        customDomainStatus: 'PENDING'
+        plan: 'FREE',
+        planExpiredAt: ''
     });
 
     const { data: merchants, error, isLoading, mutate } = useSWR(
@@ -50,19 +53,23 @@ export default function MerchantManagementPage() {
 
     const { data: merchantDetail, error: detailError, isLoading: loadingDetail, mutate: mutateDetail } = useSWR(
         selectedMerchantId ? `http://localhost:3001/admin/merchants/${selectedMerchantId}` : null,
-        fetcher,
-        {
-            onSuccess: (data) => {
-                const sets = data.settings || {};
-                setSettingsForm({
-                    platformFee: sets.platformFee || 0,
-                    allowCustomDomain: sets.allowCustomDomain || false,
-                    isMaintenance: sets.isMaintenance || false,
-                    customDomainStatus: sets.customDomainStatus || 'NONE'
-                });
-            }
-        }
+        fetcher
     );
+
+    useEffect(() => {
+        if (merchantDetail) {
+            setSettingsForm({
+                platformFee: merchantDetail.settings?.platformFee || 0,
+                allowCustomDomain: merchantDetail.settings?.allowCustomDomain || false,
+                customDomainStatus: merchantDetail.settings?.customDomainStatus || 'NONE',
+                isMaintenance: merchantDetail.settings?.isMaintenance || false,
+                plan: merchantDetail.plan || 'FREE',
+                planExpiredAt: merchantDetail.planExpiredAt
+                    ? merchantDetail.planExpiredAt.split('T')[0]
+                    : ''
+            });
+        }
+    }, [merchantDetail]);
 
     const showToast = (title: string, desc: string, type: 'success' | 'error' = 'success') => {
         setToastMsg({ title, desc, type });
@@ -212,6 +219,31 @@ export default function MerchantManagementPage() {
                                                 <p className="text-[10px] text-slate-500 mt-1">Potongan bagi hasil untuk Super Admin dari setiap trx berhasil merchant ini.</p>
                                             </div>
 
+                                            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                                                <div>
+                                                    <label className="block text-xs font-bold text-slate-700 mb-1">Paket Berlangganan (Plan)</label>
+                                                    <select
+                                                        value={settingsForm.plan}
+                                                        onChange={(e) => setSettingsForm({ ...settingsForm, plan: e.target.value })}
+                                                        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-[13px] bg-slate-50"
+                                                    >
+                                                        <option value="FREE">Toko Gratis (FREE)</option>
+                                                        <option value="BASIC">SaaS Paket BASIC</option>
+                                                        <option value="PREMIUM">SaaS Paket PREMIUM</option>
+                                                        <option value="ENTERPRISE">SaaS Paket ENTERPRISE</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-slate-700 mb-1">Masa Aktif (Expired At)</label>
+                                                    <input
+                                                        type="date"
+                                                        value={settingsForm.planExpiredAt}
+                                                        onChange={(e) => setSettingsForm({ ...settingsForm, planExpiredAt: e.target.value })}
+                                                        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-[13px] bg-slate-50"
+                                                    />
+                                                </div>
+                                            </div>
+
                                             <div className="pt-2 border-t border-slate-100">
                                                 <label className="flex items-center gap-2 mb-2 cursor-pointer">
                                                     <input
@@ -244,7 +276,7 @@ export default function MerchantManagementPage() {
                                                         onChange={(e) => setSettingsForm({ ...settingsForm, isMaintenance: e.target.checked })}
                                                         className="w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500"
                                                     />
-                                                    <span className="font-bold text-amber-700">Paksa Mode Maintenance Tenant Tertentu</span>
+                                                    <span className="font-bold text-amber-700 text-xs">Paksa Mode Maintenance Tenant Tertentu</span>
                                                 </label>
                                             </div>
 

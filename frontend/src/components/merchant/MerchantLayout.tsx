@@ -16,13 +16,15 @@ import {
     Ticket,
     Activity,
     Tag,
-    Palette
+    Palette,
+    GraduationCap
 } from 'lucide-react';
 
 const MENU_ITEMS = [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/merchant' },
     { label: 'Katalog Produk', icon: Package, href: '/merchant/products' },
     { label: 'Pesanan & Transaksi', icon: ShoppingCart, href: '/merchant/orders' },
+    { label: 'Marketing Academy', icon: GraduationCap, href: '/merchant/academy', minPlan: 'SUPREME' },
     { label: 'Laporan & Analytics', icon: Activity, href: '/merchant/reports' },
     { label: 'Keuangan & Saldo', icon: CreditCard, href: '/merchant/finance' },
     { label: 'Promo & Voucher', icon: Tag, href: '/merchant/promos' },
@@ -104,7 +106,7 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
                     <div className="px-4 mb-3 mt-2">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Menu Utama</p>
                     </div>
-                    {MENU_ITEMS.map((item) => {
+                    {MENU_ITEMS.filter((item: any) => !item.minPlan || (user?.plan === item.minPlan)).map((item) => {
                         const Icon = item.icon;
                         const isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/merchant');
 

@@ -1,4 +1,4 @@
-import { UseGuards,  Controller, Get, Patch, Post, Param, Body, Query, HttpCode  } from "@nestjs/common";
+import { UseGuards, Controller, Get, Patch, Post, Param, Body, Query, HttpCode } from "@nestjs/common";
 import { FinanceService } from './finance.service';
 
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
@@ -51,8 +51,11 @@ export class FinanceController {
 
     @Post('withdrawals/:id/process')
     @HttpCode(200)
-    async processWithdrawal(@Param('id') id: string) {
-        return this.financeService.processWithdrawal(id, 'SuperAdmin');
+    async processWithdrawal(
+        @Param('id') id: string,
+        @Body() body: { note?: string, receiptImage?: string }
+    ) {
+        return this.financeService.processWithdrawal(id, 'SuperAdmin', body.note, body.receiptImage);
     }
 
     @Post('withdrawals/:id/reject')

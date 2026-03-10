@@ -1,8 +1,10 @@
 import { PrismaService } from '../../prisma.service';
 import { OrderPaymentStatus, OrderFulfillmentStatus } from '@prisma/client';
+import { PublicOrdersService } from '../../public/orders/public-orders.service';
 export declare class TransactionsService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private publicOrders;
+    constructor(prisma: PrismaService, publicOrders: PublicOrdersService);
     getAllTransactions(filters: any): Promise<{
         data: ({
             merchant: {

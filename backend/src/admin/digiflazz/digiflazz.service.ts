@@ -360,6 +360,29 @@ export class DigiflazzService {
     }
 
     /**
+     * Cek apakah produk ready di Digiflazz (Stok & Status)
+     */
+    async checkAvailability(skuCode: string) {
+        // Ambil data terbaru (atau dari cache)
+        const products = await this.getDigiflazzProducts();
+        const item = products.find((p: any) => p.buyer_sku_code === skuCode);
+
+        if (!item) {
+            return { isAvailable: false, reason: 'Produk tidak ditemukan di supplier' };
+        }
+
+        // buyer_product_status & seller_product_status harus true
+        if (item.buyer_product_status === false || item.seller_product_status === false) {
+            return {
+                isAvailable: false,
+                reason: (item as any).message || 'Produk sedang gangguan atau stok kosong di supplier'
+            };
+        }
+
+        return { isAvailable: true, item };
+    }
+
+    /**
      * Place Order to Digiflazz (Automated Fulfillment)
      */
     async placeOrder(orderId: string) {
@@ -419,10 +442,12 @@ export class DigiflazzService {
                     'Pending': 'PROCESSING'
                 };
 
+                const fulfillmentStatus = statusMap[data.status] || 'PROCESSING';
+
                 await this.prisma.order.update({
                     where: { id: order.id },
                     data: {
-                        fulfillmentStatus: statusMap[data.status] || 'PROCESSING',
+                        fulfillmentStatus,
                         supplierRefId: data.ref_id,
                         serialNumber: data.sn,
                         supplierResponse: data,
@@ -432,6 +457,11 @@ export class DigiflazzService {
                         failReason: data.status === 'Gagal' ? data.message : null
                     }
                 });
+
+                // REVERSAL LOGIC: Jika Gagal, tarik kembali profit merchant yang sudah terlanjur masuk
+                if (fulfillmentStatus === 'FAILED') {
+                    await this.handleCommissionReversal(order.id);
+                }
 
                 return data;
             } else {
@@ -443,6 +473,7 @@ export class DigiflazzService {
                         failReason: resJson.data?.message || 'Digiflazz API connection error'
                     }
                 });
+                await this.handleCommissionReversal(order.id);
                 return resJson;
             }
         } catch (err: any) {
@@ -454,7 +485,46 @@ export class DigiflazzService {
                     failReason: err.message || 'System error'
                 }
             });
+            await this.handleCommissionReversal(order.id);
             throw err;
         }
+    }
+
+    /**
+     * Logic Reversal Profit (untuk Digiflazz Gagal)
+     */
+    private async handleCommissionReversal(orderId: string) {
+        const commissions = await this.prisma.commission.findMany({
+            where: { orderId, status: 'SETTLED' }
+        });
+
+        if (commissions.length === 0) return;
+
+        await this.prisma.$transaction(async (tx) => {
+            for (const comm of commissions) {
+                const user = await tx.user.update({
+                    where: { id: comm.userId },
+                    data: { balance: { decrement: comm.amount } }
+                });
+
+                await tx.balanceTransaction.create({
+                    data: {
+                        userId: comm.userId,
+                        type: 'REFUND',
+                        amount: -comm.amount,
+                        balanceBefore: user.balance + comm.amount,
+                        balanceAfter: user.balance,
+                        orderId,
+                        description: `Reversal profit (Digiflazz Gagal): ${orderId}`
+                    }
+                });
+
+                await tx.commission.update({
+                    where: { id: comm.id },
+                    data: { status: 'REFUNDED' }
+                });
+            }
+        });
+        console.log(`[FinanceProtect] Automated reversal for ${orderId} completed.`);
     }
 }

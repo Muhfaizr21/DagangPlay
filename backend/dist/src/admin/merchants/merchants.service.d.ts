@@ -96,7 +96,7 @@ export declare class MerchantsService {
         ownerId: string;
         deletedAt: Date | null;
     }>;
-    updateMerchantSettings(id: string, settingsUpdate: any): Promise<{
+    updateMerchantSettings(id: string, updateData: any): Promise<{
         id: string;
         name: string;
         slug: string;

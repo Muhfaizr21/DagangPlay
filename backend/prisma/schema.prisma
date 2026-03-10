@@ -1545,6 +1545,23 @@ model EmailCampaign {
   @@index([merchantId, isActive])
 }
 
+model MarketingGuide {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  content     String?  @db.Text
+  videoUrl    String?  // YouTube/Vimeo embed link
+  thumbnail   String?
+  category    String?  // e.g. "Ads", "Strategy", "Branding"
+  targetPlan  MerchantPlan @default(SUPREME) // Who can see this
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([targetPlan, isActive])
+}
+
 model UserFavorite {
   id        String   @id @default(cuid())
   userId    String

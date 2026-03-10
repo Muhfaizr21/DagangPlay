@@ -22,8 +22,8 @@ export declare class CommissionsController {
         status: import("@prisma/client").$Enums.CommissionStatus;
         userId: string;
         orderId: string;
-        amount: number;
         type: string;
+        amount: number;
         settledAt: Date | null;
     })[]>;
     settle(id: string): Promise<any>;

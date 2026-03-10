@@ -12,14 +12,16 @@ const public_orders_controller_1 = require("./public-orders.controller");
 const public_orders_service_1 = require("./public-orders.service");
 const prisma_service_1 = require("../../prisma.service");
 const tripay_module_1 = require("../../tripay/tripay.module");
+const digiflazz_module_1 = require("../../admin/digiflazz/digiflazz.module");
 let PublicOrdersModule = class PublicOrdersModule {
 };
 exports.PublicOrdersModule = PublicOrdersModule;
 exports.PublicOrdersModule = PublicOrdersModule = __decorate([
     (0, common_1.Module)({
-        imports: [tripay_module_1.TripayModule],
+        imports: [tripay_module_1.TripayModule, digiflazz_module_1.DigiflazzModule],
         controllers: [public_orders_controller_1.PublicOrdersController],
-        providers: [public_orders_service_1.PublicOrdersService, prisma_service_1.PrismaService]
+        providers: [public_orders_service_1.PublicOrdersService, prisma_service_1.PrismaService],
+        exports: [public_orders_service_1.PublicOrdersService]
     })
 ], PublicOrdersModule);
 //# sourceMappingURL=public-orders.module.js.map

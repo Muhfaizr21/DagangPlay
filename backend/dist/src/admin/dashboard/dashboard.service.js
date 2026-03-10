@@ -12,12 +12,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DashboardService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma.service");
+const digiflazz_service_1 = require("../digiflazz/digiflazz.service");
 let DashboardService = class DashboardService {
     prisma;
-    constructor(prisma) {
+    digiflazz;
+    constructor(prisma, digiflazz) {
         this.prisma = prisma;
+        this.digiflazz = digiflazz;
     }
     async getDashboardSummary() {
+        let supplierBalance = 0;
+        try {
+            supplierBalance = await this.digiflazz.checkBalance();
+        }
+        catch (e) {
+            console.error('Failed to fetch supplier balance for dashboard');
+        }
         const revenueAgg = await this.prisma.order.aggregate({
             where: { paymentStatus: 'PAID' },
             _sum: { totalPrice: true },
@@ -63,8 +73,8 @@ let DashboardService = class DashboardService {
         return {
             stats: [
                 {
-                    label: 'Total Revenue',
-                    value: `Rp ${(Number(totalRevenue) / 1000000).toFixed(1)}M`,
+                    label: 'Total Platform Revenue',
+                    value: `Rp ${(Number(totalRevenue) / 1000000).toFixed(1)} JT`,
                     change: '+12.5%',
                     isUp: true,
                 },
@@ -87,6 +97,10 @@ let DashboardService = class DashboardService {
                     isUp: true,
                 },
             ],
+            systemHealth: {
+                supplierBalance: supplierBalance,
+                isLow: supplierBalance < 500000,
+            },
             weeklyChart,
             recentTransactions,
         };
@@ -95,6 +109,6 @@ let DashboardService = class DashboardService {
 exports.DashboardService = DashboardService;
 exports.DashboardService = DashboardService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, digiflazz_service_1.DigiflazzService])
 ], DashboardService);
 //# sourceMappingURL=dashboard.service.js.map

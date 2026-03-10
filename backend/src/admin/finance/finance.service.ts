@@ -128,7 +128,7 @@ export class FinanceService {
         });
     }
 
-    async processWithdrawal(id: string, operatorId: string) {
+    async processWithdrawal(id: string, operatorId: string, note?: string, receiptImage?: string) {
         const wd = await this.prisma.withdrawal.findUnique({ where: { id } });
         if (!wd) throw new NotFoundException('Data tidak ditemukan');
         if (wd.status !== 'PENDING') throw new BadRequestException('Status tidak PENDING');
@@ -140,7 +140,8 @@ export class FinanceService {
                     status: 'COMPLETED',
                     processedById: operatorId,
                     processedAt: new Date(),
-                    note: 'Proses manual sukses'
+                    note: note || 'Proses manual sukses',
+                    receiptImage: receiptImage || null
                 }
             });
 

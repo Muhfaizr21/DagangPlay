@@ -110,7 +110,21 @@ let WorkersService = WorkersService_1 = class WorkersService {
                 data: { balance: currentBalance, lastSyncAt: new Date() }
             });
             if (currentBalance < 500000) {
-                this.logger.warn(`LOW BALANCE ALERT: Digiflazz balance is Rp ${currentBalance.toLocaleString('id-ID')}`);
+                this.logger.warn(`LOW BALANCE ALERT: Digiflazz balance is Rp ${currentBalance.toLocaleString('id-ID')}. Setting products to MAINTENANCE.`);
+                await this.prisma.product.updateMany({
+                    where: { status: 'ACTIVE' },
+                    data: { status: 'MAINTENANCE' }
+                });
+            }
+            else {
+                const maintenanceCount = await this.prisma.product.count({ where: { status: 'MAINTENANCE' } });
+                if (maintenanceCount > 0) {
+                    await this.prisma.product.updateMany({
+                        where: { status: 'MAINTENANCE' },
+                        data: { status: 'ACTIVE' }
+                    });
+                    this.logger.log(`Balance recovered (${currentBalance}). Products set back to ACTIVE.`);
+                }
             }
         }
         catch (err) {

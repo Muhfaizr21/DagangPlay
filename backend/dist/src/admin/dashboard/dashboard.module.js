@@ -11,11 +11,13 @@ const common_1 = require("@nestjs/common");
 const dashboard_controller_1 = require("./dashboard.controller");
 const dashboard_service_1 = require("./dashboard.service");
 const prisma_service_1 = require("../../prisma.service");
+const digiflazz_module_1 = require("../digiflazz/digiflazz.module");
 let DashboardModule = class DashboardModule {
 };
 exports.DashboardModule = DashboardModule;
 exports.DashboardModule = DashboardModule = __decorate([
     (0, common_1.Module)({
+        imports: [digiflazz_module_1.DigiflazzModule],
         controllers: [dashboard_controller_1.DashboardController],
         providers: [dashboard_service_1.DashboardService, prisma_service_1.PrismaService],
     })

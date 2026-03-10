@@ -80,6 +80,9 @@ export declare class FinanceController {
         bankAccountName: string;
         processedById: string | null;
     })[]>;
-    processWithdrawal(id: string): Promise<any>;
+    processWithdrawal(id: string, body: {
+        note?: string;
+        receiptImage?: string;
+    }): Promise<any>;
     rejectWithdrawal(id: string, reason: string): Promise<any>;
 }

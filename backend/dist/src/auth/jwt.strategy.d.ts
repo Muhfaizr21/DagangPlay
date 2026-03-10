@@ -11,6 +11,7 @@ export declare class JwtStrategy extends JwtStrategy_base {
         email: string | null;
         role: import("@prisma/client").$Enums.Role;
         name: string;
+        merchantId: string | null;
     }>;
 }
 export {};

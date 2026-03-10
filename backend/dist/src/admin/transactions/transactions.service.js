@@ -12,10 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TransactionsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma.service");
+const public_orders_service_1 = require("../../public/orders/public-orders.service");
 let TransactionsService = class TransactionsService {
     prisma;
-    constructor(prisma) {
+    publicOrders;
+    constructor(prisma, publicOrders) {
         this.prisma = prisma;
+        this.publicOrders = publicOrders;
     }
     async getAllTransactions(filters) {
         const { search, paymentStatus, fulfillmentStatus, merchantId, productId, startDate, endDate, page = 1, limit = 50 } = filters;
@@ -135,6 +138,7 @@ let TransactionsService = class TransactionsService {
                     changedBy: operatorId
                 }
             });
+            await this.publicOrders.reverseCommission(id, tx);
             const user = await tx.user.findUnique({ where: { id: order.userId } });
             const currentBalance = user?.balance || 0;
             const refundAmount = Number(order.totalPrice);
@@ -150,6 +154,7 @@ let TransactionsService = class TransactionsService {
                         amount: refundAmount,
                         balanceBefore: currentBalance,
                         balanceAfter: Number(currentBalance) + refundAmount,
+                        orderId: order.id,
                         note: `Refund trx: ${order.orderNumber}`
                     }
                 });
@@ -157,7 +162,7 @@ let TransactionsService = class TransactionsService {
             await tx.auditLog.create({
                 data: { action: 'REFUND_TRANSACTION', entity: 'Order', entityId: id, newData: { refunded: true }, oldData: {} }
             });
-            return { success: true, message: 'Refund berhasil diproses' };
+            return { success: true, message: 'Refund berhasil diproses & Profit merchant ditarik balik' };
         });
     }
     async markAsFraud(id, reason, operatorId) {
@@ -208,6 +213,7 @@ let TransactionsService = class TransactionsService {
 exports.TransactionsService = TransactionsService;
 exports.TransactionsService = TransactionsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        public_orders_service_1.PublicOrdersService])
 ], TransactionsService);
 //# sourceMappingURL=transactions.service.js.map

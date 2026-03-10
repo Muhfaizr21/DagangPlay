@@ -1,15 +1,19 @@
 import { PrismaService } from '../../prisma.service';
 import { TripayService } from '../../tripay/tripay.service';
+import { DigiflazzService } from '../../admin/digiflazz/digiflazz.service';
+import { Prisma } from '@prisma/client';
 export declare class PublicOrdersService {
     private prisma;
     private tripay;
-    constructor(prisma: PrismaService, tripay: TripayService);
+    private digiflazz;
+    constructor(prisma: PrismaService, tripay: TripayService, digiflazz: DigiflazzService);
     private mapPaymentMethod;
-    createCheckout(body: any): Promise<{
+    createCheckout(body: any, host?: string): Promise<{
         success: boolean;
         orderNumber: string;
-        checkoutUrl: any;
+        payment: any;
     }>;
+    reverseCommission(orderId: string, tx?: Prisma.TransactionClient): Promise<void>;
     getOrderDetails(orderNumber: string): Promise<{
         productSku: {
             product: {
@@ -70,7 +74,7 @@ export declare class PublicOrdersService {
             marginLegend: number;
             marginSupreme: number;
             stock: number;
-            metadata: import("@prisma/client/runtime/client").JsonValue | null;
+            metadata: Prisma.JsonValue | null;
         };
         payment: {
             id: string;
@@ -89,7 +93,7 @@ export declare class PublicOrdersService {
             tripayPaymentUrl: string | null;
             tripayVaNumber: string | null;
             tripayQrUrl: string | null;
-            tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
+            tripayResponse: Prisma.JsonValue | null;
             totalAmount: number;
             fee: number;
             tripayExpiredTime: Date | null;
@@ -118,7 +122,7 @@ export declare class PublicOrdersService {
         paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
         fulfillmentStatus: import("@prisma/client").$Enums.OrderFulfillmentStatus;
         supplierRefId: string | null;
-        supplierResponse: import("@prisma/client/runtime/client").JsonValue | null;
+        supplierResponse: Prisma.JsonValue | null;
         serialNumber: string | null;
         note: string | null;
         failReason: string | null;

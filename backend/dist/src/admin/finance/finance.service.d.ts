@@ -71,7 +71,7 @@ export declare class FinanceService {
         bankAccountName: string;
         processedById: string | null;
     })[]>;
-    processWithdrawal(id: string, operatorId: string): Promise<any>;
+    processWithdrawal(id: string, operatorId: string, note?: string, receiptImage?: string): Promise<any>;
     rejectWithdrawal(id: string, reason: string, operatorId: string): Promise<any>;
     getFinanceSummary(): Promise<{
         totalDepositIn: number;

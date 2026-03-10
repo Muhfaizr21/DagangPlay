@@ -1,11 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 
+import { DigiflazzService } from '../digiflazz/digiflazz.service';
+
 @Injectable()
 export class DashboardService {
-    constructor(private prisma: PrismaService) { }
+    constructor(private prisma: PrismaService, private digiflazz: DigiflazzService) { }
 
     async getDashboardSummary() {
+        // Get Supplier Balance
+        let supplierBalance = 0;
+        try {
+            supplierBalance = await this.digiflazz.checkBalance();
+        } catch (e) {
+            console.error('Failed to fetch supplier balance for dashboard');
+        }
         // Total Revenue (all successful orders)
         const revenueAgg = await this.prisma.order.aggregate({
             where: { paymentStatus: 'PAID' },
@@ -68,8 +77,8 @@ export class DashboardService {
         return {
             stats: [
                 {
-                    label: 'Total Revenue',
-                    value: `Rp ${(Number(totalRevenue) / 1000000).toFixed(1)}M`, // formatting as M
+                    label: 'Total Platform Revenue',
+                    value: `Rp ${(Number(totalRevenue) / 1000000).toFixed(1)} JT`,
                     change: '+12.5%',
                     isUp: true,
                 },
@@ -92,6 +101,10 @@ export class DashboardService {
                     isUp: true,
                 },
             ],
+            systemHealth: {
+                supplierBalance: supplierBalance,
+                isLow: supplierBalance < 500000,
+            },
             weeklyChart,
             recentTransactions,
         };

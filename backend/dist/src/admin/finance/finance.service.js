@@ -118,7 +118,7 @@ let FinanceService = class FinanceService {
             take: 100
         });
     }
-    async processWithdrawal(id, operatorId) {
+    async processWithdrawal(id, operatorId, note, receiptImage) {
         const wd = await this.prisma.withdrawal.findUnique({ where: { id } });
         if (!wd)
             throw new common_1.NotFoundException('Data tidak ditemukan');
@@ -131,7 +131,8 @@ let FinanceService = class FinanceService {
                     status: 'COMPLETED',
                     processedById: operatorId,
                     processedAt: new Date(),
-                    note: 'Proses manual sukses'
+                    note: note || 'Proses manual sukses',
+                    receiptImage: receiptImage || null
                 }
             });
             await tx.auditLog.create({

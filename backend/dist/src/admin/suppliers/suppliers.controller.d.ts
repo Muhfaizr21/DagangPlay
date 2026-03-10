@@ -75,8 +75,8 @@ export declare class SuppliersController {
         createdAt: Date;
         supplierId: string;
         note: string | null;
-        amount: number;
         type: string;
+        amount: number;
         balanceBefore: number;
         balanceAfter: number;
     }[]>;

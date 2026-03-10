@@ -69,18 +69,24 @@ export class TripayController {
                                 }
                             });
 
-                            // 2. Update Payment Status
+                            // 2. Update Payment Status & Record Fee
+                            const tripayFee = (Number(data.fee_merchant) || 0) + (Number(data.fee_customer) || 0);
+
                             await tx.payment.update({
                                 where: { orderId: order.id },
                                 data: {
                                     status: 'PAID',
+                                    fee: tripayFee,
                                     paidAt: new Date(),
                                     tripayResponse: data as any
                                 }
                             });
 
-                            // 2.5 Credit Profit to Merchant
-                            if (profit > 0) {
+                            // 2.5 Credit Profit to Merchant (Protect Super Admin from Fees)
+                            // Formula: (Selling Price - Modal Price) - Tripay Fee
+                            const netProfit = profit - tripayFee;
+
+                            if (netProfit > 0) {
                                 const merchant = await tx.merchant.findUnique({
                                     where: { id: order.merchantId },
                                     select: { ownerId: true }
@@ -89,18 +95,30 @@ export class TripayController {
                                 if (merchant) {
                                     const user = await tx.user.update({
                                         where: { id: merchant.ownerId },
-                                        data: { balance: { increment: profit } }
+                                        data: { balance: { increment: netProfit } }
+                                    });
+
+                                    // Create official Commission record
+                                    const commission = await tx.commission.create({
+                                        data: {
+                                            orderId: order.id,
+                                            userId: merchant.ownerId,
+                                            type: 'MERCHANT_RETAIL_PROFIT',
+                                            amount: netProfit,
+                                            status: 'SETTLED',
+                                            settledAt: new Date()
+                                        }
                                     });
 
                                     await tx.balanceTransaction.create({
                                         data: {
                                             userId: merchant.ownerId,
                                             type: 'COMMISSION',
-                                            amount: profit,
-                                            balanceBefore: user.balance - profit,
+                                            amount: netProfit,
+                                            balanceBefore: user.balance - netProfit,
                                             balanceAfter: user.balance,
                                             orderId: order.id,
-                                            description: `Profit penjualan ${order.orderNumber}`
+                                            description: `Profit penjualan (bersih) ${order.orderNumber}`
                                         }
                                     });
                                 }

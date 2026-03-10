@@ -120,27 +120,38 @@ export class MerchantsService {
         };
     }
 
-    async updateMerchantSettings(id: string, settingsUpdate: any) {
+    async updateMerchantSettings(id: string, updateData: any) {
         const merchant = await this.prisma.merchant.findUnique({ where: { id } });
         if (!merchant) throw new NotFoundException('Merchant tidak ditemukan');
 
-        // Merge existing settings with new one 
-        // e.g., platformFee, minDeposit, maxDeposit, isMaintenance, allowCustomDomain
+        const { plan, planExpiredAt, isOfficial, status, ...settingsOnly } = updateData;
+
+        // Current settings (JSON field) logic
         const currentSettings = typeof merchant.settings === 'object' && merchant.settings !== null ? merchant.settings : {};
-        const newSettings = { ...currentSettings, ...settingsUpdate };
+        const newSettings = { ...currentSettings, ...settingsOnly };
 
         const updated = await this.prisma.merchant.update({
             where: { id },
-            data: { settings: newSettings }
+            data: {
+                settings: newSettings,
+                ...(plan && { plan }),
+                ...(planExpiredAt && { planExpiredAt: new Date(planExpiredAt) }),
+                ...(isOfficial !== undefined && { isOfficial }),
+                ...(status && { status })
+            }
         });
 
         await this.prisma.auditLog.create({
             data: {
-                action: 'UPDATE_MERCHANT_SETTINGS',
+                action: 'UPDATE_MERCHANT_FULL_SETTINGS',
                 entity: 'Merchant',
                 entityId: id,
-                newData: settingsUpdate,
-                oldData: {}
+                newData: updateData,
+                oldData: {
+                    plan: merchant.plan,
+                    planExpiredAt: merchant.planExpiredAt,
+                    status: merchant.status
+                }
             }
         });
 

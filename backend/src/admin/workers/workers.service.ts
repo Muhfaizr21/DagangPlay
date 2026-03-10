@@ -130,8 +130,22 @@ export class WorkersService {
             });
 
             if (currentBalance < 500000) {
-                this.logger.warn(`LOW BALANCE ALERT: Digiflazz balance is Rp ${currentBalance.toLocaleString('id-ID')}`);
-                // Future: Send notification to Super Admin Slack/Email
+                this.logger.warn(`LOW BALANCE ALERT: Digiflazz balance is Rp ${currentBalance.toLocaleString('id-ID')}. Setting products to MAINTENANCE.`);
+                // Auto-Maintenance: Lock all products to prevent unpaid orders failing at fulfillment
+                await this.prisma.product.updateMany({
+                    where: { status: 'ACTIVE' },
+                    data: { status: 'MAINTENANCE' }
+                });
+            } else {
+                // Auto-Recovery: Re-activate products if balance is sufficient (Optional: only reactivate what we closed)
+                const maintenanceCount = await this.prisma.product.count({ where: { status: 'MAINTENANCE' } });
+                if (maintenanceCount > 0) {
+                    await this.prisma.product.updateMany({
+                        where: { status: 'MAINTENANCE' },
+                        data: { status: 'ACTIVE' }
+                    });
+                    this.logger.log(`Balance recovered (${currentBalance}). Products set back to ACTIVE.`);
+                }
             }
         } catch (err: any) {
             this.logger.error(`Failed to sync supplier balance: ${err.message}`);

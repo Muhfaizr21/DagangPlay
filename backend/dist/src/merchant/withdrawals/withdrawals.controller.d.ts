@@ -1,0 +1,43 @@
+import { WithdrawalsService } from './withdrawals.service';
+export declare class WithdrawalsController {
+    private readonly withdrawalsService;
+    constructor(withdrawalsService: WithdrawalsService);
+    requestWithdrawal(req: any, dto: any): Promise<any>;
+    getHistory(req: any): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import("@prisma/client").$Enums.WithdrawalStatus;
+        note: string | null;
+        processedAt: Date | null;
+        userId: string;
+        amount: number;
+        receiptImage: string | null;
+        rejectedAt: Date | null;
+        fee: number;
+        netAmount: number;
+        bankName: string;
+        bankAccountNumber: string;
+        bankAccountName: string;
+        processedById: string | null;
+    }[]>;
+    approve(id: string, req: any, body: any): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import("@prisma/client").$Enums.WithdrawalStatus;
+        note: string | null;
+        processedAt: Date | null;
+        userId: string;
+        amount: number;
+        receiptImage: string | null;
+        rejectedAt: Date | null;
+        fee: number;
+        netAmount: number;
+        bankName: string;
+        bankAccountNumber: string;
+        bankAccountName: string;
+        processedById: string | null;
+    }>;
+    reject(id: string, req: any, body: any): Promise<any>;
+}

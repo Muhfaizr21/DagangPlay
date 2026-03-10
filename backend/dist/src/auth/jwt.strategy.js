@@ -34,7 +34,7 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
         if (user.status !== 'ACTIVE') {
             throw new common_1.UnauthorizedException('Akun ini sedang dalam status tidak aktif / disuspend.');
         }
-        return { id: user.id, email: user.email, role: user.role, name: user.name };
+        return { id: user.id, email: user.email, role: user.role, name: user.name, merchantId: user.merchantId };
     }
 };
 exports.JwtStrategy = JwtStrategy;

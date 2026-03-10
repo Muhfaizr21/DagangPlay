@@ -72,8 +72,8 @@ export declare class SuppliersService {
         createdAt: Date;
         supplierId: string;
         note: string | null;
-        amount: number;
         type: string;
+        amount: number;
         balanceBefore: number;
         balanceAfter: number;
     }[]>;

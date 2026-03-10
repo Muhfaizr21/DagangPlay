@@ -39,8 +39,8 @@ let FinanceController = class FinanceController {
     async getWithdrawals(status) {
         return this.financeService.getWithdrawals({ status });
     }
-    async processWithdrawal(id) {
-        return this.financeService.processWithdrawal(id, 'SuperAdmin');
+    async processWithdrawal(id, body) {
+        return this.financeService.processWithdrawal(id, 'SuperAdmin', body.note, body.receiptImage);
     }
     async rejectWithdrawal(id, reason) {
         return this.financeService.rejectWithdrawal(id, reason || 'No Reason', 'SuperAdmin');
@@ -89,8 +89,9 @@ __decorate([
     (0, common_1.Post)('withdrawals/:id/process'),
     (0, common_1.HttpCode)(200),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], FinanceController.prototype, "processWithdrawal", null);
 __decorate([

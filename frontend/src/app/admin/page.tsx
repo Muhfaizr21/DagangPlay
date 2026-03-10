@@ -60,6 +60,43 @@ export default function AdminDashboardPage() {
 
             {data && !isLoading && (
                 <>
+                    {/* System Infrastructure Health Bar */}
+                    <div className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className={`col-span-1 lg:col-span-2 p-4 rounded-2xl border flex items-center justify-between transition-all ${data.systemHealth?.isLow ? 'bg-red-50 border-red-200 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : 'bg-slate-50 border-slate-100'
+                            }`}>
+                            <div className="flex items-center gap-4">
+                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${data.systemHealth?.isLow ? 'bg-red-500 text-white animate-pulse' : 'bg-emerald-500 text-white'
+                                    }`}>
+                                    <Activity className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Status Supplier (Digiflazz)</h4>
+                                    <p className={`text-xl font-black ${data.systemHealth?.isLow ? 'text-red-700' : 'text-slate-800'}`}>
+                                        Rp {Number(data.systemHealth?.supplierBalance || 0).toLocaleString('id-ID')}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-end">
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${data.systemHealth?.isLow ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-emerald-100 text-emerald-700'
+                                    }`}>
+                                    {data.systemHealth?.isLow ? 'REFILL REQUIRED' : 'CONNECTED & HEALTHY'}
+                                </span>
+                                <p className="text-[9px] text-slate-400 mt-1 font-medium">Last Sync: {new Date().toLocaleTimeString()}</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 p-4 rounded-2xl flex items-center gap-4 text-white shadow-lg">
+                            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center border border-white/30">
+                                <Wallet className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1">
+                                <h4 className="text-[10px] font-black opacity-70 uppercase tracking-widest">Saldo TriPay</h4>
+                                <p className="text-lg font-black leading-tight">Connected</p>
+                            </div>
+                            <ArrowRight className="w-4 h-4 opacity-50" />
+                        </div>
+                    </div>
+
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         {data.stats.map((stat: any, i: number) => {

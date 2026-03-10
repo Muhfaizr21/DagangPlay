@@ -34,11 +34,13 @@ export default function FinanceManagementPage() {
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [toastMsg, setToastMsg] = useState<{ title: string; desc: string; type: 'success' | 'error' } | null>(null);
 
-    // Reject Modal
+    // Reject/Approve Modal
     const [showRejectModal, setShowRejectModal] = useState(false);
-    const [rejectType, setRejectType] = useState<'DEPOSIT' | 'WITHDRAWAL'>('DEPOSIT');
-    const [rejectId, setRejectId] = useState('');
-    const [rejectReason, setRejectReason] = useState('');
+    const [showApproveModal, setShowApproveModal] = useState(false);
+    const [modalActionId, setModalActionId] = useState('');
+    const [actionType, setActionType] = useState<'DEPOSIT' | 'WITHDRAWAL'>('DEPOSIT');
+    const [actionReason, setActionReason] = useState('');
+    const [actionReceipt, setActionReceipt] = useState('');
 
     // Fetch Data
     const { data: summary, error: summaryErr, isLoading: loadingSummary } = useSWR(
@@ -84,23 +86,53 @@ export default function FinanceManagementPage() {
     };
 
     const openRejectModal = (type: 'DEPOSIT' | 'WITHDRAWAL', id: string) => {
-        setRejectType(type);
-        setRejectId(id);
-        setRejectReason('');
+        setActionType(type);
+        setModalActionId(id);
+        setActionReason('');
         setShowRejectModal(true);
+    };
+
+    const openApproveModal = (type: 'DEPOSIT' | 'WITHDRAWAL', id: string) => {
+        setActionType(type);
+        setModalActionId(id);
+        setActionReason('');
+        setActionReceipt('');
+
+        // For Deposit, we can still use simple confirm or modal too
+        if (type === 'DEPOSIT') {
+            handleConfirmDeposit(id);
+        } else {
+            setShowApproveModal(true);
+        }
+    };
+
+    const submitApprove = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await axios.post(`http://localhost:3001/admin/finance/withdrawals/${modalActionId}/process`, {
+                note: actionReason,
+                receiptImage: actionReceipt
+            }, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
+
+            mutateWd();
+            showToast('Withdrawal Selesai', 'Status penarikan menjadi COMPLETED.');
+            setShowApproveModal(false);
+        } catch (err: any) {
+            showToast('Gagal', err.response?.data?.message || 'Error processing withdrawal', 'error');
+        }
     };
 
     const submitReject = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!rejectReason) return;
+        if (!actionReason) return;
 
         try {
-            if (rejectType === 'DEPOSIT') {
-                await axios.post(`http://localhost:3001/admin/finance/deposits/${rejectId}/reject`, { reason: rejectReason });
+            if (actionType === 'DEPOSIT') {
+                await axios.post(`http://localhost:3001/admin/finance/deposits/${modalActionId}/reject`, { reason: actionReason }, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
                 mutateDep();
                 showToast('Sukses', 'Deposit telah ditolak.');
             } else {
-                await axios.post(`http://localhost:3001/admin/finance/withdrawals/${rejectId}/reject`, { reason: rejectReason });
+                await axios.post(`http://localhost:3001/admin/finance/withdrawals/${modalActionId}/reject`, { reason: actionReason }, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
                 mutateWd();
                 showToast('Sukses', 'Penarikan dana dibatalkan dan uang di-refund.');
             }
@@ -136,20 +168,63 @@ export default function FinanceManagementPage() {
             {/* REJECT MODAL */}
             {showRejectModal && (
                 <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6">
-                    <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm">
-                        <h3 className="font-bold text-lg text-slate-800 mb-2">Tolak {rejectType === 'DEPOSIT' ? 'Deposit' : 'Withdrawal'}</h3>
-                        <p className="text-sm text-slate-500 mb-4">Mohon berikan alasan penolakan agar user memahami alasannya.</p>
+                    <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-200">
+                        <h3 className="font-bold text-lg text-slate-800 mb-2 font-display">Tolak {actionType}</h3>
+                        <p className="text-[13px] text-slate-500 mb-4 leading-relaxed">Berikan alasan mengapa permintaan ini ditolak agar pengguna dapat mengetahuinya.</p>
                         <form onSubmit={submitReject}>
                             <textarea
                                 required
-                                value={rejectReason}
-                                onChange={(e) => setRejectReason(e.target.value)}
-                                className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 mb-4 h-24"
-                                placeholder="Misal: Bukti transfer palsu / Rekening tidak sesuai..."
+                                value={actionReason}
+                                onChange={(e) => setActionReason(e.target.value)}
+                                className="w-full border border-slate-200 rounded-xl p-4 text-[13px] focus:outline-none focus:ring-2 focus:ring-red-400 mb-4 h-28 bg-slate-50 transition-all"
+                                placeholder="Contoh: Bukti transfer tidak valid / Data rekening salah..."
                             />
-                            <div className="flex gap-2 justify-end">
-                                <button type="button" onClick={() => setShowRejectModal(false)} className="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hidden md:block">Batal</button>
-                                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg">Konfirmasi Tolak</button>
+                            <div className="flex gap-3 justify-end">
+                                <button type="button" onClick={() => setShowRejectModal(false)} className="px-5 py-2.5 text-[13px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">Batal</button>
+                                <button type="submit" className="px-5 py-2.5 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-md shadow-red-200 transition-all">Konfirmasi Tolak</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* APPROVE MODAL (With Receipt) */}
+            {showApproveModal && (
+                <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6">
+                    <div className="bg-white rounded-2xl shadow-2xl p-7 w-full max-w-md border border-slate-100 ring-1 ring-slate-900/5">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                <CheckCircle2 className="w-6 h-6" />
+                            </div>
+                            <h3 className="font-bold text-lg text-slate-800 tracking-tight">Setujui Penarikan Dana</h3>
+                        </div>
+                        <p className="text-[13px] text-slate-500 mb-6 leading-relaxed">Selesaikan proses transfer ke rekening merchant, lalu lampirkan bukti atau catatan di sini sebagai arsip.</p>
+
+                        <form onSubmit={submitApprove} className="space-y-4">
+                            <div>
+                                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Bukti Transfer (URL/Link)</label>
+                                <input
+                                    type="text"
+                                    value={actionReceipt}
+                                    onChange={(e) => setActionReceipt(e.target.value)}
+                                    className="w-full border border-slate-200 rounded-xl p-3.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-slate-50 transition-all"
+                                    placeholder="Tempel link screenshot bukti transfer (Imgur/Drive)..."
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Pesan / Catatan Internal</label>
+                                <textarea
+                                    value={actionReason}
+                                    onChange={(e) => setActionReason(e.target.value)}
+                                    className="w-full border border-slate-200 rounded-xl p-3.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-slate-50 transition-all h-24"
+                                    placeholder="Tulis catatan (opsional)..."
+                                />
+                            </div>
+                            <div className="pt-2 flex gap-3 justify-end border-t border-slate-50 mt-2">
+                                <button type="button" onClick={() => setShowApproveModal(false)} className="px-6 py-2.5 text-[13px] font-bold text-slate-500 hover:text-slate-700 transition-colors">Batal</button>
+                                <button type="submit" className="px-6 py-2.5 text-[13px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-lg shadow-emerald-200 transition-all flex items-center gap-2">
+                                    Konfirmasi & Selesaikan
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -330,7 +405,7 @@ export default function FinanceManagementPage() {
                                                     {item.status === 'PENDING' && (
                                                         <>
                                                             <button
-                                                                onClick={() => activeTab === 'DEPOSIT' ? handleConfirmDeposit(item.id) : handleProcessWd(item.id)}
+                                                                onClick={() => openApproveModal(activeTab, item.id)}
                                                                 className="p-1.5 text-emerald-600 hover:bg-emerald-50 border border-transparent hover:border-emerald-200 rounded-lg transition-all"
                                                                 title="Approve / Loloskan"
                                                             >

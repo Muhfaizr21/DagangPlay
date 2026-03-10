@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import { OrderPaymentStatus, OrderFulfillmentStatus, FraudRiskLevel } from '@prisma/client';
+import { PublicOrdersService } from '../../public/orders/public-orders.service';
 
 @Injectable()
 export class TransactionsService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private publicOrders: PublicOrdersService
+    ) { }
 
     async getAllTransactions(filters: any) {
         const {
@@ -145,7 +149,10 @@ export class TransactionsService {
                 }
             });
 
-            // Kembalikan dana ke user balance
+            // 1. Reversal Profit Merchant (Anti-Leakage)
+            await this.publicOrders.reverseCommission(id, tx as any);
+
+            // 2. Kembalikan dana ke user balance (Customer)
             const user = await tx.user.findUnique({ where: { id: order.userId } });
             const currentBalance = user?.balance || 0;
             const refundAmount = Number(order.totalPrice);
@@ -163,6 +170,7 @@ export class TransactionsService {
                         amount: refundAmount,
                         balanceBefore: currentBalance,
                         balanceAfter: Number(currentBalance) + refundAmount,
+                        orderId: order.id,
                         note: `Refund trx: ${order.orderNumber}`
                     }
                 });
@@ -172,7 +180,7 @@ export class TransactionsService {
                 data: { action: 'REFUND_TRANSACTION', entity: 'Order', entityId: id, newData: { refunded: true }, oldData: {} }
             });
 
-            return { success: true, message: 'Refund berhasil diproses' };
+            return { success: true, message: 'Refund berhasil diproses & Profit merchant ditarik balik' };
         });
     }
 

@@ -40,7 +40,7 @@ export class MerchantOverridesController {
                 }
             },
             update: {
-                customPrice: dto.customPrice,
+                customModalPrice: dto.customModalPrice,
                 reason: dto.reason,
                 expiredAt: dto.expiredAt ? new Date(dto.expiredAt) : null,
                 isActive: true
@@ -48,7 +48,8 @@ export class MerchantOverridesController {
             create: {
                 merchantId: dto.merchantId,
                 productSkuId: dto.productSkuId,
-                customPrice: dto.customPrice,
+                customModalPrice: dto.customModalPrice,
+                customPrice: dto.sellingPrice || 0, // Fallback if admin sets retail price too
                 reason: dto.reason,
                 expiredAt: dto.expiredAt ? new Date(dto.expiredAt) : null,
                 userId: req.user.id

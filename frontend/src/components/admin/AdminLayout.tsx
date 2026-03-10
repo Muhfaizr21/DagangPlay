@@ -20,15 +20,16 @@ import {
     Megaphone,
     ShieldAlert,
     LifeBuoy,
-    Box
+    Box,
+    GraduationCap
 } from 'lucide-react';
 
 const MENU_ITEMS = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/content', label: 'Web Konten & Broadcast', icon: Megaphone },
-    { href: '/admin/merchants', label: 'Merchants (Toko)', icon: Store },
+    { href: '/admin/merchants', label: 'Manajemen Merchant', icon: Store },
+    { href: '/admin/marketing', label: 'Marketing Academy', icon: GraduationCap },
     { href: '/admin/subscriptions', label: 'SaaS Subscriptions', icon: CreditCard },
-    { href: '/admin/users', label: 'Manajemen User', icon: Users },
     { href: '/admin/products', label: 'Produk & Kategori', icon: Gamepad2 },
     { href: '/admin/products/pricing', label: 'Manajemen Tier Harga', icon: Tag },
     { href: '/admin/digiflazz', label: 'Digiflazz Product', icon: Box },

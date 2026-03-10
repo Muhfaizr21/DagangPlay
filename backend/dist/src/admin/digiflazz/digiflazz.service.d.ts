@@ -50,5 +50,35 @@ export declare class DigiflazzService {
     }>;
     checkOrderStatus(orderId: string, supplierRefId: string, buyerSkuCode: string, customerNo: string): Promise<any>;
     checkBalance(): Promise<number>;
+    checkAvailability(skuCode: string): Promise<{
+        isAvailable: boolean;
+        reason: any;
+        item?: undefined;
+    } | {
+        isAvailable: boolean;
+        item: {
+            buyer_sku_code: any;
+            product_name: any;
+            category: any;
+            brand: any;
+            type: any;
+            seller_name: any;
+            price: any;
+            buyer_product_status: any;
+            seller_product_status: any;
+            is_mapped: boolean;
+            local_info: {
+                id: any;
+                productId: any;
+                productName: any;
+                categoryId: any;
+                categoryName: any;
+                priceNormal: any;
+                status: any;
+            } | null;
+        };
+        reason?: undefined;
+    }>;
     placeOrder(orderId: string): Promise<any>;
+    private handleCommissionReversal;
 }

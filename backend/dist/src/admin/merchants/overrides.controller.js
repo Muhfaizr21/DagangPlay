@@ -48,7 +48,7 @@ let MerchantOverridesController = class MerchantOverridesController {
                 }
             },
             update: {
-                customPrice: dto.customPrice,
+                customModalPrice: dto.customModalPrice,
                 reason: dto.reason,
                 expiredAt: dto.expiredAt ? new Date(dto.expiredAt) : null,
                 isActive: true
@@ -56,7 +56,8 @@ let MerchantOverridesController = class MerchantOverridesController {
             create: {
                 merchantId: dto.merchantId,
                 productSkuId: dto.productSkuId,
-                customPrice: dto.customPrice,
+                customModalPrice: dto.customModalPrice,
+                customPrice: dto.sellingPrice || 0,
                 reason: dto.reason,
                 expiredAt: dto.expiredAt ? new Date(dto.expiredAt) : null,
                 userId: req.user.id

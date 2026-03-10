@@ -110,23 +110,34 @@ let MerchantsService = class MerchantsService {
             omset: Number(omsetAgg._sum.totalPrice || 0)
         };
     }
-    async updateMerchantSettings(id, settingsUpdate) {
+    async updateMerchantSettings(id, updateData) {
         const merchant = await this.prisma.merchant.findUnique({ where: { id } });
         if (!merchant)
             throw new common_1.NotFoundException('Merchant tidak ditemukan');
+        const { plan, planExpiredAt, isOfficial, status, ...settingsOnly } = updateData;
         const currentSettings = typeof merchant.settings === 'object' && merchant.settings !== null ? merchant.settings : {};
-        const newSettings = { ...currentSettings, ...settingsUpdate };
+        const newSettings = { ...currentSettings, ...settingsOnly };
         const updated = await this.prisma.merchant.update({
             where: { id },
-            data: { settings: newSettings }
+            data: {
+                settings: newSettings,
+                ...(plan && { plan }),
+                ...(planExpiredAt && { planExpiredAt: new Date(planExpiredAt) }),
+                ...(isOfficial !== undefined && { isOfficial }),
+                ...(status && { status })
+            }
         });
         await this.prisma.auditLog.create({
             data: {
-                action: 'UPDATE_MERCHANT_SETTINGS',
+                action: 'UPDATE_MERCHANT_FULL_SETTINGS',
                 entity: 'Merchant',
                 entityId: id,
-                newData: settingsUpdate,
-                oldData: {}
+                newData: updateData,
+                oldData: {
+                    plan: merchant.plan,
+                    planExpiredAt: merchant.planExpiredAt,
+                    status: merchant.status
+                }
             }
         });
         return updated;

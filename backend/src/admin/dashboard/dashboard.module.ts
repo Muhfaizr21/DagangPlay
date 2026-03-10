@@ -2,8 +2,10 @@ import { Module } from '@nestjs/common';
 import { DashboardController } from './dashboard.controller';
 import { DashboardService } from './dashboard.service';
 import { PrismaService } from '../../prisma.service';
+import { DigiflazzModule } from '../digiflazz/digiflazz.module';
 
 @Module({
+    imports: [DigiflazzModule],
     controllers: [DashboardController],
     providers: [DashboardService, PrismaService],
 })
