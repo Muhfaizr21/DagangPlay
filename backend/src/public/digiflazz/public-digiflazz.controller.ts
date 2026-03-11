@@ -27,10 +27,8 @@ export class PublicDigiflazzController {
             }
 
             // 2. TRANSACTION STATUS CHANGE
-            // Technically handled by checkOrderStatus, but webhook is faster
             if (event === 'transaction') {
-                // Logic for transaction status update could go here
-                // For now, price change is the most critical for margin protection
+                await this.digiflazzService.processTransactionWebhook(body.data);
             }
 
             return res.status(HttpStatus.OK).json({ success: true });

@@ -542,6 +542,56 @@ let DigiflazzService = class DigiflazzService {
             }
         }
     }
+    async processTransactionWebhook(data) {
+        if (!data || !data.ref_id)
+            return;
+        const order = await this.prisma.order.findUnique({
+            where: { orderNumber: data.ref_id }
+        });
+        if (!order) {
+            console.warn(`[DigiflazzWebhook] Order ${data.ref_id} tidak ditemukan.`);
+            return;
+        }
+        const statusMap = {
+            'Sukses': 'SUCCESS',
+            'Gagal': 'FAILED',
+            'Pending': 'PROCESSING'
+        };
+        const newStatus = statusMap[data.status] || 'PROCESSING';
+        if (order.fulfillmentStatus === 'SUCCESS' || order.fulfillmentStatus === 'FAILED' || order.fulfillmentStatus === 'REFUNDED') {
+            return;
+        }
+        await this.prisma.order.update({
+            where: { id: order.id },
+            data: {
+                fulfillmentStatus: newStatus,
+                serialNumber: data.sn || order.serialNumber,
+                failReason: data.status === 'Gagal' ? data.message : order.failReason,
+                completedAt: data.status === 'Sukses' ? new Date() : order.completedAt,
+                failedAt: data.status === 'Gagal' ? new Date() : order.failedAt,
+            }
+        });
+        if (newStatus === 'FAILED') {
+            await this.handleCommissionReversal(order.id);
+            await this.handleCustomerRefund(order.id);
+        }
+        console.log(`[DigiflazzWebhook] Transaksi ${data.ref_id} diupdate ke status ${newStatus}`);
+    }
+    maskSensitiveData(data) {
+        if (!data || typeof data !== 'object')
+            return data;
+        const sensitiveKeys = ['username', 'sign', 'key', 'apiKey', 'api_key', 'apiSecret', 'password', 'pin'];
+        const masked = Array.isArray(data) ? [...data] : { ...data };
+        for (const key of Object.keys(masked)) {
+            if (sensitiveKeys.includes(key)) {
+                masked[key] = '********';
+            }
+            else if (typeof masked[key] === 'object' && masked[key] !== null) {
+                masked[key] = this.maskSensitiveData(masked[key]);
+            }
+        }
+        return masked;
+    }
 };
 exports.DigiflazzService = DigiflazzService;
 exports.DigiflazzService = DigiflazzService = __decorate([

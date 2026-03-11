@@ -124,7 +124,15 @@ export class MerchantsService {
         const merchant = await this.prisma.merchant.findUnique({ where: { id } });
         if (!merchant) throw new NotFoundException('Merchant tidak ditemukan');
 
-        const { plan, planExpiredAt, isOfficial, status, ...settingsOnly } = updateData;
+        const { domain, plan, planExpiredAt, isOfficial, status, ...settingsOnly } = updateData;
+
+        // Ensure domain uniqueness if provided
+        if (domain && domain !== merchant.domain) {
+            const existingDomain = await this.prisma.merchant.findUnique({ where: { domain } });
+            if (existingDomain && existingDomain.id !== id) {
+                throw new Error('Domain sudah digunakan oleh merchant lain');
+            }
+        }
 
         // Current settings (JSON field) logic
         const currentSettings = typeof merchant.settings === 'object' && merchant.settings !== null ? merchant.settings : {};
@@ -134,6 +142,7 @@ export class MerchantsService {
             where: { id },
             data: {
                 settings: newSettings,
+                domain: domain === "" ? null : domain,
                 ...(plan && { plan }),
                 ...(planExpiredAt && { planExpiredAt: new Date(planExpiredAt) }),
                 ...(isOfficial !== undefined && { isOfficial }),

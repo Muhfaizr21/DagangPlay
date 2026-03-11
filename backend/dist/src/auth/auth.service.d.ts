@@ -15,6 +15,7 @@ export declare class AuthService {
             role: import("@prisma/client").$Enums.Role;
             adminPermissions: any;
             plan: import("@prisma/client").$Enums.MerchantPlan;
+            merchantSlug: string | undefined;
         };
     }>;
 }

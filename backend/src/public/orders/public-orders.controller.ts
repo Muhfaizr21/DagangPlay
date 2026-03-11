@@ -15,8 +15,8 @@ export class PublicOrdersController {
     }
 
     @Get('config')
-    async getConfig(@Req() req: any, @Query('slug') merchantSlug?: string) {
-        const host = req.headers.host || req.headers.origin;
+    async getConfig(@Req() req: any, @Query('slug') merchantSlug?: string, @Query('domain') domainMask?: string) {
+        const host = domainMask || req.headers.host || req.headers.origin;
         return this.publicOrdersService.getStoreConfig(host, merchantSlug);
     }
 

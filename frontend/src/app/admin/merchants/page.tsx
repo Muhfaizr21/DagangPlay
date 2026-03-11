@@ -38,6 +38,7 @@ export default function MerchantManagementPage() {
 
     const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
     const [settingsForm, setSettingsForm] = useState({
+        domain: '',
         platformFee: 0,
         allowCustomDomain: false,
         customDomainStatus: 'NONE',
@@ -59,6 +60,7 @@ export default function MerchantManagementPage() {
     useEffect(() => {
         if (merchantDetail) {
             setSettingsForm({
+                domain: merchantDetail.domain || '',
                 platformFee: merchantDetail.settings?.platformFee || 0,
                 allowCustomDomain: merchantDetail.settings?.allowCustomDomain || false,
                 customDomainStatus: merchantDetail.settings?.customDomainStatus || 'NONE',
@@ -123,9 +125,9 @@ export default function MerchantManagementPage() {
 
     const getPlanBadge = (plan: string) => {
         switch (plan) {
-            case 'ENTERPRISE': return <span className="text-indigo-600 font-bold text-[11px] flex items-center gap-1"><Crown className="w-3 h-3" /> Enterprise</span>;
-            case 'PROFESSIONAL': return <span className="text-blue-600 font-bold text-[11px]">Professional</span>;
-            case 'STARTER': return <span className="text-emerald-600 font-bold text-[11px]">Starter</span>;
+            case 'SUPREME': return <span className="text-orange-600 font-bold text-[11px] flex items-center gap-1"><Crown className="w-3 h-3" /> Supreme</span>;
+            case 'LEGEND': return <span className="text-purple-600 font-bold text-[11px]">Legend</span>;
+            case 'PRO': return <span className="text-blue-600 font-bold text-[11px]">Pro</span>;
             case 'FREE': return <span className="text-slate-500 font-bold text-[11px]">Free Plan</span>;
             default: return <span className="text-slate-500 font-bold text-[11px]">{plan}</span>;
         }
@@ -228,9 +230,9 @@ export default function MerchantManagementPage() {
                                                         className="w-full border border-slate-300 rounded-lg px-3 py-2 text-[13px] bg-slate-50"
                                                     >
                                                         <option value="FREE">Toko Gratis (FREE)</option>
-                                                        <option value="BASIC">SaaS Paket BASIC</option>
-                                                        <option value="PREMIUM">SaaS Paket PREMIUM</option>
-                                                        <option value="ENTERPRISE">SaaS Paket ENTERPRISE</option>
+                                                        <option value="PRO">SaaS Paket PRO</option>
+                                                        <option value="LEGEND">SaaS Paket LEGEND</option>
+                                                        <option value="SUPREME">SaaS Paket SUPREME</option>
                                                     </select>
                                                 </div>
                                                 <div>
@@ -255,16 +257,32 @@ export default function MerchantManagementPage() {
                                                     <span className="font-bold text-slate-700">Izinkan Custom Domain</span>
                                                 </label>
                                                 {settingsForm.allowCustomDomain && (
-                                                    <select
-                                                        value={settingsForm.customDomainStatus}
-                                                        onChange={(e) => setSettingsForm({ ...settingsForm, customDomainStatus: e.target.value })}
-                                                        className="w-full mt-1 border border-slate-300 rounded-lg px-3 py-2"
-                                                    >
-                                                        <option value="NONE">Belum Setup</option>
-                                                        <option value="PENDING">Menunggu Verifikasi DNS</option>
-                                                        <option value="ACTIVE">Domain Aktif (SSL Issued)</option>
-                                                        <option value="REJECTED">Ditolak / Gagal DNS</option>
-                                                    </select>
+                                                    <div className="space-y-2 mt-3">
+                                                        <div>
+                                                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Hostname Domain</label>
+                                                            <input
+                                                                type="text"
+                                                                value={settingsForm.domain}
+                                                                onChange={e => setSettingsForm({ ...settingsForm, domain: e.target.value })}
+                                                                placeholder="contoh: www.budigaming.com"
+                                                                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono outline-none focus:border-indigo-500 bg-slate-50"
+                                                            />
+                                                            <p className="text-[10px] text-slate-500 mt-1">Kosongkan jika store belum setup domain tujuan.</p>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Status CNAME/A Record</label>
+                                                            <select
+                                                                value={settingsForm.customDomainStatus}
+                                                                onChange={(e) => setSettingsForm({ ...settingsForm, customDomainStatus: e.target.value })}
+                                                                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs"
+                                                            >
+                                                                <option value="NONE">Belum Setup Domain</option>
+                                                                <option value="PENDING">Menunggu Resolve DNS</option>
+                                                                <option value="ACTIVE">Domain Tersambung Aktif</option>
+                                                                <option value="REJECTED">Koneksi Error / Ditolak</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
                                                 )}
                                             </div>
 

@@ -54,8 +54,8 @@ export declare class MerchantsService {
             user: {
                 id: string;
                 name: string;
-                email: string | null;
                 role: import("@prisma/client").$Enums.Role;
+                email: string | null;
             };
         } & {
             id: string;

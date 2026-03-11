@@ -78,34 +78,64 @@ let TripayController = class TripayController {
                             if (netProfit > 0) {
                                 const merchant = await tx.merchant.findUnique({
                                     where: { id: order.merchantId },
-                                    select: { ownerId: true }
+                                    select: { ownerId: true, settings: true }
                                 });
                                 if (merchant) {
-                                    const user = await tx.user.update({
-                                        where: { id: merchant.ownerId },
-                                        data: { balance: { increment: netProfit } }
-                                    });
-                                    await tx.commission.create({
-                                        data: {
-                                            orderId: order.id,
-                                            userId: merchant.ownerId,
-                                            type: 'MERCHANT_RETAIL_PROFIT',
-                                            amount: netProfit,
-                                            status: 'SETTLED',
-                                            settledAt: new Date()
+                                    let platformFeePct = 0;
+                                    if (merchant.settings && typeof merchant.settings === 'object' && 'platformFee' in merchant.settings) {
+                                        platformFeePct = Number(merchant.settings.platformFee) || 0;
+                                    }
+                                    const platformFeeAmount = Math.round(netProfit * (platformFeePct / 100));
+                                    const merchantNetProfit = netProfit - platformFeeAmount;
+                                    if (merchantNetProfit > 0) {
+                                        const user = await tx.user.update({
+                                            where: { id: merchant.ownerId },
+                                            data: { balance: { increment: merchantNetProfit } }
+                                        });
+                                        await tx.commission.create({
+                                            data: {
+                                                orderId: order.id,
+                                                userId: merchant.ownerId,
+                                                type: 'MERCHANT_RETAIL_PROFIT',
+                                                amount: merchantNetProfit,
+                                                status: 'SETTLED',
+                                                settledAt: new Date()
+                                            }
+                                        });
+                                        await tx.balanceTransaction.create({
+                                            data: {
+                                                userId: merchant.ownerId,
+                                                type: 'COMMISSION',
+                                                amount: merchantNetProfit,
+                                                balanceBefore: Number(user.balance) - merchantNetProfit,
+                                                balanceAfter: Number(user.balance),
+                                                orderId: order.id,
+                                                description: `Profit penjualan bersih ${order.orderNumber} (Fee Tripay: ${tripayFee}, Platform: ${platformFeeAmount})`
+                                            }
+                                        });
+                                    }
+                                    if (platformFeeAmount > 0) {
+                                        const superAdmin = await tx.user.findFirst({
+                                            where: { role: 'SUPER_ADMIN' }
+                                        });
+                                        if (superAdmin) {
+                                            const su = await tx.user.update({
+                                                where: { id: superAdmin.id },
+                                                data: { balance: { increment: platformFeeAmount } }
+                                            });
+                                            await tx.balanceTransaction.create({
+                                                data: {
+                                                    userId: superAdmin.id,
+                                                    type: 'COMMISSION',
+                                                    amount: platformFeeAmount,
+                                                    balanceBefore: Number(su.balance) - platformFeeAmount,
+                                                    balanceAfter: Number(su.balance),
+                                                    orderId: order.id,
+                                                    description: `Platform Fee (${platformFeePct}%) dari trx ${order.orderNumber}`
+                                                }
+                                            });
                                         }
-                                    });
-                                    await tx.balanceTransaction.create({
-                                        data: {
-                                            userId: merchant.ownerId,
-                                            type: 'COMMISSION',
-                                            amount: netProfit,
-                                            balanceBefore: Number(user.balance) - netProfit,
-                                            balanceAfter: Number(user.balance),
-                                            orderId: order.id,
-                                            description: `Profit penjualan bersih ${order.orderNumber} (Fee Tripay: ${tripayFee})`
-                                        }
-                                    });
+                                    }
                                 }
                             }
                         });

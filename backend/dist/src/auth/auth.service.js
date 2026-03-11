@@ -64,7 +64,8 @@ let AuthService = class AuthService {
                 email: user.email,
                 role: user.role,
                 adminPermissions: user.adminPermissions || [],
-                plan: user.ownedMerchant ? user.ownedMerchant.plan : 'PRO'
+                plan: user.ownedMerchant ? user.ownedMerchant.plan : 'PRO',
+                merchantSlug: user.ownedMerchant?.slug
             }
         };
     }

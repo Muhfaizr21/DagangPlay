@@ -78,6 +78,7 @@ let PrismaService = class PrismaService {
     get chatRoom() { return this.client.chatRoom; }
     get chatMessage() { return this.client.chatMessage; }
     get marketingGuide() { return this.client.marketingGuide; }
+    get merchantProductOverride() { return this.client.merchantProductOverride; }
     async onModuleInit() {
         await this.client.$connect();
     }

@@ -19,6 +19,9 @@ export default function MerchantProductsPage() {
     const [bulkPercentage, setBulkPercentage] = useState<number>(10);
     const [merchantPlan, setMerchantPlan] = useState('PRO');
     const [expandedProducts, setExpandedProducts] = useState<Record<string, boolean>>({});
+    const [isCustomizingProduct, setIsCustomizingProduct] = useState<any>(null);
+    const [customName, setCustomName] = useState('');
+    const [customThumbnail, setCustomThumbnail] = useState('');
 
     React.useEffect(() => {
         const userData = localStorage.getItem('admin_user');
@@ -102,6 +105,25 @@ export default function MerchantProductsPage() {
             [id]: !prev[id]
         }));
     };
+    const handleSaveMetadata = async () => {
+        if (!isCustomizingProduct) return;
+
+        try {
+            const token = localStorage.getItem('admin_token');
+            const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+            await axios.put(`${baseUrl}/merchant/products/${isCustomizingProduct.id}/metadata`, {
+                customName: customName || undefined,
+                customThumbnail: customThumbnail || undefined
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setIsCustomizingProduct(null);
+            mutate();
+            alert('Berhasil menyimpan kustomisasi produk!');
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Gagal menyimpan kustomisasi');
+        }
+    };
 
     return (
         <MerchantLayout>
@@ -167,6 +189,54 @@ export default function MerchantProductsPage() {
                 </div>
             )}
 
+            {/* Product Customization Modal */}
+            {isCustomizingProduct && (
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden relative transform transition-all">
+                        <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+                            <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                                <Settings2 className="w-5 h-5 text-indigo-600" /> Kustomisasi {isCustomizingProduct.name}
+                            </h3>
+                            <p className="text-sm text-slate-500 mt-1">Ubah tampilan produk khusus di website toko Anda.</p>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-[13px] font-bold text-slate-700 mb-2">Nama Produk Kustom</label>
+                                <input
+                                    type="text"
+                                    placeholder={isCustomizingProduct.name}
+                                    value={customName}
+                                    onChange={(e) => setCustomName(e.target.value)}
+                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-medium text-slate-800 shadow-sm"
+                                />
+                                <p className="text-[11px] text-slate-400 mt-1">Kosongkan jika ingin menggunakan nama asli.</p>
+                            </div>
+                            <div>
+                                <label className="block text-[13px] font-bold text-slate-700 mb-2">URL Thumbnail Kustom</label>
+                                <input
+                                    type="text"
+                                    placeholder={isCustomizingProduct.thumbnail}
+                                    value={customThumbnail}
+                                    onChange={(e) => setCustomThumbnail(e.target.value)}
+                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-medium text-slate-800 shadow-sm"
+                                />
+                                <p className="text-[11px] text-slate-400 mt-1">Gunakan URL gambar (JPG/PNG/WEBP). Kosongkan untuk default.</p>
+                            </div>
+                            {customThumbnail && (
+                                <div className="mt-2 text-center">
+                                    <p className="text-[11px] font-bold text-slate-400 mb-2 uppercase">Preview Gambar Baru:</p>
+                                    <img src={customThumbnail} alt="Preview" className="w-24 h-24 object-cover mx-auto rounded-2xl border-2 border-indigo-100 shadow-sm" />
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
+                            <button onClick={() => setIsCustomizingProduct(null)} className="px-5 py-2.5 text-[13px] font-bold text-slate-600 hover:bg-slate-200 rounded-xl">Batal</button>
+                            <button onClick={handleSaveMetadata} className="px-5 py-2.5 text-[13px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-all">Simpan Kustomisasi</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {isLoading ? (
                 <div className="py-20 text-center"><div className="w-8 h-8 mx-auto border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div></div>
             ) : error ? (
@@ -202,17 +272,19 @@ export default function MerchantProductsPage() {
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            if (merchantPlan !== 'SUPREME') {
-                                                alert('Kustomisasi Detail (Logo Game, Deskripsi, Panduan Topup khusus web Anda) adalah fitur eksklusif SUPREME. Silakan upgrade tier Anda.');
+                                            if (merchantPlan === 'FREE' && !product.isOfficial) {
+                                                alert('Upgrade ke PRO/SUPREME untuk kustomisasi detail produk.');
                                             } else {
-                                                alert('Fitur Kustomisasi Detail SUPREME (Mockup): Editor Logo, Deskripsi dan Panduan Topup akan terbuka.');
+                                                setIsCustomizingProduct(product);
+                                                setCustomName(product.customName || '');
+                                                setCustomThumbnail(product.customThumbnail || '');
                                             }
                                         }}
                                         className="px-3 py-1.5 flex items-center gap-2 text-[12px] font-bold rounded-lg transition-colors border shadow-sm bg-white hover:bg-slate-50 border-slate-200 text-slate-600"
                                     >
                                         <Settings2 className="w-3.5 h-3.5" />
                                         Kustomisasi Detail
-                                        {merchantPlan !== 'SUPREME' && <Lock className="w-3 h-3 text-red-500 ml-1" />}
+                                        {merchantPlan === 'FREE' && <Lock className="w-3 h-3 text-red-500 ml-1" />}
                                     </button>
                                     <div className="p-2 text-slate-400 bg-white border border-slate-200 rounded-lg shadow-sm">
                                         {expandedProducts[product.id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}

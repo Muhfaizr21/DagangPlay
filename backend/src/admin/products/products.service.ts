@@ -322,47 +322,59 @@ export class ProductsService {
         });
     }
 
-    // Public API Methods 
-    async getPublicCategories(merchantSlug?: string) {
-        // Find categories that have at least one active product with active SKUs
-        const categories = await this.prisma.category.findMany({
+    private async resolveMerchant(merchantSlug?: string, domain?: string) {
+        if (!merchantSlug && !domain) {
+            return await this.prisma.merchant.findFirst({ where: { isOfficial: true, status: 'ACTIVE' } });
+        }
+        return await this.prisma.merchant.findFirst({
             where: {
-                isActive: true,
-                products: {
-                    some: {
-                        status: 'ACTIVE',
-                        skus: {
-                            some: { status: 'ACTIVE' }
-                        }
-                    }
-                }
-            },
+                OR: [
+                    merchantSlug ? { slug: merchantSlug } : {},
+                    domain ? { domain: domain } : {},
+                    domain ? { slug: domain.split('.')[0] } : {}
+                ].filter(condition => Object.keys(condition).length > 0)
+            }
+        });
+    }
+
+    // Public API Methods 
+    async getPublicCategories(merchantSlug?: string, domain?: string) {
+        let merchantId: string | undefined;
+        let isOfficial = true;
+
+        const m = await this.resolveMerchant(merchantSlug, domain);
+        if (m) {
+            merchantId = m.id;
+            isOfficial = !!m.isOfficial;
+        }
+
+        // 1. Get ALL active categories 
+        const categories = await this.prisma.category.findMany({
+            where: { isActive: true },
             orderBy: { name: 'asc' },
-            select: {
-                id: true,
-                name: true,
-                slug: true,
-                image: true,
-                icon: true,
+            include: {
                 products: {
                     where: { status: 'ACTIVE' },
-                    select: {
-                        _count: {
-                            select: { skus: { where: { status: 'ACTIVE' } } }
+                    include: {
+                        skus: {
+                            where: { status: 'ACTIVE' },
+                            include: {
+                                merchantProductPrices: merchantId ? {
+                                    where: { merchantId }
+                                } : false
+                            }
                         }
                     }
                 }
             }
         });
 
-        // Group categories by canonical name to merge duplicates like Free Fire and Free Fire Max
         const mergedMap = new Map<string, any>();
 
         for (const cat of categories) {
             let canonicalSlug = cat.slug;
             let canonicalName = cat.name;
 
-            // Merging logic by slug
             const lowSlug = cat.slug.toLowerCase();
             if (lowSlug.startsWith('free-fire')) {
                 canonicalSlug = 'free-fire';
@@ -375,7 +387,17 @@ export class ProductsService {
                 canonicalName = 'PUBG MOBILE';
             }
 
-            const skuCount = cat.products.reduce((acc, p) => acc + (p._count?.skus || 0), 0);
+            // Calculate active SKU count for this merchant
+            let skuCount = 0;
+            for (const prod of cat.products) {
+                for (const sku of prod.skus) {
+                    const mPrice = (sku as any).merchantProductPrices?.[0];
+                    const isActive = mPrice ? mPrice.isActive : true; // Default to true so stores aren't empty
+                    if (isActive) skuCount++;
+                }
+            }
+
+            if (skuCount === 0) continue;
 
             if (mergedMap.has(canonicalSlug)) {
                 const existing = mergedMap.get(canonicalSlug);
@@ -383,9 +405,11 @@ export class ProductsService {
                 if (!existing.image && cat.image) existing.image = cat.image;
             } else {
                 mergedMap.set(canonicalSlug, {
-                    ...cat,
-                    slug: canonicalSlug,
+                    id: cat.id,
                     name: canonicalName,
+                    slug: canonicalSlug,
+                    image: cat.image,
+                    icon: cat.icon,
                     skuCount: skuCount
                 });
             }
@@ -412,12 +436,14 @@ export class ProductsService {
         return result.sort((a, b) => a.name.localeCompare(b.name));
     }
 
-    async getPublicCategoryBySlug(slug: string, merchantSlug?: string) {
+    async getPublicCategoryBySlug(slug: string, merchantSlug?: string, domain?: string) {
         // Find merchant if provided
         let merchantId: string | undefined;
-        if (merchantSlug) {
-            const m = await this.prisma.merchant.findFirst({ where: { slug: merchantSlug } });
-            merchantId = m?.id;
+        let isOfficial = true;
+        const m = await this.resolveMerchant(merchantSlug, domain);
+        if (m) {
+            merchantId = m.id;
+            isOfficial = !!m.isOfficial;
         }
 
         // Handle canonical slugs - if user asks for 'free-fire', fetch both 'free-fire' and 'free-fire-max'
@@ -427,28 +453,16 @@ export class ProductsService {
 
         let categories = await this.prisma.category.findMany({
             where: { slug: { in: slugsToFetch } },
-            select: {
-                id: true,
-                name: true,
-                slug: true,
-                image: true,
+            include: {
                 products: {
                     where: { status: 'ACTIVE' },
-                    select: {
-                        id: true,
-                        name: true,
-                        gameIdLabel: true,
-                        gameServerId: true,
-                        serverLabel: true,
+                    include: {
+                        overrides: merchantId ? {
+                            where: { merchantId }
+                        } : false,
                         skus: {
                             where: { status: 'ACTIVE' },
-                            orderBy: { priceNormal: 'asc' },
-                            select: {
-                                id: true,
-                                name: true,
-                                priceNormal: true,
-                                status: true
-                            }
+                            orderBy: { priceNormal: 'asc' }
                         }
                     }
                 }
@@ -459,28 +473,16 @@ export class ProductsService {
         if (categories.length === 0) {
             const catByProduct = await this.prisma.category.findFirst({
                 where: { products: { some: { slug: slug } } },
-                select: {
-                    id: true,
-                    name: true,
-                    slug: true,
-                    image: true,
+                include: {
                     products: {
                         where: { status: 'ACTIVE' },
-                        select: {
-                            id: true,
-                            name: true,
-                            gameIdLabel: true,
-                            gameServerId: true,
-                            serverLabel: true,
+                        include: {
+                            overrides: merchantId ? {
+                                where: { merchantId }
+                            } : false,
                             skus: {
                                 where: { status: 'ACTIVE' },
-                                orderBy: { priceNormal: 'asc' },
-                                select: {
-                                    id: true,
-                                    name: true,
-                                    priceNormal: true,
-                                    status: true
-                                }
+                                orderBy: { priceNormal: 'asc' }
                             }
                         }
                     }
@@ -491,22 +493,37 @@ export class ProductsService {
 
         if (categories.length === 0) return null;
 
-        // If merchantId is provided, fetch custom prices
+        // If merchantId is provided, fetch custom prices and visibility
         const merchantPrices = merchantId ? await this.prisma.merchantProductPrice.findMany({
-            where: { merchantId, isActive: true }
+            where: { merchantId }
         }) : [];
 
         const priceMap = new Map(merchantPrices.map(mp => [mp.productSkuId, mp.customPrice]));
+        const visibilityMap = new Map(merchantPrices.map(mp => [mp.productSkuId, mp.isActive]));
 
         // Merge results into a single object 
         const primary = categories[0];
-        const allProducts = categories.flatMap(c => c.products.map(p => ({
-            ...p,
-            skus: p.skus.map(s => ({
-                ...s,
-                priceNormal: priceMap.has(s.id) ? priceMap.get(s.id) : s.priceNormal
-            }))
-        })));
+        const allProducts = (categories as any).flatMap(c => c.products.map(p => {
+            const filteredSkus = p.skus.filter(s => {
+                const hasOverride = visibilityMap.has(s.id);
+                const isActive = hasOverride ? visibilityMap.get(s.id) : true; // Default to true so categories aren't empty
+                return isActive;
+            }).map(s => {
+                const customPrice = priceMap.get(s.id);
+                return {
+                    ...s,
+                    priceNormal: customPrice !== undefined ? customPrice : s.priceNormal
+                };
+            });
+
+            const override = (p as any).overrides?.[0];
+            return {
+                ...p,
+                name: override?.customName || p.name,
+                thumbnail: override?.customThumbnail || (p as any).thumbnail,
+                skus: filteredSkus
+            };
+        })).filter(p => p.skus.length > 0);
 
         const mergedResult = {
             ...primary,
@@ -563,20 +580,8 @@ export class ProductsService {
     }
 
     // 8. Get Public Content (Banners & Announcements) for Landing Page
-    async getPublicContent(merchantSlug?: string) {
-        let targetMerchant;
-
-        if (merchantSlug) {
-            targetMerchant = await this.prisma.merchant.findFirst({
-                where: { slug: merchantSlug }
-            });
-        }
-
-        if (!targetMerchant) {
-            targetMerchant = await this.prisma.merchant.findFirst({
-                where: { isOfficial: true }
-            });
-        }
+    async getPublicContent(merchantSlug?: string, domain?: string) {
+        const targetMerchant = await this.resolveMerchant(merchantSlug, domain);
 
         if (!targetMerchant) return { banners: [], announcements: [] };
 
@@ -595,7 +600,7 @@ export class ProductsService {
     }
 
     // 9. Get Public Reseller Sample Prices
-    async getPublicResellerPrices(merchantSlug?: string) {
+    async getPublicResellerPrices(merchantSlug?: string, domain?: string) {
         // Find a few sample popular products
         const sampleSkus = await this.prisma.productSku.findMany({
             where: {
@@ -626,13 +631,41 @@ export class ProductsService {
     }
 
     // 10. Get Full Public Catalog for Reseller Page
-    async getPublicFullCatalog(merchantSlug?: string) {
+    async getPublicFullCatalog(merchantSlug?: string, domain?: string) {
+        let merchant: any = await this.resolveMerchant(merchantSlug, domain);
+
+        const merchantId = merchant?.id;
+        let isOfficial = true;
+        if (merchant) {
+            isOfficial = !!merchant.isOfficial;
+        }
+
+
+        // Get plan mapping for tiered pricing if unofficial
+        let activeTier = 'NORMAL';
+        if (merchant) {
+            const mapping = await this.prisma.planTierMapping.findUnique({
+                where: { plan: merchant.plan || 'FREE' }
+            });
+            activeTier = mapping?.tier || 'NORMAL';
+        }
+
         const categories = await this.prisma.category.findMany({
+            where: { isActive: true },
             include: {
                 products: {
+                    where: { status: 'ACTIVE' },
                     include: {
+                        overrides: merchantId ? {
+                            where: { merchantId }
+                        } : false,
                         skus: {
                             where: { status: 'ACTIVE' },
+                            include: {
+                                merchantProductPrices: merchantId ? {
+                                    where: { merchantId }
+                                } : false
+                            },
                             orderBy: { basePrice: 'asc' }
                         }
                     }
@@ -641,26 +674,65 @@ export class ProductsService {
             orderBy: { name: 'asc' }
         });
 
-        return categories.map(cat => ({
-            id: cat.id,
-            name: cat.name,
-            slug: cat.slug,
-            icon: cat.icon,
-            image: cat.image,
-            products: cat.products.map(p => ({
-                id: p.id,
-                name: p.name,
-                slug: p.slug,
-                image: p.thumbnail || cat.image,
-                skus: p.skus.map(s => ({
-                    id: s.id,
-                    name: s.name,
-                    normal: Number(s.priceNormal),
-                    pro: Number(s.pricePro),
-                    legend: Number(s.priceLegend),
-                    supreme: Number(s.priceSupreme)
-                }))
-            }))
-        }));
+        return (categories as any).map(cat => {
+            const products = cat.products.map(p => {
+                const skus = p.skus.filter(s => {
+                    const mPrice = (s as any).merchantProductPrices?.[0];
+                    const isActive = mPrice ? mPrice.isActive : true; // Default to true so stores aren't empty
+                    return isActive;
+                }).map(s => {
+                    const mPrice = (s as any).merchantProductPrices?.[0];
+
+                    // Determine default price based on merchant plan
+                    let defaultPrice = Number(s.priceNormal);
+                    if (activeTier === 'PRO') defaultPrice = Number(s.pricePro);
+                    else if (activeTier === 'LEGEND') defaultPrice = Number(s.priceLegend);
+                    else if (activeTier === 'SUPREME') defaultPrice = Number(s.priceSupreme);
+
+                    const finalPrice = mPrice ? Number(mPrice.customPrice) : defaultPrice;
+
+                    return {
+                        id: s.id,
+                        name: s.name,
+                        normal: finalPrice,
+                        pro: Number(s.pricePro),
+                        legend: Number(s.priceLegend),
+                        supreme: Number(s.priceSupreme)
+                    };
+                });
+
+                const fallbacks: Record<string, string> = {
+                    'mobile-legends': 'https://img.df.sg/game/mlbb.png',
+                    'free-fire': 'https://img.df.sg/game/ff.png',
+                    'free-fire-max': 'https://img.df.sg/game/ffmax.png',
+                    'pubg-mobile': 'https://img.df.sg/game/pubgm.png',
+                    'genshin-impact': 'https://img.df.sg/game/genshin.png',
+                    'valorant': 'https://img.df.sg/game/valorant.png'
+                };
+                const imageFallback = fallbacks[p.slug] || fallbacks[cat.slug] || cat.image;
+
+                const override = (p as any).overrides?.[0];
+                const finalName = override?.customName || p.name;
+                const finalThumbnail = override?.customThumbnail || p.thumbnail || imageFallback;
+
+                return {
+                    id: p.id,
+                    name: finalName,
+                    slug: p.slug,
+                    image: finalThumbnail,
+                    skus: skus
+                };
+
+            }).filter(p => p.skus.length > 0);
+
+            return {
+                id: cat.id,
+                name: cat.name,
+                slug: cat.slug,
+                icon: cat.icon,
+                image: cat.image,
+                products: products
+            };
+        }).filter(cat => cat.products.length > 0);
     }
 }

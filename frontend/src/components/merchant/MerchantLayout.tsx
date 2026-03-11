@@ -20,7 +20,8 @@ import {
     Tag,
     Palette,
     GraduationCap,
-    MessageSquare
+    MessageSquare,
+    ExternalLink
 } from 'lucide-react';
 
 const MENU_ITEMS = [
@@ -51,7 +52,7 @@ const fetcher = (url: string) => {
     return axios.get(url, { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data);
 };
 
-export default function MerchantLayout({ children }: { children: React.ReactNode }) {
+export default function MerchantLayout({ children, demoUser }: { children: React.ReactNode, demoUser?: any }) {
     const router = useRouter();
     const pathname = usePathname();
     const [user, setUser] = useState<any>(null);
@@ -59,9 +60,17 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
 
     const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
     const { data: chatData } = useSWR(`${baseUrl}/chat/merchant`, fetcher, { refreshInterval: 10000 });
+    const { data: merchantSettings } = useSWR(`${baseUrl}/merchant/settings`, fetcher);
     const merchantUnreadCount = chatData?.messages?.filter((m: any) => m.isAdmin && !m.isRead).length || 0;
+    const currentSlug = user?.merchantSlug || merchantSettings?.slug;
 
     useEffect(() => {
+        if (demoUser) {
+            setUser(demoUser);
+            setIsLoading(false);
+            return;
+        }
+
         const token = localStorage.getItem('admin_token');
         const userData = localStorage.getItem('admin_user');
 
@@ -78,7 +87,7 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
 
         setUser(parsed);
         setIsLoading(false);
-    }, [router]);
+    }, [router, demoUser]);
 
     if (isLoading) {
         return <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -123,6 +132,19 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
 
                 {/* Navigation Menu */}
                 <div className="flex-1 px-4 overflow-y-auto overflow-x-hidden pb-4 space-y-1 scrollbar-hide">
+                    {/* View Website Feature */}
+                    <div className="px-2 mb-6">
+                        <a
+                            href={currentSlug ? `/?merchant=${currentSlug}` : '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-3 w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-lg shadow-indigo-600/20 transition-all active:scale-95 group font-bold text-[13px]"
+                        >
+                            <ExternalLink size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                            LIHAT WEBSITE TOKO
+                        </a>
+                    </div>
+
                     <div className="px-4 mb-3 mt-2">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Menu Utama</p>
                     </div>

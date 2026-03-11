@@ -27,6 +27,7 @@ let PublicDigiflazzController = class PublicDigiflazzController {
                 await this.digiflazzService.processPriceWebhook(body.data);
             }
             if (event === 'transaction') {
+                await this.digiflazzService.processTransactionWebhook(body.data);
             }
             return res.status(common_1.HttpStatus.OK).json({ success: true });
         }

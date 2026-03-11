@@ -46,8 +46,8 @@ export default function SaaSManagementPage() {
     const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
     const [showAdjustModal, setShowAdjustModal] = useState(false);
     const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
-    const [adjustForm, setAdjustForm] = useState({ merchantId: '', merchantName: '', plan: 'STARTER', days: 30 });
-    const [createInvoiceForm, setCreateInvoiceForm] = useState({ merchantId: '', plan: 'STARTER', amount: 0, dueDate: '' });
+    const [adjustForm, setAdjustForm] = useState({ merchantId: '', merchantName: '', plan: 'PRO', days: 30 });
+    const [createInvoiceForm, setCreateInvoiceForm] = useState({ merchantId: '', plan: 'PRO', amount: 0, dueDate: '' });
     const [toastMsg, setToastMsg] = useState<{ title: string; desc: string; type: 'success' | 'error' } | null>(null);
 
     // Plan Features State
@@ -126,7 +126,7 @@ export default function SaaSManagementPage() {
             await axios.post('http://localhost:3001/admin/subscriptions/invoices/manual', createInvoiceForm, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             mutate();
             setShowCreateInvoiceModal(false);
-            setCreateInvoiceForm({ merchantId: '', plan: 'STARTER', amount: 0, dueDate: '' });
+            setCreateInvoiceForm({ merchantId: '', plan: 'PRO', amount: 0, dueDate: '' });
             showToast('Sukses', 'Invoice langganan berhasil dibuat secara manual.');
         } catch (err: any) {
             showToast('Gagal', err.response?.data?.message || 'Error', 'error');
@@ -167,7 +167,7 @@ export default function SaaSManagementPage() {
             new Date(inv.createdAt).toISOString(),
             new Date(inv.dueDate).toISOString()
         ]);
-        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e: any[]) => e.join(","))].join("\n");
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
@@ -308,9 +308,10 @@ export default function SaaSManagementPage() {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-black border uppercase ${inv.plan === 'ENTERPRISE' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                                                        inv.plan === 'PROFESSIONAL' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
-                                                            'bg-slate-50 text-slate-600 border-slate-200'
+                                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-black border uppercase ${inv.plan === 'SUPREME' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                                        inv.plan === 'LEGEND' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                                            inv.plan === 'PRO' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                                'bg-slate-50 text-slate-600 border-slate-200'
                                                         }`}>
                                                         {inv.plan}
                                                     </span>
@@ -678,7 +679,7 @@ export default function SaaSManagementPage() {
                                 <div>
                                     <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Pilih Plan Baru</label>
                                     <div className="grid grid-cols-2 gap-2">
-                                        {['STARTER', 'PROFESSIONAL', 'ENTERPRISE'].map(p => (
+                                        {['FREE', 'PRO', 'LEGEND', 'SUPREME'].map(p => (
                                             <button
                                                 key={p}
                                                 type="button"

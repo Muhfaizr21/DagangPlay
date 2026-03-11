@@ -219,8 +219,25 @@ model Merchant {
   supportTickets        SupportTicket[]
   webhookEndpoints      WebhookEndpoint[]
   chatRoom              ChatRoom?
+  productOverrides      MerchantProductOverride[]
 
   @@index([slug, domain, status, plan, isOfficial])
+}
+
+model MerchantProductOverride {
+  id              String   @id @default(cuid())
+  merchantId      String
+  productId       String
+  customName      String?
+  customThumbnail String?
+  description     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  merchant        Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@unique([merchantId, productId])
 }
 
 model MerchantMember {
@@ -341,6 +358,7 @@ model Product {
   skus              ProductSku[]
   refundPolicy      RefundPolicy?
   userFavorites     UserFavorite[]
+  overrides         MerchantProductOverride[]
 }
 
 model ProductSku {

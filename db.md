@@ -2,30 +2,33 @@ Buatkan Prisma Schema lengkap untuk platform SaaS voucher
 & top up games bernama "DagangPlay" menggunakan PostgreSQL.
 
 Platform ini adalah:
-1. Toko resmi DagangPlay (jualan langsung ke customer & reseller)
-2. Platform SaaS (merchant bisa buka toko sendiri berlangganan)
+1. Toko resmi DagangPlay (jualan langsung ke customer)
+2. Platform SaaS (merchant bisa buka toko sendiri)
 
 Stack: NestJS + Prisma + PostgreSQL + Redis + Tripay + Digiflazz
 
 === ARSITEKTUR BISNIS ===
 
-- Multi-tenant: satu database untuk semua merchant
-- Role: SUPER_ADMIN, MERCHANT, RESELLER, CUSTOMER
-- Supplier voucher: Digiflazz (utama) + backup supplier lain
-- Payment gateway: Tripay (untuk deposit & subscription)
-- Tier harga produk: 4 level
-  NORMAL  = harga customer beli di toko resmi DagangPlay
-  PRO     = harga modal merchant plan PRO
-  LEGEND  = harga modal merchant plan LEGEND
-  SUPREME = harga modal merchant plan SUPREME
-- MLM komisi downline 3 level
+Role hanya 3:
+- SUPER_ADMIN → kelola seluruh platform
+- MERCHANT    → punya toko, jualan ke customer
+- CUSTOMER    → beli produk di toko merchant
+
+Tier harga produk 4 level:
+- NORMAL  = harga customer beli di toko resmi DagangPlay
+            juga harga modal merchant plan FREE
+- PRO     = harga modal merchant plan PRO
+- LEGEND  = harga modal merchant plan LEGEND
+- SUPREME = harga modal merchant plan SUPREME
+
+Tidak ada reseller, tidak ada MLM, tidak ada downline.
+Merchant langsung jualan ke customer.
 
 === ENUM DEFINITIONS ===
 
 enum Role {
   SUPER_ADMIN
   MERCHANT
-  RESELLER
   CUSTOMER
 }
 
@@ -55,12 +58,6 @@ enum MerchantStatus {
   PENDING_REVIEW
 }
 
-// 3 plan berbayar + FREE
-// Mapping ke tier harga:
-// FREE     → harga NORMAL (sama seperti customer)
-// PRO      → harga PRO
-// LEGEND   → harga LEGEND
-// SUPREME  → harga SUPREME
 enum MerchantPlan {
   FREE
   PRO
@@ -99,9 +96,6 @@ enum SkuStatus {
   EMPTY
 }
 
-// Tier harga produk
-// NORMAL  = harga customer toko resmi DagangPlay
-// PRO/LEGEND/SUPREME = harga modal merchant sesuai plan
 enum PriceTier {
   NORMAL
   PRO
@@ -124,22 +118,21 @@ enum OrderFulfillmentStatus {
   REFUNDED
 }
 
-// Semua metode payment via Tripay
 enum PaymentMethod {
-  BALANCE           // bayar pakai saldo DagangPlay
-  TRIPAY_QRIS       // QRIS via Tripay
-  TRIPAY_VA_BCA     // Virtual Account BCA
-  TRIPAY_VA_BNI     // Virtual Account BNI
-  TRIPAY_VA_BRI     // Virtual Account BRI
-  TRIPAY_VA_MANDIRI // Virtual Account Mandiri
-  TRIPAY_VA_PERMATA // Virtual Account Permata
-  TRIPAY_GOPAY      // GoPay via Tripay
-  TRIPAY_OVO        // OVO via Tripay
-  TRIPAY_DANA       // DANA via Tripay
-  TRIPAY_SHOPEEPAY  // ShopeePay via Tripay
-  TRIPAY_ALFAMART   // Alfamart via Tripay
-  TRIPAY_INDOMARET  // Indomaret via Tripay
-  MANUAL_TRANSFER   // Transfer manual (konfirmasi admin)
+  BALANCE
+  TRIPAY_QRIS
+  TRIPAY_VA_BCA
+  TRIPAY_VA_BNI
+  TRIPAY_VA_BRI
+  TRIPAY_VA_MANDIRI
+  TRIPAY_VA_PERMATA
+  TRIPAY_GOPAY
+  TRIPAY_OVO
+  TRIPAY_DANA
+  TRIPAY_SHOPEEPAY
+  TRIPAY_ALFAMART
+  TRIPAY_INDOMARET
+  MANUAL_TRANSFER
 }
 
 enum PaymentStatus {
@@ -167,10 +160,8 @@ enum BalanceTrxType {
   WITHDRAWAL
   PURCHASE
   REFUND
-  COMMISSION
   BONUS
   ADJUSTMENT
-  MLM_COMMISSION
 }
 
 enum WithdrawalStatus {
@@ -178,28 +169,6 @@ enum WithdrawalStatus {
   PROCESSING
   COMPLETED
   REJECTED
-}
-
-enum CommissionType {
-  FLAT
-  PERCENTAGE
-}
-
-enum CommissionAppliesTo {
-  ALL
-  CATEGORY
-  PRODUCT
-}
-
-enum CommissionForRole {
-  RESELLER
-  MERCHANT
-}
-
-enum CommissionStatus {
-  PENDING
-  SETTLED
-  CANCELLED
 }
 
 enum PromoType {
@@ -212,12 +181,6 @@ enum PromoAppliesTo {
   ALL
   CATEGORY
   PRODUCT
-}
-
-enum PromoForRole {
-  ALL
-  CUSTOMER
-  RESELLER
 }
 
 enum NotificationType {
@@ -307,14 +270,6 @@ enum DisputeStatus {
   REJECTED
 }
 
-enum ResellerLevelName {
-  BRONZE
-  SILVER
-  GOLD
-  PLATINUM
-  DIAMOND
-}
-
 enum JobStatus {
   PENDING
   RUNNING
@@ -343,72 +298,60 @@ enum ChangeType {
 // USERS & AUTH
 // ============================================
 
-// Master semua user semua role
+// Master semua user
 model User {
-  id              String     @id @default(cuid())
-  email           String?    @unique
-  phone           String?    @unique
-  password        String
-  name            String
-  username        String?    @unique
-  avatar          String?
-  role            Role       @default(CUSTOMER)
-  status          UserStatus @default(ACTIVE)
-  isVerified      Boolean    @default(false)
-  verifiedAt      DateTime?
-  referralCode    String     @unique
-  referredById    String?
-  referredBy      User?      @relation("UserReferral", fields: [referredById], references: [id])
-  referrals       User[]     @relation("UserReferral")
-  merchantId      String?
-  balance         Float      @default(0)
-  bonusBalance    Float      @default(0)
-  resellerLevelId String?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  deletedAt       DateTime?
+  id            String     @id @default(cuid())
+  email         String?    @unique
+  phone         String?    @unique
+  password      String
+  name          String
+  username      String?    @unique
+  avatar        String?
+  role          Role       @default(CUSTOMER)
+  status        UserStatus @default(ACTIVE)
+  isVerified    Boolean    @default(false)
+  verifiedAt    DateTime?
+  referralCode  String     @unique
+  referredById  String?
+  referredBy    User?      @relation("UserReferral", fields: [referredById], references: [id])
+  referrals     User[]     @relation("UserReferral")
+  merchantId    String?    // merchant mana tempat customer terdaftar
+  balance       Float      @default(0)
+  bonusBalance  Float      @default(0)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  deletedAt     DateTime?
 
   // Relations
-  profile               UserProfile?
-  sessions              UserSession[]
-  otpVerifications      OtpVerification[]
-  merchantMemberships   MerchantMember[]
-  ownedMerchant         Merchant?              @relation("MerchantOwner")
-  ordersAsCustomer      Order[]                @relation("OrderCustomer")
-  ordersAsReseller      Order[]                @relation("OrderReseller")
-  balanceTransactions   BalanceTransaction[]
-  deposits              Deposit[]
-  withdrawals           Withdrawal[]
-  commissionsEarned     Commission[]
-  referralRewards       ReferralReward[]       @relation("ReferrerRewards")
-  referralRewardsFrom   ReferralReward[]       @relation("ReferredRewards")
-  promoUsages           PromoUsage[]
-  notifications         Notification[]
-  supportTickets        SupportTicket[]        @relation("TicketUser")
-  assignedTickets       SupportTicket[]        @relation("TicketAssigned")
-  ticketReplies         SupportTicketReply[]
-  productReviews        ProductReview[]
-  auditLogs             AuditLog[]
-  apiKeys               ApiKey[]
-  trustedDevices        DeviceTrusted[]
-  loginAttempts         LoginAttempt[]
-  fraudDetections       FraudDetection[]
-  resellerLevel         ResellerLevel?         @relation(fields: [resellerLevelId], references: [id])
-  resellerLevelHistory  ResellerLevelHistory[]
-  downlineAsParent      DownlineTree?          @relation("DownlineParent")
-  downlineAsChild       DownlineTree[]         @relation("DownlineChild")
-  mlmCommissions        MLMCommission[]
-  userFavorites         UserFavorite[]
-  userActivityLogs      UserActivityLog[]
+  profile              UserProfile?
+  sessions             UserSession[]
+  otpVerifications     OtpVerification[]
+  merchantMemberships  MerchantMember[]
+  ownedMerchant        Merchant?             @relation("MerchantOwner")
+  orders               Order[]
+  balanceTransactions  BalanceTransaction[]
+  deposits             Deposit[]
+  withdrawals          Withdrawal[]
+  promoUsages          PromoUsage[]
+  notifications        Notification[]
+  supportTickets       SupportTicket[]       @relation("TicketUser")
+  assignedTickets      SupportTicket[]       @relation("TicketAssigned")
+  ticketReplies        SupportTicketReply[]
+  productReviews       ProductReview[]
+  auditLogs            AuditLog[]
+  apiKeys              ApiKey[]
+  trustedDevices       DeviceTrusted[]
+  loginAttempts        LoginAttempt[]
+  fraudDetections      FraudDetection[]
+  userFavorites        UserFavorite[]
+  userActivityLogs     UserActivityLog[]
   merchantProductPrices MerchantProductPrice[]
-  resellerProductPrices ResellerProductPrice[]
-  emailCampaignLogs     EmailCampaignLog[]
-  pushNotifLogs         PushNotificationLog[]
-  confirmedDeposits     Deposit[]              @relation("DepositConfirmedBy")
-  processedWithdrawals  Withdrawal[]           @relation("WithdrawalProcessedBy")
-  priceHistories        TierPriceHistory[]
+  emailCampaignLogs    EmailCampaignLog[]
+  pushNotifLogs        PushNotificationLog[]
+  confirmedDeposits    Deposit[]             @relation("DepositConfirmedBy")
+  processedWithdrawals Withdrawal[]          @relation("WithdrawalProcessedBy")
 
-  @@index([email, phone, role, status, merchantId, referredById])
+  @@index([email, phone, role, status, merchantId])
 }
 
 // Profil lengkap user
@@ -467,6 +410,7 @@ model OtpVerification {
 // KEAMANAN & ANTI-FRAUD
 // ============================================
 
+// Blacklist IP berbahaya
 model IPBlacklist {
   id        String    @id @default(cuid())
   ipAddress String    @unique
@@ -478,6 +422,7 @@ model IPBlacklist {
   @@index([ipAddress])
 }
 
+// Deteksi transaksi mencurigakan
 model FraudDetection {
   id         String         @id @default(cuid())
   userId     String
@@ -495,6 +440,7 @@ model FraudDetection {
   @@index([userId, riskLevel, isResolved])
 }
 
+// Track percobaan login
 model LoginAttempt {
   id         String   @id @default(cuid())
   userId     String?
@@ -509,6 +455,7 @@ model LoginAttempt {
   @@index([userId, ipAddress, isSuccess, createdAt])
 }
 
+// Whitelist device terpercaya
 model DeviceTrusted {
   id         String    @id @default(cuid())
   userId     String
@@ -524,11 +471,27 @@ model DeviceTrusted {
   @@index([userId])
 }
 
+// Rate limiting per endpoint
+model ApiRateLimit {
+  id          String   @id @default(cuid())
+  userId      String?
+  ipAddress   String
+  endpoint    String
+  hitCount    Int      @default(1)
+  windowStart DateTime
+  windowEnd   DateTime
+  isBlocked   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, ipAddress, endpoint, windowStart])
+}
+
 // ============================================
 // MERCHANT / TENANT
 // ============================================
 
-// Data tenant/mitra berlangganan SaaS
+// Data merchant berlangganan SaaS
 model Merchant {
   id              String         @id @default(cuid())
   name            String
@@ -548,8 +511,12 @@ model Merchant {
   status          MerchantStatus @default(PENDING_REVIEW)
   plan            MerchantPlan   @default(FREE)
   planExpiredAt   DateTime?
-  isOfficial      Boolean        @default(false) // true = toko resmi DagangPlay
-  settings        Json?
+
+  // true = toko resmi DagangPlay sendiri
+  // false = merchant/mitra berlangganan
+  isOfficial      Boolean        @default(false)
+
+  settings        Json?          // kustomisasi tema, fitur aktif dll
   ownerId         String         @unique
   owner           User           @relation("MerchantOwner", fields: [ownerId], references: [id])
   createdAt       DateTime       @default(now())
@@ -580,7 +547,7 @@ model Merchant {
   @@index([slug, domain, status, plan, isOfficial])
 }
 
-// Anggota tim merchant
+// Tim staff merchant
 model MerchantMember {
   id          String             @id @default(cuid())
   merchantId  String
@@ -600,7 +567,7 @@ model MerchantMember {
 // SUPPLIER & PRODUK
 // ============================================
 
-// Data supplier voucher (Digiflazz dll)
+// Data supplier (Digiflazz dll)
 model Supplier {
   id         String         @id @default(cuid())
   name       String
@@ -632,7 +599,7 @@ model SupplierLog {
   requestBody  Json?
   responseBody Json?
   httpStatus   Int?
-  duration     Int?
+  duration     Int?      // dalam millisecond
   isSuccess    Boolean
   createdAt    DateTime  @default(now())
 
@@ -644,7 +611,7 @@ model SupplierBalanceHistory {
   id            String   @id @default(cuid())
   supplierId    String
   supplier      Supplier @relation(fields: [supplierId], references: [id])
-  type          String
+  type          String   // TOP_UP, DEDUCT
   amount        Float
   balanceBefore Float
   balanceAfter  Float
@@ -654,7 +621,7 @@ model SupplierBalanceHistory {
   @@index([supplierId, createdAt])
 }
 
-// Kategori produk (nested)
+// Kategori produk (bisa nested)
 model Category {
   id          String     @id @default(cuid())
   name        String
@@ -675,7 +642,6 @@ model Category {
   updatedAt DateTime @updatedAt
 
   products          Product[]
-  commissionRules   CommissionRule[]
   promoCodes        PromoCode[]
   productSalesStats ProductSalesStats[]
   tierPricingRules  TierPricingRule[]
@@ -694,14 +660,17 @@ model Product {
   thumbnail   String?
   banner      String?
 
-  // Info game untuk validasi ID
-  gameIdLabel    String?  // label field ID (contoh: "User ID", "Player ID")
-  gameServerId   Boolean  @default(false) // perlu input server atau tidak
-  serverLabel    String?  // label field server (contoh: "Server", "Zone")
+  // Label field input ID game
+  // contoh: "User ID", "Player ID", "Email"
+  gameIdLabel   String?
 
-  // Info dari Digiflazz
-  digiflazzBrand    String?  // brand di Digiflazz (contoh: "Mobile Legends")
-  digiflazzCategory String?  // kategori di Digiflazz
+  // Apakah perlu input server/zone
+  needServer    Boolean @default(false)
+  serverLabel   String? // contoh: "Server", "Zone ID"
+
+  // Info dari Digiflazz untuk sinkronisasi
+  digiflazzBrand    String?
+  digiflazzCategory String?
 
   instruction String?       // cara top up step by step
   status      ProductStatus @default(ACTIVE)
@@ -713,7 +682,6 @@ model Product {
 
   skus              ProductSku[]
   reviews           ProductReview[]
-  commissionRules   CommissionRule[]
   gameServers       GameServer[]
   userFavorites     UserFavorite[]
   productSalesStats ProductSalesStats[]
@@ -721,37 +689,40 @@ model Product {
   refundPolicy      RefundPolicy?
 }
 
-// SKU/varian produk dengan sistem 4 tier harga
-// Ini inti dari koneksi ke Digiflazz
+// SKU/varian produk dengan 4 tier harga
+// Inti dari koneksi ke Digiflazz
 model ProductSku {
   id           String    @id @default(cuid())
   productId    String
   product      Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   supplierId   String
   supplier     Supplier  @relation(fields: [supplierId], references: [id])
-  name         String    // contoh: "86 Diamond"
+
+  // Nama varian, contoh: "86 Diamond", "172 Diamond"
+  name         String
 
   // Kode produk di Digiflazz (buyer_sku_code)
-  supplierCode String    // contoh: "mleg-86"
+  supplierCode String
 
-  // Supplier backup jika utama gagal
+  // Supplier backup jika utama gagal (failover)
   backupSupplierId   String?
   backupSupplierCode String?
 
-  // Harga beli dari Digiflazz (tidak tampil ke merchant/reseller/customer)
+  // Harga beli dari Digiflazz
+  // TIDAK PERNAH tampil ke merchant/customer
   basePrice    Float
 
   // Harga jual per tier
-  // NORMAL  = harga customer beli di toko resmi DagangPlay
-  // PRO     = harga modal merchant plan PRO
-  // LEGEND  = harga modal merchant plan LEGEND
-  // SUPREME = harga modal merchant plan SUPREME
+  // NORMAL  → customer di toko resmi + merchant FREE
+  // PRO     → merchant plan PRO
+  // LEGEND  → merchant plan LEGEND
+  // SUPREME → merchant plan SUPREME
   priceNormal  Float
   pricePro     Float
   priceLegend  Float
   priceSupreme Float
 
-  // Margin tersimpan untuk referensi cepat (dalam persen)
+  // Margin tersimpan untuk referensi cepat (persen)
   marginNormal  Float
   marginPro     Float
   marginLegend  Float
@@ -760,33 +731,36 @@ model ProductSku {
   stock     Int       @default(-1) // -1 = unlimited
   status    SkuStatus @default(ACTIVE)
   sortOrder Int       @default(0)
-  metadata  Json?     // data tambahan dari Digiflazz
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+
+  // Data tambahan dari Digiflazz (raw response)
+  metadata  Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   orders                Order[]
   merchantProductPrices MerchantProductPrice[]
-  resellerProductPrices ResellerProductPrice[]
   promoCodes            PromoCode[]
   tierPriceHistories    TierPriceHistory[]
 
   @@index([productId, supplierId, status, supplierCode])
 }
 
-// Formula otomatis set harga per tier per kategori
-// Supaya Super Admin tidak set manual satu-satu SKU
+// Formula harga otomatis per tier per kategori
+// Super Admin set persentase margin, sistem hitung sendiri
 model TierPricingRule {
   id         String    @id @default(cuid())
   categoryId String?   // null = berlaku global semua kategori
   category   Category? @relation(fields: [categoryId], references: [id])
 
-  // Persentase margin per tier di atas basePrice
-  marginNormal  Float // contoh: 11.4 = 11.4% di atas harga beli
-  marginPro     Float // contoh: 8.0
-  marginLegend  Float // contoh: 5.7
-  marginSupreme Float // contoh: 3.4
+  // Persentase margin di atas basePrice
+  marginNormal  Float   // contoh: 11.4 berarti 11.4%
+  marginPro     Float
+  marginLegend  Float
+  marginSupreme Float
 
-  // Batas minimum margin (sistem tolak jika di bawah ini)
+  // Batas minimum margin
+  // Sistem tolak jika harga yang di-set di bawah ini
   minMarginNormal  Float @default(5.0)
   minMarginPro     Float @default(3.0)
   minMarginLegend  Float @default(2.0)
@@ -800,7 +774,7 @@ model TierPricingRule {
   @@index([categoryId, isActive])
 }
 
-// Riwayat perubahan harga per tier (gabungan dari PriceHistory lama)
+// Riwayat perubahan harga semua tier
 model TierPriceHistory {
   id           String     @id @default(cuid())
   productSkuId String
@@ -820,8 +794,7 @@ model TierPriceHistory {
   newPriceLegend  Float
   newPriceSupreme Float
 
-  // Trigger perubahan
-  changeType ChangeType
+  changeType ChangeType // MANUAL, SYNC_DIGIFLAZZ, FORMULA_APPLY, BULK_UPDATE
   changedBy  String     // userId atau "SYSTEM"
   reason     String?
   createdAt  DateTime   @default(now())
@@ -830,8 +803,13 @@ model TierPriceHistory {
 }
 
 // Mapping plan merchant ke tier harga
-// Fleksibel: bisa diubah Super Admin tanpa deploy ulang
-// Contoh: promo bulan ini STARTER dapat harga PRO
+// Fleksibel: Super Admin bisa ubah kapan saja
+// tanpa perlu deploy ulang
+// Default:
+// FREE    → NORMAL
+// PRO     → PRO
+// LEGEND  → LEGEND
+// SUPREME → SUPREME
 model PlanTierMapping {
   id        String       @id @default(cuid())
   plan      MerchantPlan @unique
@@ -841,27 +819,21 @@ model PlanTierMapping {
   updatedAt DateTime     @updatedAt
 }
 
-// Data default PlanTierMapping:
-// FREE    → NORMAL
-// PRO     → PRO
-// LEGEND  → LEGEND
-// SUPREME → SUPREME
-
-// Harga override khusus per merchant
-// Digunakan jika Super Admin beri harga spesial
-// diluar tier normal ke merchant tertentu
+// Override harga khusus per merchant
+// Digunakan Super Admin untuk beri harga spesial
+// di luar tier normal (contoh: promo merchant baru)
 model MerchantProductPrice {
   id           String     @id @default(cuid())
   merchantId   String
   merchant     Merchant   @relation(fields: [merchantId], references: [id], onDelete: Cascade)
   productSkuId String
   productSku   ProductSku @relation(fields: [productSkuId], references: [id])
-  userId       String     // Super Admin yang set
-  user         User       @relation(fields: [userId], references: [id])
-  customPrice  Float      // harga khusus untuk merchant ini
+  setById      String
+  setBy        User       @relation(fields: [setById], references: [id])
+  customPrice  Float
   isActive     Boolean    @default(true)
-  reason       String?    // alasan diberi harga khusus
-  expiredAt    DateTime?  // batas waktu harga khusus berlaku
+  reason       String?
+  expiredAt    DateTime?  // null = tidak ada batas waktu
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
@@ -869,26 +841,8 @@ model MerchantProductPrice {
   @@index([merchantId, productSkuId, isActive])
 }
 
-// Harga override khusus per reseller
-// Digunakan jika merchant beri harga spesial ke reseller tertentu
-model ResellerProductPrice {
-  id           String     @id @default(cuid())
-  userId       String     // resellerId
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  productSkuId String
-  productSku   ProductSku @relation(fields: [productSkuId], references: [id])
-  customPrice  Float
-  isActive     Boolean    @default(true)
-  reason       String?
-  expiredAt    DateTime?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
-  @@unique([userId, productSkuId])
-  @@index([userId, productSkuId, isActive])
-}
-
-// Server/region per game (ML server 1-999 dll)
+// Server/region per game
+// Contoh: Mobile Legends punya server 1-999
 model GameServer {
   id        String  @id @default(cuid())
   productId String
@@ -902,7 +856,7 @@ model GameServer {
   @@index([productId])
 }
 
-// Log validasi ID game
+// Log validasi ID game customer
 model GameValidation {
   id         String   @id @default(cuid())
   productId  String
@@ -910,13 +864,14 @@ model GameValidation {
   serverId   String?
   nickname   String?
   isValid    Boolean
-  checkedAt  DateTime @default(now())
   ipAddress  String?
+  checkedAt  DateTime @default(now())
 
   @@index([productId, gameUserId])
 }
 
 // Cache nickname akun game
+// Supaya tidak validasi ulang ke API setiap saat
 model GameNickname {
   id         String   @id @default(cuid())
   productId  String
@@ -935,71 +890,70 @@ model GameNickname {
 // ============================================
 
 model Order {
-  id                   String                 @id @default(cuid())
-  orderNumber          String                 @unique // DP-20250101-XXXX
-  userId               String
-  user                 User                   @relation("OrderCustomer", fields: [userId], references: [id])
-  merchantId           String
-  merchant             Merchant               @relation(fields: [merchantId], references: [id])
-  resellerId           String?
-  reseller             User?                  @relation("OrderReseller", fields: [resellerId], references: [id])
-  productId            String
-  productSkuId         String
-  productSku           ProductSku             @relation(fields: [productSkuId], references: [id])
+  id          String @id @default(cuid())
+  orderNumber String @unique // format: DP-20250101-XXXX
+  userId      String
+  user        User   @relation(fields: [userId], references: [id])
+  merchantId  String
+  merchant    Merchant @relation(fields: [merchantId], references: [id])
 
-  // Snapshot data saat transaksi (penting! harga bisa berubah)
-  productName          String
-  productSkuName       String
-  priceTierUsed        PriceTier              // tier harga yang dipakai saat transaksi
-  basePrice            Float                  // harga beli dari supplier saat itu
-  sellingPrice         Float                  // harga jual ke customer saat itu
-  totalPrice           Float
+  productId    String
+  productSkuId String
+  productSku   ProductSku @relation(fields: [productSkuId], references: [id])
+
+  // Snapshot data saat transaksi
+  // Penting: harga & nama produk bisa berubah sewaktu-waktu
+  productName    String
+  productSkuName String
+  priceTierUsed  PriceTier  // tier harga yang dipakai saat transaksi
+  basePrice      Float      // harga beli dari supplier saat itu
+  sellingPrice   Float      // harga jual ke customer saat itu
+  totalPrice     Float      // setelah diskon
 
   // Data game customer
-  gameUserId           String
-  gameUserServerId     String?
-  gameUserName         String?
+  gameUserId       String
+  gameUserServerId String?
+  gameUserName     String?  // nickname yang berhasil divalidasi
 
-  quantity             Int                    @default(1)
+  quantity Int @default(1)
 
-  // Promo
-  promoCodeId          String?
-  promoCode            PromoCode?             @relation(fields: [promoCodeId], references: [id])
-  discountAmount       Float                  @default(0)
+  // Promo yang dipakai
+  promoCodeId    String?
+  promoCode      PromoCode? @relation(fields: [promoCodeId], references: [id])
+  discountAmount Float      @default(0)
 
-  // Payment
-  paymentMethod        PaymentMethod?
-  paymentStatus        OrderPaymentStatus     @default(PENDING)
+  // Status pembayaran
+  paymentMethod PaymentMethod?
+  paymentStatus OrderPaymentStatus @default(PENDING)
 
-  // Fulfillment ke supplier
-  fulfillmentStatus    OrderFulfillmentStatus @default(PENDING)
-  supplierId           String?
-  supplierRefId        String?                // ref_id di Digiflazz
-  supplierResponse     Json?                  // response lengkap Digiflazz
-  serialNumber         String?                // SN dari Digiflazz jika ada
+  // Status fulfillment ke supplier
+  fulfillmentStatus OrderFulfillmentStatus @default(PENDING)
+  supplierId        String?
+  supplierRefId     String?  // ref_id yang dikirim ke Digiflazz
+  supplierResponse  Json?    // full response dari Digiflazz
+  serialNumber      String?  // SN dari Digiflazz jika ada
 
-  note                 String?
-  failReason           String?
-  paidAt               DateTime?
-  processedAt          DateTime?
-  completedAt          DateTime?
-  failedAt             DateTime?
-  expiredAt            DateTime?
-  createdAt            DateTime               @default(now())
-  updatedAt            DateTime               @updatedAt
+  note       String?
+  failReason String?
+  paidAt     DateTime?
+  processedAt DateTime?
+  completedAt DateTime?
+  failedAt   DateTime?
+  expiredAt  DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  payment              Payment?
-  statusHistories      OrderStatusHistory[]
-  commissions          Commission[]
-  fraudDetections      FraudDetection[]
-  supplierLogs         SupplierLog[]
-  balanceTrx           BalanceTransaction[]
-  disputeCases         DisputeCase[]
-  mlmCommissions       MLMCommission[]
+  payment         Payment?
+  statusHistories OrderStatusHistory[]
+  fraudDetections FraudDetection[]
+  supplierLogs    SupplierLog[]
+  balanceTrx      BalanceTransaction[]
+  disputeCases    DisputeCase[]
 
-  @@index([userId, merchantId, resellerId, paymentStatus, fulfillmentStatus, createdAt])
+  @@index([userId, merchantId, paymentStatus, fulfillmentStatus, createdAt])
 }
 
+// Riwayat perubahan status order
 model OrderStatusHistory {
   id        String   @id @default(cuid())
   orderId   String
@@ -1017,44 +971,43 @@ model OrderStatusHistory {
 // ============================================
 
 model Payment {
-  id        String        @id @default(cuid())
-  orderId   String        @unique
-  order     Order         @relation(fields: [orderId], references: [id])
-  userId    String
+  id         String @id @default(cuid())
+  orderId    String @unique
+  order      Order  @relation(fields: [orderId], references: [id])
+  userId     String
   merchantId String
 
-  method    PaymentMethod
-  amount    Float
-  fee       Float         @default(0) // biaya payment gateway Tripay
-  totalAmount Float       // amount + fee
+  method      PaymentMethod
+  amount      Float
+  fee         Float         @default(0) // biaya Tripay
+  totalAmount Float         // amount + fee
 
-  status    PaymentStatus @default(PENDING)
+  status PaymentStatus @default(PENDING)
 
   // Data dari Tripay
-  tripayReference    String?  // nomor referensi Tripay
-  tripayMerchantRef  String?  // merchant_ref yang kita kirim ke Tripay
-  tripayPaymentUrl   String?  // URL pembayaran untuk redirect
-  tripayQrUrl        String?  // URL QR code jika QRIS
-  tripayVaNumber     String?  // nomor Virtual Account
-  tripayExpiredTime  DateTime? // batas waktu bayar dari Tripay
-  tripayResponse     Json?    // full response dari Tripay
+  tripayReference   String?   // nomor referensi dari Tripay
+  tripayMerchantRef String?   // ref yang kita kirim ke Tripay
+  tripayPaymentUrl  String?   // URL halaman pembayaran
+  tripayQrUrl       String?   // URL QR code jika QRIS
+  tripayVaNumber    String?   // nomor Virtual Account
+  tripayExpiredTime DateTime? // batas waktu bayar
+  tripayResponse    Json?     // full response Tripay
 
   paidAt    DateTime?
   expiredAt DateTime?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([orderId, userId, merchantId, status, tripayReference])
 }
 
-// Konfigurasi channel pembayaran per merchant
-// Merchant bisa aktif/nonaktif channel tertentu
+// Konfigurasi channel payment per merchant
 model PaymentChannel {
   id         String        @id @default(cuid())
   merchantId String?       // null = setting global
   merchant   Merchant?     @relation(fields: [merchantId], references: [id])
   method     PaymentMethod
-  name       String        // nama tampil ke customer
+  name       String
   icon       String?
   fee        Float         @default(0)
   feeType    FeeType       @default(FLAT)
@@ -1062,12 +1015,9 @@ model PaymentChannel {
   maxAmount  Float?
   isActive   Boolean       @default(true)
   sortOrder  Int           @default(0)
-
-  // Konfigurasi Tripay per merchant (jika multi merchant key)
-  tripayConfig Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  tripayConfig Json?       // konfigurasi Tripay jika per merchant
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 
   @@index([merchantId, method, isActive])
 }
@@ -1076,28 +1026,30 @@ model PaymentChannel {
 // SALDO & DEPOSIT
 // ============================================
 
+// Pengajuan deposit saldo
 model Deposit {
-  id            String        @id @default(cuid())
-  userId        String
-  user          User          @relation(fields: [userId], references: [id])
-  merchantId    String
-  merchant      Merchant      @relation(fields: [merchantId], references: [id])
-  amount        Float
-  method        PaymentMethod
-  status        DepositStatus @default(PENDING)
+  id         String        @id @default(cuid())
+  userId     String
+  user       User          @relation(fields: [userId], references: [id])
+  merchantId String
+  merchant   Merchant      @relation(fields: [merchantId], references: [id])
+  amount     Float
+  method     PaymentMethod
+  status     DepositStatus @default(PENDING)
 
-  // Data Tripay untuk deposit
+  // Data Tripay untuk deposit via payment gateway
   tripayReference   String?
   tripayMerchantRef String?
   tripayPaymentUrl  String?
   tripayVaNumber    String?
   tripayQrUrl       String?
   tripayResponse    Json?
+  tripayExpiredTime DateTime?
 
   // Jika deposit manual transfer
   receiptImage  String?
   confirmedById String?
-  confirmedBy   User?         @relation("DepositConfirmedBy", fields: [confirmedById], references: [id])
+  confirmedBy   User?    @relation("DepositConfirmedBy", fields: [confirmedById], references: [id])
   confirmedAt   DateTime?
   rejectedAt    DateTime?
   note          String?
@@ -1111,7 +1063,7 @@ model Deposit {
   @@index([userId, merchantId, status, createdAt])
 }
 
-// Mutasi saldo
+// Mutasi saldo (semua transaksi keluar masuk saldo)
 model BalanceTransaction {
   id            String         @id @default(cuid())
   userId        String
@@ -1133,7 +1085,7 @@ model BalanceTransaction {
   @@index([userId, type, createdAt])
 }
 
-// Penarikan saldo
+// Penarikan saldo ke rekening bank
 model Withdrawal {
   id                String           @id @default(cuid())
   userId            String
@@ -1160,131 +1112,12 @@ model Withdrawal {
 }
 
 // ============================================
-// KOMISI & REFERRAL
-// ============================================
-
-model CommissionRule {
-  id          String              @id @default(cuid())
-  merchantId  String?
-  name        String
-  description String?
-  type        CommissionType
-  value       Float
-  appliesTo   CommissionAppliesTo @default(ALL)
-  categoryId  String?
-  category    Category?           @relation(fields: [categoryId], references: [id])
-  productId   String?
-  product     Product?            @relation(fields: [productId], references: [id])
-  forRole     CommissionForRole
-  isActive    Boolean             @default(true)
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-
-  @@index([merchantId, forRole, isActive])
-}
-
-model Commission {
-  id        String           @id @default(cuid())
-  orderId   String
-  order     Order            @relation(fields: [orderId], references: [id])
-  userId    String
-  user      User             @relation(fields: [userId], references: [id])
-  type      String
-  amount    Float
-  status    CommissionStatus @default(PENDING)
-  settledAt DateTime?
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-
-  @@index([orderId, userId, status])
-}
-
-model ReferralReward {
-  id         String           @id @default(cuid())
-  referrerId String
-  referrer   User             @relation("ReferrerRewards", fields: [referrerId], references: [id])
-  referredId String
-  referred   User             @relation("ReferredRewards", fields: [referredId], references: [id])
-  orderId    String?
-  amount     Float
-  type       String
-  status     CommissionStatus @default(PENDING)
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-
-  @@index([referrerId, referredId, status])
-}
-
-// ============================================
-// MULTI-LEVEL RESELLER (MLM)
-// ============================================
-
-model ResellerLevel {
-  id              String            @id @default(cuid())
-  name            ResellerLevelName
-  minTransaction  Int               @default(0)
-  minRevenue      Float             @default(0)
-  commissionBonus Float             @default(0)
-  badge           String?
-  benefits        Json?
-  isActive        Boolean           @default(true)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-
-  users          User[]
-  levelHistories ResellerLevelHistory[]
-}
-
-model ResellerLevelHistory {
-  id        String        @id @default(cuid())
-  userId    String
-  user      User          @relation(fields: [userId], references: [id])
-  levelId   String
-  level     ResellerLevel @relation(fields: [levelId], references: [id])
-  oldLevel  String?
-  newLevel  String
-  reason    String?
-  createdAt DateTime      @default(now())
-
-  @@index([userId, createdAt])
-}
-
-model DownlineTree {
-  id        String   @id @default(cuid())
-  parentId  String
-  parent    User     @relation("DownlineParent", fields: [parentId], references: [id])
-  childId   String
-  child     User     @relation("DownlineChild", fields: [childId], references: [id])
-  level     Int      @default(1) // 1, 2, atau 3
-  createdAt DateTime @default(now())
-
-  @@unique([parentId, childId])
-  @@index([parentId, childId, level])
-}
-
-model MLMCommission {
-  id        String           @id @default(cuid())
-  orderId   String
-  order     Order            @relation(fields: [orderId], references: [id])
-  userId    String
-  user      User             @relation(fields: [userId], references: [id])
-  level     Int              // 1, 2, atau 3
-  percentage Float
-  amount    Float
-  status    CommissionStatus @default(PENDING)
-  settledAt DateTime?
-  createdAt DateTime         @default(now())
-
-  @@index([orderId, userId, level, status])
-}
-
-// ============================================
 // PROMO & VOUCHER DISKON
 // ============================================
 
 model PromoCode {
   id           String         @id @default(cuid())
-  merchantId   String?
+  merchantId   String?        // null = promo global dari DagangPlay
   merchant     Merchant?      @relation(fields: [merchantId], references: [id])
   code         String         @unique
   name         String
@@ -1300,9 +1133,9 @@ model PromoCode {
   isActive     Boolean        @default(true)
   appliesTo    PromoAppliesTo @default(ALL)
   categoryId   String?
+  category     Category?      @relation(fields: [categoryId], references: [id])
   productSkuId String?
   productSku   ProductSku?    @relation(fields: [productSkuId], references: [id])
-  forRole      PromoForRole   @default(ALL)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
@@ -1312,6 +1145,7 @@ model PromoCode {
   @@index([code, merchantId, isActive])
 }
 
+// Penggunaan promo per user per order
 model PromoUsage {
   id             String    @id @default(cuid())
   promoCodeId    String
@@ -1386,7 +1220,8 @@ model WebhookLog {
 // KEUANGAN LANJUT
 // ============================================
 
-// Invoice subscription SaaS merchant (dibayar via Tripay)
+// Invoice subscription SaaS merchant
+// Dibayar via Tripay
 model Invoice {
   id          String        @id @default(cuid())
   merchantId  String
@@ -1399,30 +1234,31 @@ model Invoice {
   status      InvoiceStatus @default(UNPAID)
   dueDate     DateTime
 
-  // Tripay untuk bayar invoice subscription
+  // Data Tripay untuk bayar invoice
   tripayReference  String?
   tripayPaymentUrl String?
   tripayResponse   Json?
 
   paidAt    DateTime?
   notes     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([merchantId, status, dueDate])
 }
 
+// Riwayat upgrade/downgrade plan merchant
 model SubscriptionHistory {
-  id         String       @id @default(cuid())
+  id         String        @id @default(cuid())
   merchantId String
-  merchant   Merchant     @relation(fields: [merchantId], references: [id])
+  merchant   Merchant      @relation(fields: [merchantId], references: [id])
   oldPlan    MerchantPlan?
   newPlan    MerchantPlan
   startDate  DateTime
   endDate    DateTime
   amount     Float
   note       String?
-  createdAt  DateTime     @default(now())
+  createdAt  DateTime      @default(now())
 
   @@index([merchantId, createdAt])
 }
@@ -1431,6 +1267,7 @@ model SubscriptionHistory {
 // ANALYTICS & REPORTING
 // ============================================
 
+// Snapshot penjualan harian per merchant
 model DailySalesSnapshot {
   id            String   @id @default(cuid())
   merchantId    String
@@ -1448,6 +1285,7 @@ model DailySalesSnapshot {
   @@index([merchantId, date])
 }
 
+// Statistik penjualan per produk per hari
 model ProductSalesStats {
   id           String   @id @default(cuid())
   productId    String
@@ -1463,6 +1301,7 @@ model ProductSalesStats {
   @@index([productId, categoryId, date])
 }
 
+// Log aktivitas user di platform
 model UserActivityLog {
   id        String   @id @default(cuid())
   userId    String
@@ -1500,11 +1339,11 @@ model Notification {
 
 model NotificationTemplate {
   id         String              @id @default(cuid())
-  merchantId String?
+  merchantId String?             // null = template global
   type       NotificationType
   channel    NotificationChannel
   subject    String?
-  body       String
+  body       String              // support variabel {{nama}}, {{orderId}} dll
   isActive   Boolean             @default(true)
   createdAt  DateTime            @default(now())
   updatedAt  DateTime            @updatedAt
@@ -1545,7 +1384,7 @@ model EmailCampaignLog {
 
 model Banner {
   id         String         @id @default(cuid())
-  merchantId String?
+  merchantId String?        // null = banner global DagangPlay
   merchant   Merchant?      @relation(fields: [merchantId], references: [id])
   title      String
   image      String
@@ -1591,6 +1430,8 @@ model PopupPromo {
   isActive   Boolean   @default(true)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+
+  @@index([merchantId, isActive])
 }
 
 model EmailCampaign {
@@ -1681,7 +1522,7 @@ model ProductReview {
   rating      Int      // 1-5
   comment     String?
   images      Json?
-  isVerified  Boolean  @default(false)
+  isVerified  Boolean  @default(false) // hanya yang pernah beli
   isPublished Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -1693,6 +1534,7 @@ model ProductReview {
 // OPERASIONAL
 // ============================================
 
+// Jadwal maintenance produk/supplier
 model MaintenanceSchedule {
   id          String    @id @default(cuid())
   supplierId  String?
@@ -1710,6 +1552,7 @@ model MaintenanceSchedule {
   @@index([supplierId, productId, startTime, endTime])
 }
 
+// Kebijakan refund per produk
 model RefundPolicy {
   id           String   @id @default(cuid())
   productId    String   @unique
@@ -1721,6 +1564,7 @@ model RefundPolicy {
   updatedAt    DateTime @updatedAt
 }
 
+// Kasus sengketa order
 model DisputeCase {
   id         String        @id @default(cuid())
   orderId    String
@@ -1738,9 +1582,10 @@ model DisputeCase {
   @@index([orderId, userId, status])
 }
 
+// Background job queue
 model JobQueue {
   id          String    @id @default(cuid())
-  type        String
+  type        String    // contoh: PROCESS_ORDER, SEND_NOTIF, SYNC_PRICE
   payload     Json
   status      JobStatus @default(PENDING)
   retryCount  Int       @default(0)
@@ -1752,25 +1597,6 @@ model JobQueue {
   createdAt   DateTime  @default(now())
 
   @@index([type, status, scheduledAt])
-}
-
-// ============================================
-// FRAUD & KEAMANAN LANJUT
-// ============================================
-
-model ApiRateLimit {
-  id        String   @id @default(cuid())
-  userId    String?
-  ipAddress String
-  endpoint  String
-  hitCount  Int      @default(1)
-  windowStart DateTime
-  windowEnd   DateTime
-  isBlocked Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId, ipAddress, endpoint, windowStart])
 }
 
 // ============================================
@@ -1810,8 +1636,8 @@ model AuditLog {
   user       User?     @relation(fields: [userId], references: [id])
   merchantId String?
   merchant   Merchant? @relation(fields: [merchantId], references: [id])
-  action     String
-  entity     String
+  action     String    // contoh: USER_LOGIN, ORDER_CREATED, PRICE_UPDATED
+  entity     String    // nama model yang diubah
   entityId   String?
   oldData    Json?
   newData    Json?
@@ -1824,39 +1650,44 @@ model AuditLog {
 
 === CATATAN PENTING ===
 
-1. Payment gateway HANYA Tripay
-   - Semua transaksi order pakai Tripay
-   - Semua deposit saldo pakai Tripay
-   - Semua pembayaran invoice subscription pakai Tripay
-   - Field tripayReference wajib ada di Payment, Deposit, Invoice
+1. TIDAK ADA RESELLER
+   Tidak ada Role RESELLER, tidak ada MLM,
+   tidak ada downline, tidak ada komisi reseller.
+   Merchant langsung jualan ke customer.
 
-2. Tier harga 4 level:
-   - NORMAL  = customer beli di toko resmi DagangPlay
-   - PRO     = harga modal merchant plan PRO
-   - LEGEND  = harga modal merchant plan LEGEND
-   - SUPREME = harga modal merchant plan SUPREME
-   - Mapping plan ke tier ada di tabel PlanTierMapping
-   - Bisa diubah Super Admin tanpa deploy ulang
+2. ROLE HANYA 3
+   SUPER_ADMIN, MERCHANT, CUSTOMER
 
-3. isOfficial di Merchant:
-   - true  = toko resmi DagangPlay sendiri
-   - false = merchant/mitra yang berlangganan
+3. PAYMENT GATEWAY HANYA TRIPAY
+   Semua transaksi, deposit, dan invoice subscription
+   menggunakan Tripay. Field tripayReference wajib ada
+   di Payment, Deposit, dan Invoice.
 
-4. Supplier utama = Digiflazz
-   - Field supplierCode = buyer_sku_code di Digiflazz
-   - Setiap SKU bisa punya backup supplier
-   - Semua request/response Digiflazz dilog di SupplierLog
+4. TIER HARGA 4 LEVEL
+   NORMAL  → customer toko resmi + merchant FREE
+   PRO     → merchant plan PRO
+   LEGEND  → merchant plan LEGEND
+   SUPREME → merchant plan SUPREME
+   Mapping fleksibel via tabel PlanTierMapping.
 
-5. sellingPrice di Order adalah SNAPSHOT
-   - Harga bisa berubah kapan saja
-   - Order menyimpan harga saat transaksi terjadi
-   - Pakai field priceTierUsed untuk tau tier apa yang dipakai
+5. isOfficial DI MERCHANT
+   true  = toko resmi DagangPlay
+   false = merchant berlangganan SaaS
 
-6. PlanTierMapping default:
-   - FREE    → NORMAL
-   - PRO     → PRO
-   - LEGEND  → LEGEND
-   - SUPREME → SUPREME
+6. SNAPSHOT DI ORDER
+   productName, productSkuName, basePrice,
+   sellingPrice, priceTierUsed disimpan sebagai
+   snapshot saat transaksi. Harga bisa berubah
+   tapi riwayat order tetap akurat.
 
-Format output: Prisma Schema lengkap siap 
+7. SUPPLIER UTAMA = DIGIFLAZZ
+   supplierCode = buyer_sku_code di Digiflazz
+   Semua request/response dilog di SupplierLog.
+   Setiap SKU bisa punya backup supplier (failover).
+
+8. TIDAK ADA PriceHistory LAMA
+   Diganti total dengan TierPriceHistory
+   yang menyimpan semua 4 tier sekaligus.
+
+Format output: Prisma Schema lengkap siap
 dijalankan dengan perintah: prisma migrate dev

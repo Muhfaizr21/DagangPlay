@@ -177,27 +177,24 @@ export declare class ProductsService {
         stock: number;
         metadata: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
-    getPublicCategories(merchantSlug?: string): Promise<any[]>;
-    getPublicCategoryBySlug(slug: string, merchantSlug?: string): Promise<{
+    private resolveMerchant;
+    getPublicCategories(merchantSlug?: string, domain?: string): Promise<any[]>;
+    getPublicCategoryBySlug(slug: string, merchantSlug?: string, domain?: string): Promise<{
         name: string;
         slug: string;
-        products: {
-            skus: {
-                priceNormal: number | undefined;
-                id: string;
-                name: string;
-                status: import("@prisma/client").$Enums.SkuStatus;
-            }[];
-            id: string;
-            name: string;
-            gameIdLabel: string | null;
-            gameServerId: boolean;
-            serverLabel: string | null;
-        }[];
+        products: any;
         id: string;
+        icon: string | null;
         image: string | null;
+        description: string | null;
+        sortOrder: number;
+        isActive: boolean;
+        parentId: string | null;
+        digiflazzCategory: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     } | null>;
-    getPublicContent(merchantSlug?: string): Promise<{
+    getPublicContent(merchantSlug?: string, domain?: string): Promise<{
         banners: {
             id: string;
             image: string;
@@ -226,7 +223,7 @@ export declare class ProductsService {
             imageUrl: string | null;
         }[];
     }>;
-    getPublicResellerPrices(merchantSlug?: string): Promise<{
+    getPublicResellerPrices(merchantSlug?: string, domain?: string): Promise<{
         name: string;
         normal: number;
         pro: number;
@@ -234,25 +231,5 @@ export declare class ProductsService {
         supreme: number;
         img: string;
     }[]>;
-    getPublicFullCatalog(merchantSlug?: string): Promise<{
-        id: string;
-        name: string;
-        slug: string;
-        icon: string | null;
-        image: string | null;
-        products: {
-            id: string;
-            name: string;
-            slug: string;
-            image: string | null;
-            skus: {
-                id: string;
-                name: string;
-                normal: number;
-                pro: number;
-                legend: number;
-                supreme: number;
-            }[];
-        }[];
-    }[]>;
+    getPublicFullCatalog(merchantSlug?: string, domain?: string): Promise<any>;
 }

@@ -19,7 +19,8 @@ let DashboardService = class DashboardService {
     }
     async getDashboardData(userId) {
         const merchant = await this.prisma.merchant.findUnique({
-            where: { ownerId: userId }
+            where: { ownerId: userId },
+            include: { owner: true }
         });
         if (!merchant) {
             throw new common_1.NotFoundException('Merchant tidak ditemukan untuk user ini');
@@ -117,7 +118,7 @@ let DashboardService = class DashboardService {
                 domain: merchant.domain,
                 status: merchant.status,
                 plan: merchant.plan,
-                balance: Number(revenueTotal)
+                balance: Number(merchant.owner?.balance || 0)
             },
             revenue: {
                 today: Number(revenueToday),

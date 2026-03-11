@@ -80,7 +80,9 @@ export declare class DigiflazzService {
         reason?: undefined;
     }>;
     placeOrder(orderId: string): Promise<any>;
-    private handleCommissionReversal;
-    private handleCustomerRefund;
+    handleCommissionReversal(orderId: string): Promise<void>;
+    handleCustomerRefund(orderId: string): Promise<void>;
     processPriceWebhook(payload: any): Promise<void>;
+    processTransactionWebhook(data: any): Promise<void>;
+    private maskSensitiveData;
 }

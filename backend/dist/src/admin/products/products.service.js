@@ -315,31 +315,42 @@ let ProductsService = class ProductsService {
             data: { status: status }
         });
     }
-    async getPublicCategories(merchantSlug) {
-        const categories = await this.prisma.category.findMany({
+    async resolveMerchant(merchantSlug, domain) {
+        if (!merchantSlug && !domain) {
+            return await this.prisma.merchant.findFirst({ where: { isOfficial: true, status: 'ACTIVE' } });
+        }
+        return await this.prisma.merchant.findFirst({
             where: {
-                isActive: true,
-                products: {
-                    some: {
-                        status: 'ACTIVE',
-                        skus: {
-                            some: { status: 'ACTIVE' }
-                        }
-                    }
-                }
-            },
+                OR: [
+                    merchantSlug ? { slug: merchantSlug } : {},
+                    domain ? { domain: domain } : {},
+                    domain ? { slug: domain.split('.')[0] } : {}
+                ].filter(condition => Object.keys(condition).length > 0)
+            }
+        });
+    }
+    async getPublicCategories(merchantSlug, domain) {
+        let merchantId;
+        let isOfficial = true;
+        const m = await this.resolveMerchant(merchantSlug, domain);
+        if (m) {
+            merchantId = m.id;
+            isOfficial = !!m.isOfficial;
+        }
+        const categories = await this.prisma.category.findMany({
+            where: { isActive: true },
             orderBy: { name: 'asc' },
-            select: {
-                id: true,
-                name: true,
-                slug: true,
-                image: true,
-                icon: true,
+            include: {
                 products: {
                     where: { status: 'ACTIVE' },
-                    select: {
-                        _count: {
-                            select: { skus: { where: { status: 'ACTIVE' } } }
+                    include: {
+                        skus: {
+                            where: { status: 'ACTIVE' },
+                            include: {
+                                merchantProductPrices: merchantId ? {
+                                    where: { merchantId }
+                                } : false
+                            }
                         }
                     }
                 }
@@ -362,7 +373,17 @@ let ProductsService = class ProductsService {
                 canonicalSlug = 'pubg-mobile';
                 canonicalName = 'PUBG MOBILE';
             }
-            const skuCount = cat.products.reduce((acc, p) => acc + (p._count?.skus || 0), 0);
+            let skuCount = 0;
+            for (const prod of cat.products) {
+                for (const sku of prod.skus) {
+                    const mPrice = sku.merchantProductPrices?.[0];
+                    const isActive = mPrice ? mPrice.isActive : true;
+                    if (isActive)
+                        skuCount++;
+                }
+            }
+            if (skuCount === 0)
+                continue;
             if (mergedMap.has(canonicalSlug)) {
                 const existing = mergedMap.get(canonicalSlug);
                 existing.skuCount += skuCount;
@@ -371,9 +392,11 @@ let ProductsService = class ProductsService {
             }
             else {
                 mergedMap.set(canonicalSlug, {
-                    ...cat,
-                    slug: canonicalSlug,
+                    id: cat.id,
                     name: canonicalName,
+                    slug: canonicalSlug,
+                    image: cat.image,
+                    icon: cat.icon,
                     skuCount: skuCount
                 });
             }
@@ -396,11 +419,13 @@ let ProductsService = class ProductsService {
         }
         return result.sort((a, b) => a.name.localeCompare(b.name));
     }
-    async getPublicCategoryBySlug(slug, merchantSlug) {
+    async getPublicCategoryBySlug(slug, merchantSlug, domain) {
         let merchantId;
-        if (merchantSlug) {
-            const m = await this.prisma.merchant.findFirst({ where: { slug: merchantSlug } });
-            merchantId = m?.id;
+        let isOfficial = true;
+        const m = await this.resolveMerchant(merchantSlug, domain);
+        if (m) {
+            merchantId = m.id;
+            isOfficial = !!m.isOfficial;
         }
         let slugsToFetch = [slug];
         if (slug === 'free-fire')
@@ -409,28 +434,16 @@ let ProductsService = class ProductsService {
             slugsToFetch = ['mobile-legend', 'mobile-legends', 'mlbb'];
         let categories = await this.prisma.category.findMany({
             where: { slug: { in: slugsToFetch } },
-            select: {
-                id: true,
-                name: true,
-                slug: true,
-                image: true,
+            include: {
                 products: {
                     where: { status: 'ACTIVE' },
-                    select: {
-                        id: true,
-                        name: true,
-                        gameIdLabel: true,
-                        gameServerId: true,
-                        serverLabel: true,
+                    include: {
+                        overrides: merchantId ? {
+                            where: { merchantId }
+                        } : false,
                         skus: {
                             where: { status: 'ACTIVE' },
-                            orderBy: { priceNormal: 'asc' },
-                            select: {
-                                id: true,
-                                name: true,
-                                priceNormal: true,
-                                status: true
-                            }
+                            orderBy: { priceNormal: 'asc' }
                         }
                     }
                 }
@@ -439,28 +452,16 @@ let ProductsService = class ProductsService {
         if (categories.length === 0) {
             const catByProduct = await this.prisma.category.findFirst({
                 where: { products: { some: { slug: slug } } },
-                select: {
-                    id: true,
-                    name: true,
-                    slug: true,
-                    image: true,
+                include: {
                     products: {
                         where: { status: 'ACTIVE' },
-                        select: {
-                            id: true,
-                            name: true,
-                            gameIdLabel: true,
-                            gameServerId: true,
-                            serverLabel: true,
+                        include: {
+                            overrides: merchantId ? {
+                                where: { merchantId }
+                            } : false,
                             skus: {
                                 where: { status: 'ACTIVE' },
-                                orderBy: { priceNormal: 'asc' },
-                                select: {
-                                    id: true,
-                                    name: true,
-                                    priceNormal: true,
-                                    status: true
-                                }
+                                orderBy: { priceNormal: 'asc' }
                             }
                         }
                     }
@@ -472,17 +473,31 @@ let ProductsService = class ProductsService {
         if (categories.length === 0)
             return null;
         const merchantPrices = merchantId ? await this.prisma.merchantProductPrice.findMany({
-            where: { merchantId, isActive: true }
+            where: { merchantId }
         }) : [];
         const priceMap = new Map(merchantPrices.map(mp => [mp.productSkuId, mp.customPrice]));
+        const visibilityMap = new Map(merchantPrices.map(mp => [mp.productSkuId, mp.isActive]));
         const primary = categories[0];
-        const allProducts = categories.flatMap(c => c.products.map(p => ({
-            ...p,
-            skus: p.skus.map(s => ({
-                ...s,
-                priceNormal: priceMap.has(s.id) ? priceMap.get(s.id) : s.priceNormal
-            }))
-        })));
+        const allProducts = categories.flatMap(c => c.products.map(p => {
+            const filteredSkus = p.skus.filter(s => {
+                const hasOverride = visibilityMap.has(s.id);
+                const isActive = hasOverride ? visibilityMap.get(s.id) : true;
+                return isActive;
+            }).map(s => {
+                const customPrice = priceMap.get(s.id);
+                return {
+                    ...s,
+                    priceNormal: customPrice !== undefined ? customPrice : s.priceNormal
+                };
+            });
+            const override = p.overrides?.[0];
+            return {
+                ...p,
+                name: override?.customName || p.name,
+                thumbnail: override?.customThumbnail || p.thumbnail,
+                skus: filteredSkus
+            };
+        })).filter(p => p.skus.length > 0);
         const mergedResult = {
             ...primary,
             name: slug === 'free-fire' ? 'Free Fire' : (slug === 'mobile-legends' ? 'Mobile Legends' : primary.name),
@@ -534,18 +549,8 @@ let ProductsService = class ProductsService {
         }
         return mergedResult;
     }
-    async getPublicContent(merchantSlug) {
-        let targetMerchant;
-        if (merchantSlug) {
-            targetMerchant = await this.prisma.merchant.findFirst({
-                where: { slug: merchantSlug }
-            });
-        }
-        if (!targetMerchant) {
-            targetMerchant = await this.prisma.merchant.findFirst({
-                where: { isOfficial: true }
-            });
-        }
+    async getPublicContent(merchantSlug, domain) {
+        const targetMerchant = await this.resolveMerchant(merchantSlug, domain);
         if (!targetMerchant)
             return { banners: [], announcements: [] };
         const [banners, announcements] = await Promise.all([
@@ -560,7 +565,7 @@ let ProductsService = class ProductsService {
         ]);
         return { banners, announcements };
     }
-    async getPublicResellerPrices(merchantSlug) {
+    async getPublicResellerPrices(merchantSlug, domain) {
         const sampleSkus = await this.prisma.productSku.findMany({
             where: {
                 OR: [
@@ -587,13 +592,36 @@ let ProductsService = class ProductsService {
             img: sku.product.category.image || 'https://via.placeholder.com/50'
         }));
     }
-    async getPublicFullCatalog(merchantSlug) {
+    async getPublicFullCatalog(merchantSlug, domain) {
+        let merchant = await this.resolveMerchant(merchantSlug, domain);
+        const merchantId = merchant?.id;
+        let isOfficial = true;
+        if (merchant) {
+            isOfficial = !!merchant.isOfficial;
+        }
+        let activeTier = 'NORMAL';
+        if (merchant) {
+            const mapping = await this.prisma.planTierMapping.findUnique({
+                where: { plan: merchant.plan || 'FREE' }
+            });
+            activeTier = mapping?.tier || 'NORMAL';
+        }
         const categories = await this.prisma.category.findMany({
+            where: { isActive: true },
             include: {
                 products: {
+                    where: { status: 'ACTIVE' },
                     include: {
+                        overrides: merchantId ? {
+                            where: { merchantId }
+                        } : false,
                         skus: {
                             where: { status: 'ACTIVE' },
+                            include: {
+                                merchantProductPrices: merchantId ? {
+                                    where: { merchantId }
+                                } : false
+                            },
                             orderBy: { basePrice: 'asc' }
                         }
                     }
@@ -601,27 +629,60 @@ let ProductsService = class ProductsService {
             },
             orderBy: { name: 'asc' }
         });
-        return categories.map(cat => ({
-            id: cat.id,
-            name: cat.name,
-            slug: cat.slug,
-            icon: cat.icon,
-            image: cat.image,
-            products: cat.products.map(p => ({
-                id: p.id,
-                name: p.name,
-                slug: p.slug,
-                image: p.thumbnail || cat.image,
-                skus: p.skus.map(s => ({
-                    id: s.id,
-                    name: s.name,
-                    normal: Number(s.priceNormal),
-                    pro: Number(s.pricePro),
-                    legend: Number(s.priceLegend),
-                    supreme: Number(s.priceSupreme)
-                }))
-            }))
-        }));
+        return categories.map(cat => {
+            const products = cat.products.map(p => {
+                const skus = p.skus.filter(s => {
+                    const mPrice = s.merchantProductPrices?.[0];
+                    const isActive = mPrice ? mPrice.isActive : true;
+                    return isActive;
+                }).map(s => {
+                    const mPrice = s.merchantProductPrices?.[0];
+                    let defaultPrice = Number(s.priceNormal);
+                    if (activeTier === 'PRO')
+                        defaultPrice = Number(s.pricePro);
+                    else if (activeTier === 'LEGEND')
+                        defaultPrice = Number(s.priceLegend);
+                    else if (activeTier === 'SUPREME')
+                        defaultPrice = Number(s.priceSupreme);
+                    const finalPrice = mPrice ? Number(mPrice.customPrice) : defaultPrice;
+                    return {
+                        id: s.id,
+                        name: s.name,
+                        normal: finalPrice,
+                        pro: Number(s.pricePro),
+                        legend: Number(s.priceLegend),
+                        supreme: Number(s.priceSupreme)
+                    };
+                });
+                const fallbacks = {
+                    'mobile-legends': 'https://img.df.sg/game/mlbb.png',
+                    'free-fire': 'https://img.df.sg/game/ff.png',
+                    'free-fire-max': 'https://img.df.sg/game/ffmax.png',
+                    'pubg-mobile': 'https://img.df.sg/game/pubgm.png',
+                    'genshin-impact': 'https://img.df.sg/game/genshin.png',
+                    'valorant': 'https://img.df.sg/game/valorant.png'
+                };
+                const imageFallback = fallbacks[p.slug] || fallbacks[cat.slug] || cat.image;
+                const override = p.overrides?.[0];
+                const finalName = override?.customName || p.name;
+                const finalThumbnail = override?.customThumbnail || p.thumbnail || imageFallback;
+                return {
+                    id: p.id,
+                    name: finalName,
+                    slug: p.slug,
+                    image: finalThumbnail,
+                    skus: skus
+                };
+            }).filter(p => p.skus.length > 0);
+            return {
+                id: cat.id,
+                name: cat.name,
+                slug: cat.slug,
+                icon: cat.icon,
+                image: cat.image,
+                products: products
+            };
+        }).filter(cat => cat.products.length > 0);
     }
 };
 exports.ProductsService = ProductsService;

@@ -78,7 +78,7 @@ export class WorkersService {
                 // TIMEOUT PROTECTION: Jika sudah 10 Menit masih PROCESSING, anggap gagal agar dana kembali ke user
                 const tenMinutesAgo = new Date(now.getTime() - (10 * 60 * 1000));
                 if (order.fulfillmentStatus === OrderFulfillmentStatus.PROCESSING && order.updatedAt < tenMinutesAgo) {
-                    this.logger.warn(`Order ${order.orderNumber} TIMEOUT. Marking as FAILED.`);
+                    this.logger.warn(`Order ${order.orderNumber} TIMEOUT. Marking as FAILED & Refunding.`);
                     await this.prisma.order.update({
                         where: { id: order.id },
                         data: {
@@ -87,11 +87,10 @@ export class WorkersService {
                             failedAt: new Date()
                         }
                     });
-                    // DigiflazzService will handle reversal and refund via its own logic if we trigger it,
-                    // but since service is injected here, we can use it.
-                    // Assuming service.placeOrder handles reversal internally, but here we just mark failed.
-                    // Actually we should trigger refund logic here too.
-                    // Let's call a dedicated method if available or just update DB.
+
+                    // REVERSAL & REFUND
+                    await this.digiflazz.handleCommissionReversal(order.id);
+                    await this.digiflazz.handleCustomerRefund(order.id);
                     continue;
                 }
 

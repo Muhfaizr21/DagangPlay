@@ -38,4 +38,9 @@ export declare class ProductsService {
         success: boolean;
         count: number;
     }>;
+    updateProductOverride(merchantId: string, productId: string, data: {
+        customName?: string;
+        customThumbnail?: string;
+        description?: string;
+    }): Promise<any>;
 }

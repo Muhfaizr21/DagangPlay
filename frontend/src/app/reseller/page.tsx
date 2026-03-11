@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-    ShieldCheck, Zap, Coins, TrendingUp, CheckCircle2,
-    MonitorPlay, Layout, Search, ArrowRight, ChevronDown,
-    Star, Check, ArrowUpRight, Minus, Play, BarChart3,
-    Users, Globe, Sparkles, ChevronRight
+  ShieldCheck, Zap, Coins, TrendingUp, CheckCircle2,
+  MonitorPlay, Layout, Search, ArrowRight, ChevronDown,
+  Star, Check, ArrowUpRight, Minus, Play, BarChart3,
+  Users, Globe, Sparkles, ChevronRight
 } from 'lucide-react';
 import PriceCatalog from '@/components/PriceCatalog';
 
@@ -22,7 +22,7 @@ import PriceCatalog from '@/components/PriceCatalog';
 ───────────────────────────────────────────────────── */
 
 const Styles = () => (
-    <style>{`
+  <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,700;1,800&display=swap');
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -792,558 +792,558 @@ const Styles = () => (
 
 const BARS = [28, 44, 36, 58, 45, 70, 54, 82, 64, 75, 60, 88, 70, 80, 65, 93, 76, 88];
 const TRX = [
-    { id: '#7821', game: 'MLBB 148 Diamonds', st: 'ok', amt: 'Rp 42.500' },
-    { id: '#7820', game: 'Free Fire 70 Diamonds', st: 'ok', amt: 'Rp 11.000' },
-    { id: '#7819', game: 'PUBG 60 UC', st: 'pend', amt: 'Rp 14.500' },
-    { id: '#7818', game: 'MLBB 86 Diamonds', st: 'ok', amt: 'Rp 21.000' },
+  { id: '#7821', game: 'MLBB 148 Diamonds', st: 'ok', amt: 'Rp 42.500' },
+  { id: '#7820', game: 'Free Fire 70 Diamonds', st: 'ok', amt: 'Rp 11.000' },
+  { id: '#7819', game: 'PUBG 60 UC', st: 'pend', amt: 'Rp 14.500' },
+  { id: '#7818', game: 'MLBB 86 Diamonds', st: 'ok', amt: 'Rp 21.000' },
 ];
 const WOF = [
-    { name: "Fantasi Gamer", profit: "Rp27.8Jt", img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Fantasi" },
-    { name: "Arb Store", profit: "Rp24.5Jt", img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Arb" },
-    { name: "Rolly Store", profit: "Rp18.1Jt", img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rolly" },
+  { name: "Fantasi Gamer", profit: "Rp27.8Jt", img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Fantasi" },
+  { name: "Arb Store", profit: "Rp24.5Jt", img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Arb" },
+  { name: "Rolly Store", profit: "Rp18.1Jt", img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rolly" },
 ];
 const STRIP = ["MLBB +2.1%", "Free Fire +1.8%", "PUBG M +3.2%", "Genshin -0.5%", "Honkai SR +4.1%", "COD Mobile +2.7%", "Total Trx Hari Ini 14,821", "Reseller Aktif 3,204"];
 const RESELLER_PLANS = [{ id: 'PRO', name: 'Pro' }, { id: 'LEGEND', name: 'Legend' }, { id: 'SUPREME', name: 'Supreme' }];
 
 export default function ResellerLandingPage() {
-    const [isMounted, setIsMounted] = useState(false);
-    const [selectedPlan, setSelectedPlan] = useState('PRO');
-    const [hargaModal, setHargaModal] = useState(37500);
-    const [hargaJual, setHargaJual] = useState(40000);
-    const [jumlahPenjualan, setJumlahPenjualan] = useState(20);
-    const [sampleProducts, setSampleProducts] = useState<any[]>([]);
-    const [billingCycle, setBillingCycle] = useState<'yearly' | 'quarterly'>('yearly');
-    const MLBB: any = { pro: 39709, legend: 38773, supreme: 38023, normal: 40646 };
+  const [isMounted, setIsMounted] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState('PRO');
+  const [hargaModal, setHargaModal] = useState(37500);
+  const [hargaJual, setHargaJual] = useState(40000);
+  const [jumlahPenjualan, setJumlahPenjualan] = useState(20);
+  const [sampleProducts, setSampleProducts] = useState<any[]>([]);
+  const [billingCycle, setBillingCycle] = useState<'yearly' | 'quarterly'>('yearly');
+  const MLBB: any = { pro: 39709, legend: 38773, supreme: 38023, normal: 40646 };
 
-    useEffect(() => {
-        const m = MLBB[selectedPlan.toLowerCase()] || MLBB.pro;
-        setHargaModal(m); setHargaJual(Math.ceil(m * 1.08 / 500) * 500);
-    }, [selectedPlan]);
+  useEffect(() => {
+    const m = MLBB[selectedPlan.toLowerCase()] || MLBB.pro;
+    setHargaModal(m); setHargaJual(Math.ceil(m * 1.08 / 500) * 500);
+  }, [selectedPlan]);
 
-    const [plans, setPlans] = useState<any>({
-        PRO: { price: 74917, maxProducts: 50, customDomain: true, multiUser: false, whiteLabel: false, customFeatures: [], description: "Mulai bisnis dengan mudah!" },
-        LEGEND: { price: 82250, maxProducts: 500, customDomain: true, multiUser: true, whiteLabel: false, customFeatures: [], description: "Naik level, untung berlipat!" },
-        SUPREME: { price: 99917, maxProducts: 99999, customDomain: true, multiUser: true, whiteLabel: true, customFeatures: [], description: "Fitur terlengkap, untung maksimal!" },
-    });
+  const [plans, setPlans] = useState<any>({
+    PRO: { price: 74917, maxProducts: 50, customDomain: true, multiUser: false, whiteLabel: false, customFeatures: [], description: "Mulai bisnis dengan mudah!" },
+    LEGEND: { price: 82250, maxProducts: 500, customDomain: true, multiUser: true, whiteLabel: false, customFeatures: [], description: "Naik level, untung berlipat!" },
+    SUPREME: { price: 99917, maxProducts: 99999, customDomain: true, multiUser: true, whiteLabel: true, customFeatures: [], description: "Fitur terlengkap, untung maksimal!" },
+  });
 
-    const gpd = (p: number) => {
-        if (!p) p = 0; const o = p * 2.5;
-        if (billingCycle === 'yearly') return { original: o, discounted: p, label: '/ tahun', mo: p / 12 };
-        const q = Math.round(p * .3); return { original: o * .3, discounted: q, label: '/ 3 bulan', mo: q / 3 };
-    };
+  const gpd = (p: number) => {
+    if (!p) p = 0; const o = p * 2.5;
+    if (billingCycle === 'yearly') return { original: o, discounted: p, label: '/ tahun', mo: p / 12 };
+    const q = Math.round(p * .3); return { original: o * .3, discounted: q, label: '/ 3 bulan', mo: q / 3 };
+  };
 
-    useEffect(() => {
-        setIsMounted(true);
-        const fb = [
-            { name: 'Mobile Legends 86 Diamonds', normal: 19500, pro: 18800, legend: 18500, supreme: 18100, img: 'https://cdn.unipin.com/images/icon_product_channels/1592285005-icon-ml.png' },
-            { name: 'Free Fire 70 Diamonds', normal: 10000, pro: 9500, legend: 9300, supreme: 9000, img: 'https://cdn.unipin.com/images/icon_product_channels/1598282333-icon-ff.png' },
-            { name: 'PUBG M 60 UC', normal: 14000, pro: 13500, legend: 13200, supreme: 12800, img: 'https://cdn.unipin.com/images/icon_product_channels/1593414902-icon-pubgm.png' },
-        ];
-        fetch(`http://localhost:3001/public/subscriptions/plans/features?t=${Date.now()}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache,no-store,must-revalidate', 'Pragma': 'no-cache' } })
-            .then(r => r.json()).then(d => { if (d?.PRO) setPlans(d) }).catch(() => { });
-        fetch('http://localhost:3001/public/products/reseller-prices')
-            .then(r => r.json())
-            .then(d => {
-                if (Array.isArray(d) && d.length > 0) { setSampleProducts(d); const f = d[0]; const im = f.pro || f.normal || 0; setHargaModal(im); setHargaJual(Math.ceil(im * 1.1 / 100) * 100); }
-                else setSampleProducts(fb);
-            }).catch(() => setSampleProducts(fb));
-    }, []);
+  useEffect(() => {
+    setIsMounted(true);
+    const fb = [
+      { name: 'Mobile Legends 86 Diamonds', normal: 19500, pro: 18800, legend: 18500, supreme: 18100, img: 'https://cdn.unipin.com/images/icon_product_channels/1592285005-icon-ml.png' },
+      { name: 'Free Fire 70 Diamonds', normal: 10000, pro: 9500, legend: 9300, supreme: 9000, img: 'https://cdn.unipin.com/images/icon_product_channels/1598282333-icon-ff.png' },
+      { name: 'PUBG M 60 UC', normal: 14000, pro: 13500, legend: 13200, supreme: 12800, img: 'https://cdn.unipin.com/images/icon_product_channels/1593414902-icon-pubgm.png' },
+    ];
+    fetch(`http://localhost:3001/public/subscriptions/plans/features?t=${Date.now()}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache,no-store,must-revalidate', 'Pragma': 'no-cache' } })
+      .then(r => r.json()).then(d => { if (d?.PRO) setPlans(d) }).catch(() => { });
+    fetch('http://localhost:3001/public/products/reseller-prices')
+      .then(r => r.json())
+      .then(d => {
+        if (Array.isArray(d) && d.length > 0) { setSampleProducts(d); const f = d[0]; const im = f.pro || f.normal || 0; setHargaModal(im); setHargaJual(Math.ceil(im * 1.1 / 100) * 100); }
+        else setSampleProducts(fb);
+      }).catch(() => setSampleProducts(fb));
+  }, []);
 
-    const profit = (hargaJual - hargaModal) * jumlahPenjualan * 30;
-    const fmt = (n: number) => isMounted ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n) : `Rp ${n}`;
+  const profit = (hargaJual - hargaModal) * jumlahPenjualan * 30;
+  const fmt = (n: number) => isMounted ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n) : `Rp ${n}`;
 
-    const Feat = ({ on, text, light, accent }: { on: boolean, text: string, light: boolean, accent?: boolean }) => (
-        <div className={`pf${on ? '' : ' off'}`}>
-            {on
-                ? <Check size={14} className={`pf-i ${light ? 'pf-on-gold' : 'pf-on-navy'}`} />
-                : <Minus size={14} className="pf-i pf-off-c" />}
-            <span className={light ? 'pf-text-light' : 'pf-text-dark'} style={accent && on ? { fontWeight: 700 } : {}}>{text}</span>
+  const Feat = ({ on, text, light, accent }: { on: boolean, text: string, light: boolean, accent?: boolean }) => (
+    <div className={`pf${on ? '' : ' off'}`}>
+      {on
+        ? <Check size={14} className={`pf-i ${light ? 'pf-on-gold' : 'pf-on-navy'}`} />
+        : <Minus size={14} className="pf-i pf-off-c" />}
+      <span className={light ? 'pf-text-light' : 'pf-text-dark'} style={accent && on ? { fontWeight: 700 } : {}}>{text}</span>
+    </div>
+  );
+
+  return (
+    <div className="root">
+      <Styles />
+
+      {/* NAV */}
+      <nav className="nav">
+        <Link href="/" className="nav-brand">
+          <div className="nav-icon">DP</div>
+          <span className="nav-name">DagangPlay</span>
+        </Link>
+        <div className="nav-links">
+          <a href="#features" className="nav-lk">Fitur</a>
+          <a href="#pricing" className="nav-lk">Harga Modal</a>
+          <a href="#demo" className="nav-lk">Demo</a>
         </div>
-    );
+        <Link href="/admin/login" className="nav-login">Masuk</Link>
+        <Link href="/reseller/register" className="nav-cta">Daftar Reseller <ArrowUpRight size={13} /></Link>
+      </nav>
 
-    return (
-        <div className="root">
-            <Styles />
-
-            {/* NAV */}
-            <nav className="nav">
-                <Link href="/" className="nav-brand">
-                    <div className="nav-icon">DP</div>
-                    <span className="nav-name">DagangPlay</span>
-                </Link>
-                <div className="nav-links">
-                    <a href="#features" className="nav-lk">Fitur</a>
-                    <a href="#pricing" className="nav-lk">Harga Modal</a>
-                    <a href="#demo" className="nav-lk">Demo</a>
-                </div>
-                <Link href="/admin/login" className="nav-login">Masuk</Link>
-                <Link href="/reseller/register" className="nav-cta">Daftar Reseller <ArrowUpRight size={13} /></Link>
-            </nav>
-
-            {/* HERO */}
-            <section className="hero">
-                <div className="hero-mesh" />
-                <div className="hero-grid" />
-                <div className="hero-inner">
-                    <div className="hero-left">
-                        <div className="hero-tag a1"><span className="hero-tag-dot" />&nbsp;Platform Reseller #1 Indonesia</div>
-                        <h1 className="hero-h1 a2">
-                            Buat Web Top Up.<br />
-                            <span className="hl">Tidur Pun<br />Cuan Masuk.</span>
-                        </h1>
-                        <p className="hero-p a3">Sistem otomatis kami yang bekerja keras. Kamu yang terima profitnya. Tanpa deposit, tanpa ribet — langsung jalan dari hari pertama.</p>
-                        <div className="hero-btns a4">
-                            <Link href="/reseller/register" className="btn-gold">Mulai Sekarang <ArrowRight size={15} /></Link>
-                            <a href="#pricing" className="btn-ghost-w">Cek Harga Modal</a>
-                        </div>
-                        <div className="hero-stats a5">
-                            <div className="hero-stat">
-                                <div className="hero-sv">Rp<span className="g">1,9M</span></div>
-                                <div className="hero-sl">Total Omzet Reseller</div>
-                            </div>
-                            <div className="hero-divider" />
-                            <div className="hero-stat">
-                                <div className="hero-sv">Rp<span className="g">40M+</span></div>
-                                <div className="hero-sl">Nilai Transaksi</div>
-                            </div>
-                            <div className="hero-divider" />
-                            <div className="hero-stat">
-                                <div className="hero-sv"><span className="g">14K+</span></div>
-                                <div className="hero-sl">Trx Hari Ini</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Dashboard Mockup */}
-                    <div className="hero-right">
-                        <div className="dash-card">
-                            <div className="dash-top">
-                                <div className="dash-top-l">
-                                    <div className="dot-row">
-                                        <div className="dot" style={{ background: '#ff5f57' }} />
-                                        <div className="dot" style={{ background: '#febc2e' }} />
-                                        <div className="dot" style={{ background: '#28c840' }} />
-                                    </div>
-                                    <span className="dash-title">Dashboard Reseller — Bulan Ini</span>
-                                </div>
-                                <span className="dash-live">Live</span>
-                            </div>
-                            <div className="dash-metrics">
-                                {[{ l: 'Omzet', v: 'Rp27.8Jt', d: '▲ 12.4%' }, { l: 'Transaksi', v: '1,284', d: '▲ 8.1%' }, { l: 'Profit Bersih', v: 'Rp4.2Jt', d: '▲ 19.7%' }].map((m, i) => (
-                                    <div key={i} className="dash-m">
-                                        <div className="dash-ml">{m.l}</div>
-                                        <div className="dash-mv">{m.v}</div>
-                                        <div className="dash-md">{m.d}</div>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="dash-chart">
-                                <div className="dash-cl">Transaksi 18 Hari Terakhir</div>
-                                <div className="chart-bars">
-                                    {BARS.map((h, i) => <div key={i} className={`cbar${i === BARS.length - 1 ? ' on' : ''}`} style={{ height: `${h}%` }} />)}
-                                </div>
-                            </div>
-                            <div className="dash-trx-list">
-                                <div className="dash-trx-hd"><span>Transaksi Terbaru</span><span>auto-refresh</span></div>
-                                {TRX.map((t, i) => (
-                                    <div key={i} className="trx-row">
-                                        <span className="trx-id">{t.id}</span>
-                                        <span style={{ fontSize: '.72rem', color: 'rgba(255,255,255,0.6)' }}>{t.game}</span>
-                                        <span className={`trx-badge ${t.st === 'ok' ? 'trx-ok' : 'trx-pend'}`}>{t.st === 'ok' ? 'Sukses' : 'Proses'}</span>
-                                        <span className="trx-amt">{t.amt}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                        {/* Floating WoF */}
-                        <div className="wof-float">
-                            <div className="wof-label">🏆 Top Reseller Bulan Ini</div>
-                            <div className="wof-row">
-                                {WOF.map((r, i) => (
-                                    <div key={i} className="wof-item">
-                                        <img src={r.img} alt={r.name} className="wof-av" />
-                                        <span className="wof-name">{r.name}</span>
-                                        <span className="wof-amt">{r.profit}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* STRIP */}
-            <div className="strip">
-                <div className="strip-track">
-                    {[...STRIP, ...STRIP].map((s, i) => (
-                        <span key={i} className="strip-item">{s}<span className="strip-dot"> ✦ </span></span>
-                    ))}
-                </div>
+      {/* HERO */}
+      <section className="hero">
+        <div className="hero-mesh" />
+        <div className="hero-grid" />
+        <div className="hero-inner">
+          <div className="hero-left">
+            <div className="hero-tag a1"><span className="hero-tag-dot" />&nbsp;Platform Reseller #1 Indonesia</div>
+            <h1 className="hero-h1 a2">
+              Buat Web Top Up.<br />
+              <span className="hl">Tidur Pun<br />Cuan Masuk.</span>
+            </h1>
+            <p className="hero-p a3">Sistem otomatis kami yang bekerja keras. Kamu yang terima profitnya. Tanpa deposit, tanpa ribet — langsung jalan dari hari pertama.</p>
+            <div className="hero-btns a4">
+              <Link href="/reseller/register" className="btn-gold">Mulai Sekarang <ArrowRight size={15} /></Link>
+              <a href="#pricing" className="btn-ghost-w">Cek Harga Modal</a>
             </div>
-
-            {/* FEATURES */}
-            <div className="sec-white" id="features">
-                <div className="s-wrap">
-                    <div style={{ maxWidth: 560 }}>
-                        <div className="s-eyebrow navy line">Kenapa DagangPlay?</div>
-                        <h2 className="s-h2-dark">Sistem yang Bekerja<br /><em>Lebih Keras Darimu</em></h2>
-                        <p className="s-p-dark">Fokus ke jualan. Server, teknis, stok, payment — semua kami yang urus sampai beres.</p>
-                    </div>
-                    <div className="feat-grid">
-                        {[
-                            { icon: <Coins size={20} />, title: "Tanpa Modal Deposit", desc: "Mulai tanpa setoran awal. Jualan produk digital tanpa risiko kehilangan modal sepeserpun." },
-                            { icon: <TrendingUp size={20} />, title: "Bebas Atur Margin", desc: "Tentukan sendiri margin keuntunganmu. 20%, 50%, atau 100%? Strategi ada di tanganmu." },
-                            { icon: <ShieldCheck size={20} />, title: "All-in-One Siap Pakai", desc: "Website, domain, server, dan payment gateway sudah terpasang. Tinggal bawa pelanggan." },
-                        ].map((f, i) => (
-                            <div key={i} className="feat-card">
-                                <div className="feat-icon-wrap">{f.icon}</div>
-                                <div className="feat-title">{f.title}</div>
-                                <div className="feat-desc">{f.desc}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+            <div className="hero-stats a5">
+              <div className="hero-stat">
+                <div className="hero-sv">Rp<span className="g">1,9M</span></div>
+                <div className="hero-sl">Total Omzet Reseller</div>
+              </div>
+              <div className="hero-divider" />
+              <div className="hero-stat">
+                <div className="hero-sv">Rp<span className="g">40M+</span></div>
+                <div className="hero-sl">Nilai Transaksi</div>
+              </div>
+              <div className="hero-divider" />
+              <div className="hero-stat">
+                <div className="hero-sv"><span className="g">14K+</span></div>
+                <div className="hero-sl">Trx Hari Ini</div>
+              </div>
             </div>
+          </div>
 
-            {/* DEMO */}
-            <div className="sec-navy" id="demo">
-                <div className="s-wrap">
-                    <div style={{ maxWidth: 560 }}>
-                        <div className="s-eyebrow gold line">Demo Live</div>
-                        <h2 className="s-h2-white">Jangan Beli Kucing <em>Dalam Karung</em></h2>
-                        <p className="s-p-white">Rasakan sendiri jadi owner. Login, atur harga, dan lihat betapa mudahnya sistem kami.</p>
-                    </div>
-                    <div className="demo-grid">
-                        <div className="demo-card">
-                            <div className="demo-thumb">
-                                <div className="demo-thumb-bg">
-                                    <div className="demo-mock-bar" />
-                                    <div className="demo-mock-grid">
-                                        <div className="demo-mock-side" />
-                                        <div className="demo-mock-main">{[1, 2, 3].map(i => <div key={i} className="demo-mock-row" />)}</div>
-                                    </div>
-                                </div>
-                                <div className="demo-overlay"><div className="demo-play-btn"><Play size={20} fill="currentColor" /></div></div>
-                            </div>
-                            <div className="demo-body">
-                                <div className="demo-tag">Panel Admin</div>
-                                <div className="demo-title">Demo Panel Reseller</div>
-                                <div className="demo-desc">Jelajahi semua fitur dashboard reseller secara langsung</div>
-                                <Link href="/admin/login" className="demo-link">Login Sebagai Admin <ArrowUpRight size={13} /></Link>
-                            </div>
-                        </div>
-                        <div className="demo-card">
-                            <div className="demo-thumb" style={{ background: 'var(--navy-soft)' }}>
-                                <div className="demo-thumb-bg">
-                                    <div className="demo-mock-bar" style={{ background: 'rgba(255,255,255,0.08)' }} />
-                                    <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '.35rem' }}>
-                                        {[1, 2, 3, 4, 5, 6].map(i => <div key={i} style={{ background: 'rgba(255,255,255,0.07)', borderRadius: '4px' }} />)}
-                                    </div>
-                                </div>
-                                <div className="demo-overlay"><div className="demo-play-btn"><Play size={20} fill="currentColor" /></div></div>
-                            </div>
-                            <div className="demo-body">
-                                <div className="demo-tag">Storefront</div>
-                                <div className="demo-title">Demo Tema Website</div>
-                                <div className="demo-desc">Preview tampilan toko top up yang akan dilihat pelangganmu</div>
-                                <a href="#" className="demo-link" style={{ color: 'rgba(255,255,255,0.5)' }}>Buka Demo <ArrowUpRight size={13} /></a>
-                            </div>
-                        </div>
-                    </div>
+          {/* Dashboard Mockup */}
+          <div className="hero-right">
+            <div className="dash-card">
+              <div className="dash-top">
+                <div className="dash-top-l">
+                  <div className="dot-row">
+                    <div className="dot" style={{ background: '#ff5f57' }} />
+                    <div className="dot" style={{ background: '#febc2e' }} />
+                    <div className="dot" style={{ background: '#28c840' }} />
+                  </div>
+                  <span className="dash-title">Dashboard Reseller — Bulan Ini</span>
                 </div>
-            </div>
-
-            {/* CALCULATOR */}
-            <div className="sec-white">
-                <div className="s-wrap">
-                    <div style={{ maxWidth: 560 }}>
-                        <div className="s-eyebrow navy line">Simulasi Profit</div>
-                        <h2 className="s-h2-dark">Hitung <em>Cuan</em> Bulananmu</h2>
-                        <p className="s-p-dark">Gunakan harga modal terbaik kami dan simulasikan penghasilan nyata kamu.</p>
-                    </div>
-                    <div className="calc-wrap">
-                        <div className="calc-panel">
-                            <div className="c-label" style={{ marginBottom: '.5rem' }}><span>Pilih Paket</span></div>
-                            <div className="plan-row">
-                                {RESELLER_PLANS.map(p => (
-                                    <button key={p.id} className={`plan-btn${selectedPlan === p.id ? ' active' : ''}`} onClick={() => setSelectedPlan(p.id)}>{p.name}</button>
-                                ))}
-                            </div>
-                            <div className="c-row">
-                                <div>
-                                    <div className="c-label"><span>Harga Modal {selectedPlan}</span></div>
-                                    <div className="c-field">
-                                        <span className="c-pfx">Rp</span>
-                                        <input type="text" readOnly value={hargaModal.toLocaleString('id-ID')} className="c-input" />
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="c-label"><span>Harga Jual Kamu</span></div>
-                                    <div className="c-field">
-                                        <span className="c-pfx">Rp</span>
-                                        <input type="number" value={hargaJual} onChange={e => setHargaJual(Number(e.target.value))} className="c-input" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <div className="c-label">
-                                    <span>Target Penjualan / Hari</span>
-                                    <span className="c-chip">{jumlahPenjualan} Order</span>
-                                </div>
-                                <input type="range" min="1" max="500" value={jumlahPenjualan} onChange={e => setJumlahPenjualan(Number(e.target.value))} />
-                                <div className="range-meta"><span>Santai (1)</span><span>Maksimal (500)</span></div>
-                            </div>
-                        </div>
-                        <div className="result-panel">
-                            <div>
-                                <div className="r-label">Estimasi Profit / Bulan</div>
-                                <div className="r-val">{fmt(profit)}</div>
-                                <div className="r-note">Estimasi kotor. Belum dikurangi biaya operasional.</div>
-                                <div className="r-tags">
-                                    <span className="r-tag">Website Siap Pakai</span>
-                                    <span className="r-tag">Tanpa Deposit</span>
-                                    <span className="r-tag">Bayar Per Trx</span>
-                                </div>
-                            </div>
-                            <Link href="/reseller/register" className="btn-gold" style={{ justifyContent: 'center', width: '100%', fontSize: '.9rem', padding: '1rem' }}>
-                                Daftar Sekarang <ArrowRight size={15} />
-                            </Link>
-                        </div>
-                    </div>
+                <span className="dash-live">Live</span>
+              </div>
+              <div className="dash-metrics">
+                {[{ l: 'Omzet', v: 'Rp27.8Jt', d: '▲ 12.4%' }, { l: 'Transaksi', v: '1,284', d: '▲ 8.1%' }, { l: 'Profit Bersih', v: 'Rp4.2Jt', d: '▲ 19.7%' }].map((m, i) => (
+                  <div key={i} className="dash-m">
+                    <div className="dash-ml">{m.l}</div>
+                    <div className="dash-mv">{m.v}</div>
+                    <div className="dash-md">{m.d}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="dash-chart">
+                <div className="dash-cl">Transaksi 18 Hari Terakhir</div>
+                <div className="chart-bars">
+                  {BARS.map((h, i) => <div key={i} className={`cbar${i === BARS.length - 1 ? ' on' : ''}`} style={{ height: `${h}%` }} />)}
                 </div>
+              </div>
+              <div className="dash-trx-list">
+                <div className="dash-trx-hd"><span>Transaksi Terbaru</span><span>auto-refresh</span></div>
+                {TRX.map((t, i) => (
+                  <div key={i} className="trx-row">
+                    <span className="trx-id">{t.id}</span>
+                    <span style={{ fontSize: '.72rem', color: 'rgba(255,255,255,0.6)' }}>{t.game}</span>
+                    <span className={`trx-badge ${t.st === 'ok' ? 'trx-ok' : 'trx-pend'}`}>{t.st === 'ok' ? 'Sukses' : 'Proses'}</span>
+                    <span className="trx-amt">{t.amt}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-
-            {/* PLANS */}
-            <div className="sec-navy" id="subscription">
-                <div className="s-wrap">
-                    <div style={{ maxWidth: 560, marginBottom: '2.5rem' }}>
-                        <div className="s-eyebrow gold line">Paket Langganan</div>
-                        <h2 className="s-h2-white">Pilih Senjata <em>Bisnismu</em></h2>
-                        <p className="s-p-white">Harga modal transparan. Semua sistem siap 100%, langsung jalan dari hari pertama.</p>
-                    </div>
-                    <div className="billing-toggle-wrap">
-                        <div className="b-toggle">
-                            <button className={`b-tab${billingCycle === 'quarterly' ? ' on' : ''}`} onClick={() => setBillingCycle('quarterly')}>3 Bulan</button>
-                            <button className={`b-tab${billingCycle === 'yearly' ? ' on' : ''}`} onClick={() => setBillingCycle('yearly')}>Tahunan</button>
-                        </div>
-                        {billingCycle === 'yearly' && <span className="b-save">Hemat hingga 60%</span>}
-                    </div>
-                    <div className="plans-grid">
-                        {/* PRO */}
-                        <div className="plan-card">
-                            <div className="plan-body">
-                                <div className="plan-name light">Pro</div>
-                                <div className="plan-desc light">{plans.PRO.description}</div>
-                                <div className="plan-orig light">Rp {gpd(plans.PRO.price).original.toLocaleString('id-ID')}</div>
-                                <div className="plan-price light">Rp {Math.round(gpd(plans.PRO.price).discounted).toLocaleString('id-ID')}</div>
-                                <div className="plan-period light">{gpd(plans.PRO.price).label} · Rp {Math.round(gpd(plans.PRO.price).mo).toLocaleString('id-ID')}/bln</div>
-                                <Link href="/reseller/register" className="plan-cta ghost-w">Daftar Sekarang <ArrowRight size={13} /></Link>
-                                <div className="plan-feats">
-                                    <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Maks. <b>{plans.PRO.maxProducts.toLocaleString('id-ID')}</b> Produk</span></div>
-                                    <Feat on={plans.PRO.customDomain} text="Custom Domain" light={true} />
-                                    <Feat on={plans.PRO.multiUser} text="Multi User / Akun Staff" light={true} />
-                                    <Feat on={plans.PRO.whiteLabel} text="White Label" light={true} />
-                                    <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Harga Modal Tier Pro</span></div>
-                                    <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Auto-Transfer (Tanpa Deposit)</span></div>
-                                    {plans.PRO.customFeatures?.map((f: string, i: number) => f && <div key={i} className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">{f}</span></div>)}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* SUPREME */}
-                        <div className="plan-card featured">
-                            <div className="plan-chip"><Star size={12} fill="currentColor" /> Paling Banjir Cuan</div>
-                            <div className="plan-body">
-                                <div className="plan-name dark">Supreme</div>
-                                <div className="plan-desc dark">{plans.SUPREME.description}</div>
-                                <div className="plan-orig dark">Rp {gpd(plans.SUPREME.price).original.toLocaleString('id-ID')}</div>
-                                <div className="plan-price dark" style={{ color: 'var(--navy)' }}>Rp {Math.round(gpd(plans.SUPREME.price).discounted).toLocaleString('id-ID')}</div>
-                                <div className="plan-period dark">{gpd(plans.SUPREME.price).label} · Rp {Math.round(gpd(plans.SUPREME.price).mo).toLocaleString('id-ID')}/bln</div>
-                                <Link href="/reseller/register" className="plan-cta navy-fill">Daftar Sekarang <Zap size={13} /></Link>
-                                <div className="plan-feats">
-                                    <div className="pf"><Check size={14} className="pf-i pf-on-navy" /><span className="pf-text-dark">Maks. <b>{plans.SUPREME.maxProducts.toLocaleString('id-ID')}</b> Produk</span></div>
-                                    <Feat on={plans.SUPREME.customDomain} text="Custom Domain Bebas" light={false} />
-                                    <Feat on={plans.SUPREME.multiUser} text="Multi User + Akun Staff" light={false} />
-                                    <div className={`pf${plans.SUPREME.whiteLabel ? '' : ' off'}`}>{plans.SUPREME.whiteLabel ? <Check size={14} className="pf-i pf-on-navy" /> : <Minus size={14} className="pf-i pf-off-c" />}<span className="pf-text-dark" style={plans.SUPREME.whiteLabel ? { fontWeight: 700 } : {}}>{plans.SUPREME.whiteLabel ? 'Full White Label Brand Kamu' : 'White Label'}</span></div>
-                                    <div className="pf"><Check size={14} className="pf-i pf-on-navy" /><span className="pf-text-dark" style={{ fontWeight: 700 }}>Harga Modal VIP — Termurah</span></div>
-                                    <div className="pf"><Check size={14} className="pf-i pf-on-navy" /><span className="pf-text-dark">Auto-Transfer (Tanpa Deposit)</span></div>
-                                    {plans.SUPREME.customFeatures?.map((f: string, i: number) => f && <div key={i} className="pf"><Check size={14} className="pf-i pf-on-navy" /><span className="pf-text-dark">{f}</span></div>)}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* LEGEND */}
-                        <div className="plan-card">
-                            <div className="plan-body">
-                                <div className="plan-name light">Legend</div>
-                                <div className="plan-desc light">{plans.LEGEND.description}</div>
-                                <div className="plan-orig light">Rp {gpd(plans.LEGEND.price).original.toLocaleString('id-ID')}</div>
-                                <div className="plan-price light">Rp {Math.round(gpd(plans.LEGEND.price).discounted).toLocaleString('id-ID')}</div>
-                                <div className="plan-period light">{gpd(plans.LEGEND.price).label} · Rp {Math.round(gpd(plans.LEGEND.price).mo).toLocaleString('id-ID')}/bln</div>
-                                <Link href="/reseller/register" className="plan-cta ghost-w">Daftar Sekarang <ArrowRight size={13} /></Link>
-                                <div className="plan-feats">
-                                    <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Maks. <b>{plans.LEGEND.maxProducts.toLocaleString('id-ID')}</b> Produk</span></div>
-                                    <Feat on={plans.LEGEND.customDomain} text="Custom Domain" light={true} />
-                                    <Feat on={plans.LEGEND.multiUser} text="Multi User / Akun Staff" light={true} />
-                                    <Feat on={plans.LEGEND.whiteLabel} text="White Label" light={true} />
-                                    <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Harga Modal Tier Legend</span></div>
-                                    <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Auto-Transfer (Tanpa Deposit)</span></div>
-                                    {plans.LEGEND.customFeatures?.map((f: string, i: number) => f && <div key={i} className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">{f}</span></div>)}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            {/* Floating WoF */}
+            <div className="wof-float">
+              <div className="wof-label">🏆 Top Reseller Bulan Ini</div>
+              <div className="wof-row">
+                {WOF.map((r, i) => (
+                  <div key={i} className="wof-item">
+                    <img src={r.img} alt={r.name} className="wof-av" />
+                    <span className="wof-name">{r.name}</span>
+                    <span className="wof-amt">{r.profit}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-
-            {/* CATALOG */}
-            <div id="pricing" style={{ background: 'var(--off)', borderTop: '1px solid rgba(10,22,40,0.08)', borderBottom: '1px solid rgba(10,22,40,0.08)' }}>
-                <PriceCatalog />
-            </div>
-
-            {/* DOMAIN */}
-            <div className="sec-white">
-                <div className="s-wrap-sm" style={{ textAlign: 'center' }}>
-                    <div className="s-eyebrow navy line" style={{ justifyContent: 'center' }}>Amankan Domain</div>
-                    <h2 className="s-h2-dark" style={{ textAlign: 'center' }}>Klaim Domain <em>Impianmu</em></h2>
-                    <p className="s-p-dark" style={{ margin: '0 auto 0', textAlign: 'center' }}>Cek ketersediaan domain. Jika tersedia, klaim sebelum diambil orang lain.</p>
-                    <div className="domain-box">
-                        <div className="domain-ico"><Search size={14} /></div>
-                        <input type="text" placeholder="nama-toko-kamu" className="domain-in" />
-                        <select className="domain-sel"><option>.com</option><option>.id</option><option>.my.id</option><option>.store</option></select>
-                        <button className="domain-btn"><Search size={12} /> Cek Domain</button>
-                    </div>
-                </div>
-            </div>
-
-            {/* COMPARISON */}
-            <div className="sec-offwhite">
-                <div className="s-wrap">
-                    <div style={{ maxWidth: 560 }}>
-                        <div className="s-eyebrow navy line">Perbandingan Biaya</div>
-                        <h2 className="s-h2-dark">Kenapa Harus <em>DagangPlay?</em></h2>
-                        <p className="s-p-dark">Bandingkan sendiri. Mana yang lebih masuk akal untuk bisnis kamu.</p>
-                    </div>
-                    <div className="cmp">
-                        <div className="cmp-head">
-                            <div className="cmp-th label">Komponen Biaya</div>
-                            <div className="cmp-th bad">Bikin Web Sendiri</div>
-                            <div className="cmp-th good">DagangPlay</div>
-                        </div>
-                        {[
-                            { item: "Gaji Developer", own: "Rp10.000.000 × 12", dp: "Termasuk" },
-                            { item: "Hosting & Domain", own: "Rp1.000.000", dp: "Termasuk" },
-                            { item: "Theme / Template", own: "Rp500.000", dp: "Termasuk" },
-                            { item: "Payment Gateway", own: "Rp1.000.000", dp: "Termasuk" },
-                            { item: "Maintenance & Update", own: "Rp1.000.000", dp: "Termasuk" },
-                            { item: "Biaya Tak Terduga", own: "Tidak Terduga", dp: "Termasuk" },
-                        ].map((r, i) => (
-                            <div key={i} className="cmp-row">
-                                <div className="cmp-td">{r.item}</div>
-                                <div className="cmp-td bad">{r.own}</div>
-                                <div className="cmp-td good"><CheckCircle2 size={13} /> {r.dp}</div>
-                            </div>
-                        ))}
-                        <div className="cmp-foot">
-                            <div className="cmp-ft label">Total Tahun Pertama</div>
-                            <div className="cmp-ft bad"><div className="cmp-ft-val red">± Rp 123.500.000</div></div>
-                            <div className="cmp-ft good"><div className="cmp-ft-val green">Rp 0 – 750.000</div></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* ACADEMY */}
-            <div className="sec-navy">
-                <div className="s-wrap">
-                    <div style={{ maxWidth: 560 }}>
-                        <div className="s-eyebrow gold line">DagangPlay Academy</div>
-                        <h2 className="s-h2-white">Gak Bisa Jualan?<br /><em>Kami Bimbing</em> Sampai Pecah Telur</h2>
-                        <p className="s-p-white">Sistem canggih plus ilmu marketing dari praktisi berpengalaman — gratis untuk semua reseller.</p>
-                    </div>
-                    <div className="academy-grid">
-                        {[
-                            { title: "Master Branding", desc: "Bangun brand yang kuat dan diingat pelanggan" },
-                            { title: "Master Sales", desc: "Strategi closing yang terbukti menghasilkan" },
-                            { title: "Master TikTok", desc: "Masuk FYP dan konvert jadi transaksi nyata" },
-                            { title: "Master Instagram", desc: "Optimasi IG khusus bisnis top up game" },
-                        ].map((m, i) => (
-                            <div key={i} className="ac-card">
-                                <div className="ac-num">0{i + 1}</div>
-                                <div className="ac-icon"><MonitorPlay size={20} /></div>
-                                <div className="ac-title">{m.title}</div>
-                                <div className="ac-desc">{m.desc}</div>
-                                <div className="ac-arrow"><ArrowUpRight size={16} /></div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            {/* TESTIMONIALS */}
-            <div className="sec-white">
-                <div className="s-wrap">
-                    <div style={{ maxWidth: 560 }}>
-                        <div className="s-eyebrow navy line">Testimoni</div>
-                        <h2 className="s-h2-dark">Kata Mereka yang<br />Sudah <em>Membuktikan</em></h2>
-                    </div>
-                    <div className="testi-grid">
-                        {[
-                            { name: "Budi Santoso", role: "Owner TopUp XYZ", text: "Gila sih DagangPlay, marginnya gede banget! Sebulan bisa dapet omset 50jt padahal gw cuma nyebar link di grup mabar." },
-                            { name: "Siti Aminah", role: "Pelajar", text: "Awalnya iseng buat jajan, eh keterusan pas tau harganya murah. Prosesnya otomatis jadi gak ganggu waktu sekolah." },
-                            { name: "Andi Wijaya", role: "Pemilik Warnet", text: "Integrasi sistemnya mantap. Warnet sepi tapi bisnis top up game jalan terus. Supportnya juga super responsif." },
-                        ].map((t, i) => (
-                            <div key={i} className="testi-card">
-                                <div className="testi-stars">{[1, 2, 3, 4, 5].map(s => <Star key={s} size={13} fill="#E8B84B" color="#E8B84B" />)}</div>
-                                <p className="testi-quote">"{t.text}"</p>
-                                <div className="testi-foot">
-                                    <div className="testi-av">{t.name[0]}</div>
-                                    <div><div className="testi-name">{t.name}</div><div className="testi-role">{t.role}</div></div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            {/* FAQ */}
-            <div className="sec-offwhite">
-                <div className="s-wrap" style={{ textAlign: 'center' }}>
-                    <div className="s-eyebrow navy line" style={{ justifyContent: 'center' }}>FAQ</div>
-                    <h2 className="s-h2-dark" style={{ textAlign: 'center' }}>Pertanyaan yang Paling <em>Sering Muncul</em></h2>
-                    <div className="faq-list" style={{ textAlign: 'left' }}>
-                        {[
-                            { q: "Apakah ini beneran gratis?", a: "Ya, kami menyediakan paket FREE (Reseller Normal) selamanya, tanpa biaya pendaftaran." },
-                            { q: "Apa bedanya Free dengan Pro/Legend/Supreme?", a: "Paket berbayar memberikan Harga Modal yang lebih murah, plus fitur-fitur prioritas eksklusif." },
-                            { q: "Apakah saldo harus deposit dulu?", a: "Tidak. Kamu tidak wajib deposit saldo. Setiap pesanan bisa langsung dibayar per transaksi via Payment Gateway." },
-                            { q: "Gimana cara narik keuntungan (withdraw)?", a: "Margin dari setiap transaksi masuk ke saldo DagangPlay kamu, bisa dicairkan ke rekening bank kapan saja." },
-                        ].map((f, i) => (
-                            <details key={i} className="faq-item">
-                                <summary className="faq-q"><span>{f.q}</span><ChevronDown size={16} className="faq-icon" /></summary>
-                                <div className="faq-a">{f.a}</div>
-                            </details>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            {/* CTA */}
-            <section className="cta-section">
-                <div className="s-eyebrow gold line" style={{ justifyContent: 'center', marginBottom: '1.5rem' }}>Ayo Bergabung</div>
-                <h2 className="cta-h">Siap Punya Kerajaan Bisnis<br />Top-Up <em>Sendiri?</em></h2>
-                <Link href="/reseller/register" className="btn-gold" style={{ fontSize: '1rem', padding: '1rem 2.5rem', position: 'relative', zIndex: 2 }}>
-                    Ambil Sekarang <ArrowUpRight size={17} />
-                </Link>
-            </section>
-
-            {/* FOOTER */}
-            <footer className="footer">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '.625rem' }}>
-                    <div className="nav-icon">DP</div>
-                    <span style={{ fontWeight: 700, fontSize: '.85rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '-.01em' }}>DagangPlay Partner Network</span>
-                </div>
-                <div className="footer-copy">© {new Date().getFullYear()} DagangPlay. All rights reserved.</div>
-            </footer>
+          </div>
         </div>
-    );
+      </section>
+
+      {/* STRIP */}
+      <div className="strip">
+        <div className="strip-track">
+          {[...STRIP, ...STRIP].map((s, i) => (
+            <span key={i} className="strip-item">{s}<span className="strip-dot"> ✦ </span></span>
+          ))}
+        </div>
+      </div>
+
+      {/* FEATURES */}
+      <div className="sec-white" id="features">
+        <div className="s-wrap">
+          <div style={{ maxWidth: 560 }}>
+            <div className="s-eyebrow navy line">Kenapa DagangPlay?</div>
+            <h2 className="s-h2-dark">Sistem yang Bekerja<br /><em>Lebih Keras Darimu</em></h2>
+            <p className="s-p-dark">Fokus ke jualan. Server, teknis, stok, payment — semua kami yang urus sampai beres.</p>
+          </div>
+          <div className="feat-grid">
+            {[
+              { icon: <Coins size={20} />, title: "Tanpa Modal Deposit", desc: "Mulai tanpa setoran awal. Jualan produk digital tanpa risiko kehilangan modal sepeserpun." },
+              { icon: <TrendingUp size={20} />, title: "Bebas Atur Margin", desc: "Tentukan sendiri margin keuntunganmu. 20%, 50%, atau 100%? Strategi ada di tanganmu." },
+              { icon: <ShieldCheck size={20} />, title: "All-in-One Siap Pakai", desc: "Website, domain, server, dan payment gateway sudah terpasang. Tinggal bawa pelanggan." },
+            ].map((f, i) => (
+              <div key={i} className="feat-card">
+                <div className="feat-icon-wrap">{f.icon}</div>
+                <div className="feat-title">{f.title}</div>
+                <div className="feat-desc">{f.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* DEMO */}
+      <div className="sec-navy" id="demo">
+        <div className="s-wrap">
+          <div style={{ maxWidth: 560 }}>
+            <div className="s-eyebrow gold line">Demo Live</div>
+            <h2 className="s-h2-white">Jangan Beli Kucing <em>Dalam Karung</em></h2>
+            <p className="s-p-white">Rasakan sendiri jadi owner. Login, atur harga, dan lihat betapa mudahnya sistem kami.</p>
+          </div>
+          <div className="demo-grid">
+            <div className="demo-card">
+              <div className="demo-thumb">
+                <div className="demo-thumb-bg">
+                  <div className="demo-mock-bar" />
+                  <div className="demo-mock-grid">
+                    <div className="demo-mock-side" />
+                    <div className="demo-mock-main">{[1, 2, 3].map(i => <div key={i} className="demo-mock-row" />)}</div>
+                  </div>
+                </div>
+                <div className="demo-overlay"><div className="demo-play-btn"><Play size={20} fill="currentColor" /></div></div>
+              </div>
+              <div className="demo-body">
+                <div className="demo-tag">Panel Admin</div>
+                <div className="demo-title">Demo Panel Reseller</div>
+                <div className="demo-desc">Jelajahi semua fitur dashboard reseller secara langsung</div>
+                <Link href="/demo/admin" className="demo-link">Login Sebagai Admin <ArrowUpRight size={13} /></Link>
+              </div>
+            </div>
+            <div className="demo-card">
+              <div className="demo-thumb" style={{ background: 'var(--navy-soft)' }}>
+                <div className="demo-thumb-bg">
+                  <div className="demo-mock-bar" style={{ background: 'rgba(255,255,255,0.08)' }} />
+                  <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '.35rem' }}>
+                    {[1, 2, 3, 4, 5, 6].map(i => <div key={i} style={{ background: 'rgba(255,255,255,0.07)', borderRadius: '4px' }} />)}
+                  </div>
+                </div>
+                <div className="demo-overlay"><div className="demo-play-btn"><Play size={20} fill="currentColor" /></div></div>
+              </div>
+              <div className="demo-body">
+                <div className="demo-tag">Storefront</div>
+                <div className="demo-title">Demo Tema Website</div>
+                <div className="demo-desc">Preview tampilan toko top up yang akan dilihat pelangganmu</div>
+                <Link href="/demo/store" className="demo-link">Buka Demo <ArrowUpRight size={13} /></Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CALCULATOR */}
+      <div className="sec-white">
+        <div className="s-wrap">
+          <div style={{ maxWidth: 560 }}>
+            <div className="s-eyebrow navy line">Simulasi Profit</div>
+            <h2 className="s-h2-dark">Hitung <em>Cuan</em> Bulananmu</h2>
+            <p className="s-p-dark">Gunakan harga modal terbaik kami dan simulasikan penghasilan nyata kamu.</p>
+          </div>
+          <div className="calc-wrap">
+            <div className="calc-panel">
+              <div className="c-label" style={{ marginBottom: '.5rem' }}><span>Pilih Paket</span></div>
+              <div className="plan-row">
+                {RESELLER_PLANS.map(p => (
+                  <button key={p.id} className={`plan-btn${selectedPlan === p.id ? ' active' : ''}`} onClick={() => setSelectedPlan(p.id)}>{p.name}</button>
+                ))}
+              </div>
+              <div className="c-row">
+                <div>
+                  <div className="c-label"><span>Harga Modal {selectedPlan}</span></div>
+                  <div className="c-field">
+                    <span className="c-pfx">Rp</span>
+                    <input type="text" readOnly value={hargaModal.toLocaleString('id-ID')} className="c-input" />
+                  </div>
+                </div>
+                <div>
+                  <div className="c-label"><span>Harga Jual Kamu</span></div>
+                  <div className="c-field">
+                    <span className="c-pfx">Rp</span>
+                    <input type="number" value={hargaJual} onChange={e => setHargaJual(Number(e.target.value))} className="c-input" />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div className="c-label">
+                  <span>Target Penjualan / Hari</span>
+                  <span className="c-chip">{jumlahPenjualan} Order</span>
+                </div>
+                <input type="range" min="1" max="500" value={jumlahPenjualan} onChange={e => setJumlahPenjualan(Number(e.target.value))} />
+                <div className="range-meta"><span>Santai (1)</span><span>Maksimal (500)</span></div>
+              </div>
+            </div>
+            <div className="result-panel">
+              <div>
+                <div className="r-label">Estimasi Profit / Bulan</div>
+                <div className="r-val">{fmt(profit)}</div>
+                <div className="r-note">Estimasi kotor. Belum dikurangi biaya operasional.</div>
+                <div className="r-tags">
+                  <span className="r-tag">Website Siap Pakai</span>
+                  <span className="r-tag">Tanpa Deposit</span>
+                  <span className="r-tag">Bayar Per Trx</span>
+                </div>
+              </div>
+              <Link href="/reseller/register" className="btn-gold" style={{ justifyContent: 'center', width: '100%', fontSize: '.9rem', padding: '1rem' }}>
+                Daftar Sekarang <ArrowRight size={15} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* PLANS */}
+      <div className="sec-navy" id="subscription">
+        <div className="s-wrap">
+          <div style={{ maxWidth: 560, marginBottom: '2.5rem' }}>
+            <div className="s-eyebrow gold line">Paket Langganan</div>
+            <h2 className="s-h2-white">Pilih Senjata <em>Bisnismu</em></h2>
+            <p className="s-p-white">Harga modal transparan. Semua sistem siap 100%, langsung jalan dari hari pertama.</p>
+          </div>
+          <div className="billing-toggle-wrap">
+            <div className="b-toggle">
+              <button className={`b-tab${billingCycle === 'quarterly' ? ' on' : ''}`} onClick={() => setBillingCycle('quarterly')}>3 Bulan</button>
+              <button className={`b-tab${billingCycle === 'yearly' ? ' on' : ''}`} onClick={() => setBillingCycle('yearly')}>Tahunan</button>
+            </div>
+            {billingCycle === 'yearly' && <span className="b-save">Hemat hingga 60%</span>}
+          </div>
+          <div className="plans-grid">
+            {/* PRO */}
+            <div className="plan-card">
+              <div className="plan-body">
+                <div className="plan-name light">Pro</div>
+                <div className="plan-desc light">{plans.PRO.description}</div>
+                <div className="plan-orig light">Rp {gpd(plans.PRO.price).original.toLocaleString('id-ID')}</div>
+                <div className="plan-price light">Rp {Math.round(gpd(plans.PRO.price).discounted).toLocaleString('id-ID')}</div>
+                <div className="plan-period light">{gpd(plans.PRO.price).label} · Rp {Math.round(gpd(plans.PRO.price).mo).toLocaleString('id-ID')}/bln</div>
+                <Link href="/reseller/register" className="plan-cta ghost-w">Daftar Sekarang <ArrowRight size={13} /></Link>
+                <div className="plan-feats">
+                  <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Maks. <b>{plans.PRO.maxProducts.toLocaleString('id-ID')}</b> Produk</span></div>
+                  <Feat on={plans.PRO.customDomain} text="Custom Domain" light={true} />
+                  <Feat on={plans.PRO.multiUser} text="Multi User / Akun Staff" light={true} />
+                  <Feat on={plans.PRO.whiteLabel} text="White Label" light={true} />
+                  <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Harga Modal Tier Pro</span></div>
+                  <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Auto-Transfer (Tanpa Deposit)</span></div>
+                  {plans.PRO.customFeatures?.map((f: string, i: number) => f && <div key={i} className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">{f}</span></div>)}
+                </div>
+              </div>
+            </div>
+
+            {/* SUPREME */}
+            <div className="plan-card featured">
+              <div className="plan-chip"><Star size={12} fill="currentColor" /> Paling Banjir Cuan</div>
+              <div className="plan-body">
+                <div className="plan-name dark">Supreme</div>
+                <div className="plan-desc dark">{plans.SUPREME.description}</div>
+                <div className="plan-orig dark">Rp {gpd(plans.SUPREME.price).original.toLocaleString('id-ID')}</div>
+                <div className="plan-price dark" style={{ color: 'var(--navy)' }}>Rp {Math.round(gpd(plans.SUPREME.price).discounted).toLocaleString('id-ID')}</div>
+                <div className="plan-period dark">{gpd(plans.SUPREME.price).label} · Rp {Math.round(gpd(plans.SUPREME.price).mo).toLocaleString('id-ID')}/bln</div>
+                <Link href="/reseller/register" className="plan-cta navy-fill">Daftar Sekarang <Zap size={13} /></Link>
+                <div className="plan-feats">
+                  <div className="pf"><Check size={14} className="pf-i pf-on-navy" /><span className="pf-text-dark">Maks. <b>{plans.SUPREME.maxProducts.toLocaleString('id-ID')}</b> Produk</span></div>
+                  <Feat on={plans.SUPREME.customDomain} text="Custom Domain Bebas" light={false} />
+                  <Feat on={plans.SUPREME.multiUser} text="Multi User + Akun Staff" light={false} />
+                  <div className={`pf${plans.SUPREME.whiteLabel ? '' : ' off'}`}>{plans.SUPREME.whiteLabel ? <Check size={14} className="pf-i pf-on-navy" /> : <Minus size={14} className="pf-i pf-off-c" />}<span className="pf-text-dark" style={plans.SUPREME.whiteLabel ? { fontWeight: 700 } : {}}>{plans.SUPREME.whiteLabel ? 'Full White Label Brand Kamu' : 'White Label'}</span></div>
+                  <div className="pf"><Check size={14} className="pf-i pf-on-navy" /><span className="pf-text-dark" style={{ fontWeight: 700 }}>Harga Modal VIP — Termurah</span></div>
+                  <div className="pf"><Check size={14} className="pf-i pf-on-navy" /><span className="pf-text-dark">Auto-Transfer (Tanpa Deposit)</span></div>
+                  {plans.SUPREME.customFeatures?.map((f: string, i: number) => f && <div key={i} className="pf"><Check size={14} className="pf-i pf-on-navy" /><span className="pf-text-dark">{f}</span></div>)}
+                </div>
+              </div>
+            </div>
+
+            {/* LEGEND */}
+            <div className="plan-card">
+              <div className="plan-body">
+                <div className="plan-name light">Legend</div>
+                <div className="plan-desc light">{plans.LEGEND.description}</div>
+                <div className="plan-orig light">Rp {gpd(plans.LEGEND.price).original.toLocaleString('id-ID')}</div>
+                <div className="plan-price light">Rp {Math.round(gpd(plans.LEGEND.price).discounted).toLocaleString('id-ID')}</div>
+                <div className="plan-period light">{gpd(plans.LEGEND.price).label} · Rp {Math.round(gpd(plans.LEGEND.price).mo).toLocaleString('id-ID')}/bln</div>
+                <Link href="/reseller/register" className="plan-cta ghost-w">Daftar Sekarang <ArrowRight size={13} /></Link>
+                <div className="plan-feats">
+                  <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Maks. <b>{plans.LEGEND.maxProducts.toLocaleString('id-ID')}</b> Produk</span></div>
+                  <Feat on={plans.LEGEND.customDomain} text="Custom Domain" light={true} />
+                  <Feat on={plans.LEGEND.multiUser} text="Multi User / Akun Staff" light={true} />
+                  <Feat on={plans.LEGEND.whiteLabel} text="White Label" light={true} />
+                  <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Harga Modal Tier Legend</span></div>
+                  <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Auto-Transfer (Tanpa Deposit)</span></div>
+                  {plans.LEGEND.customFeatures?.map((f: string, i: number) => f && <div key={i} className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">{f}</span></div>)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CATALOG */}
+      <div id="pricing" style={{ background: 'var(--off)', borderTop: '1px solid rgba(10,22,40,0.08)', borderBottom: '1px solid rgba(10,22,40,0.08)' }}>
+        <PriceCatalog />
+      </div>
+
+      {/* DOMAIN */}
+      <div className="sec-white">
+        <div className="s-wrap-sm" style={{ textAlign: 'center' }}>
+          <div className="s-eyebrow navy line" style={{ justifyContent: 'center' }}>Amankan Domain</div>
+          <h2 className="s-h2-dark" style={{ textAlign: 'center' }}>Klaim Domain <em>Impianmu</em></h2>
+          <p className="s-p-dark" style={{ margin: '0 auto 0', textAlign: 'center' }}>Cek ketersediaan domain. Jika tersedia, klaim sebelum diambil orang lain.</p>
+          <div className="domain-box">
+            <div className="domain-ico"><Search size={14} /></div>
+            <input type="text" placeholder="nama-toko-kamu" className="domain-in" />
+            <select className="domain-sel"><option>.com</option><option>.id</option><option>.my.id</option><option>.store</option></select>
+            <button className="domain-btn"><Search size={12} /> Cek Domain</button>
+          </div>
+        </div>
+      </div>
+
+      {/* COMPARISON */}
+      <div className="sec-offwhite">
+        <div className="s-wrap">
+          <div style={{ maxWidth: 560 }}>
+            <div className="s-eyebrow navy line">Perbandingan Biaya</div>
+            <h2 className="s-h2-dark">Kenapa Harus <em>DagangPlay?</em></h2>
+            <p className="s-p-dark">Bandingkan sendiri. Mana yang lebih masuk akal untuk bisnis kamu.</p>
+          </div>
+          <div className="cmp">
+            <div className="cmp-head">
+              <div className="cmp-th label">Komponen Biaya</div>
+              <div className="cmp-th bad">Bikin Web Sendiri</div>
+              <div className="cmp-th good">DagangPlay</div>
+            </div>
+            {[
+              { item: "Gaji Developer", own: "Rp10.000.000 × 12", dp: "Termasuk" },
+              { item: "Hosting & Domain", own: "Rp1.000.000", dp: "Termasuk" },
+              { item: "Theme / Template", own: "Rp500.000", dp: "Termasuk" },
+              { item: "Payment Gateway", own: "Rp1.000.000", dp: "Termasuk" },
+              { item: "Maintenance & Update", own: "Rp1.000.000", dp: "Termasuk" },
+              { item: "Biaya Tak Terduga", own: "Tidak Terduga", dp: "Termasuk" },
+            ].map((r, i) => (
+              <div key={i} className="cmp-row">
+                <div className="cmp-td">{r.item}</div>
+                <div className="cmp-td bad">{r.own}</div>
+                <div className="cmp-td good"><CheckCircle2 size={13} /> {r.dp}</div>
+              </div>
+            ))}
+            <div className="cmp-foot">
+              <div className="cmp-ft label">Total Tahun Pertama</div>
+              <div className="cmp-ft bad"><div className="cmp-ft-val red">± Rp 123.500.000</div></div>
+              <div className="cmp-ft good"><div className="cmp-ft-val green">Rp 0 – 750.000</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ACADEMY */}
+      <div className="sec-navy">
+        <div className="s-wrap">
+          <div style={{ maxWidth: 560 }}>
+            <div className="s-eyebrow gold line">DagangPlay Academy</div>
+            <h2 className="s-h2-white">Gak Bisa Jualan?<br /><em>Kami Bimbing</em> Sampai Pecah Telur</h2>
+            <p className="s-p-white">Sistem canggih plus ilmu marketing dari praktisi berpengalaman — gratis untuk semua reseller.</p>
+          </div>
+          <div className="academy-grid">
+            {[
+              { title: "Master Branding", desc: "Bangun brand yang kuat dan diingat pelanggan" },
+              { title: "Master Sales", desc: "Strategi closing yang terbukti menghasilkan" },
+              { title: "Master TikTok", desc: "Masuk FYP dan konvert jadi transaksi nyata" },
+              { title: "Master Instagram", desc: "Optimasi IG khusus bisnis top up game" },
+            ].map((m, i) => (
+              <div key={i} className="ac-card">
+                <div className="ac-num">0{i + 1}</div>
+                <div className="ac-icon"><MonitorPlay size={20} /></div>
+                <div className="ac-title">{m.title}</div>
+                <div className="ac-desc">{m.desc}</div>
+                <div className="ac-arrow"><ArrowUpRight size={16} /></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* TESTIMONIALS */}
+      <div className="sec-white">
+        <div className="s-wrap">
+          <div style={{ maxWidth: 560 }}>
+            <div className="s-eyebrow navy line">Testimoni</div>
+            <h2 className="s-h2-dark">Kata Mereka yang<br />Sudah <em>Membuktikan</em></h2>
+          </div>
+          <div className="testi-grid">
+            {[
+              { name: "Budi Santoso", role: "Owner TopUp XYZ", text: "Gila sih DagangPlay, marginnya gede banget! Sebulan bisa dapet omset 50jt padahal gw cuma nyebar link di grup mabar." },
+              { name: "Siti Aminah", role: "Pelajar", text: "Awalnya iseng buat jajan, eh keterusan pas tau harganya murah. Prosesnya otomatis jadi gak ganggu waktu sekolah." },
+              { name: "Andi Wijaya", role: "Pemilik Warnet", text: "Integrasi sistemnya mantap. Warnet sepi tapi bisnis top up game jalan terus. Supportnya juga super responsif." },
+            ].map((t, i) => (
+              <div key={i} className="testi-card">
+                <div className="testi-stars">{[1, 2, 3, 4, 5].map(s => <Star key={s} size={13} fill="#E8B84B" color="#E8B84B" />)}</div>
+                <p className="testi-quote">"{t.text}"</p>
+                <div className="testi-foot">
+                  <div className="testi-av">{t.name[0]}</div>
+                  <div><div className="testi-name">{t.name}</div><div className="testi-role">{t.role}</div></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* FAQ */}
+      <div className="sec-offwhite">
+        <div className="s-wrap" style={{ textAlign: 'center' }}>
+          <div className="s-eyebrow navy line" style={{ justifyContent: 'center' }}>FAQ</div>
+          <h2 className="s-h2-dark" style={{ textAlign: 'center' }}>Pertanyaan yang Paling <em>Sering Muncul</em></h2>
+          <div className="faq-list" style={{ textAlign: 'left' }}>
+            {[
+              { q: "Apakah ini beneran gratis?", a: "Ya, kami menyediakan paket FREE (Reseller Normal) selamanya, tanpa biaya pendaftaran." },
+              { q: "Apa bedanya Free dengan Pro/Legend/Supreme?", a: "Paket berbayar memberikan Harga Modal yang lebih murah, plus fitur-fitur prioritas eksklusif." },
+              { q: "Apakah saldo harus deposit dulu?", a: "Tidak. Kamu tidak wajib deposit saldo. Setiap pesanan bisa langsung dibayar per transaksi via Payment Gateway." },
+              { q: "Gimana cara narik keuntungan (withdraw)?", a: "Margin dari setiap transaksi masuk ke saldo DagangPlay kamu, bisa dicairkan ke rekening bank kapan saja." },
+            ].map((f, i) => (
+              <details key={i} className="faq-item">
+                <summary className="faq-q"><span>{f.q}</span><ChevronDown size={16} className="faq-icon" /></summary>
+                <div className="faq-a">{f.a}</div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* CTA */}
+      <section className="cta-section">
+        <div className="s-eyebrow gold line" style={{ justifyContent: 'center', marginBottom: '1.5rem' }}>Ayo Bergabung</div>
+        <h2 className="cta-h">Siap Punya Kerajaan Bisnis<br />Top-Up <em>Sendiri?</em></h2>
+        <Link href="/reseller/register" className="btn-gold" style={{ fontSize: '1rem', padding: '1rem 2.5rem', position: 'relative', zIndex: 2 }}>
+          Ambil Sekarang <ArrowUpRight size={17} />
+        </Link>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="footer">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '.625rem' }}>
+          <div className="nav-icon">DP</div>
+          <span style={{ fontWeight: 700, fontSize: '.85rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '-.01em' }}>DagangPlay Partner Network</span>
+        </div>
+        <div className="footer-copy">© {new Date().getFullYear()} DagangPlay. All rights reserved.</div>
+      </footer>
+    </div>
+  );
 }

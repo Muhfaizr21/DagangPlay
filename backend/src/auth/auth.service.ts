@@ -66,7 +66,8 @@ export class AuthService {
                 email: user.email,
                 role: user.role,
                 adminPermissions: (user as any).adminPermissions || [],
-                plan: user.ownedMerchant ? user.ownedMerchant.plan : 'PRO'
+                plan: user.ownedMerchant ? user.ownedMerchant.plan : 'PRO',
+                merchantSlug: user.ownedMerchant?.slug
             }
         };
     }

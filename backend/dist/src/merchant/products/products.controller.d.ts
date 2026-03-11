@@ -44,4 +44,9 @@ export declare class ProductsController {
         success: boolean;
         count: number;
     }>;
+    updateProductMetadata(req: any, productId: string, body: {
+        customName?: string;
+        customThumbnail?: string;
+        description?: string;
+    }): Promise<any>;
 }

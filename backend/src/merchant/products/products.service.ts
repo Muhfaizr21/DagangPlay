@@ -162,4 +162,20 @@ export class ProductsService {
         await this.prisma.$transaction(operations);
         return { success: true, count: operations.length };
     }
+
+    async updateProductOverride(merchantId: string, productId: string, data: { customName?: string, customThumbnail?: string, description?: string }) {
+        return this.prisma.merchantProductOverride.upsert({
+            where: {
+                merchantId_productId: { merchantId, productId }
+            },
+            update: {
+                ...data
+            },
+            create: {
+                merchantId,
+                productId,
+                ...data
+            }
+        });
+    }
 }

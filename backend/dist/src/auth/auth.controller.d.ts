@@ -13,6 +13,7 @@ export declare class AuthController {
             role: import("@prisma/client").$Enums.Role;
             adminPermissions: any;
             plan: import("@prisma/client").$Enums.MerchantPlan;
+            merchantSlug: string | undefined;
         };
     }>;
 }

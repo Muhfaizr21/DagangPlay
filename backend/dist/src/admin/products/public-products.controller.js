@@ -20,57 +20,62 @@ let PublicProductsController = class PublicProductsController {
     constructor(productsService) {
         this.productsService = productsService;
     }
-    async getCategories(merchantSlug) {
-        return this.productsService.getPublicCategories(merchantSlug);
+    async getCategories(merchantSlug, domain) {
+        return this.productsService.getPublicCategories(merchantSlug, domain);
     }
-    async getCategoryBySlug(slug, merchantSlug) {
-        return this.productsService.getPublicCategoryBySlug(slug, merchantSlug);
+    async getCategoryBySlug(slug, merchantSlug, domain) {
+        return this.productsService.getPublicCategoryBySlug(slug, merchantSlug, domain);
     }
-    async getContent(merchantSlug) {
-        return this.productsService.getPublicContent(merchantSlug);
+    async getContent(merchantSlug, domain) {
+        return this.productsService.getPublicContent(merchantSlug, domain);
     }
-    async getResellerPrices(merchantSlug) {
-        return this.productsService.getPublicResellerPrices(merchantSlug);
+    async getResellerPrices(merchantSlug, domain) {
+        return this.productsService.getPublicResellerPrices(merchantSlug, domain);
     }
-    async getFullCatalog(merchantSlug) {
-        return this.productsService.getPublicFullCatalog(merchantSlug);
+    async getFullCatalog(merchantSlug, domain) {
+        return this.productsService.getPublicFullCatalog(merchantSlug, domain);
     }
 };
 exports.PublicProductsController = PublicProductsController;
 __decorate([
     (0, common_1.Get)('categories'),
     __param(0, (0, common_1.Query)('merchant')),
+    __param(1, (0, common_1.Query)('domain')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], PublicProductsController.prototype, "getCategories", null);
 __decorate([
     (0, common_1.Get)('categories/:slug'),
     __param(0, (0, common_1.Param)('slug')),
     __param(1, (0, common_1.Query)('merchant')),
+    __param(2, (0, common_1.Query)('domain')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", Promise)
 ], PublicProductsController.prototype, "getCategoryBySlug", null);
 __decorate([
     (0, common_1.Get)('content'),
     __param(0, (0, common_1.Query)('merchant')),
+    __param(1, (0, common_1.Query)('domain')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], PublicProductsController.prototype, "getContent", null);
 __decorate([
     (0, common_1.Get)('reseller-prices'),
     __param(0, (0, common_1.Query)('merchant')),
+    __param(1, (0, common_1.Query)('domain')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], PublicProductsController.prototype, "getResellerPrices", null);
 __decorate([
     (0, common_1.Get)('full-catalog'),
     __param(0, (0, common_1.Query)('merchant')),
+    __param(1, (0, common_1.Query)('domain')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], PublicProductsController.prototype, "getFullCatalog", null);
 exports.PublicProductsController = PublicProductsController = __decorate([

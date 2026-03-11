@@ -149,6 +149,7 @@ export class PublicOrdersService {
                 data: {
                     name: `Guest ${whatsapp}`,
                     phone: whatsapp,
+                    merchantId: merchantId, // Tag the user to the store where they first bought
                     password: 'GUEST_NO_LOGIN',
                     referralCode: `GUEST-${Date.now()}-${Math.floor(Math.random() * 1000)}`
                 }

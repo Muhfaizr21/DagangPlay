@@ -9,7 +9,8 @@ export class DashboardService {
     async getDashboardData(userId: string) {
         // Step 1: Find merchant associated with this user
         const merchant = await this.prisma.merchant.findUnique({
-            where: { ownerId: userId }
+            where: { ownerId: userId },
+            include: { owner: true }
         });
 
         if (!merchant) {
@@ -130,7 +131,7 @@ export class DashboardService {
                 domain: merchant.domain,
                 status: merchant.status,
                 plan: merchant.plan,
-                balance: Number(revenueTotal) // using revenueTotal as merchant balance representation
+                balance: Number(merchant.owner?.balance || 0) // showing real available balance
             },
             revenue: {
                 today: Number(revenueToday),

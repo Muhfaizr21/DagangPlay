@@ -114,13 +114,20 @@ let MerchantsService = class MerchantsService {
         const merchant = await this.prisma.merchant.findUnique({ where: { id } });
         if (!merchant)
             throw new common_1.NotFoundException('Merchant tidak ditemukan');
-        const { plan, planExpiredAt, isOfficial, status, ...settingsOnly } = updateData;
+        const { domain, plan, planExpiredAt, isOfficial, status, ...settingsOnly } = updateData;
+        if (domain && domain !== merchant.domain) {
+            const existingDomain = await this.prisma.merchant.findUnique({ where: { domain } });
+            if (existingDomain && existingDomain.id !== id) {
+                throw new Error('Domain sudah digunakan oleh merchant lain');
+            }
+        }
         const currentSettings = typeof merchant.settings === 'object' && merchant.settings !== null ? merchant.settings : {};
         const newSettings = { ...currentSettings, ...settingsOnly };
         const updated = await this.prisma.merchant.update({
             where: { id },
             data: {
                 settings: newSettings,
+                domain: domain === "" ? null : domain,
                 ...(plan && { plan }),
                 ...(planExpiredAt && { planExpiredAt: new Date(planExpiredAt) }),
                 ...(isOfficial !== undefined && { isOfficial }),

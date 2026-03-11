@@ -45,6 +45,12 @@ let ProductsController = class ProductsController {
             throw new Error('Merchant not found');
         return this.productsService.bulkUpdateMargin(merchant.id, req.user.id, body.markupPercentage, body.categoryId);
     }
+    async updateProductMetadata(req, productId, body) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id }, select: { id: true } });
+        if (!merchant)
+            throw new Error('Merchant not found');
+        return this.productsService.updateProductOverride(merchant.id, productId, body);
+    }
 };
 exports.ProductsController = ProductsController;
 __decorate([
@@ -73,6 +79,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "bulkUpdatePricing", null);
+__decorate([
+    (0, common_1.Put)(':productId/metadata'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('productId')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "updateProductMetadata", null);
 exports.ProductsController = ProductsController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.MERCHANT, client_1.Role.SUPER_ADMIN),

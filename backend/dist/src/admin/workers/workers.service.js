@@ -70,7 +70,7 @@ let WorkersService = WorkersService_1 = class WorkersService {
             try {
                 const tenMinutesAgo = new Date(now.getTime() - (10 * 60 * 1000));
                 if (order.fulfillmentStatus === client_1.OrderFulfillmentStatus.PROCESSING && order.updatedAt < tenMinutesAgo) {
-                    this.logger.warn(`Order ${order.orderNumber} TIMEOUT. Marking as FAILED.`);
+                    this.logger.warn(`Order ${order.orderNumber} TIMEOUT. Marking as FAILED & Refunding.`);
                     await this.prisma.order.update({
                         where: { id: order.id },
                         data: {
@@ -79,6 +79,8 @@ let WorkersService = WorkersService_1 = class WorkersService {
                             failedAt: new Date()
                         }
                     });
+                    await this.digiflazz.handleCommissionReversal(order.id);
+                    await this.digiflazz.handleCustomerRefund(order.id);
                     continue;
                 }
                 const customerNo = order.gameUserServerId ? `${order.gameUserId}${order.gameUserServerId}` : order.gameUserId;

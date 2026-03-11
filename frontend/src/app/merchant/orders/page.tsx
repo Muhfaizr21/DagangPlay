@@ -147,7 +147,7 @@ export default function MerchantOrdersPage() {
                                             <p className="text-[12px] text-indigo-600 mt-0.5 line-clamp-1">{order.gameUserId} {order.gameUserServerId ? `(${order.gameUserServerId})` : ''}</p>
                                         </td>
                                         <td className="p-4">
-                                            <p className="text-sm font-bold text-slate-700">{order.customer?.name || order.reseller?.name || 'Guest'}</p>
+                                            <p className="text-sm font-bold text-slate-700">{order.user?.name || 'Guest'}</p>
                                             {order.reseller && <span className="inline-block mt-1 px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[10px] font-bold">Reseller</span>}
                                         </td>
                                         <td className="p-4">

@@ -129,6 +129,7 @@ let PublicOrdersService = class PublicOrdersService {
                 data: {
                     name: `Guest ${whatsapp}`,
                     phone: whatsapp,
+                    merchantId: merchantId,
                     password: 'GUEST_NO_LOGIN',
                     referralCode: `GUEST-${Date.now()}-${Math.floor(Math.random() * 1000)}`
                 }

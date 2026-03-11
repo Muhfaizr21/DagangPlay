@@ -32,4 +32,11 @@ export class ProductsController {
         if (!merchant) throw new Error('Merchant not found');
         return this.productsService.bulkUpdateMargin(merchant.id, req.user.id, body.markupPercentage, body.categoryId);
     }
+
+    @Put(':productId/metadata')
+    async updateProductMetadata(@Request() req, @Param('productId') productId: string, @Body() body: { customName?: string, customThumbnail?: string, description?: string }) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id }, select: { id: true } });
+        if (!merchant) throw new Error('Merchant not found');
+        return this.productsService.updateProductOverride(merchant.id, productId, body);
+    }
 }

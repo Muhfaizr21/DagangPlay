@@ -75,6 +75,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     get chatRoom() { return this.client.chatRoom; }
     get chatMessage() { return this.client.chatMessage; }
     get marketingGuide() { return this.client.marketingGuide; }
+    get merchantProductOverride() { return (this.client as any).merchantProductOverride; }
 
     async onModuleInit() {
         await this.client.$connect();

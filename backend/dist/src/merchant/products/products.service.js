@@ -147,6 +147,21 @@ let ProductsService = class ProductsService {
         await this.prisma.$transaction(operations);
         return { success: true, count: operations.length };
     }
+    async updateProductOverride(merchantId, productId, data) {
+        return this.prisma.merchantProductOverride.upsert({
+            where: {
+                merchantId_productId: { merchantId, productId }
+            },
+            update: {
+                ...data
+            },
+            create: {
+                merchantId,
+                productId,
+                ...data
+            }
+        });
+    }
 };
 exports.ProductsService = ProductsService;
 exports.ProductsService = ProductsService = __decorate([
