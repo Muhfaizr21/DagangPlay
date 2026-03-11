@@ -221,8 +221,12 @@ export class FinanceService {
 
         const revenueFromMargin = Number(orderSalesAgg._sum.totalPrice || 0) - Number(orderSalesAgg._sum.basePrice || 0);
 
-        // (Mock) Revenue from SaaS
-        const saasRevenue = 0; // If you charge SaaS plan via external tables, sum it here
+        // Revenue from SaaS
+        const saasInvoicesAgg = await this.prisma.invoice.aggregate({
+            where: { status: 'PAID' },
+            _sum: { totalAmount: true }
+        });
+        const saasRevenue = Number(saasInvoicesAgg._sum.totalAmount || 0);
 
         // Today's Sales
         const today = new Date();

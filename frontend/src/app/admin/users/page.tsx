@@ -284,7 +284,11 @@ export default function UserManagementPage() {
                                                 <div>
                                                     <p className="text-[14px] font-bold text-slate-800 tracking-tight gap-2 flex items-center">
                                                         {user.name}
-                                                        {user.isVerified && <ShieldCheck className="w-3.5 h-3.5 text-blue-500" title="Akun Terverifikasi" />}
+                                                        {user.isVerified && (
+                                                            <span title="Akun Terverifikasi">
+                                                                <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />
+                                                            </span>
+                                                        )}
                                                     </p>
                                                     <p className="text-[12px] font-medium text-indigo-500 mt-0.5" title={user.email}>{user.email}</p>
                                                     <p className="text-[10px] text-slate-400 font-mono mt-0.5 px-1 py-0.5 bg-slate-100 inline-block rounded">{user.id.substring(0, 8)}</p>

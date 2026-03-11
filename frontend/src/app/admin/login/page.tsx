@@ -53,8 +53,8 @@ export default function AdminLoginPage() {
             {/* Form Container */}
             <div className="w-full max-w-md p-8 md:p-10 rounded-2xl relative z-10 border border-slate-200 bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)]">
                 <div className="text-center mb-8">
-                    <div className="mx-auto inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 border border-slate-200 shadow-sm mb-4">
-                        <span className="text-3xl text-[#C9A84C] drop-shadow-sm">⚡</span>
+                    <div className="mx-auto inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white border border-slate-200 shadow-sm mb-4 p-3 overflow-hidden">
+                        <img src="/dagang.png" alt="Logo" className="w-full h-full object-contain" />
                     </div>
                     <h1 className="font-heading text-3xl text-slate-800 tracking-widest whitespace-nowrap">DAGANG<span className="text-[#C9A84C]">PLAY</span></h1>
                     <p className="font-body text-cyan-600 text-[10px] uppercase tracking-widest mt-2 font-bold select-none">Multi-Role Authentication Area</p>

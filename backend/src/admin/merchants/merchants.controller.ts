@@ -1,4 +1,4 @@
-import { UseGuards,  Controller, Get, Query, Patch, Param, Body, BadRequestException, Post  } from "@nestjs/common";
+import { UseGuards, Controller, Get, Query, Patch, Param, Body, BadRequestException, Post } from "@nestjs/common";
 import { MerchantsService } from './merchants.service';
 import { MerchantStatus } from '@prisma/client';
 
@@ -14,8 +14,8 @@ export class MerchantsController {
     constructor(private readonly merchantsService: MerchantsService) { }
 
     @Get()
-    async getMerchants(@Query('search') search?: string, @Query('status') status?: string) {
-        return this.merchantsService.getAllMerchants(search, status);
+    async getMerchants(@Query('search') search?: string, @Query('status') status?: string, @Query('page') page: string = '1', @Query('perPage') perPage: string = '10') {
+        return this.merchantsService.getAllMerchants(search, status, Number(page), Number(perPage));
     }
 
     @Patch(':id/status')

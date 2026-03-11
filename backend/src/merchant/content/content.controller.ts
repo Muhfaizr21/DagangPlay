@@ -83,4 +83,33 @@ export class ContentController {
         if (!merchant) throw new Error('Merchant not found');
         return this.contentService.updateThemeSettings(merchant.id, body);
     }
+
+    // Popup Promos
+    @Get('popup-promos')
+    async getPopupPromos(@Request() req) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant) throw new Error('Merchant not found');
+        return this.contentService.getPopupPromos(merchant.id);
+    }
+
+    @Post('popup-promos')
+    async createPopupPromo(@Request() req, @Body() body: any) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant) throw new Error('Merchant not found');
+        return this.contentService.createPopupPromo(merchant.id, body);
+    }
+
+    @Put('popup-promos/:id/toggle')
+    async togglePopupPromo(@Request() req, @Param('id') id: string, @Body('isActive') isActive: boolean) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant) throw new Error('Merchant not found');
+        return this.contentService.togglePopupPromo(merchant.id, id, isActive);
+    }
+
+    @Delete('popup-promos/:id')
+    async deletePopupPromo(@Request() req, @Param('id') id: string) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant) throw new Error('Merchant not found');
+        return this.contentService.deletePopupPromo(merchant.id, id);
+    }
 }

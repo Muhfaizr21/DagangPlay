@@ -8,9 +8,9 @@ export declare class WithdrawalsController {
         status: import("@prisma/client").$Enums.WithdrawalStatus;
         createdAt: Date;
         updatedAt: Date;
+        userId: string;
         note: string | null;
         processedAt: Date | null;
-        userId: string;
         amount: number;
         receiptImage: string | null;
         rejectedAt: Date | null;
@@ -26,9 +26,9 @@ export declare class WithdrawalsController {
         status: import("@prisma/client").$Enums.WithdrawalStatus;
         createdAt: Date;
         updatedAt: Date;
+        userId: string;
         note: string | null;
         processedAt: Date | null;
-        userId: string;
         amount: number;
         receiptImage: string | null;
         rejectedAt: Date | null;

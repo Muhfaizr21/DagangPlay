@@ -1,12 +1,14 @@
+import * as bcrypt from 'bcrypt';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import { MerchantStatus } from '@prisma/client';
+import { paginate } from '../../common/utils/pagination';
 
 @Injectable()
 export class MerchantsService {
     constructor(private prisma: PrismaService) { }
 
-    async getAllMerchants(search?: string, statusFilter?: string) {
+    async getAllMerchants(search?: string, statusFilter?: string, page: number = 1, perPage: number = 10) {
         const where: any = {};
         if (search) {
             where.OR = [
@@ -18,52 +20,48 @@ export class MerchantsService {
             where.status = statusFilter;
         }
 
-        const merchants = await this.prisma.merchant.findMany({
+        const paginated = await paginate(this.prisma.merchant, {
             where,
             orderBy: { createdAt: 'desc' },
+        }, { page, perPage });
+
+        const merchantIds = paginated.data.map((m: any) => m.id);
+
+        // Batch fetch counts and omset to avoid N+1
+        const [resellerCounts, omsetAggs] = await Promise.all([
+            this.prisma.user.groupBy({
+                by: ['merchantId'],
+                where: { merchantId: { in: merchantIds }, role: 'CUSTOMER', status: 'ACTIVE' },
+                _count: { _all: true }
+            }),
+            this.prisma.order.groupBy({
+                by: ['merchantId'],
+                where: { merchantId: { in: merchantIds }, paymentStatus: 'PAID' },
+                _sum: { totalPrice: true }
+            })
+        ]);
+
+        const mappedData = paginated.data.map((m: any) => {
+            const resellers = resellerCounts.find(rc => rc.merchantId === m.id)?._count._all || 0;
+            const omset = Number(omsetAggs.find(oa => oa.merchantId === m.id)?._sum.totalPrice || 0);
+
+            return {
+                id: m.id,
+                name: m.name,
+                domain: m.domain || `${m.slug}.dagangplay.com`,
+                plan: m.plan,
+                status: m.status,
+                resellers,
+                omset,
+                date: m.createdAt.toISOString().split('T')[0],
+                isOfficial: m.isOfficial,
+            };
         });
 
-        // We fetch aggregate data for each merchant
-        // For production with thousands of merchants, this should be a raw SQL query or done differently,
-        // but for now mapping sequentially or via Promise.all is fine.
-
-        const mappedMerchants = await Promise.all(
-            merchants.map(async (m) => {
-                // Reseller/Customer Count
-                const resellersCount = await this.prisma.user.count({
-                    where: {
-                        merchantId: m.id,
-                        role: 'CUSTOMER',
-                        status: 'ACTIVE',
-                    },
-                });
-
-                // Omset Calculation
-                const omsetAgg = await this.prisma.order.aggregate({
-                    where: {
-                        merchantId: m.id,
-                        paymentStatus: 'PAID',
-                    },
-                    _sum: {
-                        totalPrice: true,
-                    },
-                });
-
-                return {
-                    id: m.id,
-                    name: m.name,
-                    domain: m.domain || `${m.slug}.dagangplay.com`, // Default domain if none
-                    plan: m.plan,
-                    status: m.status,
-                    resellers: resellersCount,
-                    omset: Number(omsetAgg._sum.totalPrice || 0),
-                    date: m.createdAt.toISOString().split('T')[0],
-                    isOfficial: m.isOfficial,
-                };
-            })
-        );
-
-        return mappedMerchants;
+        return {
+            ...paginated,
+            data: mappedData
+        };
     }
 
     async setMerchantStatus(id: string, status: MerchantStatus, reason?: string) {
@@ -171,17 +169,18 @@ export class MerchantsService {
         const merchant = await this.prisma.merchant.findUnique({ where: { id: merchantId }, include: { owner: true } });
         if (!merchant || !merchant.owner) throw new NotFoundException('Merchant/Owner tidak ditemukan');
 
-        // Logic reset password (mocking bcrypt for now)
-        // const hash = await bcrypt.hash('DagangPlay123!', 10);
+        const newPass = 'DagangPlay123!';
+        const hashedPassword = await bcrypt.hash(newPass, 10);
+
         await this.prisma.user.update({
             where: { id: merchant.owner.id },
-            data: { password: 'NEW_HASHED_PASSWORD_DAGANGPLAY123!' } // in real app: bcrypt
+            data: { password: hashedPassword }
         });
 
         await this.prisma.auditLog.create({
             data: { action: 'RESET_OWNER_PASSWORD', entity: 'Merchant', entityId: merchantId, newData: {}, oldData: {} }
         });
 
-        return { success: true, message: 'Password Owner direset menjadi DagangPlay123!' };
+        return { success: true, message: `Password Owner direset menjadi ${newPass}` };
     }
 }

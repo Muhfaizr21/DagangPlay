@@ -49,6 +49,7 @@ export declare class PrismaService implements OnModuleInit, OnModuleDestroy {
     get chatMessage(): import("@prisma/client").Prisma.ChatMessageDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get marketingGuide(): import("@prisma/client").Prisma.MarketingGuideDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get merchantProductOverride(): any;
+    get otpVerification(): import("@prisma/client").Prisma.OtpVerificationDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     onModuleInit(): Promise<void>;
     onModuleDestroy(): Promise<void>;
 }

@@ -1,4 +1,5 @@
 import { Controller, Post, Body, Get, Param, Req, Query } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { PublicOrdersService } from './public-orders.service';
 import { TripayService } from '../../tripay/tripay.service';
 
@@ -21,6 +22,7 @@ export class PublicOrdersController {
     }
 
     @Post('checkout')
+    @Throttle({ default: { limit: 3, ttl: 60000 } })
     async checkout(@Body() body: any, @Req() req: any) {
         const host = req.headers.host;
         const origin = req.headers.origin;

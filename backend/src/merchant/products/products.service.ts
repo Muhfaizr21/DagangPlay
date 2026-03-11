@@ -95,6 +95,20 @@ export class ProductsService {
             throw new NotFoundException('SKU tidak ditemukan');
         }
 
+        // Get Merchant's Tier Modal Price
+        const merchant = await this.prisma.merchant.findUnique({ where: { id: merchantId } });
+        const mapping = await this.prisma.planTierMapping.findUnique({ where: { plan: merchant?.plan || 'FREE' } });
+        const activeTier = mapping?.tier || 'NORMAL';
+
+        let merchantModalPrice = Number(sku.priceNormal);
+        if (activeTier === 'PRO') merchantModalPrice = Number(sku.pricePro);
+        if (activeTier === 'LEGEND') merchantModalPrice = Number(sku.priceLegend);
+        if (activeTier === 'SUPREME') merchantModalPrice = Number(sku.priceSupreme);
+
+        if (customPrice < merchantModalPrice) {
+            throw new Error(`CRITICAL_ERROR: Harga jual (Rp ${customPrice}) tidak boleh lebih rendah dari harga modal (Rp ${merchantModalPrice}) atas plan ${merchant?.plan}.`);
+        }
+
         // Enforce SaaS Limit
         if (isActive) {
             await this.subscriptionsService.checkFeatureLimit(merchantId, 'maxProducts');
@@ -123,6 +137,15 @@ export class ProductsService {
     }
 
     async bulkUpdateMargin(merchantId: string, userId: string, markupPercentage: number, categoryId?: string) {
+        if (markupPercentage < 0) {
+            throw new Error('CRITICAL_ERROR: Margin markup tidak boleh negatif untuk mencegah minus saat transaksi.');
+        }
+
+        // Get Merchant's Tier
+        const merchant = await this.prisma.merchant.findUnique({ where: { id: merchantId } });
+        const mapping = await this.prisma.planTierMapping.findUnique({ where: { plan: merchant?.plan || 'FREE' } });
+        const activeTier = mapping?.tier || 'NORMAL';
+
         // 1. Find all active SKUs for the merchant (optionally filtered by category)
         const productWhere: any = { status: 'ACTIVE' };
         if (categoryId) {
@@ -137,13 +160,15 @@ export class ProductsService {
         const skus = products.flatMap(p => p.skus);
 
         // Enforce SaaS Limit for Bulk
-        // Note: For simplicity, we check if they are already at limit. 
-        // In real world, we'd check if adding 'skus.length' exceeds limit.
-        await this.subscriptionsService.checkFeatureLimit(merchantId, 'maxProducts');
+        // We pass skus.length to prevent bypassing limit when selecting bulk
+        await this.subscriptionsService.checkFeatureLimit(merchantId, 'maxProducts', skus.length);
         const operations = skus.map(sku => {
-            // we'll calculate margin based on default Super Admin priceNormal
-            // if markupPercentage = 10, new price = priceNormal * 1.10
-            const defaultPrice = Number(sku.priceNormal);
+            // we'll calculate margin based on merchant's active tier modal price
+            let defaultPrice = Number(sku.priceNormal);
+            if (activeTier === 'PRO') defaultPrice = Number(sku.pricePro);
+            if (activeTier === 'LEGEND') defaultPrice = Number(sku.priceLegend);
+            if (activeTier === 'SUPREME') defaultPrice = Number(sku.priceSupreme);
+
             const newPrice = defaultPrice + (defaultPrice * (markupPercentage / 100));
 
             return this.prisma.merchantProductPrice.upsert({

@@ -87,6 +87,30 @@ let ContentController = class ContentController {
             throw new Error('Merchant not found');
         return this.contentService.updateThemeSettings(merchant.id, body);
     }
+    async getPopupPromos(req) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant)
+            throw new Error('Merchant not found');
+        return this.contentService.getPopupPromos(merchant.id);
+    }
+    async createPopupPromo(req, body) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant)
+            throw new Error('Merchant not found');
+        return this.contentService.createPopupPromo(merchant.id, body);
+    }
+    async togglePopupPromo(req, id, isActive) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant)
+            throw new Error('Merchant not found');
+        return this.contentService.togglePopupPromo(merchant.id, id, isActive);
+    }
+    async deletePopupPromo(req, id) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant)
+            throw new Error('Merchant not found');
+        return this.contentService.deletePopupPromo(merchant.id, id);
+    }
 };
 exports.ContentController = ContentController;
 __decorate([
@@ -169,6 +193,38 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], ContentController.prototype, "updateTheme", null);
+__decorate([
+    (0, common_1.Get)('popup-promos'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ContentController.prototype, "getPopupPromos", null);
+__decorate([
+    (0, common_1.Post)('popup-promos'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], ContentController.prototype, "createPopupPromo", null);
+__decorate([
+    (0, common_1.Put)('popup-promos/:id/toggle'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)('isActive')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Boolean]),
+    __metadata("design:returntype", Promise)
+], ContentController.prototype, "togglePopupPromo", null);
+__decorate([
+    (0, common_1.Delete)('popup-promos/:id'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], ContentController.prototype, "deletePopupPromo", null);
 exports.ContentController = ContentController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.MERCHANT, client_1.Role.SUPER_ADMIN),

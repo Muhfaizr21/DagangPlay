@@ -64,8 +64,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <aside className="w-64 border-r border-slate-200/60 bg-white flex flex-col z-20">
                 <div className="h-16 flex items-center px-6 border-b border-slate-100">
                     <Link href="/admin" className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-600 shadow-sm flex items-center justify-center">
-                            <Zap className="w-4 h-4 text-white fill-white" />
+                        <div className="w-9 h-9 rounded-lg bg-white border border-slate-200 shadow-sm flex items-center justify-center p-1">
+                            <img src="/dagang.png" alt="Logo" className="w-full h-full object-contain" />
                         </div>
                         <span className="font-heading tracking-[.05em] text-lg font-bold text-slate-900">DAGANGPLAY</span>
                     </Link>

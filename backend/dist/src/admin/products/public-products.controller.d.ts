@@ -19,33 +19,13 @@ export declare class PublicProductsController {
         updatedAt: Date;
     } | null>;
     getContent(merchantSlug?: string, domain?: string): Promise<{
-        banners: {
-            id: string;
-            image: string;
-            sortOrder: number;
-            isActive: boolean;
-            createdAt: Date;
-            updatedAt: Date;
-            merchantId: string | null;
-            title: string;
-            linkUrl: string | null;
-            position: import("@prisma/client").$Enums.BannerPosition;
-            startDate: Date | null;
-            endDate: Date | null;
-            clickCount: number;
-        }[];
-        announcements: {
-            id: string;
-            isActive: boolean;
-            createdAt: Date;
-            updatedAt: Date;
-            merchantId: string | null;
-            title: string;
-            startDate: Date | null;
-            endDate: Date | null;
-            content: string;
-            imageUrl: string | null;
-        }[];
+        banners: never[];
+        announcements: never[];
+        popupPromos?: undefined;
+    } | {
+        banners: any;
+        announcements: any;
+        popupPromos: any;
     }>;
     getResellerPrices(merchantSlug?: string, domain?: string): Promise<{
         name: string;

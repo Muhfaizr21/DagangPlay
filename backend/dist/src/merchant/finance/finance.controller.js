@@ -43,6 +43,12 @@ let FinanceController = class FinanceController {
             throw new Error('Merchant not found');
         return this.financeService.requestDeposit(merchant.id, req.user.id, body.amount, body.method);
     }
+    async getDeposits(req, page = '1', perPage = '10') {
+        return this.financeService.getDeposits(req.user.id, Number(page), Number(perPage));
+    }
+    async getWithdrawals(req, page = '1', perPage = '10') {
+        return this.financeService.getWithdrawals(req.user.id, Number(page), Number(perPage));
+    }
 };
 exports.FinanceController = FinanceController;
 __decorate([
@@ -68,6 +74,24 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], FinanceController.prototype, "requestDeposit", null);
+__decorate([
+    (0, common_1.Get)('deposits'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Query)('page')),
+    __param(2, (0, common_1.Query)('perPage')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", Promise)
+], FinanceController.prototype, "getDeposits", null);
+__decorate([
+    (0, common_1.Get)('withdrawals'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Query)('page')),
+    __param(2, (0, common_1.Query)('perPage')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", Promise)
+], FinanceController.prototype, "getWithdrawals", null);
 exports.FinanceController = FinanceController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.MERCHANT, client_1.Role.SUPER_ADMIN),

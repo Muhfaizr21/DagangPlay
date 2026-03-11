@@ -81,7 +81,10 @@ export default function MerchantManagementPage() {
     const handleUpdateStatus = async (id: string, newStatus: string, actionName: string) => {
         try {
             if (confirm(`Apakah Anda yakin ingin melakukan aksi "${actionName}" pada toko ini?`)) {
-                await axios.patch(`http://localhost:3001/admin/merchants/${id}/status`, { status: newStatus });
+                await axios.patch(`http://localhost:3001/admin/merchants/${id}/status`,
+                    { status: newStatus },
+                    { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } }
+                );
                 mutate();
                 if (selectedMerchantId === id) mutateDetail();
                 showToast('Status Diperbarui', `Status merchant menjadi ${newStatus}`);
@@ -95,7 +98,10 @@ export default function MerchantManagementPage() {
         e.preventDefault();
         if (!selectedMerchantId) return;
         try {
-            await axios.patch(`http://localhost:3001/admin/merchants/${selectedMerchantId}/settings`, settingsForm);
+            await axios.patch(`http://localhost:3001/admin/merchants/${selectedMerchantId}/settings`,
+                settingsForm,
+                { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } }
+            );
             mutateDetail();
             showToast('Tersimpan', `Pengaturan Merchant sukses diubah.`);
         } catch (err: any) {
@@ -386,76 +392,82 @@ export default function MerchantManagementPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {merchants.map((merchant: any) => (
-                                    <tr key={merchant.id} className="hover:bg-slate-50/50 transition-colors group">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-lg shadow-sm">
-                                                    {merchant.name.charAt(0)}
+                                {(() => {
+                                    const list = Array.isArray(merchants) ? merchants : (merchants?.data || []);
+                                    return list.map((merchant: any) => (
+                                        <tr key={merchant.id} className="hover:bg-slate-50/50 transition-colors group">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-lg shadow-sm">
+                                                        {merchant.name.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[14px] font-semibold text-slate-800 flex items-center gap-2">
+                                                            {merchant.name}
+                                                            {merchant.isOfficial && <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 text-[9px] border border-amber-200 uppercase font-bold tracking-wider">Official</span>}
+                                                        </p>
+                                                        <a href={`https://${merchant.domain}`} className="text-[12px] font-medium text-indigo-500 hover:text-indigo-700 hover:underline underline-offset-4 flex items-center gap-1 mt-0.5 opacity-80" target="_blank">
+                                                            {merchant.domain} <ExternalLink className="w-3 h-3" />
+                                                        </a>
+                                                        <p className="text-[10px] text-slate-400 font-mono mt-0.5" title={merchant.id}>{merchant.id.substring(0, 8)}...</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <p className="text-[14px] font-semibold text-slate-800 flex items-center gap-2">
-                                                        {merchant.name}
-                                                        {merchant.isOfficial && <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 text-[9px] border border-amber-200 uppercase font-bold tracking-wider">Official</span>}
-                                                    </p>
-                                                    <a href={`https://${merchant.domain}`} className="text-[12px] font-medium text-indigo-500 hover:text-indigo-700 hover:underline underline-offset-4 flex items-center gap-1 mt-0.5 opacity-80" target="_blank">
-                                                        {merchant.domain} <ExternalLink className="w-3 h-3" />
-                                                    </a>
-                                                    <p className="text-[10px] text-slate-400 font-mono mt-0.5" title={merchant.id}>{merchant.id.substring(0, 8)}...</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            {getPlanBadge(merchant.plan)}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            {getStatusBadge(merchant.status)}
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <p className="text-[14px] font-bold text-slate-800">Rp {Number(merchant.omset).toLocaleString('id-ID')}</p>
-                                            <p className="text-[11px] text-slate-500 font-medium">{merchant.resellers} Reseller aktif</p>
-                                        </td>
-                                        <td className="px-6 py-4 text-center text-[13px] text-slate-600 font-medium">
-                                            {merchant.date}
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => setSelectedMerchantId(merchant.id)} className="p-1.5 text-indigo-600 hover:bg-indigo-50 border border-transparent hover:border-indigo-200 rounded-lg transition-all" title="Detail & Atur">
-                                                    <Eye className="w-4 h-4" />
-                                                </button>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                {getPlanBadge(merchant.plan)}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                {getStatusBadge(merchant.status)}
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <p className="text-[14px] font-bold text-slate-800">Rp {Number(merchant.omset).toLocaleString('id-ID')}</p>
+                                                <p className="text-[11px] text-slate-500 font-medium">{merchant.resellers} Reseller aktif</p>
+                                            </td>
+                                            <td className="px-6 py-4 text-center text-[13px] text-slate-600 font-medium">
+                                                {merchant.date}
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => setSelectedMerchantId(merchant.id)} className="p-1.5 text-indigo-600 hover:bg-indigo-50 border border-transparent hover:border-indigo-200 rounded-lg transition-all" title="Detail & Atur">
+                                                        <Eye className="w-4 h-4" />
+                                                    </button>
 
-                                                {merchant.status === 'PENDING_REVIEW' && (
-                                                    <button onClick={() => handleUpdateStatus(merchant.id, 'ACTIVE', 'Approve')} className="p-1.5 text-emerald-600 hover:bg-emerald-50 border border-transparent hover:border-emerald-200 rounded-lg transition-all" title="Setujui Pendaftaran">
-                                                        <ShieldCheck className="w-4 h-4" />
-                                                    </button>
-                                                )}
-                                                {merchant.status === 'ACTIVE' && (
-                                                    <button onClick={() => handleUpdateStatus(merchant.id, 'SUSPENDED', 'Suspend')} className="p-1.5 text-amber-500 hover:bg-amber-50 border border-transparent hover:border-amber-200 rounded-lg transition-all" title="Suspend Sementara">
-                                                        <PauseCircle className="w-4 h-4" />
-                                                    </button>
-                                                )}
-                                                {merchant.status === 'SUSPENDED' && (
-                                                    <button onClick={() => handleUpdateStatus(merchant.id, 'ACTIVE', 'Unsuspend')} className="p-1.5 text-emerald-600 hover:bg-emerald-50 border border-transparent hover:border-emerald-200 rounded-lg transition-all" title="Aktifkan Kembali">
-                                                        <PlayCircle className="w-4 h-4" />
-                                                    </button>
-                                                )}
-                                                {!merchant.isOfficial && (
-                                                    <button onClick={() => handleUpdateStatus(merchant.id, 'INACTIVE', 'Ban')} className="p-1.5 text-red-500 hover:bg-red-50 border border-transparent hover:border-red-200 rounded-lg transition-all" title="Ban Permanen">
-                                                        <Ban className="w-4 h-4" />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
+                                                    {merchant.status === 'PENDING_REVIEW' && (
+                                                        <button onClick={() => handleUpdateStatus(merchant.id, 'ACTIVE', 'Approve')} className="p-1.5 text-emerald-600 hover:bg-emerald-50 border border-transparent hover:border-emerald-200 rounded-lg transition-all" title="Setujui Pendaftaran">
+                                                            <ShieldCheck className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                    {merchant.status === 'ACTIVE' && (
+                                                        <button onClick={() => handleUpdateStatus(merchant.id, 'SUSPENDED', 'Suspend')} className="p-1.5 text-amber-500 hover:bg-amber-50 border border-transparent hover:border-amber-200 rounded-lg transition-all" title="Suspend Sementara">
+                                                            <PauseCircle className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                    {merchant.status === 'SUSPENDED' && (
+                                                        <button onClick={() => handleUpdateStatus(merchant.id, 'ACTIVE', 'Unsuspend')} className="p-1.5 text-emerald-600 hover:bg-emerald-50 border border-transparent hover:border-emerald-200 rounded-lg transition-all" title="Aktifkan Kembali">
+                                                            <PlayCircle className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                    {!merchant.isOfficial && (
+                                                        <button onClick={() => handleUpdateStatus(merchant.id, 'INACTIVE', 'Ban')} className="p-1.5 text-red-500 hover:bg-red-50 border border-transparent hover:border-red-200 rounded-lg transition-all" title="Ban Permanen">
+                                                            <Ban className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                })()}
                             </tbody>
                         </table>
 
-                        {merchants.length === 0 && (
-                            <div className="p-10 text-center text-slate-500 font-medium text-sm">
-                                Tidak ada merchant yang ditemukan dengan filter tersebut.
-                            </div>
-                        )}
+                        {(() => {
+                            const list = Array.isArray(merchants) ? merchants : (merchants?.data || []);
+                            return list.length === 0 && (
+                                <div className="p-10 text-center text-slate-500 font-medium text-sm">
+                                    Tidak ada merchant yang ditemukan dengan filter tersebut.
+                                </div>
+                            );
+                        })()}
                     </div>
                 )}
             </div>

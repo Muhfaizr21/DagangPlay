@@ -16,6 +16,8 @@ export declare class DashboardService {
             total: number;
             lastMonth: number;
             trendPercentage: number;
+            profitTotal: number;
+            profitMonth: number;
         };
         transactionsToday: {
             success: number;

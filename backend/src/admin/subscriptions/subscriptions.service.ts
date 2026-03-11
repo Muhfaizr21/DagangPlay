@@ -166,7 +166,7 @@ export class SubscriptionsService {
         };
     }
 
-    async checkFeatureLimit(merchantId: string, feature: 'maxProducts' | 'multiUser' | 'whiteLabel' | 'customDomain') {
+    async checkFeatureLimit(merchantId: string, feature: 'maxProducts' | 'multiUser' | 'whiteLabel' | 'customDomain', addingCount: number = 0) {
         const features = await this.getMerchantPlanFeatures(merchantId);
 
         if (features.isExpired) {
@@ -190,7 +190,11 @@ export class SubscriptionsService {
                 where: { merchantId, isActive: true }
             });
 
-            if (features.maxProducts !== undefined && count >= features.maxProducts) {
+            const totalAfterAdd = count + addingCount;
+
+            if (features.maxProducts !== undefined && totalAfterAdd > features.maxProducts && addingCount > 0) {
+                throw new BadRequestException(`Limit produk aktif terlampaui. Paket Anda hanya mengizinkan ${features.maxProducts} produk. (Saat ini ${count}, akan ditambah ${addingCount})`);
+            } else if (features.maxProducts !== undefined && count >= features.maxProducts && addingCount === 0) {
                 throw new BadRequestException(`Limit produk aktif terlampaui (${count}/${features.maxProducts}). Silakan upgrade paket Anda.`);
             }
         }

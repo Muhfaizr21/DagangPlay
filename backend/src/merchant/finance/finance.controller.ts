@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request, Query } from '@nestjs/common';
 import { FinanceService } from './finance.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -30,5 +30,15 @@ export class FinanceController {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
         if (!merchant) throw new Error('Merchant not found');
         return this.financeService.requestDeposit(merchant.id, req.user.id, body.amount, body.method);
+    }
+
+    @Get('deposits')
+    async getDeposits(@Request() req, @Query('page') page: string = '1', @Query('perPage') perPage: string = '10') {
+        return this.financeService.getDeposits(req.user.id, Number(page), Number(perPage));
+    }
+
+    @Get('withdrawals')
+    async getWithdrawals(@Request() req, @Query('page') page: string = '1', @Query('perPage') perPage: string = '10') {
+        return this.financeService.getWithdrawals(req.user.id, Number(page), Number(perPage));
     }
 }

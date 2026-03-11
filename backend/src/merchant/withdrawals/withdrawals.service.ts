@@ -9,27 +9,28 @@ export class WithdrawalsService {
     async requestWithdrawal(userId: string, dto: { amount: number; bankName: string; accountNumber: string; accountName: string }) {
         const { amount, bankName, accountNumber, accountName } = dto;
 
-        // 1. Get User Balance
-        const user = await this.prisma.user.findUnique({
-            where: { id: userId },
-            select: { id: true, balance: true }
-        });
-
-        if (!user || user.balance < amount) {
-            throw new BadRequestException('Saldo tidak cukup untuk melakukan penarikan.');
-        }
-
         if (amount < 10000) {
             throw new BadRequestException('Minimal penarikan adalah Rp 10.000');
         }
 
         // 2. Process Withdrawal (Immediate deduction)
         return this.prisma.$transaction(async (tx) => {
-            // Deduct balance
-            const updatedUser = await tx.user.update({
-                where: { id: userId },
+            // Atomic Balance Check and Deduction using updateMany to prevent double-spending
+            const updateResult = await tx.user.updateMany({
+                where: {
+                    id: userId,
+                    balance: { gte: amount }
+                },
                 data: { balance: { decrement: amount } }
             });
+
+            if (updateResult.count === 0) {
+                throw new BadRequestException('Saldo tidak cukup atau sedang dikunci (Gagal pada sistem).');
+            }
+
+            // Fetch the updated user for the balance_transaction record
+            const updatedUser = await tx.user.findUnique({ where: { id: userId } });
+            if (!updatedUser) throw new Error('User not found after deduction');
 
             // Create Withdrawal Request
             const withdrawal = await tx.withdrawal.create({

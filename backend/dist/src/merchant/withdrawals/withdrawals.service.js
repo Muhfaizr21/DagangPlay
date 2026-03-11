@@ -19,21 +19,23 @@ let WithdrawalsService = class WithdrawalsService {
     }
     async requestWithdrawal(userId, dto) {
         const { amount, bankName, accountNumber, accountName } = dto;
-        const user = await this.prisma.user.findUnique({
-            where: { id: userId },
-            select: { id: true, balance: true }
-        });
-        if (!user || user.balance < amount) {
-            throw new common_1.BadRequestException('Saldo tidak cukup untuk melakukan penarikan.');
-        }
         if (amount < 10000) {
             throw new common_1.BadRequestException('Minimal penarikan adalah Rp 10.000');
         }
         return this.prisma.$transaction(async (tx) => {
-            const updatedUser = await tx.user.update({
-                where: { id: userId },
+            const updateResult = await tx.user.updateMany({
+                where: {
+                    id: userId,
+                    balance: { gte: amount }
+                },
                 data: { balance: { decrement: amount } }
             });
+            if (updateResult.count === 0) {
+                throw new common_1.BadRequestException('Saldo tidak cukup atau sedang dikunci (Gagal pada sistem).');
+            }
+            const updatedUser = await tx.user.findUnique({ where: { id: userId } });
+            if (!updatedUser)
+                throw new Error('User not found after deduction');
             const withdrawal = await tx.withdrawal.create({
                 data: {
                     userId,

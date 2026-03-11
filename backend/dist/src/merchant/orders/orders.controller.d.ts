@@ -158,7 +158,7 @@ export declare class OrdersController {
             completedAt: Date | null;
             failedAt: Date | null;
             merchantModalPrice: number | null;
-        };
+        } | null;
     }>;
     refundOrder(req: any, orderId: string, reason: string): Promise<any>;
 }

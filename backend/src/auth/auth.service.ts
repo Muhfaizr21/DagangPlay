@@ -1,3 +1,4 @@
+import * as bcrypt from 'bcrypt';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { JwtService } from '@nestjs/jwt';
@@ -11,7 +12,7 @@ export class AuthService {
 
     async adminLogin(data: any) {
         console.log('--- Auth Audit: Admin Login Attempt ---');
-        console.log('Email:', data.email);
+        // REMOVED sensitive log: console.log('Email:', data.email);
 
         const user = await this.prisma.user.findUnique({
             where: { email: data.email },
@@ -19,7 +20,7 @@ export class AuthService {
         });
 
         if (!user) {
-            console.log('Result: FAILED - Email not found');
+            console.log('Result: FAILED - User not found');
             throw new UnauthorizedException('Email administrator tidak terdaftar.');
         }
 
@@ -35,8 +36,26 @@ export class AuthService {
             throw new UnauthorizedException('Akun admin Anda sedang dinonaktifkan.');
         }
 
-        // Verify Password (Plain text check for now per requirement)
-        if (user.password !== data.password) {
+        // Verify Password (Check bcrypt, fallback to plain for migration if needed)
+        let isMatch = false;
+        if (user.password.startsWith('$2')) {
+            isMatch = await bcrypt.compare(data.password, user.password);
+        } else {
+            // Migration fallback: if db has plain text password
+            isMatch = user.password === data.password;
+
+            // Auto-migrate to hash if successful
+            if (isMatch) {
+                const hashedPassword = await bcrypt.hash(data.password, 10);
+                await this.prisma.user.update({
+                    where: { id: user.id },
+                    data: { password: hashedPassword }
+                });
+                console.log('Result: Migrated plain-text password to hash.');
+            }
+        }
+
+        if (!isMatch) {
             console.log('Result: FAILED - Wrong Password');
             throw new UnauthorizedException('Password yang Anda masukkan salah.');
         }

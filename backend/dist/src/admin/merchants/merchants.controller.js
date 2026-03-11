@@ -25,8 +25,8 @@ let MerchantsController = class MerchantsController {
     constructor(merchantsService) {
         this.merchantsService = merchantsService;
     }
-    async getMerchants(search, status) {
-        return this.merchantsService.getAllMerchants(search, status);
+    async getMerchants(search, status, page = '1', perPage = '10') {
+        return this.merchantsService.getAllMerchants(search, status, Number(page), Number(perPage));
     }
     async updateStatus(id, status, reason) {
         if (!status)
@@ -48,8 +48,10 @@ __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)('search')),
     __param(1, (0, common_1.Query)('status')),
+    __param(2, (0, common_1.Query)('page')),
+    __param(3, (0, common_1.Query)('perPage')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, String, String, String]),
     __metadata("design:returntype", Promise)
 ], MerchantsController.prototype, "getMerchants", null);
 __decorate([

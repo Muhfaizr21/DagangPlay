@@ -14,10 +14,11 @@ async function main() {
     });
 
     if (!merchant) {
+        const hashedPassword = await require('bcrypt').hash('password123', 10);
         merchant = await prisma.user.create({
             data: {
                 email: 'merchant1@dagangplay.com',
-                password: 'password123',
+                password: hashedPassword,
                 name: 'Merchant Pertama',
                 role: Role.MERCHANT,
                 status: 'ACTIVE',
@@ -38,9 +39,10 @@ async function main() {
         });
         console.log('Merchant created!');
     } else {
+        const hashedPassword = await require('bcrypt').hash('password123', 10);
         await prisma.user.update({
             where: { email: 'merchant1@dagangplay.com' },
-            data: { password: 'password123', role: Role.MERCHANT }
+            data: { password: hashedPassword, role: Role.MERCHANT }
         });
         console.log('Merchant updated!');
     }

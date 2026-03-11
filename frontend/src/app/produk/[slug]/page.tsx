@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
 import Link from 'next/link';
+import Image from 'next/image';
 import { use } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -27,12 +28,22 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
         ? `${baseUrl}/public/orders/config?slug=${merchantSlug}`
         : `${baseUrl}/public/orders/config`;
 
-    const { data: category, error, isLoading } = useSWR(categoryUrl, fetcher);
-    const { data: tripayChannelsResp } = useSWR(`${baseUrl}/public/orders/payment-channels`, fetcher);
-    const { data: config } = useSWR(configUrl, fetcher);
+    const swrConfig = {
+        revalidateOnFocus: false,
+        dedupingInterval: 10000 // 10s dedupe
+    };
 
-    // Usually Tripay returns data in "data" array
-    const paymentChannels = tripayChannelsResp?.data || [];
+    const { data: category, error, isLoading } = useSWR(categoryUrl, fetcher, swrConfig);
+    const { data: tripayChannelsResp } = useSWR(`${baseUrl}/public/orders/payment-channels`, fetcher, swrConfig);
+    const { data: config } = useSWR(configUrl, fetcher, swrConfig);
+
+    // Extract active payment channels from Tripay response
+    // Tripay format: { success: true, data: [{ code, name, group, icon_url, fee_flat, fee_percent, active }] }
+    const rawChannels = tripayChannelsResp?.data || [];
+    // Include channel if active is true OR if active field doesn't exist (sandbox may omit it)
+    const paymentChannels = rawChannels.length > 0
+        ? rawChannels.filter((ch: any) => ch.active !== false)
+        : [];
 
     const [selectedSku, setSelectedSku] = useState<any>(null);
     const [gameId, setGameId] = useState('');
@@ -110,9 +121,15 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
             <header className={`sticky top-0 z-50 h-20 border-b backdrop-blur-xl ${isLight ? 'bg-white/80 border-slate-200' : 'bg-[#050B18]/70 border-white/5'}`}>
                 <div className="container mx-auto px-6 h-full flex items-center justify-between">
                     <Link href={merchantSlug ? `/?merchant=${merchantSlug}` : "/"} className="flex items-center gap-3 no-underline group">
-                        <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-white transition-transform group-hover:scale-110 ${isLight ? 'bg-indigo-600 shadow-xl shadow-indigo-100' : 'bg-indigo-600'}`}>
+                        <div className={`w-11 h-11 rounded-2xl relative flex items-center justify-center text-white transition-transform group-hover:scale-110 ${isLight ? 'bg-indigo-600 shadow-xl shadow-indigo-100' : 'bg-indigo-600'}`}>
                             {config?.logo ? (
-                                <img src={config.logo} alt="Logo" className="w-full h-full object-cover rounded-2xl" />
+                                <Image
+                                    src={config.logo}
+                                    alt="Logo"
+                                    fill
+                                    sizes="44px"
+                                    className="object-cover rounded-2xl"
+                                />
                             ) : (
                                 <Gamepad size={24} />
                             )}
@@ -150,7 +167,14 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
                             <div className={`rounded-[3rem] overflow-hidden border transition-all ${isLight ? 'bg-white border-slate-200 shadow-2xl shadow-indigo-100/30' : 'bg-slate-900 border-white/5'}`}>
                                 <div className="aspect-[4/3] relative overflow-hidden">
                                     {category.image ? (
-                                        <img src={category.image} alt={category.name} className="w-full h-full object-cover" />
+                                        <Image
+                                            src={category.image}
+                                            alt={category.name}
+                                            fill
+                                            priority
+                                            sizes="(max-width: 768px) 100vw, 33vw"
+                                            className="object-cover"
+                                        />
                                     ) : (
                                         <div className="w-full h-full bg-indigo-600 flex items-center justify-center text-5xl font-black text-white italic">
                                             {category.name.substring(0, 2).toUpperCase()}
@@ -305,7 +329,7 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
 
                         {/* 3. Payment Method */}
                         <section className={`rounded-[3rem] p-10 border transition-all ${isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900 border-white/5'}`}>
-                            <div className="flex items-center gap-5 mb-12">
+                            <div className="flex items-center gap-5 mb-10">
                                 <div className="w-14 h-14 rounded-2xl bg-indigo-600 text-white font-black italic text-2xl flex items-center justify-center shadow-lg shadow-indigo-100">03</div>
                                 <div>
                                     <h2 className={`text-2xl font-black italic uppercase tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>Payment Mode</h2>
@@ -313,32 +337,156 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {paymentChannels.map((channel: any) => (
-                                    <button
-                                        key={channel.code}
-                                        onClick={() => setSelectedPayment(channel.code)}
-                                        className={`flex items-center justify-between p-6 rounded-3xl border transition-all duration-300 ${selectedPayment === channel.code
-                                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl shadow-indigo-200 scale-[1.02]'
-                                            : `${isLight ? 'bg-slate-50 border-slate-100 hover:border-indigo-300 text-slate-700' : 'bg-black/20 border-white/5 text-white'}`
-                                            }`}
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-16 h-10 bg-white rounded-xl flex items-center justify-center overflow-hidden p-2 shadow-sm border border-slate-100">
-                                                {channel.icon_url ? (
-                                                    <img src={channel.icon_url} alt={channel.name} className="max-h-full max-w-full object-contain" />
-                                                ) : (
-                                                    <span className="text-[10px] font-black text-slate-900">{channel.name}</span>
-                                                )}
+                            {/* Loading Skeleton */}
+                            {!tripayChannelsResp && (
+                                <div className="space-y-3 animate-pulse">
+                                    {[1, 2, 3, 4].map(i => (
+                                        <div key={i} className={`h-16 rounded-2xl ${isLight ? 'bg-slate-100' : 'bg-white/5'}`}></div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Error / Empty State */}
+                            {tripayChannelsResp && paymentChannels.length === 0 && (
+                                <div className={`text-center py-10 rounded-2xl border-2 border-dashed ${isLight ? 'border-slate-200' : 'border-white/10'}`}>
+                                    <Wallet size={40} className="mx-auto mb-3 opacity-20" />
+                                    <p className={`text-sm font-bold ${isLight ? 'text-slate-400' : 'text-slate-600'}`}>
+                                        Metode pembayaran tidak tersedia saat ini
+                                    </p>
+                                    <p className={`text-[11px] mt-1 ${isLight ? 'text-slate-300' : 'text-slate-700'}`}>
+                                        Silakan hubungi admin atau coba beberapa saat lagi
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Payment Channels Grouped by Category */}
+                            {paymentChannels.length > 0 && (() => {
+                                // Group channels by their group field
+                                const groups: Record<string, any[]> = {};
+                                paymentChannels.forEach((ch: any) => {
+                                    // Filter: only active channels (if field exists)
+                                    if (ch.active === false) return;
+                                    const g = ch.group || 'Lainnya';
+                                    if (!groups[g]) groups[g] = [];
+                                    groups[g].push(ch);
+                                });
+
+                                // Define display order for groups
+                                const groupOrder = ['QRIS', 'Virtual Account', 'E-Wallet', 'Convenience Store', 'Transfer Bank', 'Lainnya'];
+                                const sortedGroups = Object.entries(groups).sort(([a], [b]) => {
+                                    const ai = groupOrder.findIndex(g => a.toLowerCase().includes(g.toLowerCase()) || g.toLowerCase().includes(a.toLowerCase()));
+                                    const bi = groupOrder.findIndex(g => b.toLowerCase().includes(g.toLowerCase()) || g.toLowerCase().includes(b.toLowerCase()));
+                                    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+                                });
+
+                                return (
+                                    <div className="space-y-8">
+                                        {sortedGroups.map(([groupName, channels]) => (
+                                            <div key={groupName}>
+                                                {/* Group Label */}
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <span className={`text-[10px] font-black uppercase tracking-[0.25em] ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
+                                                        {groupName}
+                                                    </span>
+                                                    <div className={`flex-1 h-px ${isLight ? 'bg-slate-100' : 'bg-white/5'}`}></div>
+                                                </div>
+
+                                                {/* Channels Grid */}
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    {channels.map((channel: any) => {
+                                                        const isSelected = selectedPayment === channel.code;
+                                                        const fee = channel.fee_flat > 0
+                                                            ? `+Rp ${Number(channel.fee_flat).toLocaleString('id-ID')}`
+                                                            : channel.fee_percent > 0
+                                                                ? `+${channel.fee_percent}%`
+                                                                : 'Gratis';
+                                                        const isFree = fee === 'Gratis';
+
+                                                        return (
+                                                            <button
+                                                                key={channel.code}
+                                                                onClick={() => setSelectedPayment(channel.code)}
+                                                                className={`group relative flex items-center gap-4 p-4 rounded-2xl border-2 text-left transition-all duration-300 ${isSelected
+                                                                    ? 'bg-indigo-600 border-indigo-600 shadow-xl shadow-indigo-200/50 scale-[1.02]'
+                                                                    : isLight
+                                                                        ? 'bg-slate-50 border-slate-100 hover:border-indigo-300 hover:bg-white hover:shadow-md'
+                                                                        : 'bg-black/20 border-white/5 hover:border-indigo-600/50 hover:bg-white/5'
+                                                                    }`}
+                                                            >
+                                                                {/* Bank/Channel Icon */}
+                                                                {(() => {
+                                                                    const iconStyle: Record<string, string> = {
+                                                                        'QRISC': 'bg-gradient-to-br from-blue-500 to-indigo-600',
+                                                                        'BNIVA': 'bg-gradient-to-br from-orange-500 to-orange-600',
+                                                                        'BRIVA': 'bg-gradient-to-br from-sky-500 to-blue-600',
+                                                                        'BCAVA': 'bg-gradient-to-br from-blue-700 to-indigo-800',
+                                                                        'MANDIRIVA': 'bg-gradient-to-br from-yellow-400 to-orange-500',
+                                                                        'PERMATAVA': 'bg-gradient-to-br from-red-500 to-rose-600',
+                                                                        'DANA': 'bg-gradient-to-br from-blue-400 to-blue-600',
+                                                                        'OVO': 'bg-gradient-to-br from-purple-500 to-purple-700',
+                                                                        'SHOPEEPAY': 'bg-gradient-to-br from-orange-400 to-red-500',
+                                                                        'GOPAY': 'bg-gradient-to-br from-green-500 to-emerald-600',
+                                                                        'ALFAMART': 'bg-gradient-to-br from-red-500 to-red-700',
+                                                                        'INDOMARET': 'bg-gradient-to-br from-red-600 to-yellow-500',
+                                                                    };
+                                                                    const iconLabel: Record<string, string> = {
+                                                                        'QRISC': 'QR', 'BNIVA': 'BNI', 'BRIVA': 'BRI',
+                                                                        'BCAVA': 'BCA', 'MANDIRIVA': 'MDR', 'PERMATAVA': 'PMT',
+                                                                        'DANA': 'DAN', 'OVO': 'OVO', 'SHOPEEPAY': 'SPY',
+                                                                        'GOPAY': 'GPY', 'ALFAMART': 'ALF', 'INDOMARET': 'IND',
+                                                                    };
+                                                                    const bg = isSelected ? 'bg-white/20' : (iconStyle[channel.code] || 'bg-gradient-to-br from-slate-400 to-slate-600');
+                                                                    const label = iconLabel[channel.code] || channel.code.slice(0, 3);
+                                                                    return (
+                                                                        <div className={`w-14 h-10 rounded-xl relative flex items-center justify-center flex-shrink-0 transition-all ${bg}`}>
+                                                                            {channel.icon_url ? (
+                                                                                <Image
+                                                                                    src={channel.icon_url}
+                                                                                    alt={channel.name}
+                                                                                    fill
+                                                                                    loading="lazy"
+                                                                                    sizes="56px"
+                                                                                    className="object-contain p-1"
+                                                                                />
+                                                                            ) : (
+                                                                                <span className="text-[10px] font-black text-white tracking-tight">{label}</span>
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })()}
+                                                                {/* Channel Info */}
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className={`text-xs font-black uppercase italic tracking-tight leading-tight truncate ${isSelected ? 'text-white' : isLight ? 'text-slate-800' : 'text-white'}`}>
+                                                                        {channel.name}
+                                                                    </p>
+                                                                    <p className={`text-[10px] font-mono mt-0.5 ${isSelected ? 'text-indigo-200' : isLight ? 'text-slate-400' : 'text-slate-500'}`}>
+                                                                        {channel.code}
+                                                                    </p>
+                                                                </div>
+
+                                                                {/* Fee Badge */}
+                                                                <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                                                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${isSelected
+                                                                        ? 'bg-white/20 text-white'
+                                                                        : isFree
+                                                                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                                                            : 'bg-orange-50 text-orange-600 border border-orange-100'
+                                                                        }`}>
+                                                                        {fee}
+                                                                    </span>
+                                                                    {isSelected && (
+                                                                        <ShieldCheck size={14} className="text-white/80" />
+                                                                    )}
+                                                                </div>
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
-                                            <span className={`text-[11px] font-black uppercase italic tracking-tight ${selectedPayment === channel.code ? 'text-white' : ''}`}>
-                                                {channel.name}
-                                            </span>
-                                        </div>
-                                        {selectedPayment === channel.code && <ShieldCheck size={18} className="text-white" />}
-                                    </button>
-                                ))}
-                            </div>
+                                        ))}
+                                    </div>
+                                );
+                            })()}
                         </section>
 
                         {/* 4. WhatsApp Info */}

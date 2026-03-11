@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import MerchantLayout from '../../../components/merchant/MerchantLayout';
 import useSWR from 'swr';
 import axios from 'axios';
-import { Palette, Image as ImageIcon, MessageSquare, Plus, Trash2, Power, Lock, CheckCircle2 } from 'lucide-react';
+import { Palette, Image as ImageIcon, MessageSquare, Plus, Trash2, Power, Lock, CheckCircle2, Megaphone, Monitor, Pointer } from 'lucide-react';
 
 const fetcher = (url: string) => {
     const token = localStorage.getItem('admin_token');
@@ -16,10 +16,18 @@ export default function MerchantContentPage() {
 
     // Data Fetching
     const { data: banners, mutate: mutateBanners } = useSWR('http://localhost:3001/merchant/content/banners', fetcher);
-    // const { data: announcements, mutate: mutateAnnc } = useSWR('http://localhost:3001/merchant/content/announcements', fetcher);
+    const { data: announcements, mutate: mutateAnnc } = useSWR('http://localhost:3001/merchant/content/announcements', fetcher);
+    const { data: popupPromos, mutate: mutatePopup } = useSWR('http://localhost:3001/merchant/content/popup-promos', fetcher);
 
+    // Modals
     const [isAddBannerModal, setIsAddBannerModal] = useState(false);
-    const [bannerForm, setBannerForm] = useState({ title: '', imageUrl: '', linkUrl: '', location: 'HERO' });
+    const [isAddAnncModal, setIsAddAnncModal] = useState(false);
+    const [isAddPopupModal, setIsAddPopupModal] = useState(false);
+
+    // Forms
+    const [bannerForm, setBannerForm] = useState({ title: '', imageUrl: '', linkUrl: '', location: 'HERO', sequence: 0 });
+    const [anncForm, setAnncForm] = useState({ title: '', content: '' });
+    const [popupForm, setPopupForm] = useState({ title: '', imageUrl: '', content: '', linkUrl: '' });
 
     // Merchant Plan
     const [merchantPlan, setMerchantPlan] = useState('PRO');
@@ -48,14 +56,14 @@ export default function MerchantContentPage() {
         fetchSettings();
     }, []);
 
+    // Banner Handlers
     const handleCreateBanner = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('admin_token');
             await axios.post('http://localhost:3001/merchant/content/banners', bannerForm, { headers: { Authorization: `Bearer ${token}` } });
-            alert('Banner berhasil ditambahkan!');
             setIsAddBannerModal(false);
-            setBannerForm({ title: '', imageUrl: '', linkUrl: '', location: 'HERO' });
+            setBannerForm({ title: '', imageUrl: '', linkUrl: '', location: 'HERO', sequence: 0 });
             mutateBanners();
         } catch (err: any) {
             alert(err.response?.data?.message || 'Gagal membuat banner');
@@ -80,6 +88,76 @@ export default function MerchantContentPage() {
             mutateBanners();
         } catch (err) {
             alert('Gagal hapus banner');
+        }
+    };
+
+    // Announcement Handlers
+    const handleCreateAnnc = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem('admin_token');
+            await axios.post('http://localhost:3001/merchant/content/announcements', anncForm, { headers: { Authorization: `Bearer ${token}` } });
+            setIsAddAnncModal(false);
+            setAnncForm({ title: '', content: '' });
+            mutateAnnc();
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Gagal membuat pengumuman');
+        }
+    };
+
+    const handleToggleAnnc = async (id: string, currentStatus: boolean) => {
+        try {
+            const token = localStorage.getItem('admin_token');
+            await axios.put(`http://localhost:3001/merchant/content/announcements/${id}/toggle`, { isActive: !currentStatus }, { headers: { Authorization: `Bearer ${token}` } });
+            mutateAnnc();
+        } catch (err) {
+            alert('Gagal ubah status pengumuman');
+        }
+    };
+
+    const handleDeleteAnnc = async (id: string) => {
+        if (!confirm('Hapus pengumuman ini?')) return;
+        try {
+            const token = localStorage.getItem('admin_token');
+            await axios.delete(`http://localhost:3001/merchant/content/announcements/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+            mutateAnnc();
+        } catch (err) {
+            alert('Gagal hapus pengumuman');
+        }
+    };
+
+    // Popup Promo Handlers
+    const handleCreatePopup = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem('admin_token');
+            await axios.post('http://localhost:3001/merchant/content/popup-promos', popupForm, { headers: { Authorization: `Bearer ${token}` } });
+            setIsAddPopupModal(false);
+            setPopupForm({ title: '', imageUrl: '', content: '', linkUrl: '' });
+            mutatePopup();
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Gagal membuat popup promo');
+        }
+    };
+
+    const handleTogglePopup = async (id: string, currentStatus: boolean) => {
+        try {
+            const token = localStorage.getItem('admin_token');
+            await axios.put(`http://localhost:3001/merchant/content/popup-promos/${id}/toggle`, { isActive: !currentStatus }, { headers: { Authorization: `Bearer ${token}` } });
+            mutatePopup();
+        } catch (err) {
+            alert('Gagal ubah status popup');
+        }
+    };
+
+    const handleDeletePopup = async (id: string) => {
+        if (!confirm('Hapus popup ini?')) return;
+        try {
+            const token = localStorage.getItem('admin_token');
+            await axios.delete(`http://localhost:3001/merchant/content/popup-promos/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+            mutatePopup();
+        } catch (err) {
+            alert('Gagal hapus popup');
         }
     };
 
@@ -110,7 +188,10 @@ export default function MerchantContentPage() {
                             <ImageIcon className="w-4 h-4" /> Banners Utama
                         </button>
                         <button onClick={() => setActiveTab('announcements')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'announcements' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
-                            <MessageSquare className="w-4 h-4" /> Pengumuman
+                            <Megaphone className="w-4 h-4" /> Pengumuman
+                        </button>
+                        <button onClick={() => setActiveTab('popup')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'popup' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
+                            <Pointer className="w-4 h-4" /> Popup Promo
                         </button>
                         <button onClick={() => setActiveTab('theme')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'theme' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
                             <Palette className="w-4 h-4" /> Tema & Warna
@@ -124,7 +205,10 @@ export default function MerchantContentPage() {
                     {activeTab === 'banners' && (
                         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
                             <div className="p-5 border-b border-slate-100 flex justify-between items-center">
-                                <h3 className="text-lg font-bold text-slate-800">Manajemen Banner</h3>
+                                <div>
+                                    <h3 className="text-lg font-bold text-slate-800">Manajemen Banner</h3>
+                                    <p className="text-xs text-slate-500">Slide gambar promo di halaman depan</p>
+                                </div>
                                 <button onClick={() => setIsAddBannerModal(true)} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md">
                                     <Plus className="w-4 h-4" /> Tambah Banner
                                 </button>
@@ -146,23 +230,26 @@ export default function MerchantContentPage() {
                                                 ) : (
                                                     <div className="flex items-center justify-center w-full h-full text-slate-400">Broken Image</div>
                                                 )}
-                                                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={() => handleToggleBanner(b.id, b.isActive)} className="p-2 bg-white rounded-lg shadow-sm border border-slate-100 hover:bg-slate-50 text-slate-600">
+                                                <div className="absolute top-2 right-2 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => handleToggleBanner(b.id, b.isActive)} className="p-2 bg-white rounded-lg shadow-sm border border-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600">
                                                         <Power className="w-4 h-4" />
                                                     </button>
-                                                    <button onClick={() => handleDeleteBanner(b.id)} className="p-2 bg-white rounded-lg shadow-sm border border-slate-100 hover:text-red-600 text-slate-600">
+                                                    <button onClick={() => handleDeleteBanner(b.id)} className="p-2 bg-white rounded-lg shadow-sm border border-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-600">
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 </div>
+                                                <div className="absolute bottom-2 left-2">
+                                                    <span className="px-2 py-1 bg-white/90 backdrop-blur-sm text-[9px] font-black text-indigo-700 rounded-lg shadow-sm border border-indigo-100 uppercase tracking-tighter">Posisi: {b.position}</span>
+                                                </div>
                                                 {!b.isActive && (
-                                                    <div className="absolute inset-0 bg-slate-900/50 flex items-center justify-center">
-                                                        <span className="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-lg uppercase">Nonaktif</span>
+                                                    <div className="absolute inset-0 bg-slate-900/50 flex items-center justify-center pointer-events-none">
+                                                        <span className="px-3 py-1 bg-red-500 text-white text-[10px] font-black rounded-lg uppercase shadow-lg">Nonaktif</span>
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="p-4 bg-white">
+                                            <div className="p-4 bg-white border-t border-slate-50">
                                                 <p className="font-bold text-slate-800 text-sm truncate">{b.title}</p>
-                                                <p className="text-xs text-slate-500 mt-1 truncate">Link: {b.linkUrl || '-'}</p>
+                                                <p className="text-[10px] text-slate-500 mt-1 truncate font-mono bg-slate-50 p-1 rounded">URL: {b.linkUrl || '-'}</p>
                                             </div>
                                         </div>
                                     ))}
@@ -171,16 +258,104 @@ export default function MerchantContentPage() {
                         </div>
                     )}
 
-                    {/* Announcements Mockup */}
+                    {/* Announcements */}
                     {activeTab === 'announcements' && (
-                        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 text-center py-16">
-                            <MessageSquare className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                            <h3 className="text-lg font-bold text-slate-800 mb-2">Papan Pengumuman</h3>
-                            <p className="text-slate-500 px-8 text-sm max-w-md mx-auto">Tampilkan pesan running text atau popup darurat kepada pelanggan Anda. Segera hadir.</p>
+                        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                            <div className="p-5 border-b border-slate-100 flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-lg font-bold text-slate-800">Papan Pengumuman</h3>
+                                    <p className="text-xs text-slate-500">Teks berjalan atau informasi di dashboard user</p>
+                                </div>
+                                <button onClick={() => setIsAddAnncModal(true)} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md">
+                                    <Plus className="w-4 h-4" /> Tambah Pengumuman
+                                </button>
+                            </div>
+                            <div className="p-5">
+                                <div className="space-y-3">
+                                    {!announcements ? (
+                                        <p className="text-slate-500 text-sm">Memuat data...</p>
+                                    ) : announcements.length === 0 ? (
+                                        <div className="text-center py-10 opacity-70 border-2 border-dashed border-slate-100 rounded-2xl">
+                                            <Megaphone className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                                            <p className="text-slate-500 font-bold">Belum ada pengumuman</p>
+                                        </div>
+                                    ) : announcements.map((a: any) => (
+                                        <div key={a.id} className={`flex items-center justify-between p-4 rounded-2xl border ${a.isActive ? 'border-indigo-100 bg-indigo-50/20' : 'border-slate-200 bg-slate-50 opacity-60'}`}>
+                                            <div className="flex items-center gap-4">
+                                                <div className={`p-2 rounded-xl ${a.isActive ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-200 text-slate-500'}`}>
+                                                    <Megaphone className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-slate-800 text-sm">{a.title}</p>
+                                                    <p className="text-xs text-slate-500 line-clamp-1">{a.content}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button onClick={() => handleToggleAnnc(a.id, a.isActive)} className={`p-2 rounded-lg border transition-colors ${a.isActive ? 'bg-white border-indigo-200 text-indigo-600 hover:bg-indigo-50' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>
+                                                    <Power className="w-4 h-4" />
+                                                </button>
+                                                <button onClick={() => handleDeleteAnnc(a.id)} className="p-2 bg-white border border-red-100 text-red-500 rounded-lg hover:bg-red-50">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     )}
 
-                    {/* Theme Mockup */}
+                    {/* Popup Promos */}
+                    {activeTab === 'popup' && (
+                        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                            <div className="p-5 border-b border-slate-100 flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-lg font-bold text-slate-800">Popup Promo</h3>
+                                    <p className="text-xs text-slate-500">Muncul saat pelanggan pertama kali buka toko</p>
+                                </div>
+                                <button onClick={() => setIsAddPopupModal(true)} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md">
+                                    <Plus className="w-4 h-4" /> Tambah Popup
+                                </button>
+                            </div>
+                            <div className="p-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    {!popupPromos ? (
+                                        <p className="text-slate-500 text-sm">Memuat data...</p>
+                                    ) : popupPromos.length === 0 ? (
+                                        <div className="col-span-2 text-center py-10 opacity-70">
+                                            <Pointer className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                                            <p className="text-slate-500 font-bold">Belum ada popup promo</p>
+                                        </div>
+                                    ) : popupPromos.map((p: any) => (
+                                        <div key={p.id} className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm flex flex-col">
+                                            <div className="h-48 bg-slate-100 relative">
+                                                <img src={p.image || 'https://via.placeholder.com/400x300?text=No+Image'} className="w-full h-full object-cover" alt={p.title} />
+                                                {!p.isActive && (
+                                                    <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center">
+                                                        <span className="bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase">Mati</span>
+                                                    </div>
+                                                )}
+                                                <div className="absolute top-2 right-2 flex gap-1">
+                                                    <button onClick={() => handleTogglePopup(p.id, p.isActive)} className="p-2 bg-white rounded-lg shadow-sm text-slate-600 hover:text-indigo-600">
+                                                        <Power className="w-4 h-4" />
+                                                    </button>
+                                                    <button onClick={() => handleDeletePopup(p.id)} className="p-2 bg-white rounded-lg shadow-sm text-slate-600 hover:text-red-600">
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="p-4">
+                                                <h4 className="font-bold text-slate-800 text-sm truncate">{p.title}</h4>
+                                                <p className="text-xs text-slate-500 mt-1 line-clamp-2">{p.content || 'Tidak ada deskripsi'}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Theme */}
                     {activeTab === 'theme' && (
                         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
                             <h3 className="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2">
@@ -253,26 +428,103 @@ export default function MerchantContentPage() {
                 <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-3xl shadow-xl w-full max-w-[400px] overflow-hidden">
                         <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                            <h3 className="text-lg font-bold text-slate-800">Tambah Banner Baru</h3>
+                            <h3 className="text-lg font-bold text-slate-800 text-center flex-grow pl-6">Konfigurasi Banner</h3>
                             <button onClick={() => setIsAddBannerModal(false)} className="text-slate-400 hover:text-slate-600 text-xl font-light">&times;</button>
                         </div>
                         <form onSubmit={handleCreateBanner} className="p-6">
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-[12px] font-bold text-slate-500 mb-2">Judul Banner</label>
-                                    <input type="text" required value={bannerForm.title} onChange={e => setBannerForm({ ...bannerForm, title: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500" />
+                                    <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Judul Banner</label>
+                                    <input type="text" required value={bannerForm.title} onChange={e => setBannerForm({ ...bannerForm, title: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm" placeholder="Contoh: Promo Ramadhan" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Posisi / Lokasi</label>
+                                        <select value={bannerForm.location} onChange={e => setBannerForm({ ...bannerForm, location: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm">
+                                            <option value="HERO">Main Hero (Slider)</option>
+                                            <option value="SIDEBAR">Sidebar</option>
+                                            <option value="FOOTER">Footer</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Urutan (0-9)</label>
+                                        <input type="number" value={bannerForm.sequence} onChange={e => setBannerForm({ ...bannerForm, sequence: parseInt(e.target.value) })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm" />
+                                    </div>
                                 </div>
                                 <div>
-                                    <label className="block text-[12px] font-bold text-slate-500 mb-2">URL Gambar (Direct Link)</label>
-                                    <input type="url" required value={bannerForm.imageUrl} onChange={e => setBannerForm({ ...bannerForm, imageUrl: e.target.value })} placeholder="https://..." className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500" />
+                                    <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Image URL</label>
+                                    <input type="url" required value={bannerForm.imageUrl} onChange={e => setBannerForm({ ...bannerForm, imageUrl: e.target.value })} placeholder="https://..." className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm" />
+                                    <p className="text-[10px] text-slate-400 mt-1 italic">*Gunakan ukuran 1200x400 untuk hasil terbaik</p>
                                 </div>
                                 <div>
-                                    <label className="block text-[12px] font-bold text-slate-500 mb-2">Link Tujuan (Opsional)</label>
-                                    <input type="text" value={bannerForm.linkUrl} onChange={e => setBannerForm({ ...bannerForm, linkUrl: e.target.value })} placeholder="/kategori/mobile-legends" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500" />
+                                    <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Link Tujuan (Opsional)</label>
+                                    <input type="text" value={bannerForm.linkUrl} onChange={e => setBannerForm({ ...bannerForm, linkUrl: e.target.value })} placeholder="/produk/mobile-legends-topup" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm" />
                                 </div>
                             </div>
-                            <button type="submit" className="w-full mt-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-md">
-                                Simpan Banner
+                            <button type="submit" className="w-full mt-8 py-4 bg-indigo-600 text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-200">
+                                Apply & Sinkronisasi
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Tambah Pengumuman */}
+            {isAddAnncModal && (
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl shadow-xl w-full max-w-[400px] overflow-hidden">
+                        <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                            <h3 className="text-lg font-bold text-slate-800 text-center flex-grow pl-6">Informasi Baru</h3>
+                            <button onClick={() => setIsAddAnncModal(false)} className="text-slate-400 hover:text-slate-600 text-xl font-light">&times;</button>
+                        </div>
+                        <form onSubmit={handleCreateAnnc} className="p-6">
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Judul Info</label>
+                                    <input type="text" required value={anncForm.title} onChange={e => setAnncForm({ ...anncForm, title: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm" placeholder="Contoh: Maintenance Sistem" />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Konten / Isi Pesan</label>
+                                    <textarea required value={anncForm.content} onChange={e => setAnncForm({ ...anncForm, content: e.target.value })} rows={4} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm resize-none" placeholder="Tulis pengumuman di sini..."></textarea>
+                                </div>
+                            </div>
+                            <button type="submit" className="w-full mt-8 py-4 bg-indigo-600 text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-200">
+                                Publikasikan Info
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Tambah Popup */}
+            {isAddPopupModal && (
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl shadow-xl w-full max-w-[400px] overflow-hidden">
+                        <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                            <h3 className="text-lg font-bold text-slate-800 text-center flex-grow pl-6">Popup Promo Strategis</h3>
+                            <button onClick={() => setIsAddPopupModal(false)} className="text-slate-400 hover:text-slate-600 text-xl font-light">&times;</button>
+                        </div>
+                        <form onSubmit={handleCreatePopup} className="p-6">
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Nama Promo</label>
+                                    <input type="text" required value={popupForm.title} onChange={e => setPopupForm({ ...popupForm, title: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm" placeholder="Contoh: Flash Sale Diamonds" />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Banner Image URL</label>
+                                    <input type="url" required value={popupForm.imageUrl} onChange={e => setPopupForm({ ...popupForm, imageUrl: e.target.value })} placeholder="https://..." className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm" />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Penjelasan Singkat</label>
+                                    <input type="text" value={popupForm.content} onChange={e => setPopupForm({ ...popupForm, content: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm" placeholder="Opsional" />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Direct Link (Opsional)</label>
+                                    <input type="text" value={popupForm.linkUrl} onChange={e => setPopupForm({ ...popupForm, linkUrl: e.target.value })} placeholder="/promo/special" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm" />
+                                </div>
+                            </div>
+                            <button type="submit" className="w-full mt-8 py-4 bg-emerald-600 text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-emerald-700 transition-all shadow-lg hover:shadow-emerald-200">
+                                Aktifkan Popup Sekarang
                             </button>
                         </form>
                     </div>

@@ -3,25 +3,40 @@ import { MerchantStatus } from '@prisma/client';
 export declare class MerchantsService {
     private prisma;
     constructor(prisma: PrismaService);
-    getAllMerchants(search?: string, statusFilter?: string): Promise<{
-        id: string;
-        name: string;
-        domain: string;
-        plan: import("@prisma/client").$Enums.MerchantPlan;
-        status: import("@prisma/client").$Enums.MerchantStatus;
-        resellers: number;
-        omset: number;
-        date: string;
-        isOfficial: boolean;
-    }[]>;
+    getAllMerchants(search?: string, statusFilter?: string, page?: number, perPage?: number): Promise<{
+        data: {
+            id: any;
+            name: any;
+            domain: any;
+            plan: any;
+            status: any;
+            resellers: number;
+            omset: number;
+            date: any;
+            isOfficial: any;
+        }[];
+        meta: {
+            total: number;
+            lastPage: number;
+            currentPage: number;
+            perPage: number;
+            prev: number | null;
+            next: number | null;
+        };
+    }>;
     setMerchantStatus(id: string, status: MerchantStatus, reason?: string): Promise<{
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.MerchantStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
         slug: string;
+        domain: string | null;
+        ownerId: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
-        domain: string | null;
         description: string | null;
         tagline: string | null;
         contactEmail: string | null;
@@ -30,54 +45,54 @@ export declare class MerchantsService {
         address: string | null;
         city: string | null;
         province: string | null;
-        status: import("@prisma/client").$Enums.MerchantStatus;
         plan: import("@prisma/client").$Enums.MerchantPlan;
         planExpiredAt: Date | null;
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
-        ownerId: string;
-        createdAt: Date;
-        updatedAt: Date;
-        deletedAt: Date | null;
     }>;
     getMerchantDetail(id: string): Promise<{
         resellersCount: number;
         omset: number;
-        owner: {
-            id: string;
-            name: string;
-            status: import("@prisma/client").$Enums.UserStatus;
-            email: string | null;
-            isVerified: boolean;
-        };
-        members: ({
-            user: {
-                id: string;
-                name: string;
-                role: import("@prisma/client").$Enums.Role;
-                email: string | null;
-            };
-        } & {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            merchantId: string;
-            role: import("@prisma/client").$Enums.MerchantMemberRole;
-            userId: string;
-            permissions: import("@prisma/client/runtime/client").JsonValue | null;
-        })[];
         _count: {
             deposits: number;
             orders: number;
             supportTickets: number;
         };
+        owner: {
+            id: string;
+            email: string | null;
+            name: string;
+            status: import("@prisma/client").$Enums.UserStatus;
+            isVerified: boolean;
+        };
+        members: ({
+            user: {
+                id: string;
+                email: string | null;
+                name: string;
+                role: import("@prisma/client").$Enums.Role;
+            };
+        } & {
+            id: string;
+            role: import("@prisma/client").$Enums.MerchantMemberRole;
+            merchantId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            permissions: import("@prisma/client/runtime/client").JsonValue | null;
+        })[];
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.MerchantStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
         slug: string;
+        domain: string | null;
+        ownerId: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
-        domain: string | null;
         description: string | null;
         tagline: string | null;
         contactEmail: string | null;
@@ -86,24 +101,24 @@ export declare class MerchantsService {
         address: string | null;
         city: string | null;
         province: string | null;
-        status: import("@prisma/client").$Enums.MerchantStatus;
         plan: import("@prisma/client").$Enums.MerchantPlan;
         planExpiredAt: Date | null;
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
-        ownerId: string;
-        createdAt: Date;
-        updatedAt: Date;
-        deletedAt: Date | null;
     }>;
     updateMerchantSettings(id: string, updateData: any): Promise<{
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.MerchantStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
         slug: string;
+        domain: string | null;
+        ownerId: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
-        domain: string | null;
         description: string | null;
         tagline: string | null;
         contactEmail: string | null;
@@ -112,15 +127,10 @@ export declare class MerchantsService {
         address: string | null;
         city: string | null;
         province: string | null;
-        status: import("@prisma/client").$Enums.MerchantStatus;
         plan: import("@prisma/client").$Enums.MerchantPlan;
         planExpiredAt: Date | null;
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
-        ownerId: string;
-        createdAt: Date;
-        updatedAt: Date;
-        deletedAt: Date | null;
     }>;
     resetOwnerPassword(merchantId: string): Promise<{
         success: boolean;

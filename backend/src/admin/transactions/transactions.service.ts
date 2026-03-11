@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException, InternalServerError
 import { PrismaService } from '../../prisma.service';
 import { OrderPaymentStatus, OrderFulfillmentStatus, FraudRiskLevel } from '@prisma/client';
 import { PublicOrdersService } from '../../public/orders/public-orders.service';
+import { paginate } from '../../common/utils/pagination';
 
 @Injectable()
 export class TransactionsService {
@@ -45,33 +46,15 @@ export class TransactionsService {
             };
         }
 
-        const skip = (Number(page) - 1) * Number(limit);
-        const take = Number(limit);
-
-        const [data, total] = await Promise.all([
-            this.prisma.order.findMany({
-                where,
-                orderBy: { createdAt: 'desc' },
-                include: {
-                    user: { select: { id: true, name: true, email: true } },
-                    merchant: { select: { id: true, name: true } },
-                    payment: true,
-                },
-                skip,
-                take
-            }),
-            this.prisma.order.count({ where })
-        ]);
-
-        return {
-            data,
-            meta: {
-                totalItems: total,
-                totalPages: Math.ceil(total / take),
-                currentPage: Number(page),
-                itemsPerPage: take
-            }
-        };
+        return paginate(this.prisma.order, {
+            where,
+            orderBy: { createdAt: 'desc' },
+            include: {
+                user: { select: { id: true, name: true, email: true } },
+                merchant: { select: { id: true, name: true } },
+                payment: true,
+            },
+        }, { page, perPage: limit });
     }
 
     async getTransactionDetail(id: string) {

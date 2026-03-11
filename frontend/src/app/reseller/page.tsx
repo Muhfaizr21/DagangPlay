@@ -868,7 +868,9 @@ export default function ResellerLandingPage() {
       {/* NAV */}
       <nav className="nav">
         <Link href="/" className="nav-brand">
-          <div className="nav-icon">DP</div>
+          <div className="nav-icon" style={{ background: 'white' }}>
+            <img src="/dagang.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '1px' }} />
+          </div>
           <span className="nav-name">DagangPlay</span>
         </Link>
         <div className="nav-links">
@@ -1339,7 +1341,9 @@ export default function ResellerLandingPage() {
       {/* FOOTER */}
       <footer className="footer">
         <div style={{ display: 'flex', alignItems: 'center', gap: '.625rem' }}>
-          <div className="nav-icon">DP</div>
+          <div className="nav-icon" style={{ background: 'white' }}>
+            <img src="/dagang.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '1px' }} />
+          </div>
           <span style={{ fontWeight: 700, fontSize: '.85rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '-.01em' }}>DagangPlay Partner Network</span>
         </div>
         <div className="footer-copy">© {new Date().getFullYear()} DagangPlay. All rights reserved.</div>

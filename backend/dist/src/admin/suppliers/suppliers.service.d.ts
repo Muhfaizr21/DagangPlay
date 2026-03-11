@@ -9,11 +9,11 @@ export declare class SuppliersService {
         status: import("@prisma/client").$Enums.SupplierStatus;
         createdAt: Date;
         updatedAt: Date;
-        balance: number;
         code: import("@prisma/client").$Enums.SupplierCode;
         apiUrl: string;
         apiKey: string;
         apiSecret: string;
+        balance: number;
         lastSyncAt: Date | null;
     }[]>;
     getSupplierById(id: string): Promise<{
@@ -22,11 +22,11 @@ export declare class SuppliersService {
         status: import("@prisma/client").$Enums.SupplierStatus;
         createdAt: Date;
         updatedAt: Date;
-        balance: number;
         code: import("@prisma/client").$Enums.SupplierCode;
         apiUrl: string;
         apiKey: string;
         apiSecret: string;
+        balance: number;
         lastSyncAt: Date | null;
     }>;
     updateSupplier(id: string, data: {
@@ -41,11 +41,11 @@ export declare class SuppliersService {
         status: import("@prisma/client").$Enums.SupplierStatus;
         createdAt: Date;
         updatedAt: Date;
-        balance: number;
         code: import("@prisma/client").$Enums.SupplierCode;
         apiUrl: string;
         apiKey: string;
         apiSecret: string;
+        balance: number;
         lastSyncAt: Date | null;
     }>;
     testConnection(id: string): Promise<{
@@ -55,10 +55,10 @@ export declare class SuppliersService {
     }>;
     topupBalance(id: string, amount: number, note?: string): Promise<any>;
     getSupplierLogs(id: string, limit?: number): Promise<{
-        id: string;
-        createdAt: Date;
-        supplierId: string;
         method: string;
+        id: string;
+        supplierId: string;
+        createdAt: Date;
         endpoint: string;
         requestBody: import("@prisma/client/runtime/client").JsonValue | null;
         responseBody: import("@prisma/client/runtime/client").JsonValue | null;
@@ -69,8 +69,8 @@ export declare class SuppliersService {
     }[]>;
     getSupplierBalanceHistories(id: string, limit?: number): Promise<{
         id: string;
-        createdAt: Date;
         supplierId: string;
+        createdAt: Date;
         note: string | null;
         type: string;
         amount: number;

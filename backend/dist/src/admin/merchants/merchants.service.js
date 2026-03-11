@@ -1,24 +1,59 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MerchantsService = void 0;
+const bcrypt = __importStar(require("bcrypt"));
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma.service");
 const client_1 = require("@prisma/client");
+const pagination_1 = require("../../common/utils/pagination");
 let MerchantsService = class MerchantsService {
     prisma;
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async getAllMerchants(search, statusFilter) {
+    async getAllMerchants(search, statusFilter, page = 1, perPage = 10) {
         const where = {};
         if (search) {
             where.OR = [
@@ -29,40 +64,42 @@ let MerchantsService = class MerchantsService {
         if (statusFilter && statusFilter !== 'ALL') {
             where.status = statusFilter;
         }
-        const merchants = await this.prisma.merchant.findMany({
+        const paginated = await (0, pagination_1.paginate)(this.prisma.merchant, {
             where,
             orderBy: { createdAt: 'desc' },
-        });
-        const mappedMerchants = await Promise.all(merchants.map(async (m) => {
-            const resellersCount = await this.prisma.user.count({
-                where: {
-                    merchantId: m.id,
-                    role: 'CUSTOMER',
-                    status: 'ACTIVE',
-                },
-            });
-            const omsetAgg = await this.prisma.order.aggregate({
-                where: {
-                    merchantId: m.id,
-                    paymentStatus: 'PAID',
-                },
-                _sum: {
-                    totalPrice: true,
-                },
-            });
+        }, { page, perPage });
+        const merchantIds = paginated.data.map((m) => m.id);
+        const [resellerCounts, omsetAggs] = await Promise.all([
+            this.prisma.user.groupBy({
+                by: ['merchantId'],
+                where: { merchantId: { in: merchantIds }, role: 'CUSTOMER', status: 'ACTIVE' },
+                _count: { _all: true }
+            }),
+            this.prisma.order.groupBy({
+                by: ['merchantId'],
+                where: { merchantId: { in: merchantIds }, paymentStatus: 'PAID' },
+                _sum: { totalPrice: true }
+            })
+        ]);
+        const mappedData = paginated.data.map((m) => {
+            const resellers = resellerCounts.find(rc => rc.merchantId === m.id)?._count._all || 0;
+            const omset = Number(omsetAggs.find(oa => oa.merchantId === m.id)?._sum.totalPrice || 0);
             return {
                 id: m.id,
                 name: m.name,
                 domain: m.domain || `${m.slug}.dagangplay.com`,
                 plan: m.plan,
                 status: m.status,
-                resellers: resellersCount,
-                omset: Number(omsetAgg._sum.totalPrice || 0),
+                resellers,
+                omset,
                 date: m.createdAt.toISOString().split('T')[0],
                 isOfficial: m.isOfficial,
             };
-        }));
-        return mappedMerchants;
+        });
+        return {
+            ...paginated,
+            data: mappedData
+        };
     }
     async setMerchantStatus(id, status, reason) {
         const merchant = await this.prisma.merchant.findUnique({ where: { id } });
@@ -153,14 +190,16 @@ let MerchantsService = class MerchantsService {
         const merchant = await this.prisma.merchant.findUnique({ where: { id: merchantId }, include: { owner: true } });
         if (!merchant || !merchant.owner)
             throw new common_1.NotFoundException('Merchant/Owner tidak ditemukan');
+        const newPass = 'DagangPlay123!';
+        const hashedPassword = await bcrypt.hash(newPass, 10);
         await this.prisma.user.update({
             where: { id: merchant.owner.id },
-            data: { password: 'NEW_HASHED_PASSWORD_DAGANGPLAY123!' }
+            data: { password: hashedPassword }
         });
         await this.prisma.auditLog.create({
             data: { action: 'RESET_OWNER_PASSWORD', entity: 'Merchant', entityId: merchantId, newData: {}, oldData: {} }
         });
-        return { success: true, message: 'Password Owner direset menjadi DagangPlay123!' };
+        return { success: true, message: `Password Owner direset menjadi ${newPass}` };
     }
 };
 exports.MerchantsService = MerchantsService;

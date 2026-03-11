@@ -18,12 +18,18 @@ export default function MerchantStorefront({ config }: { config: any }) {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
     const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-    const { data: contentData } = useSWR(`${baseUrl}/public/products/content`, fetcher);
-    const { data: categories } = useSWR(`${baseUrl}/public/products/categories`, fetcher);
-    const { data: catalog } = useSWR(`${baseUrl}/public/products/full-catalog`, fetcher);
+    const { data: contentData } = useSWR(`${baseUrl}/public/products/content?merchant=${config?.slug}`, fetcher);
+    const { data: categories } = useSWR(`${baseUrl}/public/products/categories?merchant=${config?.slug}`, fetcher);
+    const { data: catalog } = useSWR(`${baseUrl}/public/products/full-catalog?merchant=${config?.slug}`, fetcher);
 
-    const banners = contentData?.banners || [];
+    const allBanners = contentData?.banners || [];
+    const heroBanners = allBanners.filter((b: any) => b.position === 'HERO' || !b.position);
+    const footerBanners = allBanners.filter((b: any) => b.position === 'FOOTER');
     const announcements = contentData?.announcements || [];
+    const popupPromos = contentData?.popupPromos || [];
+
+    const [showPopup, setShowPopup] = useState(true);
+    const activePopup = popupPromos.length > 0 ? popupPromos[0] : null;
 
     const allProducts = catalog?.flatMap((cat: any) =>
         cat.products.map((p: any) => ({
@@ -104,7 +110,7 @@ export default function MerchantStorefront({ config }: { config: any }) {
             <main className="container mx-auto px-6 py-10 lg:py-16">
                 <div className="relative mb-20">
                     <div className="rounded-[3.5rem] overflow-hidden shadow-2xl shadow-indigo-100 border-8 border-white bg-white">
-                        <BannerSlider banners={banners} theme="light" />
+                        <BannerSlider banners={heroBanners} theme="light" />
                     </div>
                     {/* Floating Info Stats */}
                     <div className="hidden lg:flex absolute -bottom-8 right-12 bg-white rounded-3xl p-6 shadow-2xl shadow-indigo-100 border border-slate-50 gap-10">
@@ -241,6 +247,29 @@ export default function MerchantStorefront({ config }: { config: any }) {
                         <p className="text-slate-500 font-medium">Coba kata kunci lain atau pilih kategori yang berbeda.</p>
                     </div>
                 )}
+                {/* Footer Banners / Mini Promos */}
+                {footerBanners.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-24 mb-16">
+                        {footerBanners.map((banner: any) => (
+                            <a
+                                key={banner.id}
+                                href={banner.linkUrl || '#'}
+                                className="group relative h-48 rounded-[2rem] overflow-hidden shadow-xl shadow-indigo-100/50 border-4 border-white transition-all hover:scale-[1.02]"
+                            >
+                                <img
+                                    src={banner.image}
+                                    alt={banner.title}
+                                    className="w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
+                                    <h4 className="text-white font-black uppercase italic tracking-tighter text-lg leading-tight group-hover:text-indigo-300 transition-colors">
+                                        {banner.title}
+                                    </h4>
+                                </div>
+                            </a>
+                        ))}
+                    </div>
+                )}
             </main>
 
             {/* Why Choose Us - Modern Strip */}
@@ -334,6 +363,47 @@ export default function MerchantStorefront({ config }: { config: any }) {
                 </span>
             </a>
 
+            {/* Popup Promo Modal */}
+            {activePopup && showPopup && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowPopup(false)}></div>
+                    <div className="relative bg-white rounded-[2.5rem] shadow-2xl max-w-lg w-full overflow-hidden animate-in zoom-in duration-300">
+                        <button
+                            onClick={() => setShowPopup(false)}
+                            className="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white z-10 transition-colors"
+                        >
+                            &times;
+                        </button>
+
+                        <div className="relative aspect-video">
+                            <img
+                                src={activePopup.image || 'https://via.placeholder.com/800x450?text=Promo'}
+                                alt={activePopup.title}
+                                className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
+                            <div className="absolute bottom-6 left-8 right-8">
+                                <span className="bg-indigo-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-2 inline-block">Special Offer</span>
+                                <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">{activePopup.title || "Special Promo"}</h3>
+                            </div>
+                        </div>
+
+                        <div className="p-8 text-center bg-white">
+                            <p className="text-slate-500 font-medium mb-8 leading-relaxed">
+                                {activePopup.content || "Dapatkan promo menarik hari ini hanya di toko kami. Klik tombol di bawah untuk melihat detail selengkapnya."}
+                            </p>
+                            <a
+                                href={activePopup.linkUrl || '#'}
+                                onClick={() => setShowPopup(false)}
+                                className="inline-block w-full py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-indigo-100 hover:bg-slate-900 transition-all active:scale-95"
+                            >
+                                Ambil Promo Sekarang
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <style jsx global>{`
                 @font-face {
                     font-family: 'Inter';
@@ -348,6 +418,10 @@ export default function MerchantStorefront({ config }: { config: any }) {
                 .scrollbar-hide {
                     -ms-overflow-style: none;
                     scrollbar-width: none;
+                }
+                @keyframes marquee {
+                    0% { transform: translateX(0); }
+                    100% { transform: translateX(-50%); }
                 }
             `}</style>
         </div>

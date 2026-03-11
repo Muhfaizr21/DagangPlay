@@ -15,8 +15,8 @@ export declare class SecurityService {
         } | null;
     } & {
         id: string;
-        createdAt: Date;
         metadata: import("@prisma/client/runtime/client").JsonValue | null;
+        createdAt: Date;
         userId: string;
         reason: string;
         orderId: string | null;
@@ -27,8 +27,8 @@ export declare class SecurityService {
     })[]>;
     resolveFraud(id: string, resolvedBy: string): Promise<{
         id: string;
-        createdAt: Date;
         metadata: import("@prisma/client/runtime/client").JsonValue | null;
+        createdAt: Date;
         userId: string;
         reason: string;
         orderId: string | null;
@@ -69,12 +69,12 @@ export declare class SecurityService {
     } & {
         id: string;
         createdAt: Date;
-        email: string | null;
-        failReason: string | null;
-        userId: string | null;
         ipAddress: string;
         userAgent: string | null;
+        userId: string | null;
+        failReason: string | null;
         isSuccess: boolean;
+        email: string | null;
     })[]>;
     getAuditLogs(startDate?: string, action?: string): Promise<({
         user: {
@@ -85,8 +85,6 @@ export declare class SecurityService {
     } & {
         id: string;
         createdAt: Date;
-        merchantId: string | null;
-        userId: string | null;
         action: string;
         entity: string;
         entityId: string | null;
@@ -94,5 +92,7 @@ export declare class SecurityService {
         newData: import("@prisma/client/runtime/client").JsonValue | null;
         ipAddress: string | null;
         userAgent: string | null;
+        userId: string | null;
+        merchantId: string | null;
     })[]>;
 }

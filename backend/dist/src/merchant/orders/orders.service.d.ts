@@ -165,7 +165,7 @@ export declare class OrdersService {
             completedAt: Date | null;
             failedAt: Date | null;
             merchantModalPrice: number | null;
-        };
+        } | null;
     }>;
     refundOrder(merchantId: string, orderId: string, reason: string): Promise<any>;
 }

@@ -197,7 +197,11 @@ let FinanceService = class FinanceService {
             _sum: { totalPrice: true, basePrice: true }
         });
         const revenueFromMargin = Number(orderSalesAgg._sum.totalPrice || 0) - Number(orderSalesAgg._sum.basePrice || 0);
-        const saasRevenue = 0;
+        const saasInvoicesAgg = await this.prisma.invoice.aggregate({
+            where: { status: 'PAID' },
+            _sum: { totalAmount: true }
+        });
+        const saasRevenue = Number(saasInvoicesAgg._sum.totalAmount || 0);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const todaySalesAgg = await this.prisma.order.aggregate({

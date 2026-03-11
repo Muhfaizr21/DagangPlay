@@ -166,7 +166,9 @@ let OrdersService = class OrdersService {
             throw new common_1.NotFoundException('Order not found');
         if (order.fulfillmentStatus === 'SUCCESS')
             throw new common_1.BadRequestException('Order already SUCCESS');
-        const updated = await this.prisma.order.update({
+        if (order.paymentStatus !== 'PAID')
+            throw new common_1.BadRequestException('Order belum terbayar, tidak bisa diretry');
+        await this.prisma.order.update({
             where: { id: orderId },
             data: { fulfillmentStatus: 'PROCESSING' }
         });
@@ -178,7 +180,14 @@ let OrdersService = class OrdersService {
                 changedBy: 'MERCHANT'
             }
         });
-        return { message: 'Order added to retry queue', order: updated };
+        try {
+            await this.digiflazz.placeOrder(orderId);
+        }
+        catch (err) {
+            console.error('[RetryOrder] Retry fulfillment failed:', err);
+        }
+        const updated = await this.prisma.order.findUnique({ where: { id: orderId } });
+        return { message: 'Order retry triggered via Digiflazz', order: updated };
     }
     async refundOrder(merchantId, orderId, reason) {
         const order = await this.prisma.order.findFirst({
@@ -202,7 +211,7 @@ let OrdersService = class OrdersService {
                     changedBy: 'MERCHANT'
                 }
             });
-            if (order.paymentStatus === 'PAID') {
+            if (order.paymentStatus === 'PAID' && order.paymentMethod === 'BALANCE') {
                 const buyerId = order.userId;
                 if (buyerId) {
                     await tx.user.update({

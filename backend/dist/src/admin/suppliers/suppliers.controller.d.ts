@@ -9,11 +9,11 @@ export declare class SuppliersController {
         status: import("@prisma/client").$Enums.SupplierStatus;
         createdAt: Date;
         updatedAt: Date;
-        balance: number;
         code: import("@prisma/client").$Enums.SupplierCode;
         apiUrl: string;
         apiKey: string;
         apiSecret: string;
+        balance: number;
         lastSyncAt: Date | null;
     }[]>;
     getSupplierById(id: string): Promise<{
@@ -22,11 +22,11 @@ export declare class SuppliersController {
         status: import("@prisma/client").$Enums.SupplierStatus;
         createdAt: Date;
         updatedAt: Date;
-        balance: number;
         code: import("@prisma/client").$Enums.SupplierCode;
         apiUrl: string;
         apiKey: string;
         apiSecret: string;
+        balance: number;
         lastSyncAt: Date | null;
     }>;
     updateSupplier(id: string, data: {
@@ -41,11 +41,11 @@ export declare class SuppliersController {
         status: import("@prisma/client").$Enums.SupplierStatus;
         createdAt: Date;
         updatedAt: Date;
-        balance: number;
         code: import("@prisma/client").$Enums.SupplierCode;
         apiUrl: string;
         apiKey: string;
         apiSecret: string;
+        balance: number;
         lastSyncAt: Date | null;
     }>;
     testConnection(id: string): Promise<{
@@ -58,10 +58,10 @@ export declare class SuppliersController {
         note?: string;
     }): Promise<any>;
     getLogs(id: string): Promise<{
-        id: string;
-        createdAt: Date;
-        supplierId: string;
         method: string;
+        id: string;
+        supplierId: string;
+        createdAt: Date;
         endpoint: string;
         requestBody: import("@prisma/client/runtime/client").JsonValue | null;
         responseBody: import("@prisma/client/runtime/client").JsonValue | null;
@@ -72,8 +72,8 @@ export declare class SuppliersController {
     }[]>;
     getBalanceHistory(id: string): Promise<{
         id: string;
-        createdAt: Date;
         supplierId: string;
+        createdAt: Date;
         note: string | null;
         type: string;
         amount: number;

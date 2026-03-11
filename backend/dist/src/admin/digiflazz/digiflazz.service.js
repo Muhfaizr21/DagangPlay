@@ -458,7 +458,7 @@ let DigiflazzService = class DigiflazzService {
                 });
                 await tx.commission.update({
                     where: { id: comm.id },
-                    data: { status: 'REFUNDED' }
+                    data: { status: 'CANCELLED' }
                 });
             }
         });
@@ -562,7 +562,10 @@ let DigiflazzService = class DigiflazzService {
             return;
         }
         await this.prisma.order.update({
-            where: { id: order.id },
+            where: {
+                id: order.id,
+                fulfillmentStatus: { notIn: ['SUCCESS', 'FAILED', 'REFUNDED'] }
+            },
             data: {
                 fulfillmentStatus: newStatus,
                 serialNumber: data.sn || order.serialNumber,

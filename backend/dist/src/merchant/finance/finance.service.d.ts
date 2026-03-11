@@ -7,16 +7,17 @@ export declare class FinanceService {
     getFinanceOverview(merchantId: string, ownerId: string): Promise<{
         balance: number;
         revenue: number;
+        profit: number;
         deposits: {
+            method: import("@prisma/client").$Enums.PaymentMethod;
             id: string;
             status: import("@prisma/client").$Enums.DepositStatus;
             createdAt: Date;
             updatedAt: Date;
-            merchantId: string;
-            note: string | null;
-            expiredAt: Date | null;
             userId: string;
-            method: import("@prisma/client").$Enums.PaymentMethod;
+            merchantId: string;
+            expiredAt: Date | null;
+            note: string | null;
             amount: number;
             tripayReference: string | null;
             tripayMerchantRef: string | null;
@@ -34,9 +35,9 @@ export declare class FinanceService {
             status: import("@prisma/client").$Enums.WithdrawalStatus;
             createdAt: Date;
             updatedAt: Date;
+            userId: string;
             note: string | null;
             processedAt: Date | null;
-            userId: string;
             amount: number;
             receiptImage: string | null;
             rejectedAt: Date | null;
@@ -48,35 +49,18 @@ export declare class FinanceService {
             processedById: string | null;
         }[];
     }>;
-    requestWithdrawal(ownerId: string, amount: number, bankName: string, bankAccountName: string, bankAccountNumber: string, isInstant?: boolean): Promise<{
-        id: string;
-        status: import("@prisma/client").$Enums.WithdrawalStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        note: string | null;
-        processedAt: Date | null;
-        userId: string;
-        amount: number;
-        receiptImage: string | null;
-        rejectedAt: Date | null;
-        fee: number;
-        netAmount: number;
-        bankName: string;
-        bankAccountNumber: string;
-        bankAccountName: string;
-        processedById: string | null;
-    }>;
+    requestWithdrawal(ownerId: string, amount: number, bankName: string, bankAccountName: string, bankAccountNumber: string, isInstant?: boolean): Promise<any>;
     requestDeposit(merchantId: string, ownerId: string, amount: number, method: string): Promise<{
         checkoutUrl: any;
+        method: import("@prisma/client").$Enums.PaymentMethod;
         id: string;
         status: import("@prisma/client").$Enums.DepositStatus;
         createdAt: Date;
         updatedAt: Date;
-        merchantId: string;
-        note: string | null;
-        expiredAt: Date | null;
         userId: string;
-        method: import("@prisma/client").$Enums.PaymentMethod;
+        merchantId: string;
+        expiredAt: Date | null;
+        note: string | null;
         amount: number;
         tripayReference: string | null;
         tripayMerchantRef: string | null;
@@ -89,4 +73,6 @@ export declare class FinanceService {
         confirmedAt: Date | null;
         rejectedAt: Date | null;
     }>;
+    getDeposits(ownerId: string, page?: number, perPage?: number): Promise<import("../../common/utils/pagination").PaginatedResult<unknown>>;
+    getWithdrawals(ownerId: string, page?: number, perPage?: number): Promise<import("../../common/utils/pagination").PaginatedResult<unknown>>;
 }

@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MerchantLayout from '../../../components/merchant/MerchantLayout';
 import useSWR from 'swr';
 import axios from 'axios';
-import { CreditCard, Wallet, ArrowDownToLine, ArrowUpToLine, Gift, RefreshCcw, Lock, Zap, Clock, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { CreditCard, Wallet, ArrowDownToLine, ArrowUpToLine, Gift, RefreshCcw, Lock, Zap, Clock, HelpCircle, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react';
 
 const fetcher = (url: string) => {
     const token = localStorage.getItem('admin_token');
@@ -21,7 +21,7 @@ export default function MerchantFinancePage() {
 
     const [merchantPlan, setMerchantPlan] = useState('PRO');
 
-    React.useEffect(() => {
+    useEffect(() => {
         const userData = localStorage.getItem('admin_user');
         if (userData) {
             const parsed = JSON.parse(userData);
@@ -30,7 +30,37 @@ export default function MerchantFinancePage() {
     }, []);
 
     const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
-    const [depositForm, setDepositForm] = useState({ amount: '', method: 'BANK_TRANSFER', provider: 'MANUAL' });
+    const [depositAmount, setDepositAmount] = useState('');
+    const [selectedChannel, setSelectedChannel] = useState<any>(null);
+    const [paymentChannels, setPaymentChannels] = useState<any[]>([]);
+    const [channelsLoading, setChannelsLoading] = useState(false);
+    const [depositLoading, setDepositLoading] = useState(false);
+
+    const openDepositModal = async () => {
+        setIsDepositModalOpen(true);
+        setChannelsLoading(true);
+        try {
+            const res = await axios.get(`${baseUrl}/public/orders/payment-channels`);
+            const channels = (res.data?.data || []).filter((c: any) => c.active);
+            setPaymentChannels(channels);
+            if (channels.length > 0 && !selectedChannel) setSelectedChannel(channels[0]);
+        } catch {
+            const fallback = [
+                { code: 'QRISC', name: 'QRIS (Semua E-Wallet)', group: 'QRIS', fee_flat: 0, fee_percent: 0.7, icon_url: null },
+                { code: 'BRIVA', name: 'BRI Virtual Account', group: 'Virtual Account', fee_flat: 4000, fee_percent: 0, icon_url: null },
+                { code: 'BCAVA', name: 'BCA Virtual Account', group: 'Virtual Account', fee_flat: 4500, fee_percent: 0, icon_url: null },
+                { code: 'BNIVA', name: 'BNI Virtual Account', group: 'Virtual Account', fee_flat: 4000, fee_percent: 0, icon_url: null },
+                { code: 'MANDIRIVA', name: 'Mandiri Virtual Account', group: 'Virtual Account', fee_flat: 4000, fee_percent: 0, icon_url: null },
+                { code: 'DANA', name: 'DANA', group: 'E-Wallet', fee_flat: 0, fee_percent: 0.7, icon_url: null },
+                { code: 'OVO', name: 'OVO', group: 'E-Wallet', fee_flat: 0, fee_percent: 0.7, icon_url: null },
+                { code: 'SHOPEEPAY', name: 'ShopeePay', group: 'E-Wallet', fee_flat: 0, fee_percent: 0.7, icon_url: null },
+            ];
+            setPaymentChannels(fallback);
+            if (!selectedChannel) setSelectedChannel(fallback[0]);
+        } finally {
+            setChannelsLoading(false);
+        }
+    };
 
     const handleWithdraw = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -55,24 +85,31 @@ export default function MerchantFinancePage() {
 
     const handleDeposit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!selectedChannel) return alert('Pilih metode pembayaran terlebih dahulu');
+        if (!depositAmount || Number(depositAmount) < 10000) return alert('Nominal minimal Rp 10.000');
+        setDepositLoading(true);
         try {
             const token = localStorage.getItem('admin_token');
             const res = await axios.post(`${baseUrl}/merchant/finance/deposit`, {
-                ...depositForm, amount: Number(depositForm.amount)
+                amount: Number(depositAmount),
+                method: selectedChannel.code
             }, { headers: { Authorization: `Bearer ${token}` } });
+
+            setIsDepositModalOpen(false);
+            setDepositAmount('');
 
             if (res.data.checkoutUrl) {
                 window.open(res.data.checkoutUrl, '_blank');
-                alert('Silakan selesaikan pembayaran Isi Saldo Anda di halaman Tripay yang terbuka.');
+                alert('Tagihan berhasil dibuat! Silakan selesaikan pembayaran di halaman Tripay yang terbuka.');
             } else {
                 alert('Request topup deposit berhasil dibuat, silakan lakukan pembayaran!');
             }
 
-            setIsDepositModalOpen(false);
-            setDepositForm({ amount: '', method: 'BANK_TRANSFER', provider: 'MANUAL' });
             mutateFinance();
         } catch (err: any) {
             alert(err.response?.data?.message || 'Gagal membuat deposit request');
+        } finally {
+            setDepositLoading(false);
         }
     };
 
@@ -84,7 +121,7 @@ export default function MerchantFinancePage() {
                     <p className="text-slate-500 text-sm mt-1">Audit saldo, tarik profit, dan monitor kesehatan finansial toko Anda.</p>
                 </div>
                 <div className="flex gap-3 w-full md:w-auto">
-                    <button onClick={() => setIsDepositModalOpen(true)} className="flex-1 md:flex-none px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold text-[13px] rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-50 transition-all shadow-sm">
+                    <button onClick={openDepositModal} className="flex-1 md:flex-none px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold text-[13px] rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-50 transition-all shadow-sm">
                         <ArrowDownToLine className="w-4 h-4 text-emerald-600" /> Top Up Saldo
                     </button>
                     <button onClick={() => setIsWithdrawModalOpen(true)} className="flex-1 md:flex-none px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[13px] rounded-2xl shadow-[0_8px_20px_-4px_rgba(99,102,241,0.5)] transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2">
@@ -376,33 +413,161 @@ export default function MerchantFinancePage() {
             )}
 
             {isDepositModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden relative">
-                        <div className="p-5 border-b border-slate-100 bg-emerald-50/50">
-                            <h3 className="text-lg font-bold text-emerald-700 flex items-center gap-2">
-                                <ArrowDownToLine className="w-5 h-5 text-emerald-600" /> Isi Saldo Merchant
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden relative max-h-[90vh] flex flex-col">
+                        {/* Header */}
+                        <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-teal-50 flex justify-between items-center flex-shrink-0">
+                            <h3 className="text-lg font-bold text-emerald-800 flex items-center gap-2">
+                                <ArrowDownToLine className="w-5 h-5 text-emerald-600" /> Isi Saldo via Tripay
                             </h3>
+                            <button onClick={() => setIsDepositModalOpen(false)} className="text-slate-400 hover:text-slate-600 text-2xl font-light w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors">&times;</button>
                         </div>
-                        <form onSubmit={handleDeposit} className="p-6">
-                            <div className="space-y-4 mb-6">
+
+                        <div className="overflow-y-auto flex-1">
+                            <form onSubmit={handleDeposit} className="p-6 space-y-5">
+                                {/* Amount Input */}
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 mb-1">Nominal Topup (Rp)</label>
-                                    <input type="number" required min="10000" placeholder="100000" value={depositForm.amount} onChange={e => setDepositForm({ ...depositForm, amount: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:border-emerald-500" />
+                                    <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-widest">Nominal Top Up (Rp)</label>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-lg">Rp</span>
+                                        <input
+                                            type="number"
+                                            required
+                                            min="10000"
+                                            placeholder="100.000"
+                                            value={depositAmount}
+                                            onChange={e => setDepositAmount(e.target.value)}
+                                            className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-slate-200 outline-none focus:border-emerald-500 font-bold text-xl transition-colors bg-slate-50 focus:bg-white"
+                                        />
+                                    </div>
+                                    {/* Quick amount pills */}
+                                    <div className="flex gap-2 mt-2 flex-wrap">
+                                        {[50000, 100000, 200000, 500000].map(amt => (
+                                            <button
+                                                key={amt}
+                                                type="button"
+                                                onClick={() => setDepositAmount(String(amt))}
+                                                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${depositAmount === String(amt) ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                                            >
+                                                {amt.toLocaleString('id-ID')}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
+
+                                {/* Payment Method Selector */}
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 mb-1">Metode Pembayaran</label>
-                                    <select value={depositForm.method} onChange={e => setDepositForm({ ...depositForm, method: e.target.value })} className="w-full px-4 py-3 bg-white rounded-xl border border-slate-200 outline-none focus:border-emerald-500">
-                                        <option value="BANK_TRANSFER">Transfer Bank</option>
-                                        <option value="EWALLET">E-Wallet</option>
-                                        <option value="QRIS">QRIS</option>
-                                    </select>
+                                    <label className="block text-xs font-bold text-slate-500 mb-3 uppercase tracking-widest">Metode Pembayaran</label>
+                                    {channelsLoading ? (
+                                        <div className="flex items-center justify-center py-8 text-slate-400">
+                                            <div className="w-6 h-6 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mr-2"></div>
+                                            <span className="text-sm font-medium">Memuat metode pembayaran...</span>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                                            {Object.entries(
+                                                paymentChannels.reduce((groups: any, ch: any) => {
+                                                    const g = ch.group || 'Lainnya';
+                                                    if (!groups[g]) groups[g] = [];
+                                                    groups[g].push(ch);
+                                                    return groups;
+                                                }, {})
+                                            ).map(([group, channels]: any) => (
+                                                <div key={group}>
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 mt-2">{group}</p>
+                                                    <div className="space-y-1.5">
+                                                        {channels.map((ch: any) => {
+                                                            const feeInfo = ch.fee_flat > 0
+                                                                ? `+Rp${ch.fee_flat.toLocaleString('id-ID')}`
+                                                                : ch.fee_percent > 0
+                                                                    ? `+${ch.fee_percent}%`
+                                                                    : 'Gratis';
+                                                            return (
+                                                                <button
+                                                                    key={ch.code}
+                                                                    type="button"
+                                                                    onClick={() => setSelectedChannel(ch)}
+                                                                    className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all text-left ${selectedChannel?.code === ch.code
+                                                                        ? 'border-emerald-500 bg-emerald-50'
+                                                                        : 'border-slate-100 hover:border-emerald-200 hover:bg-slate-50'
+                                                                        }`}
+                                                                >
+                                                                    <div className="flex items-center gap-3">
+                                                                        {ch.icon_url ? (
+                                                                            <img src={ch.icon_url} alt={ch.name} className="w-8 h-8 object-contain rounded-lg" />
+                                                                        ) : (
+                                                                            <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+                                                                                <CreditCard className="w-4 h-4 text-slate-400" />
+                                                                            </div>
+                                                                        )}
+                                                                        <div>
+                                                                            <p className="text-sm font-bold text-slate-800 leading-none">{ch.name}</p>
+                                                                            <p className="text-[10px] text-slate-400 mt-0.5 font-medium">{ch.code}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${feeInfo === 'Gratis' ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'}`}>
+                                                                            {feeInfo}
+                                                                        </span>
+                                                                        {selectedChannel?.code === ch.code && (
+                                                                            <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                                                                        )}
+                                                                    </div>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                            <div className="flex gap-3">
-                                <button type="button" onClick={() => setIsDepositModalOpen(false)} className="flex-1 py-3 text-slate-600 font-bold bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors">Batal</button>
-                                <button type="submit" className="flex-1 py-3 text-white font-bold bg-emerald-500 rounded-xl hover:bg-emerald-600 transition-colors">Buat Tagihan</button>
-                            </div>
-                        </form>
+
+                                {/* Summary */}
+                                {selectedChannel && depositAmount && Number(depositAmount) >= 10000 && (
+                                    <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 text-sm">
+                                        <div className="flex justify-between mb-1">
+                                            <span className="text-slate-500">Nominal Top Up</span>
+                                            <span className="font-bold text-slate-800">Rp {Number(depositAmount).toLocaleString('id-ID')}</span>
+                                        </div>
+                                        <div className="flex justify-between mb-2">
+                                            <span className="text-slate-500">Biaya Layanan ({selectedChannel.name})</span>
+                                            <span className="font-bold text-orange-600">
+                                                {selectedChannel.fee_flat > 0
+                                                    ? `Rp ${selectedChannel.fee_flat.toLocaleString('id-ID')}`
+                                                    : selectedChannel.fee_percent > 0
+                                                        ? `Rp ${Math.ceil(Number(depositAmount) * selectedChannel.fee_percent / 100).toLocaleString('id-ID')}`
+                                                        : 'Gratis'}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between pt-2 border-t border-slate-200">
+                                            <span className="font-bold text-slate-700">Total Bayar</span>
+                                            <span className="font-black text-emerald-700 text-base">
+                                                Rp {(Number(depositAmount) + (selectedChannel.fee_flat || Math.ceil(Number(depositAmount) * (selectedChannel.fee_percent || 0) / 100))).toLocaleString('id-ID')}
+                                            </span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-400 mt-2 text-center">*Saldo yang dikreditkan: Rp {Number(depositAmount).toLocaleString('id-ID')}</p>
+                                    </div>
+                                )}
+
+                                <div className="flex gap-3 pt-2">
+                                    <button type="button" onClick={() => setIsDepositModalOpen(false)} className="flex-1 py-3.5 text-slate-600 font-bold bg-slate-100 rounded-2xl hover:bg-slate-200 transition-colors">
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={depositLoading || !selectedChannel || !depositAmount || Number(depositAmount) < 10000}
+                                        className="flex-1 py-3.5 text-white font-bold bg-emerald-500 rounded-2xl hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-emerald-100"
+                                    >
+                                        {depositLoading ? (
+                                            <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Memproses...</>
+                                        ) : (
+                                            <><ArrowDownToLine className="w-4 h-4" /> Buat Tagihan Sekarang</>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             )}

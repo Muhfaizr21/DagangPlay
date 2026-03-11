@@ -28,15 +28,15 @@ export declare class FinanceController {
             name: string;
         } | null;
     } & {
+        method: import("@prisma/client").$Enums.PaymentMethod;
         id: string;
         status: import("@prisma/client").$Enums.DepositStatus;
         createdAt: Date;
         updatedAt: Date;
-        merchantId: string;
-        note: string | null;
-        expiredAt: Date | null;
         userId: string;
-        method: import("@prisma/client").$Enums.PaymentMethod;
+        merchantId: string;
+        expiredAt: Date | null;
+        note: string | null;
         amount: number;
         tripayReference: string | null;
         tripayMerchantRef: string | null;
@@ -67,9 +67,9 @@ export declare class FinanceController {
         status: import("@prisma/client").$Enums.WithdrawalStatus;
         createdAt: Date;
         updatedAt: Date;
+        userId: string;
         note: string | null;
         processedAt: Date | null;
-        userId: string;
         amount: number;
         receiptImage: string | null;
         rejectedAt: Date | null;

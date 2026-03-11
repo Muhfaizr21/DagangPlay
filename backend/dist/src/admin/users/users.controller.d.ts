@@ -12,10 +12,10 @@ export declare class UsersController {
             _count: {
                 ordersAsCustomer: number;
             };
+            balance: number;
             email: string | null;
             role: import("@prisma/client").$Enums.Role;
             isVerified: boolean;
-            balance: number;
             bonusBalance: number;
         }[];
         meta: {
@@ -30,12 +30,15 @@ export declare class UsersController {
             merchant: {
                 id: string;
                 name: string;
+                status: import("@prisma/client").$Enums.MerchantStatus;
+                createdAt: Date;
+                updatedAt: Date;
                 slug: string;
+                description: string | null;
                 logo: string | null;
                 favicon: string | null;
                 bannerImage: string | null;
                 domain: string | null;
-                description: string | null;
                 tagline: string | null;
                 contactEmail: string | null;
                 contactPhone: string | null;
@@ -43,33 +46,30 @@ export declare class UsersController {
                 address: string | null;
                 city: string | null;
                 province: string | null;
-                status: import("@prisma/client").$Enums.MerchantStatus;
                 plan: import("@prisma/client").$Enums.MerchantPlan;
                 planExpiredAt: Date | null;
                 isOfficial: boolean;
                 settings: import("@prisma/client/runtime/client").JsonValue | null;
                 ownerId: string;
-                createdAt: Date;
-                updatedAt: Date;
                 deletedAt: Date | null;
             };
         } & {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            userId: string;
             merchantId: string;
             role: import("@prisma/client").$Enums.MerchantMemberRole;
-            userId: string;
             permissions: import("@prisma/client/runtime/client").JsonValue | null;
         })[];
         profile: {
             id: string;
-            address: string | null;
-            city: string | null;
-            province: string | null;
             createdAt: Date;
             updatedAt: Date;
             userId: string;
+            address: string | null;
+            city: string | null;
+            province: string | null;
             bankName: string | null;
             bankAccountNumber: string | null;
             bankAccountName: string | null;
@@ -80,50 +80,50 @@ export declare class UsersController {
             idCardNumber: string | null;
         } | null;
     } & {
+        username: string | null;
         id: string;
         name: string;
         status: import("@prisma/client").$Enums.UserStatus;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
+        balance: number;
         merchantId: string | null;
+        deletedAt: Date | null;
         email: string | null;
         phone: string | null;
-        username: string | null;
-        referralCode: string;
         password: string;
         avatar: string | null;
         role: import("@prisma/client").$Enums.Role;
         adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
         isVerified: boolean;
         verifiedAt: Date | null;
+        referralCode: string;
         referredById: string | null;
-        balance: number;
         bonusBalance: number;
     }>;
     updateUserStatus(id: string, body: {
         status: UserStatus;
         reason?: string;
     }): Promise<{
+        username: string | null;
         id: string;
         name: string;
         status: import("@prisma/client").$Enums.UserStatus;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
+        balance: number;
         merchantId: string | null;
+        deletedAt: Date | null;
         email: string | null;
         phone: string | null;
-        username: string | null;
-        referralCode: string;
         password: string;
         avatar: string | null;
         role: import("@prisma/client").$Enums.Role;
         adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
         isVerified: boolean;
         verifiedAt: Date | null;
+        referralCode: string;
         referredById: string | null;
-        balance: number;
         bonusBalance: number;
     }>;
     adjustBalance(id: string, body: {
@@ -133,10 +133,10 @@ export declare class UsersController {
     }): Promise<any>;
     getBalanceHistories(id: string): Promise<{
         id: string;
-        description: string | null;
         createdAt: Date;
-        note: string | null;
+        description: string | null;
         userId: string;
+        note: string | null;
         orderId: string | null;
         type: import("@prisma/client").$Enums.BalanceTrxType;
         amount: number;
@@ -148,9 +148,9 @@ export declare class UsersController {
     getSessions(id: string): Promise<{
         id: string;
         createdAt: Date;
-        userId: string;
         ipAddress: string | null;
         userAgent: string | null;
+        userId: string;
         token: string;
         refreshToken: string;
         device: string | null;

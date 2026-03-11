@@ -18,14 +18,14 @@ const PlatformLanding = ({ config, contentData, filteredProducts, search, setSea
             <header className={`fixed inset-x-0 top-0 z-[100] transition-all duration-700 ${scrolled ? 'h-16 bg-[#030712]/80 backdrop-blur-3xl border-b border-white/[0.04] shadow-2xl' : 'h-20 bg-transparent border-none'}`}>
                 <div className="container mx-auto px-8 h-full flex items-center justify-between">
                     <a href="#top" className="flex items-center gap-4 group no-underline text-inherit transition-transform active:scale-95">
-                        <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-[#030712] shadow-[0_8px_20px_rgba(255,255,255,0.1)] group-hover:shadow-white/40 transition-all duration-500">
-                            {config?.logo ? <img src={config.logo} alt="Logo" className="w-5 h-5 object-contain" /> : <IGamepad />}
+                        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#030712] shadow-[0_8px_20px_rgba(255,255,255,0.1)] group-hover:shadow-white/40 transition-all duration-500 overflow-hidden">
+                            <img src="/dagang.png?v=2" alt="Logo" className="w-7 h-7 object-contain" />
                         </div>
                         <div className="flex flex-col">
                             <span className="font-heading tracking-[.3em] text-md md:text-lg uppercase leading-none mb-1 logo-text font-black">
-                                {config?.name?.replace(/OFFICIAL STORE/gi, "").trim() || "DAGANGPLAY"}
+                                {config?.name?.replace(/OFFICIAL STORE/gi, "").trim() || "DAGANGPLAY CORP"}
                             </span>
-                            <span className="text-[7px] font-black tracking-[.6em] text-gold/60 uppercase italic">OFFICIAL PARTNER</span>
+                            <span className="text-[7px] font-black tracking-[.6em] text-gold/60 uppercase italic">LOGO VERIFIED 2026</span>
                         </div>
                     </a>
 
@@ -232,7 +232,10 @@ const PlatformLanding = ({ config, contentData, filteredProducts, search, setSea
                 <div className="container mx-auto px-8">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-20">
                         <div className="md:col-span-4 space-y-8">
-                            <span className="font-heading text-2xl font-black uppercase tracking-[.5em] logo-text">{config?.name || "DAGANGPLAY"}</span>
+                            <div className="flex items-center gap-4 mb-4">
+                                <img src="/dagang.png" alt="Logo" className="w-8 h-8 object-contain" />
+                                <span className="font-heading text-2xl font-black uppercase tracking-[.5em] logo-text">{config?.name || "DAGANGPLAY"}</span>
+                            </div>
                             <p className="text-white/20 text-[11px] font-body leading-loose uppercase tracking-[.3em] font-black italic max-w-xs cursor-default">
                                 "{config?.tagline || "Solusi manajemen aset gaming dan transaksi digital tingkat pro."}"
                             </p>

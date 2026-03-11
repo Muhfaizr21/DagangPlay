@@ -31,7 +31,7 @@ let SubscriptionService = class SubscriptionService {
         return {
             plan: merchant.plan,
             planExpiredAt: merchant.planExpiredAt,
-            isActive: merchant.planExpiredAt ? new Date() < new Date(merchant.planExpiredAt) : false,
+            isActive: !merchant.planExpiredAt || new Date() < new Date(merchant.planExpiredAt),
             latestInvoice: invoice
         };
     }
@@ -55,16 +55,7 @@ let SubscriptionService = class SubscriptionService {
                 dueDate: new Date(Date.now() + 86400000 * 3)
             }
         });
-        const methodMap = {
-            'QRIS': 'QRISC',
-            'BCAVA': 'BCAVA',
-            'BNIVA': 'BNIVA',
-            'BRIVA': 'BRIVA',
-            'MANDIRIVA': 'MANDIRIVA',
-            'OVO': 'OVO',
-            'DANA': 'DANA',
-        };
-        const tripayMethod = methodMap[method] || 'QRISC';
+        const tripayMethod = method === 'QRIS' ? 'QRISC' : (method || 'QRISC');
         const tripayPayload = {
             method: tripayMethod,
             merchant_ref: invoiceNo,

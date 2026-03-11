@@ -553,7 +553,7 @@ let ProductsService = class ProductsService {
         const targetMerchant = await this.resolveMerchant(merchantSlug, domain);
         if (!targetMerchant)
             return { banners: [], announcements: [] };
-        const [banners, announcements] = await Promise.all([
+        const [banners, announcements, popupPromos] = await Promise.all([
             this.prisma.banner.findMany({
                 where: { merchantId: targetMerchant.id, isActive: true },
                 orderBy: { sortOrder: 'asc' }
@@ -561,9 +561,16 @@ let ProductsService = class ProductsService {
             this.prisma.announcement.findMany({
                 where: { merchantId: targetMerchant.id, isActive: true },
                 orderBy: { createdAt: 'desc' }
+            }),
+            this.prisma.popupPromo.findMany({
+                where: {
+                    merchantId: targetMerchant.id,
+                    isActive: true,
+                },
+                orderBy: { createdAt: 'desc' }
             })
         ]);
-        return { banners, announcements };
+        return { banners, announcements, popupPromos };
     }
     async getPublicResellerPrices(merchantSlug, domain) {
         const sampleSkus = await this.prisma.productSku.findMany({

@@ -19,7 +19,8 @@ export class SubscriptionService {
         return {
             plan: merchant.plan,
             planExpiredAt: merchant.planExpiredAt,
-            isActive: merchant.planExpiredAt ? new Date() < new Date(merchant.planExpiredAt) : false,
+            // FREE plan (no planExpiredAt) is always considered active
+            isActive: !merchant.planExpiredAt || new Date() < new Date(merchant.planExpiredAt),
             latestInvoice: invoice
         };
     }
@@ -49,18 +50,9 @@ export class SubscriptionService {
         });
 
         // 2. Request Tripay Payment
-        // Map common method codes
-        const methodMap: Record<string, string> = {
-            'QRIS': 'QRISC',
-            'BCAVA': 'BCAVA',
-            'BNIVA': 'BNIVA',
-            'BRIVA': 'BRIVA',
-            'MANDIRIVA': 'MANDIRIVA',
-            'OVO': 'OVO',
-            'DANA': 'DANA',
-        };
-
-        const tripayMethod = methodMap[method] || 'QRISC';
+        // Frontend now sends valid Tripay codes directly (QRISC, BRIVA, etc.)
+        // Only need to map legacy 'QRIS' -> 'QRISC' for backward compatibility
+        const tripayMethod = method === 'QRIS' ? 'QRISC' : (method || 'QRISC');
 
         const tripayPayload = {
             method: tripayMethod,

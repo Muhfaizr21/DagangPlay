@@ -154,7 +154,7 @@ let SubscriptionsService = SubscriptionsService_1 = class SubscriptionsService {
             plan: merchant.plan
         };
     }
-    async checkFeatureLimit(merchantId, feature) {
+    async checkFeatureLimit(merchantId, feature, addingCount = 0) {
         const features = await this.getMerchantPlanFeatures(merchantId);
         if (features.isExpired) {
             throw new common_1.BadRequestException('Masa aktif paket Anda telah habis. Silakan lakukan perpanjangan.');
@@ -172,7 +172,11 @@ let SubscriptionsService = SubscriptionsService_1 = class SubscriptionsService {
             const count = await this.prisma.merchantProductPrice.count({
                 where: { merchantId, isActive: true }
             });
-            if (features.maxProducts !== undefined && count >= features.maxProducts) {
+            const totalAfterAdd = count + addingCount;
+            if (features.maxProducts !== undefined && totalAfterAdd > features.maxProducts && addingCount > 0) {
+                throw new common_1.BadRequestException(`Limit produk aktif terlampaui. Paket Anda hanya mengizinkan ${features.maxProducts} produk. (Saat ini ${count}, akan ditambah ${addingCount})`);
+            }
+            else if (features.maxProducts !== undefined && count >= features.maxProducts && addingCount === 0) {
                 throw new common_1.BadRequestException(`Limit produk aktif terlampaui (${count}/${features.maxProducts}). Silakan upgrade paket Anda.`);
             }
         }

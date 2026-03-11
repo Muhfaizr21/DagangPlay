@@ -1,3 +1,4 @@
+import * as bcrypt from 'bcrypt';
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import { TripayService } from '../../tripay/tripay.service';
@@ -145,12 +146,14 @@ export class PublicOrdersService {
         });
 
         if (!guestUser) {
+            const hashedPassword = await bcrypt.hash('GUEST_NO_LOGIN', 10);
+
             guestUser = await this.prisma.user.create({
                 data: {
                     name: `Guest ${whatsapp}`,
                     phone: whatsapp,
                     merchantId: merchantId, // Tag the user to the store where they first bought
-                    password: 'GUEST_NO_LOGIN',
+                    password: hashedPassword,
                     referralCode: `GUEST-${Date.now()}-${Math.floor(Math.random() * 1000)}`
                 }
             });
@@ -262,7 +265,7 @@ export class PublicOrdersService {
                 // 3. Mark commission as Refunded
                 await innerTx.commission.update({
                     where: { id: comm.id },
-                    data: { status: 'REFUNDED' as any }
+                    data: { status: 'CANCELLED' }
                 });
             }
         };
@@ -317,6 +320,25 @@ export class PublicOrdersService {
 
         // 2. Get Features
         const features = await this.subscriptionsService.getMerchantPlanFeatures(targetMerchant.id);
+
+        if (!targetMerchant.isOfficial) {
+            if (targetMerchant.status === 'SUSPENDED' || targetMerchant.status === 'INACTIVE') {
+                return {
+                    isSuspended: true,
+                    statusCode: 403,
+                    name: targetMerchant.name,
+                    message: "Toko sedang dalam perbaikan / ditangguhkan"
+                };
+            }
+            if (features.isExpired) {
+                return {
+                    isExpired: true,
+                    statusCode: 403,
+                    name: targetMerchant.name,
+                    message: "Masa aktif toko ini telah berakhir"
+                };
+            }
+        }
 
         console.log(`[PublicOrdersService] getStoreConfig: host=${host}, selectedMerchant=${targetMerchant.name}, theme=${JSON.stringify((targetMerchant.settings as any)?.theme)}`);
 

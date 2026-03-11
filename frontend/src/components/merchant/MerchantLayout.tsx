@@ -52,7 +52,7 @@ const fetcher = (url: string) => {
     return axios.get(url, { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data);
 };
 
-export default function MerchantLayout({ children, demoUser }: { children: React.ReactNode, demoUser?: any }) {
+export default function MerchantLayout({ children, title, demoUser }: { children: React.ReactNode, title?: string, demoUser?: any }) {
     const router = useRouter();
     const pathname = usePathname();
     const [user, setUser] = useState<any>(null);
@@ -107,8 +107,8 @@ export default function MerchantLayout({ children, demoUser }: { children: React
                 {/* Brand Area */}
                 <div className="h-20 flex items-center px-8 border-b border-slate-100/50">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
-                            <Zap className="w-5 h-5 fill-white" />
+                        <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-1 shadow-sm">
+                            <img src="/dagang.png" alt="Logo" className="w-full h-full object-contain" />
                         </div>
                         <div>
                             <h1 className="font-bold text-[18px] tracking-tight text-slate-900 leading-tight">DagangPlay</h1>

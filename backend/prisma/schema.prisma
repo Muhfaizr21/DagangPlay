@@ -64,7 +64,7 @@ model User {
   processedWithdrawals  Withdrawal[]           @relation("WithdrawalProcessedBy")
   withdrawals           Withdrawal[]
 
-  @@index([email, phone, role, status, merchantId, referredById, adminPermissions])
+  @@index([email, phone, role, status, merchantId])
 }
 
 model UserProfile {
@@ -221,7 +221,7 @@ model Merchant {
   chatRoom              ChatRoom?
   productOverrides      MerchantProductOverride[]
 
-  @@index([slug, domain, status, plan, isOfficial])
+  @@index([slug, domain, status, plan, isOfficial, createdAt])
 }
 
 model MerchantProductOverride {
@@ -555,7 +555,9 @@ model Order {
   payment            Payment?
   supplierLogs       SupplierLog[]
 
-  @@index([userId, merchantId, paymentStatus, fulfillmentStatus, createdAt])
+  @@index([merchantId, paymentStatus, fulfillmentStatus, createdAt])
+  @@index([userId, paymentStatus, fulfillmentStatus, createdAt])
+  @@index([orderNumber])
 }
 
 model OrderStatusHistory {
@@ -593,7 +595,9 @@ model Payment {
   updatedAt         DateTime      @updatedAt
   order             Order         @relation(fields: [orderId], references: [id])
 
-  @@index([orderId, userId, merchantId, status, tripayReference])
+  @@index([orderId, status])
+  @@index([tripayReference])
+  @@index([merchantId, status, createdAt])
 }
 
 model PaymentChannel {
@@ -642,7 +646,9 @@ model Deposit {
   merchant           Merchant            @relation(fields: [merchantId], references: [id])
   user               User                @relation(fields: [userId], references: [id])
 
-  @@index([userId, merchantId, status, createdAt])
+  @@index([merchantId, status, createdAt])
+  @@index([userId, status, createdAt])
+  @@index([tripayReference])
 }
 
 model BalanceTransaction {
@@ -664,6 +670,9 @@ model BalanceTransaction {
   withdrawal    Withdrawal?    @relation(fields: [withdrawalId], references: [id])
 
   @@index([userId, type, createdAt])
+  @@index([depositId])
+  @@index([withdrawalId])
+  @@index([orderId])
 }
 
 model Withdrawal {
@@ -886,7 +895,9 @@ model Invoice {
   proofUrl         String?
   merchant         Merchant      @relation(fields: [merchantId], references: [id])
 
-  @@index([merchantId, status, dueDate])
+  @@index([merchantId, status, createdAt])
+  @@index([invoiceNo])
+  @@index([tripayReference])
 }
 
 model SubscriptionHistory {
@@ -1277,7 +1288,9 @@ model AuditLog {
   merchant   Merchant? @relation(fields: [merchantId], references: [id])
   user       User?     @relation(fields: [userId], references: [id])
 
-  @@index([userId, merchantId, action, entity, createdAt])
+  @@index([merchantId, entity, action, createdAt])
+  @@index([userId, createdAt])
+  @@index([entity, entityId])
 }
 
 enum Role {

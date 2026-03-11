@@ -25,7 +25,9 @@ export class SettingsService {
                 contactEmail: data.contactEmail,
                 contactPhone: data.contactPhone,
                 contactWhatsapp: data.contactWhatsapp,
-                address: data.address
+                address: data.address,
+                logo: data.logo,
+                bannerImage: data.bannerImage
             }
         });
     }

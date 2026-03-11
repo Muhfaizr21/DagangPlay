@@ -13,19 +13,44 @@ export class TripayService {
     private readonly merchantCode = process.env.TRIPAY_MERCHANT_CODE!;
 
     /**
-     * Get all available payment channels from Tripay
+     * Get all available payment channels from Tripay.
+     * Falls back to a hardcoded list if Tripay API is unreachable (e.g. in Docker/local dev).
      */
     async getPaymentChannels() {
         try {
             const response = await axios.get(`${this.baseUrl}/merchant/payment-channel`, {
                 headers: {
                     'Authorization': `Bearer ${this.apiKey}`
-                }
+                },
+                timeout: 8000, // 8s timeout
+                maxRedirects: 0, // Don't follow redirects (302 means blocked)
             });
-            return response.data;
+
+            if (response.data?.success && Array.isArray(response.data?.data)) {
+                return response.data;
+            }
+            throw new Error('Invalid response from Tripay');
         } catch (error: any) {
-            this.logger.error('Failed to get Tripay payment channels:', error.response?.data || error.message);
-            throw new Error('Gagal mendapatkan metode pembayaran');
+            this.logger.warn('Tripay payment channels unavailable, using fallback list. Reason: ' + (error.message || 'Unknown'));
+
+            // Fallback channels based on Tripay Sandbox active channels
+            // Using null for icon_url so the code fallback text display is used
+            const fallbackChannels = [
+                { code: 'QRISC', name: 'QRIS', group: 'QRIS', type: 'DIRECT', fee_flat: 0, fee_percent: 0.7, icon_url: null, active: true },
+                { code: 'BNIVA', name: 'BNI Virtual Account', group: 'Virtual Account', type: 'DIRECT', fee_flat: 4250, fee_percent: 0, icon_url: null, active: true },
+                { code: 'BRIVA', name: 'BRI Virtual Account', group: 'Virtual Account', type: 'DIRECT', fee_flat: 4250, fee_percent: 0, icon_url: null, active: true },
+                { code: 'BCAVA', name: 'BCA Virtual Account', group: 'Virtual Account', type: 'DIRECT', fee_flat: 5500, fee_percent: 0, icon_url: null, active: true },
+                { code: 'MANDIRIVA', name: 'Mandiri Virtual Account', group: 'Virtual Account', type: 'DIRECT', fee_flat: 4250, fee_percent: 0, icon_url: null, active: true },
+                { code: 'PERMATAVA', name: 'Permata Virtual Account', group: 'Virtual Account', type: 'DIRECT', fee_flat: 4250, fee_percent: 0, icon_url: null, active: true },
+                { code: 'DANA', name: 'DANA', group: 'E-Wallet', type: 'REDIRECT', fee_flat: 0, fee_percent: 0.7, icon_url: null, active: true },
+                { code: 'OVO', name: 'OVO', group: 'E-Wallet', type: 'REDIRECT', fee_flat: 0, fee_percent: 0.7, icon_url: null, active: true },
+                { code: 'SHOPEEPAY', name: 'ShopeePay', group: 'E-Wallet', type: 'REDIRECT', fee_flat: 0, fee_percent: 0.7, icon_url: null, active: true },
+                { code: 'GOPAY', name: 'GoPay', group: 'E-Wallet', type: 'REDIRECT', fee_flat: 0, fee_percent: 0.7, icon_url: null, active: true },
+                { code: 'ALFAMART', name: 'Alfamart', group: 'Convenience Store', type: 'DIRECT', fee_flat: 2500, fee_percent: 0, icon_url: null, active: true },
+                { code: 'INDOMARET', name: 'Indomaret', group: 'Convenience Store', type: 'DIRECT', fee_flat: 2500, fee_percent: 0, icon_url: null, active: true },
+            ];
+
+            return { success: true, data: fallbackChannels };
         }
     }
 

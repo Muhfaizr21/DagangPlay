@@ -13,6 +13,7 @@ exports.TransactionsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma.service");
 const public_orders_service_1 = require("../../public/orders/public-orders.service");
+const pagination_1 = require("../../common/utils/pagination");
 let TransactionsService = class TransactionsService {
     prisma;
     publicOrders;
@@ -44,31 +45,15 @@ let TransactionsService = class TransactionsService {
                 lte: new Date(endDate)
             };
         }
-        const skip = (Number(page) - 1) * Number(limit);
-        const take = Number(limit);
-        const [data, total] = await Promise.all([
-            this.prisma.order.findMany({
-                where,
-                orderBy: { createdAt: 'desc' },
-                include: {
-                    user: { select: { id: true, name: true, email: true } },
-                    merchant: { select: { id: true, name: true } },
-                    payment: true,
-                },
-                skip,
-                take
-            }),
-            this.prisma.order.count({ where })
-        ]);
-        return {
-            data,
-            meta: {
-                totalItems: total,
-                totalPages: Math.ceil(total / take),
-                currentPage: Number(page),
-                itemsPerPage: take
-            }
-        };
+        return (0, pagination_1.paginate)(this.prisma.order, {
+            where,
+            orderBy: { createdAt: 'desc' },
+            include: {
+                user: { select: { id: true, name: true, email: true } },
+                merchant: { select: { id: true, name: true } },
+                payment: true,
+            },
+        }, { page, perPage: limit });
     }
     async getTransactionDetail(id) {
         const order = await this.prisma.order.findUnique({

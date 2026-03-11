@@ -27,8 +27,8 @@ export class DashboardService {
         const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
 
-        // Revenue calculations
-        const [revenueTodayAgg, revenueMonthAgg, revenueTotalAgg, revenueLastMonthAgg] = await Promise.all([
+        // Profit & Revenue calculations
+        const [revenueTodayAgg, revenueMonthAgg, revenueTotalAgg, revenueLastMonthAgg, profitTotalAgg, profitMonthAgg] = await Promise.all([
             this.prisma.order.aggregate({
                 where: { merchantId, paymentStatus: 'PAID', createdAt: { gte: startOfToday } },
                 _sum: { totalPrice: true }
@@ -44,17 +44,28 @@ export class DashboardService {
             this.prisma.order.aggregate({
                 where: { merchantId, paymentStatus: 'PAID', createdAt: { gte: lastMonthStart, lte: lastMonthEnd } },
                 _sum: { totalPrice: true }
+            }),
+            // Profit is stored in Commission table for merchants
+            this.prisma.commission.aggregate({
+                where: { userId: merchant.ownerId, status: 'SETTLED' },
+                _sum: { amount: true }
+            }),
+            this.prisma.commission.aggregate({
+                where: { userId: merchant.ownerId, status: 'SETTLED', createdAt: { gte: startOfMonth } },
+                _sum: { amount: true }
             })
         ]);
 
-        const revenueToday = revenueTodayAgg._sum.totalPrice || 0;
-        const revenueMonth = revenueMonthAgg._sum.totalPrice || 0;
-        const revenueTotal = revenueTotalAgg._sum.totalPrice || 0;
-        const revenueLastMonth = revenueLastMonthAgg._sum.totalPrice || 0;
+        const revenueToday = Number(revenueTodayAgg._sum.totalPrice || 0);
+        const revenueMonth = Number(revenueMonthAgg._sum.totalPrice || 0);
+        const revenueTotal = Number(revenueTotalAgg._sum.totalPrice || 0);
+        const revenueLastMonth = Number(revenueLastMonthAgg._sum.totalPrice || 0);
+        const profitTotal = Number(profitTotalAgg._sum.amount || 0);
+        const profitMonth = Number(profitMonthAgg._sum.amount || 0);
 
         let revenueTrend = 0;
-        if (Number(revenueLastMonth) > 0) {
-            revenueTrend = ((Number(revenueMonth) - Number(revenueLastMonth)) / Number(revenueLastMonth)) * 100;
+        if (revenueLastMonth > 0) {
+            revenueTrend = ((revenueMonth - revenueLastMonth) / revenueLastMonth) * 100;
         }
 
         // Transactions today
@@ -134,11 +145,13 @@ export class DashboardService {
                 balance: Number(merchant.owner?.balance || 0) // showing real available balance
             },
             revenue: {
-                today: Number(revenueToday),
-                month: Number(revenueMonth),
-                total: Number(revenueTotal),
-                lastMonth: Number(revenueLastMonth),
-                trendPercentage: revenueTrend
+                today: revenueToday,
+                month: revenueMonth,
+                total: revenueTotal,
+                lastMonth: revenueLastMonth,
+                trendPercentage: revenueTrend,
+                profitTotal,
+                profitMonth,
             },
             transactionsToday: {
                 success: trxSuccess,

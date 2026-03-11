@@ -585,7 +585,7 @@ export class ProductsService {
 
         if (!targetMerchant) return { banners: [], announcements: [] };
 
-        const [banners, announcements] = await Promise.all([
+        const [banners, announcements, popupPromos] = await Promise.all([
             this.prisma.banner.findMany({
                 where: { merchantId: targetMerchant.id, isActive: true },
                 orderBy: { sortOrder: 'asc' }
@@ -593,10 +593,17 @@ export class ProductsService {
             this.prisma.announcement.findMany({
                 where: { merchantId: targetMerchant.id, isActive: true },
                 orderBy: { createdAt: 'desc' }
+            }),
+            this.prisma.popupPromo.findMany({
+                where: {
+                    merchantId: targetMerchant.id,
+                    isActive: true,
+                },
+                orderBy: { createdAt: 'desc' }
             })
         ]);
 
-        return { banners, announcements };
+        return { banners, announcements, popupPromos };
     }
 
     // 9. Get Public Reseller Sample Prices

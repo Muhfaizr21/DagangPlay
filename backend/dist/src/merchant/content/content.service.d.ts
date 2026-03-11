@@ -4,8 +4,6 @@ export declare class ContentService {
     constructor(prisma: PrismaService);
     getBanners(merchantId: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         merchantId: string | null;
         title: string;
         image: string;
@@ -16,11 +14,11 @@ export declare class ContentService {
         endDate: Date | null;
         isActive: boolean;
         clickCount: number;
+        createdAt: Date;
+        updatedAt: Date;
     }[]>;
     createBanner(merchantId: string, data: any): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         merchantId: string | null;
         title: string;
         image: string;
@@ -31,11 +29,11 @@ export declare class ContentService {
         endDate: Date | null;
         isActive: boolean;
         clickCount: number;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     toggleBanner(merchantId: string, id: string, isActive: boolean): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         merchantId: string | null;
         title: string;
         image: string;
@@ -46,11 +44,11 @@ export declare class ContentService {
         endDate: Date | null;
         isActive: boolean;
         clickCount: number;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     deleteBanner(merchantId: string, id: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         merchantId: string | null;
         title: string;
         image: string;
@@ -61,63 +59,68 @@ export declare class ContentService {
         endDate: Date | null;
         isActive: boolean;
         clickCount: number;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     getAnnouncements(merchantId: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         merchantId: string | null;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
         content: string;
         imageUrl: string | null;
     }[]>;
     createAnnouncement(merchantId: string, data: any): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         merchantId: string | null;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
         content: string;
         imageUrl: string | null;
     }>;
     toggleAnnouncement(merchantId: string, id: string, isActive: boolean): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         merchantId: string | null;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
         content: string;
         imageUrl: string | null;
     }>;
     deleteAnnouncement(merchantId: string, id: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         merchantId: string | null;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
         content: string;
         imageUrl: string | null;
     }>;
     updateStoreDesign(merchantId: string, data: any): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         name: string;
         slug: string;
+        domain: string | null;
+        ownerId: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
-        domain: string | null;
         description: string | null;
         tagline: string | null;
         contactEmail: string | null;
@@ -131,19 +134,19 @@ export declare class ContentService {
         planExpiredAt: Date | null;
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
-        ownerId: string;
-        createdAt: Date;
-        updatedAt: Date;
         deletedAt: Date | null;
     }>;
     updateThemeSettings(merchantId: string, data: any): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         name: string;
         slug: string;
+        domain: string | null;
+        ownerId: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
-        domain: string | null;
         description: string | null;
         tagline: string | null;
         contactEmail: string | null;
@@ -157,9 +160,10 @@ export declare class ContentService {
         planExpiredAt: Date | null;
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
-        ownerId: string;
-        createdAt: Date;
-        updatedAt: Date;
         deletedAt: Date | null;
     }>;
+    getPopupPromos(merchantId: string): Promise<any>;
+    createPopupPromo(merchantId: string, data: any): Promise<any>;
+    togglePopupPromo(merchantId: string, id: string, isActive: boolean): Promise<any>;
+    deletePopupPromo(merchantId: string, id: string): Promise<any>;
 }

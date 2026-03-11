@@ -79,6 +79,7 @@ let PrismaService = class PrismaService {
     get chatMessage() { return this.client.chatMessage; }
     get marketingGuide() { return this.client.marketingGuide; }
     get merchantProductOverride() { return this.client.merchantProductOverride; }
+    get otpVerification() { return this.client.otpVerification; }
     async onModuleInit() {
         await this.client.$connect();
     }

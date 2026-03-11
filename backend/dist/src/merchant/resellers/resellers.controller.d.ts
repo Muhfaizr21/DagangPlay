@@ -14,30 +14,30 @@ export declare class ResellersController {
         _count: {
             ordersAsCustomer: number;
         };
+        balance: number;
         email: string | null;
         phone: string | null;
-        balance: number;
     }[]>;
     updateStatus(req: any, resellerId: string, status: UserStatus): Promise<{
+        username: string | null;
         id: string;
         name: string;
         status: import("@prisma/client").$Enums.UserStatus;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
+        balance: number;
         merchantId: string | null;
+        deletedAt: Date | null;
         email: string | null;
         phone: string | null;
-        username: string | null;
-        referralCode: string;
         password: string;
         avatar: string | null;
         role: import("@prisma/client").$Enums.Role;
         adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
         isVerified: boolean;
         verifiedAt: Date | null;
+        referralCode: string;
         referredById: string | null;
-        balance: number;
         bonusBalance: number;
     }>;
     adjustBalance(req: any, resellerId: string, body: {
@@ -46,25 +46,25 @@ export declare class ResellersController {
         notes: string;
     }): Promise<any>;
     createReseller(req: any, body: any): Promise<{
+        username: string | null;
         id: string;
         name: string;
         status: import("@prisma/client").$Enums.UserStatus;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
+        balance: number;
         merchantId: string | null;
+        deletedAt: Date | null;
         email: string | null;
         phone: string | null;
-        username: string | null;
-        referralCode: string;
         password: string;
         avatar: string | null;
         role: import("@prisma/client").$Enums.Role;
         adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
         isVerified: boolean;
         verifiedAt: Date | null;
+        referralCode: string;
         referredById: string | null;
-        balance: number;
         bonusBalance: number;
     }>;
 }

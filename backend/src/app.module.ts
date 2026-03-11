@@ -1,4 +1,6 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { PrismaService } from './prisma.service';
 import { TripayModule } from './tripay/tripay.module';
 import { PublicOrdersModule } from './public/orders/public-orders.module';
@@ -29,9 +31,31 @@ import { ChatModule } from './chat/chat.module';
 
 import { PublicDigiflazzModule } from './public/digiflazz/public-digiflazz.module';
 
+import { TasksService } from './common/tasks/tasks.service';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
+
 @Module({
-  imports: [ScheduleModule.forRoot(), DashboardModule, MerchantsModule, ProductsModule, SuppliersModule, UsersModule, TransactionsModule, FinanceModule, CommissionsModule, PromosModule, SubscriptionsModule, ContentModule, SecurityModule, TicketsModule, SettingsModule, AuthModule, UploadModule, WorkersModule, MerchantModule, DigiflazzModule, TripayModule, PublicOrdersModule, WithdrawalsModule, MarketingModule, ChatModule, PublicDigiflazzModule],
+  imports: [
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 20, // Global limit for general usage
+    }]),
+    ScheduleModule.forRoot(), DashboardModule, MerchantsModule, ProductsModule, SuppliersModule, UsersModule, TransactionsModule, FinanceModule, CommissionsModule, PromosModule, SubscriptionsModule, ContentModule, SecurityModule, TicketsModule, SettingsModule, AuthModule, UploadModule, WorkersModule, MerchantModule, DigiflazzModule, TripayModule, PublicOrdersModule, WithdrawalsModule, MarketingModule, ChatModule, PublicDigiflazzModule
+  ],
   controllers: [],
-  providers: [PrismaService],
+  providers: [
+    PrismaService,
+    TasksService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(LoggerMiddleware)
+      .forRoutes('*');
+  }
+}

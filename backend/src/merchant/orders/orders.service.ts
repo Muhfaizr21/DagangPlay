@@ -182,14 +182,14 @@ export class OrdersService {
 
         if (!order) throw new NotFoundException('Order not found');
         if (order.fulfillmentStatus === 'SUCCESS') throw new BadRequestException('Order already SUCCESS');
+        if (order.paymentStatus !== 'PAID') throw new BadRequestException('Order belum terbayar, tidak bisa diretry');
 
-        // Logic for retry: mark as PROCESSING and add to queue
-        const updated = await this.prisma.order.update({
+        // Mark as PROCESSING
+        await this.prisma.order.update({
             where: { id: orderId },
             data: { fulfillmentStatus: 'PROCESSING' }
         });
 
-        // mock adding to queue:
         await this.prisma.orderStatusHistory.create({
             data: {
                 orderId,
@@ -199,7 +199,16 @@ export class OrdersService {
             }
         });
 
-        return { message: 'Order added to retry queue', order: updated };
+        // CRITICAL FIX: Actually trigger Digiflazz fulfillment!
+        try {
+            await this.digiflazz.placeOrder(orderId);
+        } catch (err) {
+            console.error('[RetryOrder] Retry fulfillment failed:', err);
+            // Don't throw — status already saved, admin can check logs
+        }
+
+        const updated = await this.prisma.order.findUnique({ where: { id: orderId } });
+        return { message: 'Order retry triggered via Digiflazz', order: updated };
     }
 
     async refundOrder(merchantId: string, orderId: string, reason: string) {
@@ -227,8 +236,9 @@ export class OrdersService {
                 }
             });
 
-            // Add balance back if it was paid
-            if (order.paymentStatus === 'PAID') {
+            // CRITICAL FIX: Only refund balance for WALLET orders (direct/internal)
+            // For Tripay orders, refund must go through Tripay or manual bank transfer
+            if (order.paymentStatus === 'PAID' && order.paymentMethod === 'BALANCE') {
                 const buyerId = order.userId;
                 if (buyerId) {
                     await tx.user.update({

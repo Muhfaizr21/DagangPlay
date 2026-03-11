@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import MerchantLayout from '../../../components/merchant/MerchantLayout';
 import useSWR from 'swr';
 import axios from 'axios';
-import { CreditCard, CheckCircle, Clock, Zap, Check, ArrowRight, Shield, HelpCircle, ChevronDown } from 'lucide-react';
+import { CreditCard, CheckCircle, Clock, Zap, Check, ArrowRight, Shield, HelpCircle, ChevronDown, X } from 'lucide-react';
 
 const fetcher = (url: string) => {
     const token = localStorage.getItem('admin_token');
@@ -21,27 +21,73 @@ export default function MerchantSubscriptionPage() {
 
     // Fetch subscription status and invoices
     const { data: status, error: statusError, mutate: mutateStatus } = useSWR(`${baseUrl}/merchant/subscription`, fetcher);
-    const { data: invoices, error: invError, mutate: mutateInvoices } = useSWR(`${baseUrl}/merchant/subscription/invoices`, fetcher);
+    const { data: invoices, mutate: mutateInvoices } = useSWR(`${baseUrl}/merchant/subscription/invoices`, fetcher);
 
-    const handleCreateInvoice = async () => {
+    // State for new invoice modal
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [invoiceForm, setInvoiceForm] = useState({ plan: 'PRO', method: 'QRISC' });
+    const [paymentChannels, setPaymentChannels] = useState<any[]>([]);
+    const [channelsLoading, setChannelsLoading] = useState(false);
+    const [createLoading, setCreateLoading] = useState(false);
+
+    const PLAN_PRICES: Record<string, { price: number; description: string; features: string[] }> = {
+        PRO: { price: 199000, description: 'Untuk toko berkembang', features: ['Max 50 Produk Aktif', 'Custom Domain', 'Laporan Penjualan', 'Support Prioritas'] },
+        LEGEND: { price: 349000, description: 'Untuk merchant profesional', features: ['Max 500 Produk Aktif', 'Multi User/Staff', 'White Label', 'Analytics Lanjutan'] },
+        SUPREME: { price: 499000, description: 'Tak terbatas & VIP', features: ['Produk Tanpa Batas', 'All LEGEND Features', 'Tarik Dana Instan', 'SLA 99.9% Uptime'] },
+    };
+
+    const openCreateModal = async () => {
+        setIsCreateModalOpen(true);
+        if (paymentChannels.length === 0) {
+            setChannelsLoading(true);
+            try {
+                const res = await axios.get(`${baseUrl}/public/orders/payment-channels`);
+                const channels = (res.data?.data || []).filter((c: any) => c.active);
+                setPaymentChannels(channels.length > 0 ? channels : getFallbackChannels());
+            } catch {
+                setPaymentChannels(getFallbackChannels());
+            } finally {
+                setChannelsLoading(false);
+            }
+        }
+    };
+
+    const getFallbackChannels = () => [
+        { code: 'QRISC', name: 'QRIS (Semua E-Wallet)' },
+        { code: 'BRIVA', name: 'BRI Virtual Account' },
+        { code: 'BCAVA', name: 'BCA Virtual Account' },
+        { code: 'BNIVA', name: 'BNI Virtual Account' },
+        { code: 'MANDIRIVA', name: 'Mandiri Virtual Account' },
+        { code: 'DANA', name: 'DANA' },
+        { code: 'OVO', name: 'OVO' },
+    ];
+
+    const handleCreateInvoice = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setCreateLoading(true);
         try {
             const token = localStorage.getItem('admin_token');
+            const planData = PLAN_PRICES[invoiceForm.plan];
             const res = await axios.post(`${baseUrl}/merchant/subscription/invoices`,
-                { plan: 'PRO', amount: 250000, method: 'QRIS' },
+                { plan: invoiceForm.plan, amount: planData.price, method: invoiceForm.method },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
+            setIsCreateModalOpen(false);
+
             if (res.data.tripayPaymentUrl) {
                 window.open(res.data.tripayPaymentUrl, '_blank');
-                alert('Tagihan pembayaran berhasil dibuat! Silakan selesaikan pembayaran di tab baru yang terbuka.');
+                alert('Tagihan berhasil dibuat! Selesaikan pembayaran di halaman Tripay yang terbuka.');
             } else {
-                alert('Tagihan pembayaran berhasil dibuat!');
+                alert('Tagihan berhasil dibuat!');
             }
 
             mutateStatus();
             mutateInvoices();
         } catch (err: any) {
             alert(err.response?.data?.message || 'Gagal membuat tagihan');
+        } finally {
+            setCreateLoading(false);
         }
     };
 
@@ -127,8 +173,8 @@ export default function MerchantSubscriptionPage() {
                                 </p>
                             </div>
 
-                            <button onClick={handleCreateInvoice} className="mt-10 w-full py-4 bg-white text-indigo-700 font-black rounded-2xl hover:bg-slate-50 transition-all shadow-xl flex items-center justify-center gap-3 text-[13px] hover:-translate-y-1">
-                                PERPANJANG SEKARANG <ArrowRight className="w-4 h-4" />
+                            <button onClick={openCreateModal} className="mt-10 w-full py-4 bg-white text-indigo-700 font-black rounded-2xl hover:bg-slate-50 transition-all shadow-xl flex items-center justify-center gap-3 text-[13px] hover:-translate-y-1">
+                                PERPANJANG / UPGRADE <ArrowRight className="w-4 h-4" />
                             </button>
                         </div>
                     </div>
@@ -286,6 +332,120 @@ export default function MerchantSubscriptionPage() {
                                     </div>
                                     <button type="submit" className="w-full py-5 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 text-[13px] uppercase tracking-widest">
                                         Konfirmasi Pembayaran
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Create Invoice Modal */}
+            {isCreateModalOpen && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
+                        {/* Header */}
+                        <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-gradient-to-r from-indigo-600 to-indigo-800 flex-shrink-0">
+                            <div>
+                                <h3 className="text-xl font-black text-white tracking-tight">Upgrade / Perpanjang Paket</h3>
+                                <p className="text-indigo-200 text-xs font-medium mt-1">Pilih paket dan metode pembayaran</p>
+                            </div>
+                            <button onClick={() => setIsCreateModalOpen(false)} className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white text-2xl font-light">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="overflow-y-auto flex-1">
+                            <form onSubmit={handleCreateInvoice} className="p-6 space-y-6">
+                                {/* Plan Selector */}
+                                <div>
+                                    <label className="block text-xs font-black text-slate-500 mb-3 uppercase tracking-widest">Pilih Paket</label>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        {Object.entries(PLAN_PRICES).map(([plan, data]) => (
+                                            <button
+                                                key={plan}
+                                                type="button"
+                                                onClick={() => setInvoiceForm({ ...invoiceForm, plan })}
+                                                className={`relative p-4 rounded-2xl border-2 text-left transition-all ${invoiceForm.plan === plan
+                                                    ? 'border-indigo-500 bg-indigo-50 shadow-lg shadow-indigo-100'
+                                                    : 'border-slate-100 hover:border-indigo-200'
+                                                    }`}
+                                            >
+                                                {invoiceForm.plan === plan && (
+                                                    <div className="absolute top-3 right-3 w-4 h-4 bg-indigo-500 rounded-full flex items-center justify-center">
+                                                        <Check className="w-2.5 h-2.5 text-white stroke-[3]" />
+                                                    </div>
+                                                )}
+                                                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{plan}</p>
+                                                <p className="text-xl font-black text-slate-800">Rp {data.price.toLocaleString('id-ID')}</p>
+                                                <p className="text-[11px] text-slate-500 font-medium mt-1">{data.description}</p>
+                                                <ul className="mt-3 space-y-1.5">
+                                                    {data.features.map((f, i) => (
+                                                        <li key={i} className="flex items-center gap-1.5 text-[11px] text-slate-600">
+                                                            <Check className="w-3 h-3 text-emerald-500 stroke-[3] flex-shrink-0" />
+                                                            {f}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Payment Method */}
+                                <div>
+                                    <label className="block text-xs font-black text-slate-500 mb-3 uppercase tracking-widest">Metode Pembayaran</label>
+                                    {channelsLoading ? (
+                                        <div className="flex items-center gap-2 py-4 text-slate-400">
+                                            <div className="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
+                                            <span className="text-sm">Memuat metode pembayaran...</span>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                            {paymentChannels.map((ch: any) => (
+                                                <button
+                                                    key={ch.code}
+                                                    type="button"
+                                                    onClick={() => setInvoiceForm({ ...invoiceForm, method: ch.code })}
+                                                    className={`p-3 rounded-xl border-2 text-left transition-all ${invoiceForm.method === ch.code
+                                                        ? 'border-indigo-500 bg-indigo-50'
+                                                        : 'border-slate-100 hover:border-indigo-200'
+                                                        }`}
+                                                >
+                                                    <p className="text-xs font-bold text-slate-800 leading-tight">{ch.name}</p>
+                                                    <p className="text-[10px] text-slate-400 font-mono mt-0.5">{ch.code}</p>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Summary */}
+                                <div className="bg-indigo-50 rounded-2xl p-5 border border-indigo-100">
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <p className="text-sm text-indigo-600 font-bold">Paket {invoiceForm.plan} — 30 Hari</p>
+                                            <p className="text-[11px] text-indigo-400 font-medium mt-0.5">
+                                                {paymentChannels.find((c: any) => c.code === invoiceForm.method)?.name || invoiceForm.method}
+                                            </p>
+                                        </div>
+                                        <p className="text-2xl font-black text-indigo-700">Rp {PLAN_PRICES[invoiceForm.plan]?.price.toLocaleString('id-ID')}</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <button type="button" onClick={() => setIsCreateModalOpen(false)} className="flex-1 py-4 text-slate-600 font-bold bg-slate-100 rounded-2xl hover:bg-slate-200 transition-colors">
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={createLoading}
+                                        className="flex-1 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 flex items-center justify-center gap-2 disabled:opacity-60"
+                                    >
+                                        {createLoading ? (
+                                            <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Memproses...</>
+                                        ) : (
+                                            <>Buat Tagihan & Bayar <ArrowRight className="w-4 h-4" /></>
+                                        )}
                                     </button>
                                 </div>
                             </form>

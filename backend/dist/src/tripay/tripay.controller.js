@@ -31,7 +31,7 @@ let TripayController = class TripayController {
     }
     async tripayCallback(signature, req, res) {
         try {
-            const rawBody = JSON.stringify(req.body);
+            const rawBody = req.rawBody || JSON.stringify(req.body);
             const isValid = this.tripayService.verifySignature(signature, rawBody);
             if (!isValid) {
                 console.warn('[TripayCallback] Invalid signature from', req.ip);
@@ -56,8 +56,10 @@ let TripayController = class TripayController {
                         }
                         const modalPrice = order.merchantModalPrice || order.sellingPrice;
                         const rawProfit = order.sellingPrice - modalPrice;
-                        const tripayFee = (Number(data.fee_merchant) || 0) + (Number(data.fee_customer) || 0);
-                        const netProfit = Math.max(0, rawProfit - tripayFee);
+                        const tripayFeeMerchant = Number(data.fee_merchant) || 0;
+                        const tripayFeeCustomer = Number(data.fee_customer) || 0;
+                        const totalTripayFee = tripayFeeMerchant + tripayFeeCustomer;
+                        const netProfit = Math.max(0, rawProfit - tripayFeeMerchant);
                         await this.prisma.$transaction(async (tx) => {
                             const updatedOrder = await tx.order.update({
                                 where: { id: order.id, paymentStatus: 'PENDING' },
@@ -70,7 +72,7 @@ let TripayController = class TripayController {
                                 where: { orderId: order.id },
                                 data: {
                                     status: 'PAID',
-                                    fee: tripayFee,
+                                    fee: totalTripayFee,
                                     paidAt: new Date(),
                                     tripayResponse: data
                                 }
@@ -110,7 +112,7 @@ let TripayController = class TripayController {
                                                 balanceBefore: Number(user.balance) - merchantNetProfit,
                                                 balanceAfter: Number(user.balance),
                                                 orderId: order.id,
-                                                description: `Profit penjualan bersih ${order.orderNumber} (Fee Tripay: ${tripayFee}, Platform: ${platformFeeAmount})`
+                                                description: `Profit penjualan bersih ${order.orderNumber} (Tripay M-Fee: ${tripayFeeMerchant}, Platform: ${platformFeeAmount})`
                                             }
                                         });
                                     }
@@ -122,6 +124,16 @@ let TripayController = class TripayController {
                                             const su = await tx.user.update({
                                                 where: { id: superAdmin.id },
                                                 data: { balance: { increment: platformFeeAmount } }
+                                            });
+                                            await tx.commission.create({
+                                                data: {
+                                                    orderId: order.id,
+                                                    userId: superAdmin.id,
+                                                    type: 'PLATFORM_FEE',
+                                                    amount: platformFeeAmount,
+                                                    status: 'SETTLED',
+                                                    settledAt: new Date()
+                                                }
                                             });
                                             await tx.balanceTransaction.create({
                                                 data: {
@@ -185,15 +197,6 @@ let TripayController = class TripayController {
                                         description: `Deposit via Tripay (${data.payment_name})`
                                     }
                                 });
-                                const superAdmin = await tx.user.findFirst({
-                                    where: { role: 'SUPER_ADMIN' }
-                                });
-                                if (superAdmin) {
-                                    await tx.user.update({
-                                        where: { id: superAdmin.id },
-                                        data: { balance: { decrement: deposit.amount } }
-                                    });
-                                }
                             });
                             console.log(`[TripayCallback] Deposit ${depositId} confirmed.`);
                         }
@@ -209,10 +212,10 @@ let TripayController = class TripayController {
                         const invoice = await this.prisma.invoice.findUnique({
                             where: { invoiceNo: ref }
                         });
-                        if (invoice && invoice.status === 'PENDING') {
+                        if (invoice && (invoice.status === 'UNPAID' || invoice.status === 'PENDING')) {
                             await this.prisma.$transaction(async (tx) => {
                                 await tx.invoice.update({
-                                    where: { id: invoice.id, status: 'PENDING' },
+                                    where: { id: invoice.id },
                                     data: { status: 'PAID', paidAt: new Date(), tripayResponse: data }
                                 });
                                 const expireAt = new Date();
@@ -237,6 +240,76 @@ let TripayController = class TripayController {
                                 });
                             });
                             console.log(`[TripayCallback] Invoice ${ref} paid. Merchant plan upgraded.`);
+                        }
+                    }
+                    catch (err) {
+                        if (err.code === 'P2025')
+                            return res.status(common_1.HttpStatus.OK).json({ success: true });
+                        throw err;
+                    }
+                }
+            }
+            else if (data.status === 'EXPIRED' || data.status === 'FAILED') {
+                if (ref.startsWith('ORD-')) {
+                    try {
+                        const order = await this.prisma.order.findUnique({
+                            where: { orderNumber: ref }
+                        });
+                        if (order && order.paymentStatus === 'PENDING') {
+                            await this.prisma.$transaction(async (tx) => {
+                                await tx.order.update({
+                                    where: { id: order.id, paymentStatus: 'PENDING' },
+                                    data: { paymentStatus: data.status }
+                                });
+                                await tx.payment.update({
+                                    where: { orderId: order.id },
+                                    data: { status: data.status, tripayResponse: data }
+                                });
+                            });
+                            console.log(`[TripayCallback] Order ${ref} updated to ${data.status}.`);
+                        }
+                    }
+                    catch (err) {
+                        if (err.code === 'P2025')
+                            return res.status(common_1.HttpStatus.OK).json({ success: true });
+                        throw err;
+                    }
+                }
+                else if (ref.startsWith('DEP-')) {
+                    try {
+                        const depositId = ref.replace('DEP-', '');
+                        const deposit = await this.prisma.deposit.findUnique({
+                            where: { id: depositId }
+                        });
+                        if (deposit && deposit.status === 'PENDING') {
+                            await this.prisma.$transaction(async (tx) => {
+                                await tx.deposit.update({
+                                    where: { id: deposit.id, status: 'PENDING' },
+                                    data: { status: data.status, tripayResponse: data }
+                                });
+                            });
+                            console.log(`[TripayCallback] Deposit ${depositId} updated to ${data.status}.`);
+                        }
+                    }
+                    catch (err) {
+                        if (err.code === 'P2025')
+                            return res.status(common_1.HttpStatus.OK).json({ success: true });
+                        throw err;
+                    }
+                }
+                else if (ref.startsWith('INV-')) {
+                    try {
+                        const invoice = await this.prisma.invoice.findUnique({
+                            where: { invoiceNo: ref }
+                        });
+                        if (invoice && (invoice.status === 'UNPAID' || invoice.status === 'PENDING')) {
+                            await this.prisma.$transaction(async (tx) => {
+                                await tx.invoice.update({
+                                    where: { id: invoice.id },
+                                    data: { status: data.status, tripayResponse: data }
+                                });
+                            });
+                            console.log(`[TripayCallback] Invoice ${ref} updated to ${data.status}.`);
                         }
                     }
                     catch (err) {

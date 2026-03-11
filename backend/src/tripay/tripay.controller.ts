@@ -18,6 +18,7 @@ export class TripayController {
      */
     @Get('payment-channels')
     async getPaymentChannels() {
+        // Assuming tripayService.getPaymentChannels() already fetches channels with fee info
         return this.tripayService.getPaymentChannels();
     }
 
@@ -31,10 +32,11 @@ export class TripayController {
         @Res() res: Response
     ) {
         try {
-            // Raw body should be used for accurate signature verification
-            // In NestJS, we often need a custom middleware or pipe to get rawBody.
-            // Using JSON.stringify(req.body) as a fallback if request is already parsed.
-            const rawBody = JSON.stringify(req.body);
+            // Raw body should be used for accurate signature verification.
+            // In NestJS, you typically need a custom middleware (e.g., in main.ts)
+            // to attach the raw body to the request object.
+            // Example: app.use(json({ verify: (req, res, buf) => { (req as any).rawBody = buf; } }));
+            const rawBody = (req as any).rawBody || JSON.stringify(req.body);
 
             const isValid = this.tripayService.verifySignature(signature, rawBody);
 
@@ -69,11 +71,14 @@ export class TripayController {
 
                         const modalPrice = order.merchantModalPrice || order.sellingPrice;
                         const rawProfit = order.sellingPrice - modalPrice;
-                        const tripayFee = (Number(data.fee_merchant) || 0) + (Number(data.fee_customer) || 0);
 
-                        // FORMULA: NET PROFIT = (SELL - MODAL) - FEE
-                        // We ensure netProfit is at least 0 to protect against negative balance additions
-                        const netProfit = Math.max(0, rawProfit - tripayFee);
+                        // We only deduct fee_merchant from our profit because fee_customer is paid directly by the buyer on top of the selling price
+                        const tripayFeeMerchant = Number(data.fee_merchant) || 0;
+                        const tripayFeeCustomer = Number(data.fee_customer) || 0;
+                        const totalTripayFee = tripayFeeMerchant + tripayFeeCustomer;
+
+                        // FORMULA: NET PROFIT = (SELL - MODAL) - FEE_MERCHANT
+                        const netProfit = Math.max(0, rawProfit - tripayFeeMerchant);
 
                         await this.prisma.$transaction(async (tx) => {
                             // 1. Update Order Status (FAIL IF NOT PENDING - Atomic Check)
@@ -90,7 +95,7 @@ export class TripayController {
                                 where: { orderId: order.id },
                                 data: {
                                     status: 'PAID',
-                                    fee: tripayFee,
+                                    fee: totalTripayFee,
                                     paidAt: new Date(),
                                     tripayResponse: data as any
                                 }
@@ -138,7 +143,7 @@ export class TripayController {
                                                 balanceBefore: Number(user.balance) - merchantNetProfit,
                                                 balanceAfter: Number(user.balance),
                                                 orderId: order.id,
-                                                description: `Profit penjualan bersih ${order.orderNumber} (Fee Tripay: ${tripayFee}, Platform: ${platformFeeAmount})`
+                                                description: `Profit penjualan bersih ${order.orderNumber} (Tripay M-Fee: ${tripayFeeMerchant}, Platform: ${platformFeeAmount})`
                                             }
                                         });
                                     }
@@ -151,6 +156,18 @@ export class TripayController {
                                             const su = await tx.user.update({
                                                 where: { id: superAdmin.id },
                                                 data: { balance: { increment: platformFeeAmount } }
+                                            });
+
+                                            // Register commission to super admin so it can be reversed if failed
+                                            await tx.commission.create({
+                                                data: {
+                                                    orderId: order.id,
+                                                    userId: superAdmin.id,
+                                                    type: 'PLATFORM_FEE',
+                                                    amount: platformFeeAmount,
+                                                    status: 'SETTLED',
+                                                    settledAt: new Date()
+                                                }
                                             });
 
                                             await tx.balanceTransaction.create({
@@ -224,16 +241,10 @@ export class TripayController {
                                     }
                                 });
 
-                                // Deduct conceptual balance from Super Admin
-                                const superAdmin = await tx.user.findFirst({
-                                    where: { role: 'SUPER_ADMIN' }
-                                });
-                                if (superAdmin) {
-                                    await tx.user.update({
-                                        where: { id: superAdmin.id },
-                                        data: { balance: { decrement: deposit.amount } }
-                                    });
-                                }
+                                // NOTE: Super Admin balance tidak dikurangi di sini.
+                                // Dalam model bisnis ini, SA menerima platform fee dari order profit (sudah ada di callback ORD-).
+                                // Deposit merchant adalah top-up dari luar (via Tripay), bukan dari SA balance.
+                                // SA balance hanya mencatat revenue dari platform fee, bukan modal deposit merchant.
                             });
                             console.log(`[TripayCallback] Deposit ${depositId} confirmed.`);
                         }
@@ -250,11 +261,11 @@ export class TripayController {
                             where: { invoiceNo: ref }
                         });
 
-                        if (invoice && invoice.status === 'PENDING') {
+                        if (invoice && (invoice.status === 'UNPAID' || invoice.status === 'PENDING')) {
                             await this.prisma.$transaction(async (tx) => {
-                                // IDEMPOTENCY: Atomic update
+                                // IDEMPOTENCY: Atomic update (check both UNPAID and PENDING)
                                 await tx.invoice.update({
-                                    where: { id: invoice.id, status: 'PENDING' },
+                                    where: { id: invoice.id },
                                     data: { status: 'PAID', paidAt: new Date(), tripayResponse: data as any }
                                 });
 
@@ -285,6 +296,71 @@ export class TripayController {
                                 });
                             });
                             console.log(`[TripayCallback] Invoice ${ref} paid. Merchant plan upgraded.`);
+                        }
+                    } catch (err: any) {
+                        if (err.code === 'P2025') return res.status(HttpStatus.OK).json({ success: true });
+                        throw err;
+                    }
+                }
+            } else if (data.status === 'EXPIRED' || data.status === 'FAILED') {
+                // Handle EXPIRED or FAILED status
+                if (ref.startsWith('ORD-')) {
+                    try {
+                        const order = await this.prisma.order.findUnique({
+                            where: { orderNumber: ref }
+                        });
+
+                        if (order && order.paymentStatus === 'PENDING') {
+                            await this.prisma.$transaction(async (tx) => {
+                                await tx.order.update({
+                                    where: { id: order.id, paymentStatus: 'PENDING' },
+                                    data: { paymentStatus: data.status }
+                                });
+                                await tx.payment.update({
+                                    where: { orderId: order.id },
+                                    data: { status: data.status, tripayResponse: data as any }
+                                });
+                            });
+                            console.log(`[TripayCallback] Order ${ref} updated to ${data.status}.`);
+                        }
+                    } catch (err: any) {
+                        if (err.code === 'P2025') return res.status(HttpStatus.OK).json({ success: true });
+                        throw err;
+                    }
+                } else if (ref.startsWith('DEP-')) {
+                    try {
+                        const depositId = ref.replace('DEP-', '');
+                        const deposit = await this.prisma.deposit.findUnique({
+                            where: { id: depositId }
+                        });
+
+                        if (deposit && deposit.status === 'PENDING') {
+                            await this.prisma.$transaction(async (tx) => {
+                                await tx.deposit.update({
+                                    where: { id: deposit.id, status: 'PENDING' },
+                                    data: { status: data.status, tripayResponse: data as any }
+                                });
+                            });
+                            console.log(`[TripayCallback] Deposit ${depositId} updated to ${data.status}.`);
+                        }
+                    } catch (err: any) {
+                        if (err.code === 'P2025') return res.status(HttpStatus.OK).json({ success: true });
+                        throw err;
+                    }
+                } else if (ref.startsWith('INV-')) {
+                    try {
+                        const invoice = await this.prisma.invoice.findUnique({
+                            where: { invoiceNo: ref }
+                        });
+
+                        if (invoice && (invoice.status === 'UNPAID' || invoice.status === 'PENDING')) {
+                            await this.prisma.$transaction(async (tx) => {
+                                await tx.invoice.update({
+                                    where: { id: invoice.id },
+                                    data: { status: data.status, tripayResponse: data as any }
+                                });
+                            });
+                            console.log(`[TripayCallback] Invoice ${ref} updated to ${data.status}.`);
                         }
                     } catch (err: any) {
                         if (err.code === 'P2025') return res.status(HttpStatus.OK).json({ success: true });

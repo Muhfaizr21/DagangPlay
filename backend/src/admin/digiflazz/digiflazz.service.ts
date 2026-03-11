@@ -524,7 +524,7 @@ export class DigiflazzService {
 
                 await tx.commission.update({
                     where: { id: comm.id },
-                    data: { status: 'REFUNDED' }
+                    data: { status: 'CANCELLED' }
                 });
             }
         });
@@ -660,7 +660,11 @@ export class DigiflazzService {
         }
 
         await this.prisma.order.update({
-            where: { id: order.id },
+            where: {
+                id: order.id,
+                // Pastikan tidak ketimpa jika webhook telat dan manual update oleh admin sudah diproses
+                fulfillmentStatus: { notIn: ['SUCCESS', 'FAILED', 'REFUNDED'] }
+            },
             data: {
                 fulfillmentStatus: newStatus,
                 serialNumber: data.sn || order.serialNumber,

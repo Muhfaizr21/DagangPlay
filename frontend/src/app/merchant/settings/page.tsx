@@ -21,7 +21,7 @@ export default function MerchantSettingsPage() {
     // const { data: webhooks, mutate: mutateWebhooks } = useSWR(`${baseUrl}/merchant/settings/webhooks`, fetcher);
 
     // Form States
-    const [profileForm, setProfileForm] = useState({ name: '', tagline: '', description: '', contactEmail: '', contactPhone: '', contactWhatsapp: '', address: '' });
+    const [profileForm, setProfileForm] = useState({ name: '', tagline: '', description: '', contactEmail: '', contactPhone: '', contactWhatsapp: '', address: '', logo: '', bannerImage: '' });
     const [domainForm, setDomainForm] = useState({ domain: '' });
     const [seoForm, setSeoForm] = useState({ googleAnalytics: '', facebookPixel: '', tiktokPixel: '' });
 
@@ -45,6 +45,8 @@ export default function MerchantSettingsPage() {
                 contactPhone: settings.contactPhone || '',
                 contactWhatsapp: settings.contactWhatsapp || '',
                 address: settings.address || '',
+                logo: settings.logo || '',
+                bannerImage: settings.bannerImage || '',
             });
             setDomainForm({ domain: settings.domain || '' });
             setSeoForm({ googleAnalytics: settings.googleAnalytics || '', facebookPixel: settings.facebookPixel || '', tiktokPixel: settings.tiktokPixel || '' });
@@ -127,6 +129,14 @@ export default function MerchantSettingsPage() {
                                     <div className="col-span-1 md:col-span-2">
                                         <label className="block text-[12px] font-bold text-slate-500 mb-2">Nama Toko</label>
                                         <input type="text" value={profileForm.name} onChange={e => setProfileForm({ ...profileForm, name: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all" />
+                                    </div>
+                                    <div className="col-span-1 md:col-span-2">
+                                        <label className="block text-[12px] font-bold text-slate-500 mb-2">URL Logo Toko</label>
+                                        <input type="url" placeholder="https://..." value={profileForm.logo} onChange={e => setProfileForm({ ...profileForm, logo: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all" />
+                                    </div>
+                                    <div className="col-span-1 md:col-span-2">
+                                        <label className="block text-[12px] font-bold text-slate-500 mb-2">URL Banner Toko</label>
+                                        <input type="url" placeholder="https://..." value={profileForm.bannerImage} onChange={e => setProfileForm({ ...profileForm, bannerImage: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all" />
                                     </div>
                                     <div>
                                         <label className="block text-[12px] font-bold text-slate-500 mb-2">Tagline (Opsional)</label>

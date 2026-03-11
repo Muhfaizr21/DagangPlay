@@ -11,10 +11,10 @@ export declare class SubscriptionController {
         latestInvoice: {
             id: string;
             status: import("@prisma/client").$Enums.InvoiceStatus;
-            plan: import("@prisma/client").$Enums.MerchantPlan;
             createdAt: Date;
             updatedAt: Date;
             merchantId: string;
+            plan: import("@prisma/client").$Enums.MerchantPlan;
             paidAt: Date | null;
             amount: number;
             tripayReference: string | null;
@@ -31,10 +31,10 @@ export declare class SubscriptionController {
     getInvoices(req: any): Promise<{
         id: string;
         status: import("@prisma/client").$Enums.InvoiceStatus;
-        plan: import("@prisma/client").$Enums.MerchantPlan;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
+        plan: import("@prisma/client").$Enums.MerchantPlan;
         paidAt: Date | null;
         amount: number;
         tripayReference: string | null;
@@ -50,10 +50,10 @@ export declare class SubscriptionController {
     createInvoice(req: any, body: any): Promise<{
         id: string;
         status: import("@prisma/client").$Enums.InvoiceStatus;
-        plan: import("@prisma/client").$Enums.MerchantPlan;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
+        plan: import("@prisma/client").$Enums.MerchantPlan;
         paidAt: Date | null;
         amount: number;
         tripayReference: string | null;
@@ -69,10 +69,10 @@ export declare class SubscriptionController {
     uploadProof(req: any, id: string, proofUrl: string): Promise<{
         id: string;
         status: import("@prisma/client").$Enums.InvoiceStatus;
-        plan: import("@prisma/client").$Enums.MerchantPlan;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
+        plan: import("@prisma/client").$Enums.MerchantPlan;
         paidAt: Date | null;
         amount: number;
         tripayReference: string | null;

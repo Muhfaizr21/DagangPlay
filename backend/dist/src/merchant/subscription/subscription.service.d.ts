@@ -11,10 +11,10 @@ export declare class SubscriptionService {
         latestInvoice: {
             id: string;
             status: import("@prisma/client").$Enums.InvoiceStatus;
-            plan: import("@prisma/client").$Enums.MerchantPlan;
             createdAt: Date;
             updatedAt: Date;
             merchantId: string;
+            plan: import("@prisma/client").$Enums.MerchantPlan;
             paidAt: Date | null;
             amount: number;
             tripayReference: string | null;
@@ -31,10 +31,10 @@ export declare class SubscriptionService {
     getInvoiceHistory(merchantId: string): Promise<{
         id: string;
         status: import("@prisma/client").$Enums.InvoiceStatus;
-        plan: import("@prisma/client").$Enums.MerchantPlan;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
+        plan: import("@prisma/client").$Enums.MerchantPlan;
         paidAt: Date | null;
         amount: number;
         tripayReference: string | null;
@@ -50,10 +50,10 @@ export declare class SubscriptionService {
     createInvoice(merchantId: string, data: any): Promise<{
         id: string;
         status: import("@prisma/client").$Enums.InvoiceStatus;
-        plan: import("@prisma/client").$Enums.MerchantPlan;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
+        plan: import("@prisma/client").$Enums.MerchantPlan;
         paidAt: Date | null;
         amount: number;
         tripayReference: string | null;
@@ -69,10 +69,10 @@ export declare class SubscriptionService {
     uploadProof(merchantId: string, invoiceId: string, proofUrl: string): Promise<{
         id: string;
         status: import("@prisma/client").$Enums.InvoiceStatus;
-        plan: import("@prisma/client").$Enums.MerchantPlan;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
+        plan: import("@prisma/client").$Enums.MerchantPlan;
         paidAt: Date | null;
         amount: number;
         tripayReference: string | null;

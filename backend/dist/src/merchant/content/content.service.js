@@ -91,6 +91,38 @@ let ContentService = class ContentService {
             data: { settings }
         });
     }
+    async getPopupPromos(merchantId) {
+        return this.prisma.popupPromo.findMany({
+            where: { merchantId },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+    async createPopupPromo(merchantId, data) {
+        return this.prisma.popupPromo.create({
+            data: {
+                merchantId,
+                title: data.title,
+                content: data.content,
+                image: data.imageUrl,
+                linkUrl: data.linkUrl,
+                startDate: data.startDate ? new Date(data.startDate) : null,
+                endDate: data.endDate ? new Date(data.endDate) : null,
+                isActive: data.isActive !== undefined ? data.isActive : true
+            }
+        });
+    }
+    async togglePopupPromo(merchantId, id, isActive) {
+        const promo = await this.prisma.popupPromo.findFirst({ where: { id, merchantId } });
+        if (!promo)
+            throw new common_1.NotFoundException('Popup Promo not found');
+        return this.prisma.popupPromo.update({ where: { id }, data: { isActive } });
+    }
+    async deletePopupPromo(merchantId, id) {
+        const promo = await this.prisma.popupPromo.findFirst({ where: { id, merchantId } });
+        if (!promo)
+            throw new common_1.NotFoundException('Popup Promo not found');
+        return this.prisma.popupPromo.delete({ where: { id } });
+    }
 };
 exports.ContentService = ContentService;
 exports.ContentService = ContentService = __decorate([

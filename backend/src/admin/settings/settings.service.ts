@@ -1,3 +1,4 @@
+import * as bcrypt from 'bcrypt';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import { Role } from '@prisma/client';
@@ -52,12 +53,15 @@ export class SettingsService {
     }
 
     async createAdminStaff(data: any) {
-        // We should hash password in a real app, assuming raw for mockup for now or bcrypt later
+        // Hash password with bcrypt before saving to DB
+        const plainPassword = data.password || 'StaffPass123!';
+        const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
         return this.prisma.user.create({
             data: {
                 name: data.name,
                 email: data.email,
-                password: data.password || 'defaultPassword123',
+                password: hashedPassword,
                 role: Role.ADMIN_STAFF,
                 adminPermissions: data.permissions || [],
                 status: 'ACTIVE',
