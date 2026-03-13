@@ -5,7 +5,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies and required libs for Prisma
+RUN apk add --no-cache openssl libc6-compat
 RUN npm install
 
 # Copy Prisma schema and generate client

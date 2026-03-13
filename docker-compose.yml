@@ -1,6 +1,22 @@
-version: '3.8'
-
 services:
+  db:
+    image: postgres:15-alpine
+    container_name: dagangplay-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=dagangplay
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   backend:
     build:
       context: ./backend
@@ -12,9 +28,11 @@ services:
       - ./backend/.env
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:admin@host.docker.internal:5432/dagangplay?schema=public
+      - DATABASE_URL=postgresql://postgres:admin@db:5432/dagangplay?schema=public
     restart: unless-stopped
-    # If using local database (MAMP/Postgres on MacOS), use host.docker.internal in .env
+    depends_on:
+      db:
+        condition: service_healthy
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -29,6 +47,10 @@ services:
       - ./frontend/.env
     environment:
       - NODE_ENV=production
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
     restart: unless-stopped
     depends_on:
       - backend
+
+volumes:
+  postgres_data:

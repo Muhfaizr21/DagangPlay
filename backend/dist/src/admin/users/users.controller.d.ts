@@ -70,14 +70,14 @@ export declare class UsersController {
             createdAt: Date;
             updatedAt: Date;
             userId: string;
+            bankName: string | null;
+            bankAccountNumber: string | null;
+            bankAccountName: string | null;
             fullName: string | null;
             birthDate: Date | null;
             gender: import("@prisma/client").$Enums.Gender | null;
             postalCode: string | null;
             idCardNumber: string | null;
-            bankName: string | null;
-            bankAccountNumber: string | null;
-            bankAccountName: string | null;
         } | null;
     } & {
         id: string;

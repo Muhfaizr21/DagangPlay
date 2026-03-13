@@ -20,10 +20,10 @@ export declare class WithdrawalsService {
         fee: number;
         receiptImage: string | null;
         rejectedAt: Date | null;
+        netAmount: number;
         bankName: string;
         bankAccountNumber: string;
         bankAccountName: string;
-        netAmount: number;
         processedById: string | null;
     }[]>;
     approveWithdrawal(withdrawalId: string, adminId: string, receiptImage?: string): Promise<{
@@ -38,10 +38,10 @@ export declare class WithdrawalsService {
         fee: number;
         receiptImage: string | null;
         rejectedAt: Date | null;
+        netAmount: number;
         bankName: string;
         bankAccountNumber: string;
         bankAccountName: string;
-        netAmount: number;
         processedById: string | null;
     }>;
     rejectWithdrawal(withdrawalId: string, adminId: string, reason: string): Promise<any>;
