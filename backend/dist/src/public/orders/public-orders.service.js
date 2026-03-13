@@ -134,8 +134,8 @@ let PublicOrdersService = class PublicOrdersService {
         }
         const basePrice = Number(sku.basePrice);
         const sellPrice = merchantOverride ? Number(merchantOverride.customPrice) : Number(sku.priceNormal);
-        let modalPrice = Number(sku.priceNormal);
-        let tier = 'NORMAL';
+        let modalPrice = Number(sku.pricePro);
+        let tier = 'PRO';
         if (merchantOverride && merchantOverride.customModalPrice) {
             modalPrice = Number(merchantOverride.customModalPrice);
             tier = 'SPECIAL_OVERRIDE';
@@ -152,6 +152,10 @@ let PublicOrdersService = class PublicOrdersService {
             else if (merchantPlan === 'SUPREME') {
                 modalPrice = Number(sku.priceSupreme);
                 tier = 'SUPREME';
+            }
+            else {
+                modalPrice = Number(sku.pricePro);
+                tier = 'PRO';
             }
         }
         const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;

@@ -85,13 +85,13 @@ let WithdrawalsService = class WithdrawalsService {
         });
     }
     async rejectWithdrawal(withdrawalId, adminId, reason) {
-        const withdrawal = await this.prisma.withdrawal.findUnique({
-            where: { id: withdrawalId }
-        });
-        if (!withdrawal || withdrawal.status !== 'PENDING') {
-            throw new common_1.BadRequestException('Permintaan penarikan tidak ditemukan atau sudah diproses.');
-        }
         return this.prisma.$transaction(async (tx) => {
+            const withdrawal = await tx.withdrawal.findUnique({
+                where: { id: withdrawalId }
+            });
+            if (!withdrawal || withdrawal.status !== 'PENDING') {
+                throw new common_1.BadRequestException('Permintaan penarikan tidak ditemukan atau sudah diproses.');
+            }
             const user = await tx.user.update({
                 where: { id: withdrawal.userId },
                 data: { balance: { increment: withdrawal.amount } }

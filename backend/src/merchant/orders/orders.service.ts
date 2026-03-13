@@ -62,7 +62,7 @@ export class OrdersService {
             await tx.balanceTransaction.create({
                 data: {
                     userId: merchant.ownerId,
-                    type: 'ORDER',
+                    type: 'PURCHASE',
                     amount: -modalPrice,
                     description: `Pembelian Produk: ${sku.product.name} - ${sku.name} (${orderNumber})`
                 }
@@ -85,7 +85,7 @@ export class OrdersService {
                     totalPrice: modalPrice,
                     paymentStatus: 'PAID',
                     fulfillmentStatus: 'PENDING',
-                    paymentMethod: 'WALLET',
+                    paymentMethod: 'BALANCE',
                     gameUserId: gameId,
                     gameUserServerId: serverId,
                     whatsapp,

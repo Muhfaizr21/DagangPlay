@@ -22,8 +22,8 @@ model User {
   referralCode          String                 @unique
   referredById          String?
   merchantId            String?
-  balance               Float                  @default(0)
-  bonusBalance          Float                  @default(0)
+  balance               Decimal                @default(0)
+  bonusBalance          Decimal                @default(0)
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
   deletedAt             DateTime?
@@ -190,7 +190,7 @@ model Merchant {
   city                  String?
   province              String?
   status                MerchantStatus         @default(PENDING_REVIEW)
-  plan                  MerchantPlan           @default(FREE)
+  plan                  MerchantPlan           @default(PRO)
   planExpiredAt         DateTime?
   isOfficial            Boolean                @default(false)
   settings              Json?
@@ -263,7 +263,7 @@ model Supplier {
   apiKey           String
   apiSecret        String
   status           SupplierStatus           @default(ACTIVE)
-  balance          Float                    @default(0)
+  balance          Decimal                  @default(0)
   lastSyncAt       DateTime?
   createdAt        DateTime                 @default(now())
   updatedAt        DateTime                 @updatedAt
@@ -1327,7 +1327,6 @@ enum MerchantStatus {
 }
 
 enum MerchantPlan {
-  FREE
   PRO
   LEGEND
   SUPREME

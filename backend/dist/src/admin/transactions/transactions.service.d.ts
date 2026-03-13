@@ -7,39 +7,39 @@ export declare class TransactionsService {
     constructor(prisma: PrismaService, publicOrders: PublicOrdersService);
     getAllTransactions(filters: any): Promise<import("../../common/utils/pagination").PaginatedResult<unknown>>;
     getTransactionDetail(id: string): Promise<{
-        merchant: {
-            id: string;
-            name: string;
-        };
-        fraudDetections: {
-            id: string;
-            createdAt: Date;
-            metadata: import("@prisma/client/runtime/client").JsonValue | null;
-            userId: string;
-            orderId: string | null;
-            reason: string;
-            riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
-            isResolved: boolean;
-            resolvedBy: string | null;
-            resolvedAt: Date | null;
-        }[];
-        user: {
-            id: string;
-            name: string;
-            email: string | null;
-        };
         supplierLogs: {
-            id: string;
-            createdAt: Date;
-            supplierId: string;
             method: string;
-            orderId: string | null;
+            id: string;
+            supplierId: string;
+            createdAt: Date;
             endpoint: string;
             requestBody: import("@prisma/client/runtime/client").JsonValue | null;
             responseBody: import("@prisma/client/runtime/client").JsonValue | null;
             httpStatus: number | null;
             duration: number | null;
             isSuccess: boolean;
+            orderId: string | null;
+        }[];
+        merchant: {
+            id: string;
+            name: string;
+        };
+        user: {
+            id: string;
+            name: string;
+            email: string | null;
+        };
+        fraudDetections: {
+            reason: string;
+            id: string;
+            metadata: import("@prisma/client/runtime/client").JsonValue | null;
+            createdAt: Date;
+            userId: string;
+            orderId: string | null;
+            riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
+            isResolved: boolean;
+            resolvedBy: string | null;
+            resolvedAt: Date | null;
         }[];
         statusHistories: {
             id: string;
@@ -50,35 +50,38 @@ export declare class TransactionsService {
             changedBy: string;
         }[];
         payment: {
+            method: import("@prisma/client").$Enums.PaymentMethod;
             id: string;
             status: import("@prisma/client").$Enums.PaymentStatus;
             createdAt: Date;
             updatedAt: Date;
-            merchantId: string;
-            paidAt: Date | null;
-            expiredAt: Date | null;
             userId: string;
-            method: import("@prisma/client").$Enums.PaymentMethod;
+            merchantId: string;
+            expiredAt: Date | null;
+            paidAt: Date | null;
+            orderId: string;
             amount: number;
-            fee: number;
-            totalAmount: number;
             tripayReference: string | null;
             tripayMerchantRef: string | null;
             tripayPaymentUrl: string | null;
-            tripayQrUrl: string | null;
             tripayVaNumber: string | null;
-            tripayExpiredTime: Date | null;
+            tripayQrUrl: string | null;
             tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
-            orderId: string;
+            totalAmount: number;
+            fee: number;
+            tripayExpiredTime: Date | null;
         } | null;
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        merchantId: string;
         productId: string;
         supplierId: string | null;
         basePrice: number;
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string;
+        merchantId: string;
+        productSkuId: string;
+        expiredAt: Date | null;
         orderNumber: string;
         productName: string;
         productSkuName: string;
@@ -89,6 +92,7 @@ export declare class TransactionsService {
         gameUserServerId: string | null;
         gameUserName: string | null;
         quantity: number;
+        promoCodeId: string | null;
         discountAmount: number;
         paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
         paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
@@ -102,11 +106,7 @@ export declare class TransactionsService {
         processedAt: Date | null;
         completedAt: Date | null;
         failedAt: Date | null;
-        expiredAt: Date | null;
         merchantModalPrice: number | null;
-        userId: string;
-        productSkuId: string;
-        promoCodeId: string | null;
     }>;
     retryTransaction(id: string, operatorId: string): Promise<{
         success: boolean;
