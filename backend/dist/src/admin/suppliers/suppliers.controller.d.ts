@@ -9,11 +9,11 @@ export declare class SuppliersController {
         status: import("@prisma/client").$Enums.SupplierStatus;
         createdAt: Date;
         updatedAt: Date;
+        balance: number;
         code: import("@prisma/client").$Enums.SupplierCode;
         apiUrl: string;
         apiKey: string;
         apiSecret: string;
-        balance: number;
         lastSyncAt: Date | null;
     }[]>;
     getSupplierById(id: string): Promise<{
@@ -22,11 +22,11 @@ export declare class SuppliersController {
         status: import("@prisma/client").$Enums.SupplierStatus;
         createdAt: Date;
         updatedAt: Date;
+        balance: number;
         code: import("@prisma/client").$Enums.SupplierCode;
         apiUrl: string;
         apiKey: string;
         apiSecret: string;
-        balance: number;
         lastSyncAt: Date | null;
     }>;
     updateSupplier(id: string, data: {
@@ -41,11 +41,11 @@ export declare class SuppliersController {
         status: import("@prisma/client").$Enums.SupplierStatus;
         createdAt: Date;
         updatedAt: Date;
+        balance: number;
         code: import("@prisma/client").$Enums.SupplierCode;
         apiUrl: string;
         apiKey: string;
         apiSecret: string;
-        balance: number;
         lastSyncAt: Date | null;
     }>;
     testConnection(id: string): Promise<{
@@ -58,25 +58,25 @@ export declare class SuppliersController {
         note?: string;
     }): Promise<any>;
     getLogs(id: string): Promise<{
-        method: string;
         id: string;
-        supplierId: string;
         createdAt: Date;
+        supplierId: string;
+        method: string;
+        orderId: string | null;
         endpoint: string;
         requestBody: import("@prisma/client/runtime/client").JsonValue | null;
         responseBody: import("@prisma/client/runtime/client").JsonValue | null;
         httpStatus: number | null;
         duration: number | null;
         isSuccess: boolean;
-        orderId: string | null;
     }[]>;
     getBalanceHistory(id: string): Promise<{
         id: string;
-        supplierId: string;
         createdAt: Date;
+        supplierId: string;
         note: string | null;
-        type: string;
         amount: number;
+        type: string;
         balanceBefore: number;
         balanceAfter: number;
     }[]>;

@@ -4,7 +4,7 @@ import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
 import 'dotenv/config';
 
-const dbUrl = process.env.DATABASE_URL || "postgresql://postgres:admin@localhost:5432/dagangplay?schema=public";
+const dbUrl = process.env.DATABASE_URL || "postgresql://muhfaiizr@localhost:5432/dagangplayd?schema=public";
 console.log('DATABASE_URL:', dbUrl);
 
 const pool = new Pool({ connectionString: dbUrl });
@@ -52,10 +52,11 @@ async function main() {
 
     // 2. MERCHANTS
     const merchantsData = [
-        { name: 'Fantasi Gamer', email: 'fantasi@m.com', slug: 'fantasi-gamer', domain: 'fantasigamer.com', plan: MerchantPlan.SUPREME, status: MerchantStatus.ACTIVE },
-        { name: 'Arb Store', email: 'arb@m.com', slug: 'arb-store', domain: 'arbstore.id', plan: MerchantPlan.LEGEND, status: MerchantStatus.ACTIVE },
-        { name: 'Rolly Store', email: 'rolly@m.com', slug: 'rolly-store', plan: MerchantPlan.PRO, status: MerchantStatus.ACTIVE },
-        { name: 'Budi Gaming', email: 'budi@m.com', slug: 'budi-gaming', plan: MerchantPlan.PRO, status: MerchantStatus.PENDING_REVIEW },
+        { name: 'Fantasi Gamer', email: 'fantasi@m.com', slug: 'fantasi-gamer', domain: 'fantasigamer.com', plan: MerchantPlan.SUPREME, status: MerchantStatus.ACTIVE, isOfficial: false },
+        { name: 'Arb Store', email: 'arb@m.com', slug: 'arb-store', domain: 'arbstore.id', plan: MerchantPlan.LEGEND, status: MerchantStatus.ACTIVE, isOfficial: false },
+        { name: 'Rolly Store', email: 'rolly@m.com', slug: 'rolly-store', plan: MerchantPlan.PRO, status: MerchantStatus.ACTIVE, isOfficial: false },
+        { name: 'Budi Gaming', email: 'budi@m.com', slug: 'budi-gaming', plan: MerchantPlan.PRO, status: MerchantStatus.PENDING_REVIEW, isOfficial: false },
+        { name: 'DagangPlay', email: 'official@dagangplay.com', slug: 'official', plan: MerchantPlan.SUPREME, status: MerchantStatus.ACTIVE, isOfficial: true },
     ];
 
     const merchantRecords: any[] = [];
@@ -79,6 +80,7 @@ async function main() {
                 domain: mt.domain,
                 status: mt.status,
                 plan: mt.plan,
+                isOfficial: mt.isOfficial,
                 ownerId: user.id
             }
         });

@@ -38,7 +38,7 @@ const adapter_pg_1 = require("@prisma/adapter-pg");
 const pg_1 = require("pg");
 const bcrypt = __importStar(require("bcrypt"));
 require("dotenv/config");
-const dbUrl = process.env.DATABASE_URL || "postgresql://postgres:admin@localhost:5432/dagangplay?schema=public";
+const dbUrl = process.env.DATABASE_URL || "postgresql://muhfaiizr@localhost:5432/dagangplayd?schema=public";
 console.log('DATABASE_URL:', dbUrl);
 const pool = new pg_1.Pool({ connectionString: dbUrl });
 const adapter = new adapter_pg_1.PrismaPg(pool);
@@ -77,10 +77,11 @@ async function main() {
         }
     });
     const merchantsData = [
-        { name: 'Fantasi Gamer', email: 'fantasi@m.com', slug: 'fantasi-gamer', domain: 'fantasigamer.com', plan: client_1.MerchantPlan.SUPREME, status: client_1.MerchantStatus.ACTIVE },
-        { name: 'Arb Store', email: 'arb@m.com', slug: 'arb-store', domain: 'arbstore.id', plan: client_1.MerchantPlan.LEGEND, status: client_1.MerchantStatus.ACTIVE },
-        { name: 'Rolly Store', email: 'rolly@m.com', slug: 'rolly-store', plan: client_1.MerchantPlan.PRO, status: client_1.MerchantStatus.ACTIVE },
-        { name: 'Budi Gaming', email: 'budi@m.com', slug: 'budi-gaming', plan: client_1.MerchantPlan.PRO, status: client_1.MerchantStatus.PENDING_REVIEW },
+        { name: 'Fantasi Gamer', email: 'fantasi@m.com', slug: 'fantasi-gamer', domain: 'fantasigamer.com', plan: client_1.MerchantPlan.SUPREME, status: client_1.MerchantStatus.ACTIVE, isOfficial: false },
+        { name: 'Arb Store', email: 'arb@m.com', slug: 'arb-store', domain: 'arbstore.id', plan: client_1.MerchantPlan.LEGEND, status: client_1.MerchantStatus.ACTIVE, isOfficial: false },
+        { name: 'Rolly Store', email: 'rolly@m.com', slug: 'rolly-store', plan: client_1.MerchantPlan.PRO, status: client_1.MerchantStatus.ACTIVE, isOfficial: false },
+        { name: 'Budi Gaming', email: 'budi@m.com', slug: 'budi-gaming', plan: client_1.MerchantPlan.PRO, status: client_1.MerchantStatus.PENDING_REVIEW, isOfficial: false },
+        { name: 'DagangPlay', email: 'official@dagangplay.com', slug: 'official', plan: client_1.MerchantPlan.SUPREME, status: client_1.MerchantStatus.ACTIVE, isOfficial: true },
     ];
     const merchantRecords = [];
     for (let mt of merchantsData) {
@@ -102,6 +103,7 @@ async function main() {
                 domain: mt.domain,
                 status: mt.status,
                 plan: mt.plan,
+                isOfficial: mt.isOfficial,
                 ownerId: user.id
             }
         });

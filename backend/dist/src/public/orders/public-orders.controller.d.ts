@@ -10,6 +10,7 @@ export declare class PublicOrdersController {
         logo: null;
         whiteLabel: boolean;
         plan: string;
+        isOfficial: boolean;
         isSuspended?: undefined;
         statusCode?: undefined;
         message?: undefined;
@@ -18,7 +19,6 @@ export declare class PublicOrdersController {
         banner?: undefined;
         tagline?: undefined;
         slug?: undefined;
-        isOfficial?: undefined;
         theme?: undefined;
     } | {
         isSuspended: boolean;
@@ -28,12 +28,12 @@ export declare class PublicOrdersController {
         logo?: undefined;
         whiteLabel?: undefined;
         plan?: undefined;
+        isOfficial?: undefined;
         isExpired?: undefined;
         id?: undefined;
         banner?: undefined;
         tagline?: undefined;
         slug?: undefined;
-        isOfficial?: undefined;
         theme?: undefined;
     } | {
         isExpired: boolean;
@@ -43,12 +43,12 @@ export declare class PublicOrdersController {
         logo?: undefined;
         whiteLabel?: undefined;
         plan?: undefined;
+        isOfficial?: undefined;
         isSuspended?: undefined;
         id?: undefined;
         banner?: undefined;
         tagline?: undefined;
         slug?: undefined;
-        isOfficial?: undefined;
         theme?: undefined;
     } | {
         id: string;
@@ -76,51 +76,52 @@ export declare class PublicOrdersController {
             product: {
                 category: {
                     id: string;
-                    createdAt: Date;
-                    updatedAt: Date;
                     name: string;
                     slug: string;
                     description: string | null;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    image: string | null;
                     sortOrder: number;
-                    digiflazzCategory: string | null;
                     isActive: boolean;
                     icon: string | null;
-                    image: string | null;
                     parentId: string | null;
+                    digiflazzCategory: string | null;
                 };
             } & {
                 id: string;
-                createdAt: Date;
-                updatedAt: Date;
                 name: string;
-                status: import("@prisma/client").$Enums.ProductStatus;
                 slug: string;
                 description: string | null;
+                status: import("@prisma/client").$Enums.ProductStatus;
+                createdAt: Date;
+                updatedAt: Date;
                 sortOrder: number;
+                banner: string | null;
+                digiflazzCategory: string | null;
                 categoryId: string;
                 thumbnail: string | null;
-                banner: string | null;
                 gameIdLabel: string | null;
                 gameServerId: boolean;
                 serverLabel: string | null;
                 digiflazzBrand: string | null;
-                digiflazzCategory: string | null;
                 instruction: string | null;
                 isFeatured: boolean;
                 isPopular: boolean;
             };
         } & {
             id: string;
-            productId: string;
-            basePrice: number;
-            supplierId: string;
-            createdAt: Date;
-            updatedAt: Date;
             name: string;
             status: import("@prisma/client").$Enums.SkuStatus;
+            createdAt: Date;
+            updatedAt: Date;
+            sortOrder: number;
+            productId: string;
+            supplierId: string;
             supplierCode: string;
             backupSupplierId: string | null;
             backupSupplierCode: string | null;
+            basePrice: number;
             priceNormal: number;
             pricePro: number;
             priceLegend: number;
@@ -130,19 +131,17 @@ export declare class PublicOrdersController {
             marginLegend: number;
             marginSupreme: number;
             stock: number;
-            sortOrder: number;
             metadata: import("@prisma/client/runtime/client").JsonValue | null;
         };
         payment: {
             id: string;
-            paidAt: Date | null;
-            expiredAt: Date | null;
+            status: import("@prisma/client").$Enums.PaymentStatus;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
             merchantId: string;
-            status: import("@prisma/client").$Enums.PaymentStatus;
-            orderId: string;
+            paidAt: Date | null;
+            expiredAt: Date | null;
+            userId: string;
             method: import("@prisma/client").$Enums.PaymentMethod;
             amount: number;
             fee: number;
@@ -154,15 +153,20 @@ export declare class PublicOrdersController {
             tripayVaNumber: string | null;
             tripayExpiredTime: Date | null;
             tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
+            orderId: string;
         } | null;
     } & {
         id: string;
-        orderNumber: string;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string;
         productId: string;
+        supplierId: string | null;
+        basePrice: number;
+        orderNumber: string;
         productName: string;
         productSkuName: string;
         priceTierUsed: import("@prisma/client").$Enums.PriceTier;
-        basePrice: number;
         sellingPrice: number;
         totalPrice: number;
         gameUserId: string;
@@ -173,7 +177,6 @@ export declare class PublicOrdersController {
         paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
         paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
         fulfillmentStatus: import("@prisma/client").$Enums.OrderFulfillmentStatus;
-        supplierId: string | null;
         supplierRefId: string | null;
         supplierResponse: import("@prisma/client/runtime/client").JsonValue | null;
         serialNumber: string | null;
@@ -184,11 +187,8 @@ export declare class PublicOrdersController {
         completedAt: Date | null;
         failedAt: Date | null;
         expiredAt: Date | null;
-        createdAt: Date;
-        updatedAt: Date;
         merchantModalPrice: number | null;
         userId: string;
-        merchantId: string;
         productSkuId: string;
         promoCodeId: string | null;
     }>;

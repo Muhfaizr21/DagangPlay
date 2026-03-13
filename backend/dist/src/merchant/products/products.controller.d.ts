@@ -28,13 +28,13 @@ export declare class ProductsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
-        userId: string;
         merchantId: string;
+        isActive: boolean;
+        expiredAt: Date | null;
+        userId: string;
         productSkuId: string;
         customPrice: number;
         reason: string | null;
-        expiredAt: Date | null;
         customModalPrice: number | null;
     }>;
     bulkUpdatePricing(req: any, body: {
@@ -48,5 +48,14 @@ export declare class ProductsController {
         customName?: string;
         customThumbnail?: string;
         description?: string;
-    }): Promise<any>;
+    }): Promise<{
+        id: string;
+        description: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string;
+        productId: string;
+        customName: string | null;
+        customThumbnail: string | null;
+    }>;
 }

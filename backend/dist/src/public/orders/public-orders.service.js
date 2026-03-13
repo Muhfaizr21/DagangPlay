@@ -300,7 +300,8 @@ let PublicOrdersService = class PublicOrdersService {
                 name: 'DagangPlay',
                 logo: null,
                 whiteLabel: false,
-                plan: 'FREE'
+                plan: 'FREE',
+                isOfficial: true
             };
         }
         const features = await this.subscriptionsService.getMerchantPlanFeatures(targetMerchant.id);

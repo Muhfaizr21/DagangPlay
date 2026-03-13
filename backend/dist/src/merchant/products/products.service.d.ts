@@ -25,13 +25,13 @@ export declare class ProductsService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
-        userId: string;
         merchantId: string;
+        isActive: boolean;
+        expiredAt: Date | null;
+        userId: string;
         productSkuId: string;
         customPrice: number;
         reason: string | null;
-        expiredAt: Date | null;
         customModalPrice: number | null;
     }>;
     bulkUpdateMargin(merchantId: string, userId: string, markupPercentage: number, categoryId?: string): Promise<{
@@ -42,5 +42,14 @@ export declare class ProductsService {
         customName?: string;
         customThumbnail?: string;
         description?: string;
-    }): Promise<any>;
+    }): Promise<{
+        id: string;
+        description: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string;
+        productId: string;
+        customName: string | null;
+        customThumbnail: string | null;
+    }>;
 }

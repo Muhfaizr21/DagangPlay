@@ -15,11 +15,11 @@ export declare class SecurityController {
         } | null;
     } & {
         id: string;
-        metadata: import("@prisma/client/runtime/client").JsonValue | null;
         createdAt: Date;
+        metadata: import("@prisma/client/runtime/client").JsonValue | null;
         userId: string;
-        reason: string;
         orderId: string | null;
+        reason: string;
         riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
         isResolved: boolean;
         resolvedBy: string | null;
@@ -27,11 +27,11 @@ export declare class SecurityController {
     })[]>;
     resolveFraud(id: string): Promise<{
         id: string;
-        metadata: import("@prisma/client/runtime/client").JsonValue | null;
         createdAt: Date;
+        metadata: import("@prisma/client/runtime/client").JsonValue | null;
         userId: string;
-        reason: string;
         orderId: string | null;
+        reason: string;
         riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
         isResolved: boolean;
         resolvedBy: string | null;
@@ -72,12 +72,12 @@ export declare class SecurityController {
     } & {
         id: string;
         createdAt: Date;
+        email: string | null;
+        failReason: string | null;
+        userId: string | null;
         ipAddress: string;
         userAgent: string | null;
-        userId: string | null;
-        failReason: string | null;
         isSuccess: boolean;
-        email: string | null;
     })[]>;
     getAuditLogs(startDate?: string, action?: string): Promise<({
         user: {
@@ -88,6 +88,8 @@ export declare class SecurityController {
     } & {
         id: string;
         createdAt: Date;
+        merchantId: string | null;
+        userId: string | null;
         action: string;
         entity: string;
         entityId: string | null;
@@ -95,7 +97,5 @@ export declare class SecurityController {
         newData: import("@prisma/client/runtime/client").JsonValue | null;
         ipAddress: string | null;
         userAgent: string | null;
-        userId: string | null;
-        merchantId: string | null;
     })[]>;
 }

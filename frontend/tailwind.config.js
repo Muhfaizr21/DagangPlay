@@ -20,10 +20,11 @@ module.exports = {
         mint: '#00E5A0',
       },
       fontFamily: {
-        heading: ['sans-serif'],
-        syne: ['sans-serif'],
-        body: ['sans-serif'],
-        sans: ['sans-serif'],
+        poppins: ['var(--font-poppins)', 'sans-serif'],
+        inter: ['var(--font-inter)', 'sans-serif'],
+        heading: ['var(--font-poppins)', 'sans-serif'],
+        body: ['var(--font-inter)', 'sans-serif'],
+        sans: ['var(--font-inter)', 'sans-serif'],
       },
       backgroundImage: {
         'gradient-gold': 'linear-gradient(135deg, #C9A84C 0%, #E8C96A 50%, #38D9F5 100%)',

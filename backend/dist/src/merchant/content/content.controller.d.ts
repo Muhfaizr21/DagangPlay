@@ -114,13 +114,12 @@ export declare class ContentController {
     }>;
     updateDesign(req: any, body: any): Promise<{
         id: string;
-        slug: string;
-        domain: string | null;
-        ownerId: string;
         name: string;
+        slug: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
+        domain: string | null;
         description: string | null;
         tagline: string | null;
         contactEmail: string | null;
@@ -134,19 +133,19 @@ export declare class ContentController {
         planExpiredAt: Date | null;
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
+        ownerId: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
     }>;
     updateTheme(req: any, body: any): Promise<{
         id: string;
-        slug: string;
-        domain: string | null;
-        ownerId: string;
         name: string;
+        slug: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
+        domain: string | null;
         description: string | null;
         tagline: string | null;
         contactEmail: string | null;
@@ -160,12 +159,61 @@ export declare class ContentController {
         planExpiredAt: Date | null;
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
+        ownerId: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
     }>;
-    getPopupPromos(req: any): Promise<any>;
-    createPopupPromo(req: any, body: any): Promise<any>;
-    togglePopupPromo(req: any, id: string, isActive: boolean): Promise<any>;
-    deletePopupPromo(req: any, id: string): Promise<any>;
+    getPopupPromos(req: any): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
+        title: string;
+        image: string | null;
+        linkUrl: string | null;
+        startDate: Date | null;
+        endDate: Date | null;
+        isActive: boolean;
+        content: string | null;
+    }[]>;
+    createPopupPromo(req: any, body: any): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
+        title: string;
+        image: string | null;
+        linkUrl: string | null;
+        startDate: Date | null;
+        endDate: Date | null;
+        isActive: boolean;
+        content: string | null;
+    }>;
+    togglePopupPromo(req: any, id: string, isActive: boolean): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
+        title: string;
+        image: string | null;
+        linkUrl: string | null;
+        startDate: Date | null;
+        endDate: Date | null;
+        isActive: boolean;
+        content: string | null;
+    }>;
+    deletePopupPromo(req: any, id: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
+        title: string;
+        image: string | null;
+        linkUrl: string | null;
+        startDate: Date | null;
+        endDate: Date | null;
+        isActive: boolean;
+        content: string | null;
+    }>;
 }

@@ -28,21 +28,21 @@ export declare class FinanceController {
             name: string;
         } | null;
     } & {
-        method: import("@prisma/client").$Enums.PaymentMethod;
         id: string;
         status: import("@prisma/client").$Enums.DepositStatus;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
         merchantId: string;
-        expiredAt: Date | null;
         note: string | null;
+        expiredAt: Date | null;
+        userId: string;
+        method: import("@prisma/client").$Enums.PaymentMethod;
         amount: number;
         tripayReference: string | null;
         tripayMerchantRef: string | null;
         tripayPaymentUrl: string | null;
-        tripayVaNumber: string | null;
         tripayQrUrl: string | null;
+        tripayVaNumber: string | null;
         tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
         receiptImage: string | null;
         confirmedById: string | null;
@@ -67,17 +67,17 @@ export declare class FinanceController {
         status: import("@prisma/client").$Enums.WithdrawalStatus;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
         note: string | null;
         processedAt: Date | null;
+        userId: string;
         amount: number;
+        fee: number;
         receiptImage: string | null;
         rejectedAt: Date | null;
-        fee: number;
-        netAmount: number;
         bankName: string;
         bankAccountNumber: string;
         bankAccountName: string;
+        netAmount: number;
         processedById: string | null;
     })[]>;
     processWithdrawal(id: string, body: {

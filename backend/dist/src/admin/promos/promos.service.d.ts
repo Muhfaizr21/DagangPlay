@@ -3,27 +3,27 @@ export declare class PromosService {
     private prisma;
     constructor(prisma: PrismaService);
     getAllPromos(search?: string): Promise<({
-        category: {
+        merchant: {
             name: string;
         } | null;
-        merchant: {
+        category: {
             name: string;
         } | null;
     } & {
         id: string;
         name: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
-        code: string;
-        description: string | null;
+        merchantId: string | null;
+        startDate: Date | null;
+        endDate: Date | null;
         isActive: boolean;
         categoryId: string | null;
-        merchantId: string | null;
+        code: string;
         productSkuId: string | null;
         type: import("@prisma/client").$Enums.PromoType;
         value: number;
-        startDate: Date | null;
-        endDate: Date | null;
         maxDiscount: number | null;
         minPurchase: number | null;
         quota: number | null;
@@ -34,18 +34,18 @@ export declare class PromosService {
     getPromoById(id: string): Promise<{
         id: string;
         name: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
-        code: string;
-        description: string | null;
+        merchantId: string | null;
+        startDate: Date | null;
+        endDate: Date | null;
         isActive: boolean;
         categoryId: string | null;
-        merchantId: string | null;
+        code: string;
         productSkuId: string | null;
         type: import("@prisma/client").$Enums.PromoType;
         value: number;
-        startDate: Date | null;
-        endDate: Date | null;
         maxDiscount: number | null;
         minPurchase: number | null;
         quota: number | null;
@@ -56,18 +56,18 @@ export declare class PromosService {
     createPromo(data: any): Promise<{
         id: string;
         name: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
-        code: string;
-        description: string | null;
+        merchantId: string | null;
+        startDate: Date | null;
+        endDate: Date | null;
         isActive: boolean;
         categoryId: string | null;
-        merchantId: string | null;
+        code: string;
         productSkuId: string | null;
         type: import("@prisma/client").$Enums.PromoType;
         value: number;
-        startDate: Date | null;
-        endDate: Date | null;
         maxDiscount: number | null;
         minPurchase: number | null;
         quota: number | null;
@@ -78,18 +78,18 @@ export declare class PromosService {
     updatePromo(id: string, data: any): Promise<{
         id: string;
         name: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
-        code: string;
-        description: string | null;
+        merchantId: string | null;
+        startDate: Date | null;
+        endDate: Date | null;
         isActive: boolean;
         categoryId: string | null;
-        merchantId: string | null;
+        code: string;
         productSkuId: string | null;
         type: import("@prisma/client").$Enums.PromoType;
         value: number;
-        startDate: Date | null;
-        endDate: Date | null;
         maxDiscount: number | null;
         minPurchase: number | null;
         quota: number | null;
@@ -100,18 +100,18 @@ export declare class PromosService {
     togglePromoStatus(id: string): Promise<{
         id: string;
         name: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
-        code: string;
-        description: string | null;
+        merchantId: string | null;
+        startDate: Date | null;
+        endDate: Date | null;
         isActive: boolean;
         categoryId: string | null;
-        merchantId: string | null;
+        code: string;
         productSkuId: string | null;
         type: import("@prisma/client").$Enums.PromoType;
         value: number;
-        startDate: Date | null;
-        endDate: Date | null;
         maxDiscount: number | null;
         minPurchase: number | null;
         quota: number | null;
@@ -122,18 +122,18 @@ export declare class PromosService {
     deletePromo(id: string): Promise<{
         id: string;
         name: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
-        code: string;
-        description: string | null;
+        merchantId: string | null;
+        startDate: Date | null;
+        endDate: Date | null;
         isActive: boolean;
         categoryId: string | null;
-        merchantId: string | null;
+        code: string;
         productSkuId: string | null;
         type: import("@prisma/client").$Enums.PromoType;
         value: number;
-        startDate: Date | null;
-        endDate: Date | null;
         maxDiscount: number | null;
         minPurchase: number | null;
         quota: number | null;

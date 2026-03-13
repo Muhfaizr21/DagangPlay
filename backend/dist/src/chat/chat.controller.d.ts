@@ -33,13 +33,13 @@ export declare class ChatController {
         isAdmin: boolean;
     }>;
     getAllRooms(): Promise<({
-        _count: {
-            messages: number;
-        };
         merchant: {
             name: string;
             logo: string | null;
             plan: import("@prisma/client").$Enums.MerchantPlan;
+        };
+        _count: {
+            messages: number;
         };
     } & {
         id: string;
