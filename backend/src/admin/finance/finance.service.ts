@@ -29,11 +29,12 @@ export class FinanceService {
     }
 
     async confirmDeposit(id: string, operatorId: string) {
-        const deposit = await this.prisma.deposit.findUnique({ where: { id } });
-        if (!deposit) throw new NotFoundException('Deposit tidak ditemukan');
-        if (deposit.status !== 'PENDING') throw new BadRequestException(`Status tidak bisa dikonfirmasi (${deposit.status})`);
-
         return this.prisma.$transaction(async (tx) => {
+            // RELOAD INSIDE TRANSACTION (Pessimistic-like Lock)
+            const deposit = await tx.deposit.findUnique({ where: { id } });
+            if (!deposit) throw new NotFoundException('Deposit tidak ditemukan');
+            if (deposit.status !== 'PENDING') throw new BadRequestException(`Status tidak bisa dikonfirmasi (${deposit.status})`);
+
             // 1. Mark status
             const updated = await tx.deposit.update({
                 where: { id },
@@ -44,17 +45,11 @@ export class FinanceService {
                 }
             });
 
-            // 2. Add balance to user
-            const user = await tx.user.findUnique({ where: { id: deposit.userId } });
-            if (!user) throw new NotFoundException('User for deposit not found');
-
-            const balanceBefore = user.balance;
+            // 2. Add balance to user (ATOMIC)
             const amount = Number(deposit.amount);
-            const balanceAfter = Number(balanceBefore) + amount;
-
-            await tx.user.update({
+            const user = await tx.user.update({
                 where: { id: deposit.userId },
-                data: { balance: balanceAfter }
+                data: { balance: { increment: amount } }
             });
 
             // 3. Create balance transaction ledger
@@ -63,8 +58,8 @@ export class FinanceService {
                     userId: user.id,
                     type: 'DEPOSIT',
                     amount,
-                    balanceBefore,
-                    balanceAfter,
+                    balanceBefore: Number(user.balance) - amount,
+                    balanceAfter: Number(user.balance),
                     depositId: id,
                     note: `Manual confirmation of deposit #${id}`
                 }
@@ -129,11 +124,11 @@ export class FinanceService {
     }
 
     async processWithdrawal(id: string, operatorId: string, note?: string, receiptImage?: string) {
-        const wd = await this.prisma.withdrawal.findUnique({ where: { id } });
-        if (!wd) throw new NotFoundException('Data tidak ditemukan');
-        if (wd.status !== 'PENDING') throw new BadRequestException('Status tidak PENDING');
-
         return this.prisma.$transaction(async (tx) => {
+            const wd = await tx.withdrawal.findUnique({ where: { id } });
+            if (!wd) throw new NotFoundException('Data tidak ditemukan');
+            if (wd.status !== 'PENDING') throw new BadRequestException('Status tidak PENDING');
+
             const updated = await tx.withdrawal.update({
                 where: { id },
                 data: {
@@ -154,11 +149,11 @@ export class FinanceService {
     }
 
     async rejectWithdrawal(id: string, reason: string, operatorId: string) {
-        const wd = await this.prisma.withdrawal.findUnique({ where: { id } });
-        if (!wd) throw new NotFoundException('Data tidak ditemukan');
-        if (wd.status !== 'PENDING') throw new BadRequestException('Status tidak PENDING');
-
         return this.prisma.$transaction(async (tx) => {
+            const wd = await tx.withdrawal.findUnique({ where: { id } });
+            if (!wd) throw new NotFoundException('Data tidak ditemukan');
+            if (wd.status !== 'PENDING') throw new BadRequestException('Status tidak PENDING');
+
             const updated = await tx.withdrawal.update({
                 where: { id },
                 data: {
@@ -169,27 +164,24 @@ export class FinanceService {
                 }
             });
 
-            // Kembalikan uang yang sempat di-"freeze" ke user saat request WD
-            const user = await tx.user.findUnique({ where: { id: wd.userId } });
-            if (user) {
-                const amount = Number(wd.amount);
-                const currentBalance = Number(user.balance);
-                await tx.user.update({
-                    where: { id: user.id },
-                    data: { balance: currentBalance + amount }
-                });
-                await tx.balanceTransaction.create({
-                    data: {
-                        userId: user.id,
-                        type: 'REFUND', // Or maybe WD_REJECT
-                        amount,
-                        balanceBefore: currentBalance,
-                        balanceAfter: currentBalance + amount,
-                        withdrawalId: id,
-                        note: `Refund for rejected WD #${id} - ${reason}`
-                    }
-                });
-            }
+            // Kembalikan uang (ATOMIC)
+            const amount = Number(wd.amount);
+            const user = await tx.user.update({
+                where: { id: wd.userId },
+                data: { balance: { increment: amount } }
+            });
+
+            await tx.balanceTransaction.create({
+                data: {
+                    userId: user.id,
+                    type: 'REFUND',
+                    amount,
+                    balanceBefore: Number(user.balance) - amount,
+                    balanceAfter: Number(user.balance),
+                    withdrawalId: id,
+                    note: `Refund for rejected WD #${id} - ${reason}`
+                }
+            });
 
             await tx.auditLog.create({
                 data: { action: 'REJECT_WITHDRAWAL', entity: 'Withdrawal', entityId: id, newData: { status: 'REJECTED', reason }, oldData: { status: 'PENDING' } }

@@ -91,15 +91,15 @@ export class WithdrawalsService {
     }
 
     async rejectWithdrawal(withdrawalId: string, adminId: string, reason: string) {
-        const withdrawal = await this.prisma.withdrawal.findUnique({
-            where: { id: withdrawalId }
-        });
-
-        if (!withdrawal || withdrawal.status !== 'PENDING') {
-            throw new BadRequestException('Permintaan penarikan tidak ditemukan atau sudah diproses.');
-        }
-
         return this.prisma.$transaction(async (tx) => {
+            // ATOMIC CHECK: Move inside transaction to prevent race conditions
+            const withdrawal = await tx.withdrawal.findUnique({
+                where: { id: withdrawalId }
+            });
+
+            if (!withdrawal || withdrawal.status !== 'PENDING') {
+                throw new BadRequestException('Permintaan penarikan tidak ditemukan atau sudah diproses.');
+            }
             // Refund balance to user
             const user = await tx.user.update({
                 where: { id: withdrawal.userId },

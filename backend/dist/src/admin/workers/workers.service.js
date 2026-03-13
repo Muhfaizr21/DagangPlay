@@ -70,18 +70,7 @@ let WorkersService = WorkersService_1 = class WorkersService {
             try {
                 const tenMinutesAgo = new Date(now.getTime() - (10 * 60 * 1000));
                 if (order.fulfillmentStatus === client_1.OrderFulfillmentStatus.PROCESSING && order.updatedAt < tenMinutesAgo) {
-                    this.logger.warn(`Order ${order.orderNumber} TIMEOUT. Marking as FAILED & Refunding.`);
-                    await this.prisma.order.update({
-                        where: { id: order.id },
-                        data: {
-                            fulfillmentStatus: client_1.OrderFulfillmentStatus.FAILED,
-                            failReason: 'Fulfillment Timeout (10 minutes with no SUCCESS response)',
-                            failedAt: new Date()
-                        }
-                    });
-                    await this.digiflazz.handleCommissionReversal(order.id);
-                    await this.digiflazz.handleCustomerRefund(order.id);
-                    continue;
+                    this.logger.warn(`Order ${order.orderNumber} is stuck in PROCESSING for over 10 minutes. Manual check recommended.`);
                 }
                 const customerNo = order.gameUserServerId ? `${order.gameUserId}${order.gameUserServerId}` : order.gameUserId;
                 const supplierInfo = await this.digiflazz.checkOrderStatus(order.id, order.supplierRefId, order.productSkuName, customerNo);
@@ -104,6 +93,11 @@ let WorkersService = WorkersService_1 = class WorkersService {
                             failReason: newStatus === client_1.OrderFulfillmentStatus.FAILED ? supplierInfo.message : null
                         }
                     });
+                    if (newStatus === client_1.OrderFulfillmentStatus.FAILED) {
+                        this.logger.warn(`Order ${order.orderNumber} FAILED via Sync. Triggering refund & reversal.`);
+                        await this.digiflazz.handleCommissionReversal(order.id);
+                        await this.digiflazz.handleCustomerRefund(order.id);
+                    }
                     this.logger.log(`Order ${order.orderNumber} updated to ${newStatus}`);
                 }
             }
@@ -125,7 +119,7 @@ let WorkersService = WorkersService_1 = class WorkersService {
                 where: { id: supplier.id },
                 data: { balance: currentBalance, lastSyncAt: new Date() }
             });
-            if (currentBalance < 0) {
+            if (currentBalance < 500000) {
                 this.logger.warn(`LOW BALANCE ALERT: Digiflazz balance is Rp ${currentBalance.toLocaleString('id-ID')}. Setting products to MAINTENANCE.`);
                 await this.prisma.product.updateMany({
                     where: { status: 'ACTIVE' },

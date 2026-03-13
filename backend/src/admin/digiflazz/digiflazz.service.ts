@@ -479,16 +479,17 @@ export class DigiflazzService {
                 return resJson;
             }
         } catch (err: any) {
-            console.error('[DigiflazzService] Fulfillment Error:', err);
+            console.error('[DigiflazzService] Fulfillment Connection Error (Potentially Stuck):', err.message);
+            // FATAL FIX: Jangan langsung anggap FAILED jika hanya error koneksi
+            // Biarkan status tetap PROCESSING agar Cron Job bisa mengecek ulang nanti.
+            // Jika langsung FAILED, resiko Double Refund jika ternyata di supplier SUKSES.
             await this.prisma.order.update({
                 where: { id: order.id },
                 data: {
-                    fulfillmentStatus: 'FAILED',
-                    failReason: err.message || 'System error'
+                    fulfillmentStatus: 'PROCESSING',
+                    note: `Connection Error: ${err.message}. Awaiting auto-sync...`
                 }
             });
-            await this.handleCommissionReversal(order.id);
-            await this.handleCustomerRefund(order.id);
             throw err;
         }
     }
@@ -548,6 +549,22 @@ export class DigiflazzService {
         });
         if (existingRefund) return;
 
+        // IDENTIFIKASI GUEST: Jika user tidak punya email dan namanya diawali "Guest "
+        const isGuest = !order.user.email && order.user.name.startsWith('Guest ');
+
+        if (isGuest) {
+            console.log(`[CustomerRefund] Order ${order.orderNumber} is a GUEST order. Marking for manual refund.`);
+            await this.prisma.order.update({
+                where: { id: order.id },
+                data: { 
+                    paymentStatus: 'PAID',
+                    fulfillmentStatus: 'FAILED',
+                    failReason: `GUEST REFUND REQUIRED: Pembeli Guest (No Whatsapp: ${order.user.phone}). Selesaikan refund manual.`
+                }
+            });
+            return;
+        }
+
         await this.prisma.$transaction(async (tx) => {
             // 1. Credit balance to User
             const user = await tx.user.update({
@@ -594,14 +611,37 @@ export class DigiflazzService {
             });
 
             for (const sku of skus) {
-                await this.prisma.$transaction(async (tx) => {
-                    // Update master base price
-                    await tx.productSku.update({
+                // FATAL: SA ANTI-LOSS logic
+                // Jika modal baru mendadak melampaui harga jual retail lami, OFF-kan SKU
+                if (newPrice > Number(sku.priceNormal)) {
+                    console.error(`[AntiLoss] Price Spike! New Base (${newPrice}) > Current Retail (${sku.priceNormal}). DEACTIVATING ${skuCode}.`);
+                    await this.prisma.productSku.update({
                         where: { id: sku.id },
-                        data: { basePrice: newPrice }
+                        data: { status: 'INACTIVE' }
+                    });
+                    continue;
+                }
+
+                await this.prisma.$transaction(async (tx) => {
+                    // Recalculate Tier Prices based on new base price + existing margins
+                    const updatedPriceNormal = newPrice + Number(sku.marginNormal);
+                    const updatedPricePro = newPrice + Number(sku.marginPro);
+                    const updatedPriceLegend = newPrice + Number(sku.marginLegend);
+                    const updatedPriceSupreme = newPrice + Number(sku.marginSupreme);
+
+                    // Update Master SKU with new prices
+                    const updatedSku = await tx.productSku.update({
+                        where: { id: sku.id },
+                        data: { 
+                            basePrice: newPrice,
+                            priceNormal: updatedPriceNormal,
+                            pricePro: updatedPricePro,
+                            priceLegend: updatedPriceLegend,
+                            priceSupreme: updatedPriceSupreme
+                        }
                     });
 
-                    // 2. CHECK ALL MERCHANT CUSTOM PRICES
+                    // 2. CHECK ALL MERCHANT CUSTOM PRICES & SYNC MODALS
                     const merchantPrices = await tx.merchantProductPrice.findMany({
                         where: { productSkuId: sku.id, isActive: true },
                         include: { merchant: true }
@@ -609,27 +649,45 @@ export class DigiflazzService {
 
                     for (const mp of merchantPrices) {
                         const plan = mp.merchant.plan;
-                        let currentModalPrice = sku.priceNormal;
+                        
+                        // Gunakan harga modal Tier sebagai benchmark
+                        let currentModalPrice = updatedPricePro;
+                        if (plan === 'LEGEND') currentModalPrice = updatedPriceLegend;
+                        else if (plan === 'SUPREME') currentModalPrice = updatedPriceSupreme;
 
-                        if (plan === 'PRO') currentModalPrice = sku.pricePro;
-                        else if (plan === 'LEGEND') currentModalPrice = sku.priceLegend;
-                        else if (plan === 'SUPREME') currentModalPrice = sku.priceSupreme;
-
-                        // Force-deactivate if selling price < updated modal cost
-                        if (mp.customPrice < currentModalPrice) {
+                        // Jika harga jual custom merchant < harga modal barunya, matikan agar merchant tidak rugi
+                        if (Number(mp.customPrice) < currentModalPrice) {
                             await tx.merchantProductPrice.update({
                                 where: { id: mp.id },
                                 data: {
                                     isActive: false,
-                                    reason: `Price Spike: Modal (${currentModalPrice}) > Jual (${mp.customPrice})`
+                                    reason: `Otomatis: Modal (${currentModalPrice}) > Harga Jual (${mp.customPrice})`
                                 }
                             });
-                            console.warn(`[AntiLoss] Merchant ${mp.merchant.name} - SKU ${skuCode} DEACTIVATED.`);
                         }
                     }
                 });
             }
         }
+    }
+
+    /**
+     * Verify Webhook Signature for Security
+     */
+    public verifyWebhookSignature(signature: string, event: string, refId?: string): boolean {
+        const { username, key } = this.getDigiflazzConfig();
+        
+        // 1. Check for standard 'callback' static signature
+        const staticSign = crypto.createHash('md5').update(username + key + 'callback').digest('hex');
+        if (signature === staticSign) return true;
+
+        // 2. Check for dynamic transaction-based signature (username + key + ref_id)
+        if (refId) {
+            const dynamicSign = crypto.createHash('md5').update(username + key + refId).digest('hex');
+            if (signature === dynamicSign) return true;
+        }
+
+        return false;
     }
     /**
      * Webhook Handler untuk Status Transaksi

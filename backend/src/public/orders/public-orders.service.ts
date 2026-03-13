@@ -117,8 +117,9 @@ export class PublicOrdersService {
 
         // 2.2 MODAL PRICE RESOLUTION (Ambiguity Fix)
         // Use customModalPrice set by Admin if exists, otherwise use tiered plan pricing
-        let modalPrice = Number(sku.priceNormal);
-        let tier: any = 'NORMAL';
+        // Default to PRO pricing if not specified, since FREE is discontinued
+        let modalPrice = Number(sku.pricePro); 
+        let tier: any = 'PRO';
 
         if (merchantOverride && merchantOverride.customModalPrice) {
             // ADMIN OVERRIDE (Wholesale Discount)
@@ -135,6 +136,10 @@ export class PublicOrdersService {
             } else if (merchantPlan === 'SUPREME') {
                 modalPrice = Number(sku.priceSupreme);
                 tier = 'SUPREME';
+            } else {
+                // Default fallback for any legacy or undefined plans to PRO (Safest minimum profit)
+                modalPrice = Number(sku.pricePro);
+                tier = 'PRO';
             }
         }
 

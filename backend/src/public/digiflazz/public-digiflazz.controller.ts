@@ -1,6 +1,6 @@
-import { Controller, Post, Body, Headers, HttpStatus, Res } from '@nestjs/common';
+import { Controller, Post, Body, Headers, HttpStatus, Res, Req } from '@nestjs/common';
 import { DigiflazzService } from '../../admin/digiflazz/digiflazz.service';
-import type { Response } from 'express';
+import { Request, Response } from 'express';
 import * as crypto from 'crypto';
 
 @Controller('public/digiflazz')
@@ -16,17 +16,33 @@ export class PublicDigiflazzController {
         @Headers('x-digiflazz-delivery') delivery: string,
         @Headers('x-digiflazz-event') event: string,
         @Body() body: any,
-        @Res() res: Response
+        @Req() req: any,
+        @Res() res: any
     ) {
         try {
-            console.log(`[DigiflazzWebhook] Event: ${event}, Delivery: ${delivery}`);
+            console.log(`[DigiflazzWebhook] Event: ${event}, Delivery: ${delivery}, IP: ${req.ip}`);
 
-            // 1. PRICE CHANGE EVENT
+            // 1. SECURITY: IP Whitelist (Digiflazz documented IPs)
+            const allowedIPs = ['103.253.212.43', '128.199.231.57', '103.111.94.131', '::ffff:103.253.212.43', '::ffff:128.199.231.57', '::ffff:103.111.94.131'];
+            if (!allowedIPs.includes(req.ip) && process.env.NODE_ENV === 'production') {
+                console.warn(`[DigiflazzWebhook] Unauthorized IP Attempt: ${req.ip}`);
+                return res.status(HttpStatus.FORBIDDEN).json({ success: false, message: 'Forbidden IP' });
+            }
+
+            // 2. SECURITY: Signature Verification
+            const refId = body.data?.ref_id || body.data?.[0]?.buyer_sku_code; // ref_id for trans, buyer_sku_code for price
+            const isValid = this.digiflazzService.verifyWebhookSignature(body.sign || '', event, refId);
+            if (!isValid) {
+                console.warn(`[DigiflazzWebhook] Invalid signature from ${req.ip}`);
+                return res.status(HttpStatus.FORBIDDEN).json({ success: false, message: 'Invalid signature' });
+            }
+
+            // 3. PRICE CHANGE EVENT
             if (event === 'price') {
                 await this.digiflazzService.processPriceWebhook(body.data);
             }
 
-            // 2. TRANSACTION STATUS CHANGE
+            // 4. TRANSACTION STATUS CHANGE
             if (event === 'transaction') {
                 await this.digiflazzService.processTransactionWebhook(body.data);
             }

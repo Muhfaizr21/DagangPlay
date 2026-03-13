@@ -1,4 +1,4 @@
-import { UseGuards, Controller, Get, Patch, Post, Param, Body, Query, HttpCode } from "@nestjs/common";
+import { UseGuards, Controller, Get, Patch, Post, Param, Body, Query, HttpCode, Req } from "@nestjs/common";
 import { FinanceService } from './finance.service';
 
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
@@ -28,17 +28,18 @@ export class FinanceController {
 
     @Post('deposits/:id/confirm')
     @HttpCode(200)
-    async confirmDeposit(@Param('id') id: string) {
-        return this.financeService.confirmDeposit(id, 'SuperAdmin');
+    async confirmDeposit(@Param('id') id: string, @Req() req: any) {
+        return this.financeService.confirmDeposit(id, req.user.id);
     }
 
     @Post('deposits/:id/reject')
     @HttpCode(200)
     async rejectDeposit(
         @Param('id') id: string,
-        @Body('reason') reason: string
+        @Body('reason') reason: string,
+        @Req() req: any
     ) {
-        return this.financeService.rejectDeposit(id, reason || 'No Reason', 'SuperAdmin');
+        return this.financeService.rejectDeposit(id, reason || 'No Reason', req.user.id);
     }
 
     // ============== WITHDRAWALS ================
@@ -53,18 +54,20 @@ export class FinanceController {
     @HttpCode(200)
     async processWithdrawal(
         @Param('id') id: string,
-        @Body() body: { note?: string, receiptImage?: string }
+        @Body() body: { note?: string, receiptImage?: string },
+        @Req() req: any
     ) {
-        return this.financeService.processWithdrawal(id, 'SuperAdmin', body.note, body.receiptImage);
+        return this.financeService.processWithdrawal(id, req.user.id, body.note, body.receiptImage);
     }
 
     @Post('withdrawals/:id/reject')
     @HttpCode(200)
     async rejectWithdrawal(
         @Param('id') id: string,
-        @Body('reason') reason: string
+        @Body('reason') reason: string,
+        @Req() req: any
     ) {
-        return this.financeService.rejectWithdrawal(id, reason || 'No Reason', 'SuperAdmin');
+        return this.financeService.rejectWithdrawal(id, reason || 'No Reason', req.user.id);
     }
 
 }

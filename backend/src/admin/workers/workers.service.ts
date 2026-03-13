@@ -75,23 +75,11 @@ export class WorkersService {
 
         for (const order of ordersToSync) {
             try {
-                // TIMEOUT PROTECTION: Jika sudah 10 Menit masih PROCESSING, anggap gagal agar dana kembali ke user
+                // TIMEOUT LOGGING: Just log a warning if stuck in PROCESSING for too long
                 const tenMinutesAgo = new Date(now.getTime() - (10 * 60 * 1000));
                 if (order.fulfillmentStatus === OrderFulfillmentStatus.PROCESSING && order.updatedAt < tenMinutesAgo) {
-                    this.logger.warn(`Order ${order.orderNumber} TIMEOUT. Marking as FAILED & Refunding.`);
-                    await this.prisma.order.update({
-                        where: { id: order.id },
-                        data: {
-                            fulfillmentStatus: OrderFulfillmentStatus.FAILED,
-                            failReason: 'Fulfillment Timeout (10 minutes with no SUCCESS response)',
-                            failedAt: new Date()
-                        }
-                    });
-
-                    // REVERSAL & REFUND
-                    await this.digiflazz.handleCommissionReversal(order.id);
-                    await this.digiflazz.handleCustomerRefund(order.id);
-                    continue;
+                    this.logger.warn(`Order ${order.orderNumber} is stuck in PROCESSING for over 10 minutes. Manual check recommended.`);
+                    // We DO NOT auto-refund here anymore to avoid loss if it eventually succeeds
                 }
 
                 const customerNo = order.gameUserServerId ? `${order.gameUserId}${order.gameUserServerId}` : order.gameUserId;
@@ -124,6 +112,14 @@ export class WorkersService {
                             failReason: newStatus === OrderFulfillmentStatus.FAILED ? supplierInfo.message : null
                         }
                     });
+
+                    // FATAL FIX: Jika Gagal via Sync, kembalikan uang user dan batalkan komisi merchant
+                    if (newStatus === OrderFulfillmentStatus.FAILED) {
+                        this.logger.warn(`Order ${order.orderNumber} FAILED via Sync. Triggering refund & reversal.`);
+                        await this.digiflazz.handleCommissionReversal(order.id);
+                        await this.digiflazz.handleCustomerRefund(order.id);
+                    }
+
                     this.logger.log(`Order ${order.orderNumber} updated to ${newStatus}`);
                 }
             } catch (err: any) {
@@ -149,7 +145,7 @@ export class WorkersService {
                 data: { balance: currentBalance, lastSyncAt: new Date() }
             });
 
-            if (currentBalance < 0) {
+            if (currentBalance < 500000) {
                 this.logger.warn(`LOW BALANCE ALERT: Digiflazz balance is Rp ${currentBalance.toLocaleString('id-ID')}. Setting products to MAINTENANCE.`);
                 // Auto-Maintenance: Lock all products to prevent unpaid orders failing at fulfillment
                 await this.prisma.product.updateMany({

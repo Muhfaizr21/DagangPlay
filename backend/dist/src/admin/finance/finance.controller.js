@@ -30,20 +30,20 @@ let FinanceController = class FinanceController {
     async getDeposits(status, search) {
         return this.financeService.getDeposits({ status, search });
     }
-    async confirmDeposit(id) {
-        return this.financeService.confirmDeposit(id, 'SuperAdmin');
+    async confirmDeposit(id, req) {
+        return this.financeService.confirmDeposit(id, req.user.id);
     }
-    async rejectDeposit(id, reason) {
-        return this.financeService.rejectDeposit(id, reason || 'No Reason', 'SuperAdmin');
+    async rejectDeposit(id, reason, req) {
+        return this.financeService.rejectDeposit(id, reason || 'No Reason', req.user.id);
     }
     async getWithdrawals(status) {
         return this.financeService.getWithdrawals({ status });
     }
-    async processWithdrawal(id, body) {
-        return this.financeService.processWithdrawal(id, 'SuperAdmin', body.note, body.receiptImage);
+    async processWithdrawal(id, body, req) {
+        return this.financeService.processWithdrawal(id, req.user.id, body.note, body.receiptImage);
     }
-    async rejectWithdrawal(id, reason) {
-        return this.financeService.rejectWithdrawal(id, reason || 'No Reason', 'SuperAdmin');
+    async rejectWithdrawal(id, reason, req) {
+        return this.financeService.rejectWithdrawal(id, reason || 'No Reason', req.user.id);
     }
 };
 exports.FinanceController = FinanceController;
@@ -65,8 +65,9 @@ __decorate([
     (0, common_1.Post)('deposits/:id/confirm'),
     (0, common_1.HttpCode)(200),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], FinanceController.prototype, "confirmDeposit", null);
 __decorate([
@@ -74,8 +75,9 @@ __decorate([
     (0, common_1.HttpCode)(200),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)('reason')),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], FinanceController.prototype, "rejectDeposit", null);
 __decorate([
@@ -90,8 +92,9 @@ __decorate([
     (0, common_1.HttpCode)(200),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", Promise)
 ], FinanceController.prototype, "processWithdrawal", null);
 __decorate([
@@ -99,8 +102,9 @@ __decorate([
     (0, common_1.HttpCode)(200),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)('reason')),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], FinanceController.prototype, "rejectWithdrawal", null);
 exports.FinanceController = FinanceController = __decorate([

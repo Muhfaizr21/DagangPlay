@@ -83,6 +83,7 @@ export declare class DigiflazzService {
     handleCommissionReversal(orderId: string): Promise<void>;
     handleCustomerRefund(orderId: string): Promise<void>;
     processPriceWebhook(payload: any): Promise<void>;
+    verifyWebhookSignature(signature: string, event: string, refId?: string): boolean;
     processTransactionWebhook(data: any): Promise<void>;
     private maskSensitiveData;
 }
