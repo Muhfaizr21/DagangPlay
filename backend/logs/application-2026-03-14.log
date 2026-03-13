@@ -10057,3 +10057,293 @@
 {"context":"RoutesResolver","level":"info","message":"PublicDigiflazzController {/public/digiflazz}:","timestamp":"2026-03-13T19:33:19.054Z"}
 {"context":"RouterExplorer","level":"info","message":"Mapped {/public/digiflazz/webhook, POST} route","timestamp":"2026-03-13T19:33:19.055Z"}
 {"context":"NestApplication","level":"info","message":"Nest application successfully started","timestamp":"2026-03-13T19:33:19.385Z"}
+{"context":"NestFactory","level":"info","message":"Starting Nest application...","timestamp":"2026-03-13T19:33:23.612Z"}
+{"context":"InstanceLoader","level":"info","message":"PassportModule dependencies initialized","timestamp":"2026-03-13T19:33:23.683Z"}
+{"context":"InstanceLoader","level":"info","message":"MerchantModule dependencies initialized","timestamp":"2026-03-13T19:33:23.684Z"}
+{"context":"InstanceLoader","level":"info","message":"ThrottlerModule dependencies initialized","timestamp":"2026-03-13T19:33:23.688Z"}
+{"context":"InstanceLoader","level":"info","message":"JwtModule dependencies initialized","timestamp":"2026-03-13T19:33:23.689Z"}
+{"context":"InstanceLoader","level":"info","message":"DiscoveryModule dependencies initialized","timestamp":"2026-03-13T19:33:23.690Z"}
+{"context":"InstanceLoader","level":"info","message":"WorkersModule dependencies initialized","timestamp":"2026-03-13T19:33:23.692Z"}
+{"context":"InstanceLoader","level":"info","message":"ScheduleModule dependencies initialized","timestamp":"2026-03-13T19:33:23.693Z"}
+{"context":"InstanceLoader","level":"info","message":"TripayModule dependencies initialized","timestamp":"2026-03-13T19:33:23.694Z"}
+{"context":"InstanceLoader","level":"info","message":"PublicDigiflazzModule dependencies initialized","timestamp":"2026-03-13T19:33:23.695Z"}
+{"context":"InstanceLoader","level":"info","message":"AppModule dependencies initialized","timestamp":"2026-03-13T19:33:23.696Z"}
+{"context":"InstanceLoader","level":"info","message":"UploadModule dependencies initialized","timestamp":"2026-03-13T19:33:23.696Z"}
+{"context":"InstanceLoader","level":"info","message":"AuthModule dependencies initialized","timestamp":"2026-03-13T19:33:23.696Z"}
+{"context":"InstanceLoader","level":"info","message":"PublicOrdersModule dependencies initialized","timestamp":"2026-03-13T19:33:23.697Z"}
+{"context":"InstanceLoader","level":"info","message":"DigiflazzModule dependencies initialized","timestamp":"2026-03-13T19:33:23.698Z"}
+{"context":"InstanceLoader","level":"info","message":"MerchantsModule dependencies initialized","timestamp":"2026-03-13T19:33:23.699Z"}
+{"context":"InstanceLoader","level":"info","message":"ProductsModule dependencies initialized","timestamp":"2026-03-13T19:33:23.699Z"}
+{"context":"InstanceLoader","level":"info","message":"SuppliersModule dependencies initialized","timestamp":"2026-03-13T19:33:23.699Z"}
+{"context":"InstanceLoader","level":"info","message":"UsersModule dependencies initialized","timestamp":"2026-03-13T19:33:23.699Z"}
+{"context":"InstanceLoader","level":"info","message":"SubscriptionsModule dependencies initialized","timestamp":"2026-03-13T19:33:23.700Z"}
+{"context":"InstanceLoader","level":"info","message":"FinanceModule dependencies initialized","timestamp":"2026-03-13T19:33:23.700Z"}
+{"context":"InstanceLoader","level":"info","message":"CommissionsModule dependencies initialized","timestamp":"2026-03-13T19:33:23.700Z"}
+{"context":"InstanceLoader","level":"info","message":"PromosModule dependencies initialized","timestamp":"2026-03-13T19:33:23.700Z"}
+{"context":"InstanceLoader","level":"info","message":"ContentModule dependencies initialized","timestamp":"2026-03-13T19:33:23.700Z"}
+{"context":"InstanceLoader","level":"info","message":"SecurityModule dependencies initialized","timestamp":"2026-03-13T19:33:23.700Z"}
+{"context":"InstanceLoader","level":"info","message":"TicketsModule dependencies initialized","timestamp":"2026-03-13T19:33:23.701Z"}
+{"context":"InstanceLoader","level":"info","message":"SettingsModule dependencies initialized","timestamp":"2026-03-13T19:33:23.701Z"}
+{"context":"InstanceLoader","level":"info","message":"DashboardModule dependencies initialized","timestamp":"2026-03-13T19:33:23.701Z"}
+{"context":"InstanceLoader","level":"info","message":"ResellersModule dependencies initialized","timestamp":"2026-03-13T19:33:23.701Z"}
+{"context":"InstanceLoader","level":"info","message":"CommissionsModule dependencies initialized","timestamp":"2026-03-13T19:33:23.701Z"}
+{"context":"InstanceLoader","level":"info","message":"PromosModule dependencies initialized","timestamp":"2026-03-13T19:33:23.701Z"}
+{"context":"InstanceLoader","level":"info","message":"ContentModule dependencies initialized","timestamp":"2026-03-13T19:33:23.702Z"}
+{"context":"InstanceLoader","level":"info","message":"SupportModule dependencies initialized","timestamp":"2026-03-13T19:33:23.702Z"}
+{"context":"InstanceLoader","level":"info","message":"ReportsModule dependencies initialized","timestamp":"2026-03-13T19:33:23.702Z"}
+{"context":"InstanceLoader","level":"info","message":"WithdrawalsModule dependencies initialized","timestamp":"2026-03-13T19:33:23.702Z"}
+{"context":"InstanceLoader","level":"info","message":"MarketingModule dependencies initialized","timestamp":"2026-03-13T19:33:23.702Z"}
+{"context":"InstanceLoader","level":"info","message":"ChatModule dependencies initialized","timestamp":"2026-03-13T19:33:23.703Z"}
+{"context":"InstanceLoader","level":"info","message":"FinanceModule dependencies initialized","timestamp":"2026-03-13T19:33:23.703Z"}
+{"context":"InstanceLoader","level":"info","message":"SubscriptionModule dependencies initialized","timestamp":"2026-03-13T19:33:23.703Z"}
+{"context":"InstanceLoader","level":"info","message":"DashboardModule dependencies initialized","timestamp":"2026-03-13T19:33:23.704Z"}
+{"context":"InstanceLoader","level":"info","message":"ProductsModule dependencies initialized","timestamp":"2026-03-13T19:33:23.704Z"}
+{"context":"InstanceLoader","level":"info","message":"SettingsModule dependencies initialized","timestamp":"2026-03-13T19:33:23.704Z"}
+{"context":"InstanceLoader","level":"info","message":"OrdersModule dependencies initialized","timestamp":"2026-03-13T19:33:23.704Z"}
+{"context":"InstanceLoader","level":"info","message":"TransactionsModule dependencies initialized","timestamp":"2026-03-13T19:33:23.704Z"}
+{"context":"RoutesResolver","level":"info","message":"DashboardController {/admin/dashboard}:","timestamp":"2026-03-13T19:33:23.736Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/dashboard/summary, GET} route","timestamp":"2026-03-13T19:33:23.739Z"}
+{"context":"RoutesResolver","level":"info","message":"DigiflazzController {/admin/digiflazz}:","timestamp":"2026-03-13T19:33:23.739Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/digiflazz/products, GET} route","timestamp":"2026-03-13T19:33:23.740Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/digiflazz/sync, POST} route","timestamp":"2026-03-13T19:33:23.741Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/digiflazz/bulk-sync, POST} route","timestamp":"2026-03-13T19:33:23.743Z"}
+{"context":"RoutesResolver","level":"info","message":"MerchantsController {/admin/merchants}:","timestamp":"2026-03-13T19:33:23.743Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchants, GET} route","timestamp":"2026-03-13T19:33:23.744Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchants/:id/status, PATCH} route","timestamp":"2026-03-13T19:33:23.745Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchants/:id, GET} route","timestamp":"2026-03-13T19:33:23.745Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchants/:id/settings, PATCH} route","timestamp":"2026-03-13T19:33:23.746Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchants/:id/reset-password, POST} route","timestamp":"2026-03-13T19:33:23.747Z"}
+{"context":"RoutesResolver","level":"info","message":"MerchantOverridesController {/admin/merchant-overrides}:","timestamp":"2026-03-13T19:33:23.747Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchant-overrides, GET} route","timestamp":"2026-03-13T19:33:23.748Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchant-overrides/merchant/:merchantId, GET} route","timestamp":"2026-03-13T19:33:23.749Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchant-overrides, POST} route","timestamp":"2026-03-13T19:33:23.750Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchant-overrides/:id, DELETE} route","timestamp":"2026-03-13T19:33:23.751Z"}
+{"context":"RoutesResolver","level":"info","message":"ProductsController {/admin/products}:","timestamp":"2026-03-13T19:33:23.751Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/products/categories, GET} route","timestamp":"2026-03-13T19:33:23.751Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/products/categories/:name/image, PATCH} route","timestamp":"2026-03-13T19:33:23.752Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/products, GET} route","timestamp":"2026-03-13T19:33:23.752Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/products/sync, POST} route","timestamp":"2026-03-13T19:33:23.753Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/products/skus/pricing, GET} route","timestamp":"2026-03-13T19:33:23.754Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/products/skus/:id/price, PATCH} route","timestamp":"2026-03-13T19:33:23.755Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/products/skus/bulk-formula, POST} route","timestamp":"2026-03-13T19:33:23.756Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/products/skus/:id/status, PATCH} route","timestamp":"2026-03-13T19:33:23.756Z"}
+{"context":"RoutesResolver","level":"info","message":"PricingRulesController {/admin/pricing-rules}:","timestamp":"2026-03-13T19:33:23.757Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/pricing-rules/categories, GET} route","timestamp":"2026-03-13T19:33:23.758Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/pricing-rules/categories, POST} route","timestamp":"2026-03-13T19:33:23.758Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/pricing-rules/categories/:id, PATCH} route","timestamp":"2026-03-13T19:33:23.759Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/pricing-rules/categories/:id, DELETE} route","timestamp":"2026-03-13T19:33:23.760Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/pricing-rules/apply-category/:categoryId, POST} route","timestamp":"2026-03-13T19:33:23.761Z"}
+{"context":"RoutesResolver","level":"info","message":"PublicProductsController {/public/products}:","timestamp":"2026-03-13T19:33:23.761Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/products/categories, GET} route","timestamp":"2026-03-13T19:33:23.762Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/products/categories/:slug, GET} route","timestamp":"2026-03-13T19:33:23.763Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/products/content, GET} route","timestamp":"2026-03-13T19:33:23.763Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/products/reseller-prices, GET} route","timestamp":"2026-03-13T19:33:23.764Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/products/full-catalog, GET} route","timestamp":"2026-03-13T19:33:23.764Z"}
+{"context":"RoutesResolver","level":"info","message":"SuppliersController {/admin/suppliers}:","timestamp":"2026-03-13T19:33:23.765Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/suppliers, GET} route","timestamp":"2026-03-13T19:33:23.766Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/suppliers/:id, GET} route","timestamp":"2026-03-13T19:33:23.766Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/suppliers/:id, PATCH} route","timestamp":"2026-03-13T19:33:23.767Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/suppliers/:id/test-connection, POST} route","timestamp":"2026-03-13T19:33:23.768Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/suppliers/:id/topup, POST} route","timestamp":"2026-03-13T19:33:23.768Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/suppliers/:id/logs, GET} route","timestamp":"2026-03-13T19:33:23.769Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/suppliers/:id/balance-history, GET} route","timestamp":"2026-03-13T19:33:23.770Z"}
+{"context":"RoutesResolver","level":"info","message":"UsersController {/admin/users}:","timestamp":"2026-03-13T19:33:23.771Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/users, GET} route","timestamp":"2026-03-13T19:33:23.772Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/users/:id, GET} route","timestamp":"2026-03-13T19:33:23.772Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/users/:id/status, PATCH} route","timestamp":"2026-03-13T19:33:23.773Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/users/:id/balance/adjust, POST} route","timestamp":"2026-03-13T19:33:23.774Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/users/:id/balance-history, GET} route","timestamp":"2026-03-13T19:33:23.774Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/users/:id/sessions, GET} route","timestamp":"2026-03-13T19:33:23.775Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/users/:id/sessions/force-logout, POST} route","timestamp":"2026-03-13T19:33:23.776Z"}
+{"context":"RoutesResolver","level":"info","message":"TransactionsController {/admin/transactions}:","timestamp":"2026-03-13T19:33:23.776Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/transactions, GET} route","timestamp":"2026-03-13T19:33:23.777Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/transactions/:id, GET} route","timestamp":"2026-03-13T19:33:23.778Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/transactions/:id/retry, POST} route","timestamp":"2026-03-13T19:33:23.779Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/transactions/:id/refund, POST} route","timestamp":"2026-03-13T19:33:23.779Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/transactions/:id/mark-fraud, POST} route","timestamp":"2026-03-13T19:33:23.781Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/transactions/:id/status/override, PATCH} route","timestamp":"2026-03-13T19:33:23.782Z"}
+{"context":"RoutesResolver","level":"info","message":"PublicOrdersController {/public/orders}:","timestamp":"2026-03-13T19:33:23.782Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/orders/payment-channels, GET} route","timestamp":"2026-03-13T19:33:23.783Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/orders/config, GET} route","timestamp":"2026-03-13T19:33:23.783Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/orders/checkout, POST} route","timestamp":"2026-03-13T19:33:23.784Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/orders/search, GET} route","timestamp":"2026-03-13T19:33:23.785Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/orders/:orderNumber, GET} route","timestamp":"2026-03-13T19:33:23.785Z"}
+{"context":"RoutesResolver","level":"info","message":"TripayController {/tripay}:","timestamp":"2026-03-13T19:33:23.785Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/tripay/payment-channels, GET} route","timestamp":"2026-03-13T19:33:23.786Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/tripay/callback, POST} route","timestamp":"2026-03-13T19:33:23.787Z"}
+{"context":"RoutesResolver","level":"info","message":"SubscriptionsController {/admin/subscriptions}:","timestamp":"2026-03-13T19:33:23.788Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/subscriptions/invoices, GET} route","timestamp":"2026-03-13T19:33:23.788Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/subscriptions/invoices/:id/confirm, POST} route","timestamp":"2026-03-13T19:33:23.789Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/subscriptions/invoices/:id/reject, POST} route","timestamp":"2026-03-13T19:33:23.790Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/subscriptions/merchants/:id/adjust, POST} route","timestamp":"2026-03-13T19:33:23.790Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/subscriptions/plans/features, GET} route","timestamp":"2026-03-13T19:33:23.791Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/subscriptions/plans/features, POST} route","timestamp":"2026-03-13T19:33:23.792Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/subscriptions/performance, GET} route","timestamp":"2026-03-13T19:33:23.792Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/subscriptions/invoices/manual, POST} route","timestamp":"2026-03-13T19:33:23.793Z"}
+{"context":"RoutesResolver","level":"info","message":"PublicSubscriptionsController {/public/subscriptions}:","timestamp":"2026-03-13T19:33:23.793Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/subscriptions/plans/features, GET} route","timestamp":"2026-03-13T19:33:23.794Z"}
+{"context":"RoutesResolver","level":"info","message":"FinanceController {/admin/finance}:","timestamp":"2026-03-13T19:33:23.794Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/finance/summary, GET} route","timestamp":"2026-03-13T19:33:23.795Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/finance/deposits, GET} route","timestamp":"2026-03-13T19:33:23.795Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/finance/deposits/:id/confirm, POST} route","timestamp":"2026-03-13T19:33:23.796Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/finance/deposits/:id/reject, POST} route","timestamp":"2026-03-13T19:33:23.797Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/finance/withdrawals, GET} route","timestamp":"2026-03-13T19:33:23.798Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/finance/withdrawals/:id/process, POST} route","timestamp":"2026-03-13T19:33:23.798Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/finance/withdrawals/:id/reject, POST} route","timestamp":"2026-03-13T19:33:23.799Z"}
+{"context":"RoutesResolver","level":"info","message":"CommissionsController {/admin/commissions}:","timestamp":"2026-03-13T19:33:23.799Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/commissions/pending, GET} route","timestamp":"2026-03-13T19:33:23.800Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/commissions/:id/settle, POST} route","timestamp":"2026-03-13T19:33:23.800Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/commissions/bulk-settle, POST} route","timestamp":"2026-03-13T19:33:23.801Z"}
+{"context":"RoutesResolver","level":"info","message":"PromosController {/admin/promos}:","timestamp":"2026-03-13T19:33:23.801Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/promos, GET} route","timestamp":"2026-03-13T19:33:23.802Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/promos/report, GET} route","timestamp":"2026-03-13T19:33:23.802Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/promos/:id, GET} route","timestamp":"2026-03-13T19:33:23.803Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/promos, POST} route","timestamp":"2026-03-13T19:33:23.803Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/promos/:id, PATCH} route","timestamp":"2026-03-13T19:33:23.804Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/promos/:id/toggle, PATCH} route","timestamp":"2026-03-13T19:33:23.805Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/promos/:id, DELETE} route","timestamp":"2026-03-13T19:33:23.805Z"}
+{"context":"RoutesResolver","level":"info","message":"ContentController {/admin/content}:","timestamp":"2026-03-13T19:33:23.806Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/banners, GET} route","timestamp":"2026-03-13T19:33:23.806Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/banners, POST} route","timestamp":"2026-03-13T19:33:23.807Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/banners/:id, PUT} route","timestamp":"2026-03-13T19:33:23.808Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/banners/:id, DELETE} route","timestamp":"2026-03-13T19:33:23.808Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/banners/:id/toggle, POST} route","timestamp":"2026-03-13T19:33:23.809Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/announcements, GET} route","timestamp":"2026-03-13T19:33:23.810Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/announcements, POST} route","timestamp":"2026-03-13T19:33:23.810Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/announcements/:id, PUT} route","timestamp":"2026-03-13T19:33:23.811Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/announcements/:id, DELETE} route","timestamp":"2026-03-13T19:33:23.812Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/announcements/:id/toggle, POST} route","timestamp":"2026-03-13T19:33:23.812Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/templates, GET} route","timestamp":"2026-03-13T19:33:23.813Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/templates, POST} route","timestamp":"2026-03-13T19:33:23.813Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/broadcasts, GET} route","timestamp":"2026-03-13T19:33:23.814Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/broadcasts, POST} route","timestamp":"2026-03-13T19:33:23.814Z"}
+{"context":"RoutesResolver","level":"info","message":"SecurityController {/admin/security}:","timestamp":"2026-03-13T19:33:23.814Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/security/fraud, GET} route","timestamp":"2026-03-13T19:33:23.815Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/security/fraud/:id/resolve, POST} route","timestamp":"2026-03-13T19:33:23.816Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/security/blacklist, GET} route","timestamp":"2026-03-13T19:33:23.817Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/security/blacklist, POST} route","timestamp":"2026-03-13T19:33:23.817Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/security/blacklist/:id, DELETE} route","timestamp":"2026-03-13T19:33:23.818Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/security/login-attempts, GET} route","timestamp":"2026-03-13T19:33:23.819Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/security/audit, GET} route","timestamp":"2026-03-13T19:33:23.820Z"}
+{"context":"RoutesResolver","level":"info","message":"TicketsController {/admin/tickets}:","timestamp":"2026-03-13T19:33:23.820Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/tickets, GET} route","timestamp":"2026-03-13T19:33:23.821Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/tickets/stats, GET} route","timestamp":"2026-03-13T19:33:23.821Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/tickets/:id, GET} route","timestamp":"2026-03-13T19:33:23.821Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/tickets/:id, PUT} route","timestamp":"2026-03-13T19:33:23.822Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/tickets/:id/reply, POST} route","timestamp":"2026-03-13T19:33:23.822Z"}
+{"context":"RoutesResolver","level":"info","message":"SettingsController {/admin/settings}:","timestamp":"2026-03-13T19:33:23.822Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/settings/global, GET} route","timestamp":"2026-03-13T19:33:23.823Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/settings/global, PUT} route","timestamp":"2026-03-13T19:33:23.823Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/settings/staff, GET} route","timestamp":"2026-03-13T19:33:23.824Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/settings/staff, POST} route","timestamp":"2026-03-13T19:33:23.824Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/settings/staff/:id, PUT} route","timestamp":"2026-03-13T19:33:23.825Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/settings/staff/:id, DELETE} route","timestamp":"2026-03-13T19:33:23.825Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/settings/jobs, GET} route","timestamp":"2026-03-13T19:33:23.826Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/settings/jobs/:id/retry, POST} route","timestamp":"2026-03-13T19:33:23.826Z"}
+{"context":"RoutesResolver","level":"info","message":"PlanMappingController {/admin/plan-tier-mappings}:","timestamp":"2026-03-13T19:33:23.827Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/plan-tier-mappings, GET} route","timestamp":"2026-03-13T19:33:23.828Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/plan-tier-mappings/sync, POST} route","timestamp":"2026-03-13T19:33:23.828Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/plan-tier-mappings, POST} route","timestamp":"2026-03-13T19:33:23.830Z"}
+{"context":"RoutesResolver","level":"info","message":"AuthController {/api/auth}:","timestamp":"2026-03-13T19:33:23.830Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/api/auth/admin/login, POST} route","timestamp":"2026-03-13T19:33:23.830Z"}
+{"context":"RoutesResolver","level":"info","message":"UploadController {/admin/upload}:","timestamp":"2026-03-13T19:33:23.831Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/upload/image, POST} route","timestamp":"2026-03-13T19:33:23.832Z"}
+{"context":"RoutesResolver","level":"info","message":"DashboardController {/merchant/dashboard}:","timestamp":"2026-03-13T19:33:23.832Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/dashboard, GET} route","timestamp":"2026-03-13T19:33:23.832Z"}
+{"context":"RoutesResolver","level":"info","message":"ProductsController {/merchant/products}:","timestamp":"2026-03-13T19:33:23.832Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/products, GET} route","timestamp":"2026-03-13T19:33:23.833Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/products/:skuId/price, PUT} route","timestamp":"2026-03-13T19:33:23.834Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/products/bulk-update, POST} route","timestamp":"2026-03-13T19:33:23.834Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/products/:productId/metadata, PUT} route","timestamp":"2026-03-13T19:33:23.835Z"}
+{"context":"RoutesResolver","level":"info","message":"ResellersController {/merchant/resellers}:","timestamp":"2026-03-13T19:33:23.835Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/resellers, GET} route","timestamp":"2026-03-13T19:33:23.835Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/resellers/:id/status, PUT} route","timestamp":"2026-03-13T19:33:23.838Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/resellers/:id/balance, POST} route","timestamp":"2026-03-13T19:33:23.838Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/resellers, POST} route","timestamp":"2026-03-13T19:33:23.839Z"}
+{"context":"RoutesResolver","level":"info","message":"OrdersController {/merchant/orders}:","timestamp":"2026-03-13T19:33:23.839Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/orders/create-direct, POST} route","timestamp":"2026-03-13T19:33:23.839Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/orders, GET} route","timestamp":"2026-03-13T19:33:23.840Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/orders/:id, GET} route","timestamp":"2026-03-13T19:33:23.841Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/orders/:id/retry, POST} route","timestamp":"2026-03-13T19:33:23.841Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/orders/:id/refund, POST} route","timestamp":"2026-03-13T19:33:23.842Z"}
+{"context":"RoutesResolver","level":"info","message":"FinanceController {/merchant/finance}:","timestamp":"2026-03-13T19:33:23.842Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/finance, GET} route","timestamp":"2026-03-13T19:33:23.842Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/finance/withdraw, POST} route","timestamp":"2026-03-13T19:33:23.844Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/finance/deposit, POST} route","timestamp":"2026-03-13T19:33:23.844Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/finance/deposits, GET} route","timestamp":"2026-03-13T19:33:23.845Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/finance/withdrawals, GET} route","timestamp":"2026-03-13T19:33:23.845Z"}
+{"context":"RoutesResolver","level":"info","message":"CommissionsController {/merchant/commissions}:","timestamp":"2026-03-13T19:33:23.846Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/commissions, GET} route","timestamp":"2026-03-13T19:33:23.846Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/commissions/settle, POST} route","timestamp":"2026-03-13T19:33:23.847Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/commissions/settle/:resellerId, POST} route","timestamp":"2026-03-13T19:33:23.847Z"}
+{"context":"RoutesResolver","level":"info","message":"PromosController {/merchant/promos}:","timestamp":"2026-03-13T19:33:23.847Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/promos, GET} route","timestamp":"2026-03-13T19:33:23.848Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/promos, POST} route","timestamp":"2026-03-13T19:33:23.848Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/promos/:id/toggle, PUT} route","timestamp":"2026-03-13T19:33:23.849Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/promos/:id, DELETE} route","timestamp":"2026-03-13T19:33:23.850Z"}
+{"context":"RoutesResolver","level":"info","message":"ContentController {/merchant/content}:","timestamp":"2026-03-13T19:33:23.850Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/banners, GET} route","timestamp":"2026-03-13T19:33:23.851Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/banners, POST} route","timestamp":"2026-03-13T19:33:23.851Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/banners/:id/toggle, PUT} route","timestamp":"2026-03-13T19:33:23.851Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/banners/:id, DELETE} route","timestamp":"2026-03-13T19:33:23.852Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/announcements, GET} route","timestamp":"2026-03-13T19:33:23.852Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/announcements, POST} route","timestamp":"2026-03-13T19:33:23.853Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/announcements/:id/toggle, PUT} route","timestamp":"2026-03-13T19:33:23.853Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/announcements/:id, DELETE} route","timestamp":"2026-03-13T19:33:23.854Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/design, PUT} route","timestamp":"2026-03-13T19:33:23.854Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/theme, PUT} route","timestamp":"2026-03-13T19:33:23.855Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/popup-promos, GET} route","timestamp":"2026-03-13T19:33:23.855Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/popup-promos, POST} route","timestamp":"2026-03-13T19:33:23.855Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/popup-promos/:id/toggle, PUT} route","timestamp":"2026-03-13T19:33:23.856Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/popup-promos/:id, DELETE} route","timestamp":"2026-03-13T19:33:23.856Z"}
+{"context":"RoutesResolver","level":"info","message":"SettingsController {/merchant/settings}:","timestamp":"2026-03-13T19:33:23.856Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/settings, GET} route","timestamp":"2026-03-13T19:33:23.857Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/settings/profile, PUT} route","timestamp":"2026-03-13T19:33:23.857Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/settings/domain, PUT} route","timestamp":"2026-03-13T19:33:23.858Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/settings/payment-channels, GET} route","timestamp":"2026-03-13T19:33:23.858Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/settings/payment-channels/:id/toggle, PUT} route","timestamp":"2026-03-13T19:33:23.859Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/settings/webhooks, GET} route","timestamp":"2026-03-13T19:33:23.860Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/settings/webhooks, POST} route","timestamp":"2026-03-13T19:33:23.860Z"}
+{"context":"RoutesResolver","level":"info","message":"SupportController {/merchant/support}:","timestamp":"2026-03-13T19:33:23.860Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/support, GET} route","timestamp":"2026-03-13T19:33:23.861Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/support/:id, GET} route","timestamp":"2026-03-13T19:33:23.861Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/support/:id/reply, POST} route","timestamp":"2026-03-13T19:33:23.862Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/support/:id, PUT} route","timestamp":"2026-03-13T19:33:23.863Z"}
+{"context":"RoutesResolver","level":"info","message":"ReportsController {/merchant/reports}:","timestamp":"2026-03-13T19:33:23.863Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/reports/sales, GET} route","timestamp":"2026-03-13T19:33:23.864Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/reports/products, GET} route","timestamp":"2026-03-13T19:33:23.864Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/reports/resellers, GET} route","timestamp":"2026-03-13T19:33:23.865Z"}
+{"context":"RoutesResolver","level":"info","message":"SubscriptionController {/merchant/subscription}:","timestamp":"2026-03-13T19:33:23.866Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/subscription, GET} route","timestamp":"2026-03-13T19:33:23.867Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/subscription/invoices, GET} route","timestamp":"2026-03-13T19:33:23.868Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/subscription/invoices, POST} route","timestamp":"2026-03-13T19:33:23.868Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/subscription/invoices/:id/proof, PUT} route","timestamp":"2026-03-13T19:33:23.869Z"}
+{"context":"RoutesResolver","level":"info","message":"WithdrawalsController {/merchant/withdrawals}:","timestamp":"2026-03-13T19:33:23.869Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/withdrawals/request, POST} route","timestamp":"2026-03-13T19:33:23.870Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/withdrawals/history, GET} route","timestamp":"2026-03-13T19:33:23.870Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/withdrawals/:id/approve, POST} route","timestamp":"2026-03-13T19:33:23.871Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/withdrawals/:id/reject, POST} route","timestamp":"2026-03-13T19:33:23.871Z"}
+{"context":"RoutesResolver","level":"info","message":"MarketingController {/admin/marketing}:","timestamp":"2026-03-13T19:33:23.872Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/marketing/guides, GET} route","timestamp":"2026-03-13T19:33:23.872Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/marketing/guides/:id, GET} route","timestamp":"2026-03-13T19:33:23.873Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/marketing/guides, POST} route","timestamp":"2026-03-13T19:33:23.873Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/marketing/guides/:id, PATCH} route","timestamp":"2026-03-13T19:33:23.874Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/marketing/guides/:id, DELETE} route","timestamp":"2026-03-13T19:33:23.874Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/marketing/my-guides, GET} route","timestamp":"2026-03-13T19:33:23.875Z"}
+{"context":"RoutesResolver","level":"info","message":"ChatController {/chat}:","timestamp":"2026-03-13T19:33:23.875Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/chat/merchant, GET} route","timestamp":"2026-03-13T19:33:23.876Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/chat/merchant/send, POST} route","timestamp":"2026-03-13T19:33:23.877Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/chat/admin/rooms, GET} route","timestamp":"2026-03-13T19:33:23.877Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/chat/admin/rooms/:id, GET} route","timestamp":"2026-03-13T19:33:23.877Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/chat/admin/rooms/:id/send, POST} route","timestamp":"2026-03-13T19:33:23.878Z"}
+{"context":"RoutesResolver","level":"info","message":"PublicDigiflazzController {/public/digiflazz}:","timestamp":"2026-03-13T19:33:23.878Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/digiflazz/webhook, POST} route","timestamp":"2026-03-13T19:33:23.879Z"}
+{"context":"NestApplication","level":"info","message":"Nest application successfully started","timestamp":"2026-03-13T19:33:24.118Z"}
+{"context":"HTTP","level":"info","message":"GET /chat/merchant 304 undefined - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.3.1 Safari/605.1.15 ::1 [209ms]","timestamp":"2026-03-13T19:33:27.017Z"}
+{"context":"HTTP","level":"info","message":"GET /chat/merchant 304 undefined - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.3.1 Safari/605.1.15 ::1 [12ms]","timestamp":"2026-03-13T19:33:36.802Z"}
+{"context":"HTTP","level":"info","message":"GET /chat/merchant 304 undefined - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.3.1 Safari/605.1.15 ::1 [15ms]","timestamp":"2026-03-13T19:33:42.701Z"}
+{"context":"HTTP","level":"info","message":"GET /merchant/settings 304 undefined - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.3.1 Safari/605.1.15 ::1 [29ms]","timestamp":"2026-03-13T19:33:42.721Z"}
+{"context":"HTTP","level":"info","message":"GET /merchant/dashboard 304 undefined - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.3.1 Safari/605.1.15 ::1 [80ms]","timestamp":"2026-03-13T19:33:42.777Z"}
+{"context":"HTTP","level":"info","message":"GET /merchant/settings 304 undefined - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.3.1 Safari/605.1.15 ::1 [16ms]","timestamp":"2026-03-13T19:33:43.853Z"}
+{"context":"HTTP","level":"info","message":"GET /chat/merchant 304 undefined - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.3.1 Safari/605.1.15 ::1 [36ms]","timestamp":"2026-03-13T19:33:43.867Z"}
+{"context":"HTTP","level":"info","message":"GET /merchant/dashboard 304 undefined - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.3.1 Safari/605.1.15 ::1 [44ms]","timestamp":"2026-03-13T19:33:43.884Z"}
