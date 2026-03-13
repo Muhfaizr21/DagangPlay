@@ -8,8 +8,8 @@ export class DashboardService {
 
     async getDashboardData(userId: string) {
         // Step 1: Find merchant associated with this user
-        const merchant = await this.prisma.merchant.findUnique({
-            where: { ownerId: userId },
+        const merchant = await this.prisma.merchant.findFirst({
+            where: { OR: [{ ownerId: userId }, { members: { some: { userId } } }] },
             include: { owner: true }
         });
 
@@ -23,12 +23,16 @@ export class DashboardService {
         const now = new Date();
         const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
         const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
 
-        // Profit & Revenue calculations
-        const [revenueTodayAgg, revenueMonthAgg, revenueTotalAgg, revenueLastMonthAgg, profitTotalAgg, profitMonthAgg] = await Promise.all([
+        // Stats calculations
+        const [
+            revenueTodayAgg, revenueMonthAgg, revenueTotalAgg, revenueLastMonthAgg,
+            profitTodayAgg, profitMonthAgg, profitTotalAgg, profitLastMonthAgg,
+            trxSuccess, trxFailed, trxPending
+        ] = await Promise.all([
+            // Revenue
             this.prisma.order.aggregate({
                 where: { merchantId, paymentStatus: 'PAID', createdAt: { gte: startOfToday } },
                 _sum: { totalPrice: true }
@@ -45,104 +49,137 @@ export class DashboardService {
                 where: { merchantId, paymentStatus: 'PAID', createdAt: { gte: lastMonthStart, lte: lastMonthEnd } },
                 _sum: { totalPrice: true }
             }),
-            // Profit is stored in Commission table for merchants
+            // Profit (Commission)
             this.prisma.commission.aggregate({
-                where: { userId: merchant.ownerId, status: 'SETTLED' },
+                where: { userId: merchant.ownerId, status: 'SETTLED', createdAt: { gte: startOfToday } },
                 _sum: { amount: true }
             }),
             this.prisma.commission.aggregate({
                 where: { userId: merchant.ownerId, status: 'SETTLED', createdAt: { gte: startOfMonth } },
                 _sum: { amount: true }
-            })
+            }),
+            this.prisma.commission.aggregate({
+                where: { userId: merchant.ownerId, status: 'SETTLED' },
+                _sum: { amount: true }
+            }),
+            this.prisma.commission.aggregate({
+                where: { userId: merchant.ownerId, status: 'SETTLED', createdAt: { gte: lastMonthStart, lte: lastMonthEnd } },
+                _sum: { amount: true }
+            }),
+            // Transaction Counts
+            this.prisma.order.count({ where: { merchantId, paymentStatus: 'PAID', createdAt: { gte: startOfToday } } }),
+            this.prisma.order.count({ where: { merchantId, paymentStatus: 'EXPIRED', createdAt: { gte: startOfToday } } }),
+            this.prisma.order.count({ where: { merchantId, paymentStatus: 'PENDING', createdAt: { gte: startOfToday } } })
         ]);
 
         const revenueToday = Number(revenueTodayAgg._sum.totalPrice || 0);
         const revenueMonth = Number(revenueMonthAgg._sum.totalPrice || 0);
         const revenueTotal = Number(revenueTotalAgg._sum.totalPrice || 0);
         const revenueLastMonth = Number(revenueLastMonthAgg._sum.totalPrice || 0);
-        const profitTotal = Number(profitTotalAgg._sum.amount || 0);
+
+        const profitToday = Number(profitTodayAgg._sum.amount || 0);
         const profitMonth = Number(profitMonthAgg._sum.amount || 0);
+        const profitTotal = Number(profitTotalAgg._sum.amount || 0);
+        const profitLastMonth = Number(profitLastMonthAgg._sum.amount || 0);
 
         let revenueTrend = 0;
         if (revenueLastMonth > 0) {
             revenueTrend = ((revenueMonth - revenueLastMonth) / revenueLastMonth) * 100;
         }
 
-        // Transactions today
-        const [trxSuccess, trxFailed, trxPending] = await Promise.all([
-            this.prisma.order.count({ where: { merchantId, paymentStatus: 'PAID', createdAt: { gte: startOfToday } } }),
-            this.prisma.order.count({ where: { merchantId, paymentStatus: 'EXPIRED', createdAt: { gte: startOfToday } } }),
-            this.prisma.order.count({ where: { merchantId, paymentStatus: 'PENDING', createdAt: { gte: startOfToday } } })
-        ]);
-
-        // Users
-        const [registeredCustomers] = await Promise.all([
-            this.prisma.user.count({ where: { merchantId, role: 'CUSTOMER' } })
-        ]);
+        let profitTrend = 0;
+        if (profitLastMonth > 0) {
+            profitTrend = ((profitMonth - profitLastMonth) / profitLastMonth) * 100;
+        }
 
         // Recent Transactions (Limit 10)
         const recentOrders = await this.prisma.order.findMany({
             where: { merchantId },
             orderBy: { createdAt: 'desc' },
             take: 10,
-            include: { user: { select: { name: true } }, productSku: { select: { product: { select: { name: true } } } } }
+            include: { user: { select: { name: true, phone: true } }, productSku: { select: { product: { select: { name: true } } } } }
         });
 
-        // Top Customers (Limit 10)
-        const topCustomersAgg = await this.prisma.order.groupBy({
-            by: ['userId'],
-            where: { merchantId, paymentStatus: 'PAID' },
-            _sum: { totalPrice: true },
-            _count: { id: true },
-            orderBy: { _sum: { totalPrice: 'desc' } },
-            take: 10
-        });
+        // Notifications/Alerts
+        const alerts: string[] = [];
+        if (trxFailed > 10) alerts.push("Tingkat transaksi gagal hari ini cukup tinggi.");
+        if (merchant.plan === 'FREE' && revenueMonth > 5000000) alerts.push("Omset Anda sudah mencapai limit Paket FREE. Silakan upgrade!");
+        if (merchant.status === 'PENDING_REVIEW') alerts.push("Domain/Toko Anda sedang dalam peninjauan.");
 
-        // get names for top customers
+        // Users & Top Customers
+        const [registeredCustomers, topCustomersAgg] = await Promise.all([
+            this.prisma.user.count({ where: { merchantId, role: 'CUSTOMER' } }),
+            this.prisma.order.groupBy({
+                by: ['userId'],
+                where: { merchantId, paymentStatus: 'PAID' },
+                _sum: { totalPrice: true },
+                _count: { id: true },
+                orderBy: { _sum: { totalPrice: 'desc' } },
+                take: 5
+            })
+        ]);
+
         const topCustomers = await Promise.all(topCustomersAgg.map(async (ag) => {
-            const ruser = await this.prisma.user.findUnique({ where: { id: ag.userId }, select: { name: true, email: true } });
+            const ruser = await this.prisma.user.findUnique({ where: { id: ag.userId }, select: { name: true, email: true, phone: true } });
             return {
                 id: ag.userId,
-                name: ruser?.name || 'Unknown',
-                email: ruser?.email || '',
+                name: ruser?.name || 'Guest User',
+                email: ruser?.email || ruser?.phone || 'No Email',
                 totalSpent: ag._sum.totalPrice || 0,
                 totalOrders: ag._count.id
             };
         }));
 
-        // Notifications/Alerts
-        const alerts: string[] = [];
-        if (trxFailed > 10) alerts.push("Tingkat transaksi gagal hari ini cukup tinggi.");
-        if (Number(revenueTotal) < 50000) alerts.push("Saldo omset / total penjualan Anda rendah.");
-        if (merchant.plan === 'FREE' || merchant.status === 'PENDING_REVIEW') alerts.push("Status Merchant Anda perlu segera di-upgrade.");
+        // Optimized Chart Data (Last 30 days)
+        const chartStartDate = new Date(now);
+        chartStartDate.setDate(chartStartDate.getDate() - 30);
+        
+        const ordersByDay = await this.prisma.order.groupBy({
+            by: ['createdAt'],
+            where: { merchantId, paymentStatus: 'PAID', createdAt: { gte: chartStartDate } },
+            _sum: { totalPrice: true }
+        });
 
-        // Chart Data (Last 30 days) - Basic mock representation
-        const chartData: any[] = [];
+        const commissionsByDay = await this.prisma.commission.groupBy({
+            by: ['createdAt'],
+            where: { userId: merchant.ownerId, status: 'SETTLED', createdAt: { gte: chartStartDate } },
+            _sum: { amount: true }
+        });
+
+        // Map to simpler format for frontend
+        const chartDataMap: Record<string, { revenue: number, profit: number }> = {};
+        
         for (let i = 29; i >= 0; i--) {
             const date = new Date(now);
             date.setDate(date.getDate() - i);
-            date.setHours(0, 0, 0, 0);
-            const nextDate = new Date(date);
-            nextDate.setDate(date.getDate() + 1);
-
-            // Note: In production we'd use raw SQL for group by day, but doing iterative query for 30 here.
-            const dayAgg = await this.prisma.order.aggregate({
-                where: { merchantId, paymentStatus: 'PAID', createdAt: { gte: date, lt: nextDate } },
-                _sum: { totalPrice: true }
-            });
-            chartData.push({
-                date: date.toISOString().split('T')[0],
-                value: Number(dayAgg._sum.totalPrice || 0)
-            });
+            const dateStr = date.toISOString().split('T')[0];
+            chartDataMap[dateStr] = { revenue: 0, profit: 0 };
         }
+
+        ordersByDay.forEach(item => {
+            const d = item.createdAt.toISOString().split('T')[0];
+            if (chartDataMap[d]) chartDataMap[d].revenue += Number(item._sum.totalPrice || 0);
+        });
+
+        commissionsByDay.forEach(item => {
+            const d = item.createdAt.toISOString().split('T')[0];
+            if (chartDataMap[d]) chartDataMap[d].profit += Number(item._sum.amount || 0);
+        });
+
+        const chartData = Object.entries(chartDataMap).map(([date, vals]) => ({
+            date,
+            revenue: vals.revenue,
+            profit: vals.profit
+        }));
 
         return {
             merchant: {
+                id: merchant.id,
                 name: merchant.name,
                 domain: merchant.domain,
                 status: merchant.status,
                 plan: merchant.plan,
-                balance: Number(merchant.owner?.balance || 0) // showing real available balance
+                balance: Number(merchant.owner?.balance || 0)
             },
             revenue: {
                 today: revenueToday,
@@ -150,8 +187,13 @@ export class DashboardService {
                 total: revenueTotal,
                 lastMonth: revenueLastMonth,
                 trendPercentage: revenueTrend,
-                profitTotal,
-                profitMonth,
+            },
+            profit: {
+                today: profitToday,
+                month: profitMonth,
+                total: profitTotal,
+                lastMonth: profitLastMonth,
+                trendPercentage: profitTrend
             },
             transactionsToday: {
                 success: trxSuccess,
@@ -160,17 +202,18 @@ export class DashboardService {
                 total: trxSuccess + trxFailed + trxPending
             },
             users: {
-                activeResellers: registeredCustomers
+                activeCustomers: registeredCustomers
             },
             recentOrders: recentOrders.map((o: any) => ({
                 id: o.orderNumber || o.id,
                 amount: o.totalPrice,
                 status: o.paymentStatus,
                 customerName: o.user?.name || 'Unknown',
+                whatsapp: o.user?.phone,
                 productName: o.productSku?.product?.name || 'Voucher',
                 createdAt: o.createdAt
             })),
-            topResellers: topCustomers,
+            topCustomers,
             alerts,
             chartData
         };

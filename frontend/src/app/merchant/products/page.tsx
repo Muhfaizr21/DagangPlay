@@ -37,6 +37,9 @@ export default function MerchantProductsPage() {
         fetcher
     );
 
+    const [bulkMode, setBulkMode] = useState<'PERCENT' | 'FIXED'>('PERCENT');
+    const [bulkAmount, setBulkAmount] = useState<number>(0);
+
     const handleEditPrice = (sku: any) => {
         setEditSkuId(sku.id);
         setEditPrice(sku.merchantSellingPrice);
@@ -85,7 +88,8 @@ export default function MerchantProductsPage() {
             const token = localStorage.getItem('admin_token');
             const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
             await axios.post(`${baseUrl}/merchant/products/bulk-update`, {
-                markupPercentage: Number(bulkPercentage)
+                markupPercentage: bulkMode === 'PERCENT' ? Number(bulkPercentage) : 0,
+                markupAmount: bulkMode === 'FIXED' ? Number(bulkAmount) : 0
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -160,30 +164,70 @@ export default function MerchantProductsPage() {
 
             {/* Bulk Margin Modal */}
             {isBulkModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 text-left">
                     <div className="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden relative transform transition-all">
                         <div className="p-6 border-b border-slate-100 bg-slate-50/50">
                             <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                                 <Zap className="w-5 h-5 text-indigo-600" /> Setup Bulk Margin
                             </h3>
-                            <p className="text-sm text-slate-500 mt-1">Ubah harga jual semua produk / kategori secara otomatis dengan basis persentase Markup.</p>
+                            <p className="text-sm text-slate-500 mt-1">Ubah harga jual masal secara otomatis berdasarkan markup modal.</p>
                         </div>
                         <div className="p-6">
-                            <label className="block text-[13px] font-bold text-slate-700 mb-2">Persentase Kenaikan (%)</label>
-                            <input
-                                type="number"
-                                value={bulkPercentage}
-                                onChange={(e) => setBulkPercentage(Number(e.target.value))}
-                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-800"
-                            />
-                            <div className="bg-amber-50 text-amber-700 text-xs p-3 rounded-xl mt-4 border border-amber-100 flex items-start gap-2">
-                                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                                <p>Tindakan ini akan menimpa seluruh harga jual kustom yang sebelumnya sudah Anda simpan per SKU.</p>
+                            <div className="flex p-1 bg-slate-100 rounded-xl mb-6">
+                                <button 
+                                    onClick={() => setBulkMode('PERCENT')}
+                                    className={`flex-1 py-2 text-[12px] font-bold rounded-lg transition-all ${bulkMode === 'PERCENT' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                >
+                                    Persentase (%)
+                                </button>
+                                <button 
+                                    onClick={() => setBulkMode('FIXED')}
+                                    className={`flex-1 py-2 text-[12px] font-bold rounded-lg transition-all ${bulkMode === 'FIXED' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                >
+                                    Nominal Rupiah (Rp)
+                                </button>
+                            </div>
+
+                            {bulkMode === 'PERCENT' ? (
+                                <div>
+                                    <label className="block text-[13px] font-bold text-slate-700 mb-2 underline decoration-indigo-200 underline-offset-4">Persentase Kenaikan (%)</label>
+                                    <div className="relative mt-1">
+                                        <input
+                                            type="number"
+                                            value={bulkPercentage}
+                                            onChange={(e) => setBulkPercentage(Number(e.target.value))}
+                                            className="w-full pl-4 pr-12 py-3 bg-white border-2 border-slate-100 focus:border-indigo-500 rounded-2xl outline-none font-black text-xl text-slate-800 transition-all"
+                                        />
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-xl text-slate-300">%</span>
+                                    </div>
+                                    <p className="text-[11px] text-slate-400 mt-2 font-medium">Contoh: 10% dari modal Rp 10.000 = Harga Jual Rp 11.000</p>
+                                </div>
+                            ) : (
+                                <div>
+                                    <label className="block text-[13px] font-bold text-slate-700 mb-2 underline decoration-indigo-200 underline-offset-4">Markup Nominal (Rp)</label>
+                                    <div className="relative mt-1">
+                                         <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-xl text-slate-300">Rp</span>
+                                         <input
+                                            type="number"
+                                            value={bulkAmount}
+                                            onChange={(e) => setBulkAmount(Number(e.target.value))}
+                                            className="w-full pl-14 pr-4 py-3 bg-white border-2 border-slate-100 focus:border-indigo-500 rounded-2xl outline-none font-black text-xl text-slate-800 transition-all"
+                                        />
+                                    </div>
+                                    <p className="text-[11px] text-slate-400 mt-2 font-medium">Contoh: Rp 2.000 + modal Rp 10.000 = Harga Jual Rp 12.000</p>
+                                </div>
+                            )}
+
+                            <div className="bg-amber-50 text-amber-700 text-[11px] p-4 rounded-2xl mt-6 border border-amber-100 flex items-start gap-3 leading-relaxed">
+                                <AlertTriangle className="w-5 h-5 shrink-0 text-amber-500" />
+                                <p className="font-medium">Tindakan ini akan menimpa seluruh harga kustom per SKU yang sudah Anda atur secara manual sebelumnya. Pastikan angka sudah benar.</p>
                             </div>
                         </div>
                         <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
-                            <button onClick={() => setIsBulkModalOpen(false)} className="px-5 py-2.5 text-[13px] font-bold text-slate-600 hover:bg-slate-200 rounded-xl">Batal</button>
-                            <button onClick={handleBulkUpdate} className="px-5 py-2.5 text-[13px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md">Terapkan Markup</button>
+                            <button onClick={() => setIsBulkModalOpen(false)} className="px-5 py-2.5 text-[13px] font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition-colors">Batal</button>
+                            <button onClick={handleBulkUpdate} className="px-6 py-2.5 text-[13px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5 active:translate-y-0">
+                                Update Semua Harga
+                            </button>
                         </div>
                     </div>
                 </div>

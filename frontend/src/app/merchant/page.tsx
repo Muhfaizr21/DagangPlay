@@ -47,24 +47,24 @@ export default function MerchantDashboard() {
         );
     }
 
-    const { merchant, revenue, transactionsToday, users, recentOrders, topCustomers, alerts, chartData } = dashboard;
+    const { merchant, revenue, profit, transactionsToday, users, recentOrders, topCustomers, alerts, chartData } = dashboard;
 
     const stats = [
-        { title: 'Total Pendapatan (Bln Ini)', value: `Rp ${(revenue?.month || 0).toLocaleString('id-ID')}`, trend: `${(revenue?.trendPercentage || 0) > 0 ? '+' : ''}${(revenue?.trendPercentage || 0).toFixed(1)}%`, isPositive: (revenue?.trendPercentage || 0) >= 0, icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50 text-emerald-500' },
-        { title: 'Pelanggan Aktif', value: (users?.activeCustomers || 0).toLocaleString('id-ID'), trend: '', isPositive: true, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50 text-indigo-500' },
+        { title: 'Total Omset (Bln Ini)', value: `Rp ${(revenue?.month || 0).toLocaleString('id-ID')}`, trend: `${(revenue?.trendPercentage || 0) > 0 ? '+' : ''}${(revenue?.trendPercentage || 0).toFixed(1)}%`, isPositive: (revenue?.trendPercentage || 0) >= 0, icon: Wallet, color: 'text-slate-900', bg: 'bg-slate-50 text-slate-500' },
+        { title: 'Laba Bersih (Bln Ini)', value: `Rp ${(profit?.month || 0).toLocaleString('id-ID')}`, trend: `${(profit?.trendPercentage || 0) > 0 ? '+' : ''}${(profit?.trendPercentage || 0).toFixed(1)}%`, isPositive: (profit?.trendPercentage || 0) >= 0, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50 text-emerald-500' },
         { title: 'Trx Hari Ini (Sukses)', value: (transactionsToday?.success || 0).toLocaleString('id-ID'), trend: `${transactionsToday?.failed || 0} Gagal`, isPositive: (transactionsToday?.failed || 0) === 0, icon: Receipt, color: 'text-amber-600', bg: 'bg-amber-50 text-amber-500' },
-        { title: 'Pendapatan Hari Ini', value: `Rp ${(revenue?.today || 0).toLocaleString('id-ID')}`, trend: '', isPositive: true, icon: TrendingUp, color: 'text-purple-600', bg: 'bg-purple-50 text-purple-500' },
+        { title: 'Laba Bersih Hari Ini', value: `Rp ${(profit?.today || 0).toLocaleString('id-ID')}`, trend: '', isPositive: true, icon: Activity, color: 'text-indigo-600', bg: 'bg-indigo-50 text-indigo-500' },
     ];
 
     // Find max value for chart scaling
-    const maxChartValue = Math.max(...(chartData || []).map((d: any) => d.value), 100000);
+    const maxChartValue = Math.max(...(chartData || []).map((d: any) => d.revenue), 100000);
 
     return (
         <MerchantLayout>
             {/* Header Content */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Overview Dashboard</h1>
+                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Performa Toko</h1>
                     <div className="flex items-center gap-3 mt-2">
                         <p className="text-[14px] text-slate-500 flex items-center gap-2">
                             <Activity className="w-4 h-4 text-emerald-500" />
@@ -76,7 +76,7 @@ export default function MerchantDashboard() {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[13px] rounded-xl shadow-[0_4px_14px_0_rgba(99,102,241,0.39)] transition-all hover:shadow-[0_6px_20px_rgba(99,102,241,0.23)] hover:-translate-y-0.5">
+                    <button className="px-5 py-2.5 bg-slate-900 hover:bg-black text-white font-bold text-[13px] rounded-xl shadow-lg transition-all hover:-translate-y-0.5">
                         Download Laporan
                     </button>
                 </div>
@@ -85,8 +85,8 @@ export default function MerchantDashboard() {
             {alerts && alerts.length > 0 && (
                 <div className="mb-6 flex flex-col gap-2">
                     {alerts.map((al: string, i: number) => (
-                        <div key={i} className="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium flex items-center gap-3">
-                            <AlertTriangle className="w-5 h-5 text-red-500" />
+                        <div key={i} className="px-4 py-3 rounded-xl bg-orange-50 border border-orange-200 text-orange-700 text-sm font-medium flex items-center gap-3">
+                            <AlertTriangle className="w-5 h-5 text-orange-500" />
                             {al}
                         </div>
                     ))}
@@ -110,8 +110,8 @@ export default function MerchantDashboard() {
                                     </span>
                                 )}
                             </div>
-                            <h3 className="text-[13px] font-bold text-slate-500 uppercase tracking-wider">{stat.title}</h3>
-                            <p className={`text-2xl font-black mt-2 tracking-tight ${stat.color}`}>{stat.value}</p>
+                            <h3 className="text-[12px] font-bold text-slate-500 uppercase tracking-widest leading-none">{stat.title}</h3>
+                            <p className={`text-2xl font-black mt-3 tracking-tight ${stat.color}`}>{stat.value}</p>
                         </div>
                     );
                 })}
@@ -122,21 +122,38 @@ export default function MerchantDashboard() {
                 <div className="col-span-1 lg:col-span-2 bg-white rounded-3xl border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.01)] overflow-hidden flex flex-col">
                     <div className="p-6 border-b border-slate-100/50 flex items-center justify-between">
                         <div>
-                            <h3 className="text-[16px] font-bold text-slate-800">Analitik Omset 30 Hari Terakhir</h3>
-                            <p className="text-[12px] text-slate-500">Total Rp {(revenue?.month || 0).toLocaleString('id-ID')}</p>
+                            <h3 className="text-[16px] font-bold text-slate-800 tracking-tight">Analisa Laba & Omset (30 Hari)</h3>
+                            <div className="flex items-center gap-4 mt-1">
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Omset</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Laba</span>
+                                </div>
+                            </div>
                         </div>
-                        <button className="text-[12px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-3 py-1.5 rounded-lg">Lihat Detail</button>
+                        <div className="bg-slate-50 p-1 rounded-xl flex gap-1">
+                             <button className="px-3 py-1.5 text-[11px] font-bold bg-white text-slate-800 rounded-lg shadow-sm">30D</button>
+                             <button className="px-3 py-1.5 text-[11px] font-bold text-slate-400 hover:text-slate-600">7D</button>
+                        </div>
                     </div>
                     <div className="flex-1 p-6 relative min-h-[300px] flex items-end justify-center">
-                        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-                        <div className="relative w-full h-48 flex items-end justify-between px-2 gap-1 sm:gap-2 opacity-80">
+                        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px]"></div>
+                        <div className="relative w-full h-48 flex items-end justify-between px-2 gap-1.5 opacity-90 overflow-hidden">
                             {(chartData || []).map((d: any, i: number) => {
-                                const hPercent = Math.max((d.value / maxChartValue) * 100, 5); // min 5% height
+                                const revH = Math.max((d.revenue / maxChartValue) * 100, 2); 
+                                const profH = Math.max((d.profit / maxChartValue) * 100, 4);
                                 return (
-                                    <div key={i} className="w-full bg-gradient-to-t from-indigo-500 to-cyan-400 rounded-t-sm hover:opacity-100 transition-opacity cursor-pointer group relative" style={{ height: `${hPercent}%` }}>
-                                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
-                                            {d.date}<br />
-                                            Rp {(d.value / 1000).toLocaleString('id-ID')}K
+                                    <div key={i} className="flex-1 flex flex-col justify-end gap-0.5 group relative">
+                                        <div className="w-full bg-indigo-500/80 rounded-t-[2px] hover:bg-indigo-500 transition-all cursor-pointer" style={{ height: `${revH}%` }}></div>
+                                        <div className="w-full bg-emerald-500/80 rounded-t-[2px] hover:bg-emerald-500 transition-all cursor-pointer" style={{ height: `${profH}%` }}></div>
+                                        
+                                        <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur text-white text-[10px] p-2.5 rounded-xl opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100 z-10 whitespace-nowrap shadow-xl border border-white/10">
+                                            <p className="font-black text-indigo-300 mb-1">{new Date(d.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</p>
+                                            <p className="flex justify-between gap-4"><span>Omset:</span> <span className="font-bold">Rp {d.revenue.toLocaleString()}</span></p>
+                                            <p className="flex justify-between gap-4"><span>Laba:</span> <span className="font-bold text-emerald-400">Rp {d.profit.toLocaleString()}</span></p>
                                         </div>
                                     </div>
                                 );

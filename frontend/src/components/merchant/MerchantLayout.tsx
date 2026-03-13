@@ -21,7 +21,8 @@ import {
     Palette,
     GraduationCap,
     MessageSquare,
-    ExternalLink
+    ExternalLink,
+    ShieldCheck
 } from 'lucide-react';
 
 const MENU_ITEMS = [
@@ -33,7 +34,6 @@ const MENU_ITEMS = [
     { label: 'Keuangan & Saldo', icon: CreditCard, href: '/merchant/finance' },
     { label: 'Promo & Voucher', icon: Tag, href: '/merchant/promos' },
     { label: 'Tampilan Toko', icon: Palette, href: '/merchant/content' },
-    { label: 'Tim / Staff', icon: Users, href: '/merchant/team', minPlan: 'LEGEND' },
     { label: 'Support & Tiket', icon: Ticket, href: '/merchant/support' },
     { label: 'Live Chat Admin', icon: MessageSquare, href: '/merchant/chat' },
     { label: 'Subscription & Billing', icon: Zap, href: '/merchant/subscription' },

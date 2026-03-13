@@ -34,7 +34,7 @@ export declare class ProductsService {
         reason: string | null;
         customModalPrice: number | null;
     }>;
-    bulkUpdateMargin(merchantId: string, userId: string, markupPercentage: number, categoryId?: string): Promise<{
+    bulkUpdateMargin(merchantId: string, userId: string, markupPercentage: number, markupAmount?: number, categoryId?: string): Promise<{
         success: boolean;
         count: number;
     }>;

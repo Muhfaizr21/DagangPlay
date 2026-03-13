@@ -68,6 +68,13 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
     const storeName = config?.name || "Premium Store";
     const storeLogo = config?.logo;
 
+    // Dynamic SEO Title
+    useEffect(() => {
+        if (category?.name || storeName) {
+            document.title = `${category?.name || 'Topup'} - ${storeName} | DagangPlay Pro`;
+        }
+    }, [category, storeName]);
+
     const paymentChannels = tripayChannelsResp?.data?.filter((ch: any) => ch.active !== false) || [];
 
     const handleBuy = async () => {

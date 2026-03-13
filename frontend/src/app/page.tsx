@@ -79,8 +79,8 @@ function Home() {
     ? `${baseUrl}/public/products/full-catalog?merchant=${slug}`
     : domain ? `${baseUrl}/public/products/full-catalog?domain=${domain}` : `${baseUrl}/public/products/full-catalog`;
 
-  const { data: contentData } = useSWR(contentUrl, fetcher, swrConfig);
-  const { data: catalog } = useSWR(catalogUrl, fetcher, swrConfig);
+  const { data: contentData, isLoading: contentLoading } = useSWR(contentUrl, fetcher, swrConfig);
+  const { data: catalog, isLoading: catalogLoading } = useSWR(catalogUrl, fetcher, swrConfig);
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 40);
@@ -91,6 +91,16 @@ function Home() {
   useEffect(() => {
     if (config?.name) {
       document.title = `${config.name.replace(/OFFICIAL STORE/gi, "").trim()} | Top Up Game Murah & Legal 24 Jam`;
+      
+      if (config.favicon) {
+        let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'icon';
+          document.getElementsByTagName('head')[0].appendChild(link);
+        }
+        link.href = config.favicon;
+      }
     }
   }, [config]);
 
@@ -146,6 +156,7 @@ function Home() {
       filteredProducts={filteredProducts}
       search={search}
       setSearch={setSearch}
+      isLoading={catalogLoading || contentLoading}
     />
   );
 }

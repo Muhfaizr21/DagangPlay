@@ -39,6 +39,7 @@ export declare class ProductsController {
     }>;
     bulkUpdatePricing(req: any, body: {
         markupPercentage: number;
+        markupAmount?: number;
         categoryId?: string;
     }): Promise<{
         success: boolean;

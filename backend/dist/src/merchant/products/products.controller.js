@@ -43,7 +43,7 @@ let ProductsController = class ProductsController {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id }, select: { id: true } });
         if (!merchant)
             throw new Error('Merchant not found');
-        return this.productsService.bulkUpdateMargin(merchant.id, req.user.id, body.markupPercentage, body.categoryId);
+        return this.productsService.bulkUpdateMargin(merchant.id, req.user.id, body.markupPercentage, body.markupAmount || 0, body.categoryId);
     }
     async updateProductMetadata(req, productId, body) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id }, select: { id: true } });
