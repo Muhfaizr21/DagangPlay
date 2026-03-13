@@ -813,24 +813,33 @@ export default function ResellerLandingPage() {
   const [jumlahPenjualan, setJumlahPenjualan] = useState(20);
   const [sampleProducts, setSampleProducts] = useState<any[]>([]);
   const [billingCycle, setBillingCycle] = useState<'yearly' | 'quarterly'>('yearly');
-  const MLBB: any = { pro: 39709, legend: 38773, supreme: 38023, normal: 40646 };
-
-  useEffect(() => {
-    const m = MLBB[selectedPlan.toLowerCase()] || MLBB.pro;
-    setHargaModal(m); setHargaJual(Math.ceil(m * 1.08 / 500) * 500);
-  }, [selectedPlan]);
-
   const [plans, setPlans] = useState<any>({
-    PRO: { price: 74917, maxProducts: 50, customDomain: true, multiUser: false, whiteLabel: false, customFeatures: [], description: "Mulai bisnis dengan mudah!" },
-    LEGEND: { price: 82250, maxProducts: 500, customDomain: true, multiUser: true, whiteLabel: false, customFeatures: [], description: "Naik level, untung berlipat!" },
-    SUPREME: { price: 99917, maxProducts: 99999, customDomain: true, multiUser: true, whiteLabel: true, customFeatures: [], description: "Fitur terlengkap, untung maksimal!" },
+    PRO: { price: 0, maxProducts: 0, customDomain: false, multiUser: false, whiteLabel: false, customFeatures: [], description: "Memuat data..." },
+    LEGEND: { price: 0, maxProducts: 0, customDomain: false, multiUser: false, whiteLabel: false, customFeatures: [], description: "Memuat data..." },
+    SUPREME: { price: 0, maxProducts: 0, customDomain: false, multiUser: false, whiteLabel: false, customFeatures: [], description: "Memuat data..." },
   });
 
   const gpd = (p: number) => {
-    if (!p) p = 0; const o = p * 2.5;
-    if (billingCycle === 'yearly') return { original: o, discounted: p, label: '/ tahun', mo: p / 12 };
-    const q = Math.round(p * .3); return { original: o * .3, discounted: q, label: '/ 3 bulan', mo: q / 3 };
+    if (!p) p = 0;
+    // Base logic: Annual = 12 * Monthly with discount, Quarterly = 3 * Monthly
+    // Here we use the price from DB as the Annual base if billingCycle is yearly.
+    const o = p * 1.5; // Estimated original price for visual strike-through
+    if (billingCycle === 'yearly') {
+      return { original: o, discounted: p, label: '/ tahun', mo: p / 12 };
+    }
+    const q = Math.round((p / 12) * 3 * 1.1); // Quarterly is slightly more expensive than 3x monthly
+    return { original: (o / 12) * 3, discounted: q, label: '/ 3 bulan', mo: q / 3 };
   };
+
+  useEffect(() => {
+    if (sampleProducts.length > 0) {
+      const f = sampleProducts[0];
+      const tierKey = selectedPlan.toLowerCase();
+      const m = f[tierKey] || f.normal || 0;
+      setHargaModal(m);
+      setHargaJual(Math.ceil((m * 1.1) / 500) * 500);
+    }
+  }, [selectedPlan, sampleProducts]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -839,13 +848,21 @@ export default function ResellerLandingPage() {
       { name: 'Free Fire 70 Diamonds', normal: 10000, pro: 9500, legend: 9300, supreme: 9000, img: 'https://cdn.unipin.com/images/icon_product_channels/1598282333-icon-ff.png' },
       { name: 'PUBG M 60 UC', normal: 14000, pro: 13500, legend: 13200, supreme: 12800, img: 'https://cdn.unipin.com/images/icon_product_channels/1593414902-icon-pubgm.png' },
     ];
-    fetch(`http://localhost:3001/public/subscriptions/plans/features?t=${Date.now()}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache,no-store,must-revalidate', 'Pragma': 'no-cache' } })
-      .then(r => r.json()).then(d => { if (d?.PRO) setPlans(d) }).catch(() => { });
-    fetch('http://localhost:3001/public/products/reseller-prices')
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    fetch(`${baseUrl}/public/subscriptions/plans/features?t=${Date.now()}`, { cache: 'no-store' })
+      .then(r => r.json())
+      .then(d => { 
+        if (d?.PRO) setPlans(d);
+      }).catch(() => { });
+
+    fetch(`${baseUrl}/public/products/reseller-prices?t=${Date.now()}`)
       .then(r => r.json())
       .then(d => {
-        if (Array.isArray(d) && d.length > 0) { setSampleProducts(d); const f = d[0]; const im = f.pro || f.normal || 0; setHargaModal(im); setHargaJual(Math.ceil(im * 1.1 / 100) * 100); }
-        else setSampleProducts(fb);
+        if (Array.isArray(d) && d.length > 0) {
+          setSampleProducts(d);
+        } else {
+          setSampleProducts(fb);
+        }
       }).catch(() => setSampleProducts(fb));
   }, []);
 

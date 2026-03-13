@@ -15,10 +15,10 @@ export declare class WithdrawalsController {
         fee: number;
         receiptImage: string | null;
         rejectedAt: Date | null;
+        netAmount: number;
         bankName: string;
         bankAccountNumber: string;
         bankAccountName: string;
-        netAmount: number;
         processedById: string | null;
     }[]>;
     approve(id: string, req: any, body: any): Promise<{
@@ -33,10 +33,10 @@ export declare class WithdrawalsController {
         fee: number;
         receiptImage: string | null;
         rejectedAt: Date | null;
+        netAmount: number;
         bankName: string;
         bankAccountNumber: string;
         bankAccountName: string;
-        netAmount: number;
         processedById: string | null;
     }>;
     reject(id: string, req: any, body: any): Promise<any>;

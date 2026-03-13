@@ -52,6 +52,10 @@ async function syncDigiflazzProducts() {
             create: { name: 'Digiflazz', code: 'DIGIFLAZZ', status: 'ACTIVE', apiUrl: url, apiKey: key, apiSecret: 'SECRET' }
         });
 
+        // 1. Fetch Pricing Rules
+        const allRules = await prisma.tierPricingRule.findMany({ where: { isActive: true } });
+        const globalRule = allRules.find(r => !r.categoryId);
+
         let updatedCount = 0;
         let newCount = 0;
 
@@ -77,11 +81,19 @@ async function syncDigiflazzProducts() {
                 create: { name: `${item.brand} Topup`, slug: productSlug, categoryId: category.id, status: 'ACTIVE' }
             });
 
+            // Determine Rule: Category specific or Global
+            const rule = allRules.find(r => r.categoryId === category.id) || globalRule;
+            
             const basePrice = Number(item.price);
-            const priceNormal = Math.ceil(basePrice * 1.1); // Simple 10% margin
-            const pricePro = Math.ceil(basePrice * 1.08);
-            const priceLegend = Math.ceil(basePrice * 1.05);
-            const priceSupreme = Math.ceil(basePrice * 1.03);
+            const mNormal = rule?.marginNormal ?? 10;
+            const mPro = rule?.marginPro ?? 8;
+            const mLegend = rule?.marginLegend ?? 5;
+            const mSupreme = rule?.marginSupreme ?? 3;
+
+            const priceNormal = Math.ceil(basePrice * (1 + mNormal / 100));
+            const pricePro    = Math.ceil(basePrice * (1 + mPro / 100));
+            const priceLegend = Math.ceil(basePrice * (1 + mLegend / 100));
+            const priceSupreme = Math.ceil(basePrice * (1 + mSupreme / 100));
 
             const skuRecord = await prisma.productSku.findFirst({
                 where: { supplierCode: item.buyer_sku_code, supplierId: supplier.id }
@@ -95,6 +107,13 @@ async function syncDigiflazzProducts() {
                     data: {
                         basePrice,
                         priceNormal,
+                        pricePro,
+                        priceLegend,
+                        priceSupreme,
+                        marginNormal: mNormal,
+                        marginPro: mPro,
+                        marginLegend: mLegend,
+                        marginSupreme: mSupreme,
                         status: isAvailable ? 'ACTIVE' : 'INACTIVE'
                     }
                 });
@@ -111,10 +130,10 @@ async function syncDigiflazzProducts() {
                         pricePro,
                         priceLegend,
                         priceSupreme,
-                        marginNormal: 10,
-                        marginPro: 8,
-                        marginLegend: 5,
-                        marginSupreme: 3,
+                        marginNormal: mNormal,
+                        marginPro: mPro,
+                        marginLegend: mLegend,
+                        marginSupreme: mSupreme,
                         status: isAvailable ? 'ACTIVE' : 'INACTIVE'
                     }
                 });

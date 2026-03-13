@@ -19,8 +19,8 @@ export declare class SupportService {
         category: import("@prisma/client").$Enums.TicketCategory;
         userId: string;
         orderId: string | null;
-        resolvedAt: Date | null;
         subject: string;
+        resolvedAt: Date | null;
         priority: import("@prisma/client").$Enums.TicketPriority;
         assignedToId: string | null;
         closedAt: Date | null;
@@ -56,8 +56,8 @@ export declare class SupportService {
         category: import("@prisma/client").$Enums.TicketCategory;
         userId: string;
         orderId: string | null;
-        resolvedAt: Date | null;
         subject: string;
+        resolvedAt: Date | null;
         priority: import("@prisma/client").$Enums.TicketPriority;
         assignedToId: string | null;
         closedAt: Date | null;
@@ -85,8 +85,8 @@ export declare class SupportService {
         category: import("@prisma/client").$Enums.TicketCategory;
         userId: string;
         orderId: string | null;
-        resolvedAt: Date | null;
         subject: string;
+        resolvedAt: Date | null;
         priority: import("@prisma/client").$Enums.TicketPriority;
         assignedToId: string | null;
         closedAt: Date | null;
