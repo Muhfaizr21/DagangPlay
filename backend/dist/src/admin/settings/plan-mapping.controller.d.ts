@@ -4,9 +4,9 @@ export declare class PlanMappingController {
     constructor(prisma: PrismaService);
     getMappings(): Promise<{
         id: string;
+        plan: import("@prisma/client").$Enums.MerchantPlan;
         updatedAt: Date;
         isActive: boolean;
-        plan: import("@prisma/client").$Enums.MerchantPlan;
         updatedBy: string;
         tier: import("@prisma/client").$Enums.PriceTier;
     }[]>;
@@ -15,9 +15,9 @@ export declare class PlanMappingController {
     }>;
     updateMapping(dto: any): Promise<{
         id: string;
+        plan: import("@prisma/client").$Enums.MerchantPlan;
         updatedAt: Date;
         isActive: boolean;
-        plan: import("@prisma/client").$Enums.MerchantPlan;
         updatedBy: string;
         tier: import("@prisma/client").$Enums.PriceTier;
     }>;

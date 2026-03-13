@@ -1,26 +1,18 @@
 import type { Metadata } from "next";
-// import { Bebas_Neue, Syne, DM_Sans } from "next/font/google";
+import { Poppins, Inter } from "next/font/google";
 import "./globals.css";
 
-/*
-const bebasNeue = Bebas_Neue({
-  weight: "400",
+const poppins = Poppins({
+  weight: ["400", "500", "600", "700", "800", "900"],
   subsets: ["latin"],
-  variable: "--font-bebas-neue",
+  variable: "--font-poppins",
 });
 
-const syne = Syne({
-  weight: ["800"],
+const inter = Inter({
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
-  variable: "--font-syne",
+  variable: "--font-inter",
 });
-
-const dmSans = DM_Sans({
-  weight: ["300", "400", "500", "600", "700"],
-  subsets: ["latin"],
-  variable: "--font-dm-sans",
-});
-*/
 
 export const metadata: Metadata = {
   title: "DagangPlay – Top Up Games Tercepat & Termurah",
@@ -40,8 +32,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id">
-      <body suppressHydrationWarning>{children}</body>
+    <html lang="id" className={`${poppins.variable} ${inter.variable}`}>
+      <body suppressHydrationWarning className="font-inter">{children}</body>
     </html>
   );
 }

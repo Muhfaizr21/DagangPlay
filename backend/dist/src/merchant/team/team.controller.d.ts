@@ -14,36 +14,36 @@ export declare class TeamController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
         merchantId: string;
         role: import("@prisma/client").$Enums.MerchantMemberRole;
+        userId: string;
         permissions: import("@prisma/client/runtime/client").JsonValue | null;
     })[]>;
     addTeamMember(req: any, body: any): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
         merchantId: string;
         role: import("@prisma/client").$Enums.MerchantMemberRole;
+        userId: string;
         permissions: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     updateTeamMember(req: any, id: string, body: any): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
         merchantId: string;
         role: import("@prisma/client").$Enums.MerchantMemberRole;
+        userId: string;
         permissions: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     removeTeamMember(req: any, id: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
         merchantId: string;
         role: import("@prisma/client").$Enums.MerchantMemberRole;
+        userId: string;
         permissions: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
 }

@@ -21,9 +21,9 @@ export declare class CommissionsService {
         createdAt: Date;
         updatedAt: Date;
         userId: string;
+        amount: number;
         orderId: string;
         type: string;
-        amount: number;
         settledAt: Date | null;
     })[]>;
     settleCommission(id: string, operatorId: string): Promise<any>;

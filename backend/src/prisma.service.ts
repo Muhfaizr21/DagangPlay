@@ -75,8 +75,28 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     get chatRoom() { return this.client.chatRoom; }
     get chatMessage() { return this.client.chatMessage; }
     get marketingGuide() { return this.client.marketingGuide; }
-    get merchantProductOverride() { return (this.client as any).merchantProductOverride; }
+    get merchantProductOverride() { return this.client.merchantProductOverride; }
     get otpVerification() { return this.client.otpVerification; }
+    get popupPromo() { return this.client.popupPromo; }
+    get webhookLog() { return this.client.webhookLog; }
+    get notification() { return this.client.notification; }
+    get pushNotificationLog() { return this.client.pushNotificationLog; }
+    get emailCampaignLog() { return this.client.emailCampaignLog; }
+    get userActivityLog() { return this.client.userActivityLog; }
+    get productSalesStats() { return this.client.productSalesStats; }
+    get dailySalesSnapshot() { return this.client.dailySalesSnapshot; }
+    get maintenanceSchedule() { return this.client.maintenanceSchedule; }
+    get refundPolicy() { return this.client.refundPolicy; }
+    get disputeCase() { return this.client.disputeCase; }
+    get apiRateLimit() { return this.client.apiRateLimit; }
+    get merchantSetting() { return this.client.merchantSetting; }
+    get gameValidation() { return this.client.gameValidation; }
+    get gameNickname() { return this.client.gameNickname; }
+    get referralReward() { return this.client.referralReward; }
+    get commissionRule() { return this.client.commissionRule; }
+    get deviceTrusted() { return this.client.deviceTrusted; }
+    get userProfile() { return this.client.userProfile; }
+    get apiKey() { return this.client.apiKey; }
 
     async onModuleInit() {
         await this.client.$connect();

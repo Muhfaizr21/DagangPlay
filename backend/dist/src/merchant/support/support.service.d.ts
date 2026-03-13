@@ -11,16 +11,16 @@ export declare class SupportService {
         };
     } & {
         id: string;
+        description: string;
         status: import("@prisma/client").$Enums.TicketStatus;
         createdAt: Date;
         updatedAt: Date;
-        category: import("@prisma/client").$Enums.TicketCategory;
-        description: string;
-        userId: string;
         merchantId: string;
+        category: import("@prisma/client").$Enums.TicketCategory;
+        userId: string;
         orderId: string | null;
-        subject: string;
         resolvedAt: Date | null;
+        subject: string;
         priority: import("@prisma/client").$Enums.TicketPriority;
         assignedToId: string | null;
         closedAt: Date | null;
@@ -48,16 +48,16 @@ export declare class SupportService {
         })[];
     } & {
         id: string;
+        description: string;
         status: import("@prisma/client").$Enums.TicketStatus;
         createdAt: Date;
         updatedAt: Date;
-        category: import("@prisma/client").$Enums.TicketCategory;
-        description: string;
-        userId: string;
         merchantId: string;
+        category: import("@prisma/client").$Enums.TicketCategory;
+        userId: string;
         orderId: string | null;
-        subject: string;
         resolvedAt: Date | null;
+        subject: string;
         priority: import("@prisma/client").$Enums.TicketPriority;
         assignedToId: string | null;
         closedAt: Date | null;
@@ -77,16 +77,16 @@ export declare class SupportService {
         assignedToId?: string;
     }): Promise<{
         id: string;
+        description: string;
         status: import("@prisma/client").$Enums.TicketStatus;
         createdAt: Date;
         updatedAt: Date;
-        category: import("@prisma/client").$Enums.TicketCategory;
-        description: string;
-        userId: string;
         merchantId: string;
+        category: import("@prisma/client").$Enums.TicketCategory;
+        userId: string;
         orderId: string | null;
-        subject: string;
         resolvedAt: Date | null;
+        subject: string;
         priority: import("@prisma/client").$Enums.TicketPriority;
         assignedToId: string | null;
         closedAt: Date | null;

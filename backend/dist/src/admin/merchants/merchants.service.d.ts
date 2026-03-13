@@ -27,16 +27,11 @@ export declare class MerchantsService {
     setMerchantStatus(id: string, status: MerchantStatus, reason?: string): Promise<{
         id: string;
         name: string;
-        status: import("@prisma/client").$Enums.MerchantStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        deletedAt: Date | null;
         slug: string;
-        domain: string | null;
-        ownerId: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
+        domain: string | null;
         description: string | null;
         tagline: string | null;
         contactEmail: string | null;
@@ -45,54 +40,54 @@ export declare class MerchantsService {
         address: string | null;
         city: string | null;
         province: string | null;
+        status: import("@prisma/client").$Enums.MerchantStatus;
         plan: import("@prisma/client").$Enums.MerchantPlan;
         planExpiredAt: Date | null;
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
+        ownerId: string;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
     }>;
     getMerchantDetail(id: string): Promise<{
         resellersCount: number;
         omset: number;
-        _count: {
-            deposits: number;
-            orders: number;
-            supportTickets: number;
-        };
         owner: {
             id: string;
-            email: string | null;
             name: string;
             status: import("@prisma/client").$Enums.UserStatus;
+            email: string | null;
             isVerified: boolean;
         };
         members: ({
             user: {
                 id: string;
-                email: string | null;
                 name: string;
+                email: string | null;
                 role: import("@prisma/client").$Enums.Role;
             };
         } & {
             id: string;
-            role: import("@prisma/client").$Enums.MerchantMemberRole;
-            merchantId: string;
             createdAt: Date;
             updatedAt: Date;
+            merchantId: string;
+            role: import("@prisma/client").$Enums.MerchantMemberRole;
             userId: string;
             permissions: import("@prisma/client/runtime/client").JsonValue | null;
         })[];
+        _count: {
+            deposits: number;
+            orders: number;
+            supportTickets: number;
+        };
         id: string;
         name: string;
-        status: import("@prisma/client").$Enums.MerchantStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        deletedAt: Date | null;
         slug: string;
-        domain: string | null;
-        ownerId: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
+        domain: string | null;
         description: string | null;
         tagline: string | null;
         contactEmail: string | null;
@@ -101,24 +96,24 @@ export declare class MerchantsService {
         address: string | null;
         city: string | null;
         province: string | null;
+        status: import("@prisma/client").$Enums.MerchantStatus;
         plan: import("@prisma/client").$Enums.MerchantPlan;
         planExpiredAt: Date | null;
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
+        ownerId: string;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
     }>;
     updateMerchantSettings(id: string, updateData: any): Promise<{
         id: string;
         name: string;
-        status: import("@prisma/client").$Enums.MerchantStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        deletedAt: Date | null;
         slug: string;
-        domain: string | null;
-        ownerId: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
+        domain: string | null;
         description: string | null;
         tagline: string | null;
         contactEmail: string | null;
@@ -127,10 +122,15 @@ export declare class MerchantsService {
         address: string | null;
         city: string | null;
         province: string | null;
+        status: import("@prisma/client").$Enums.MerchantStatus;
         plan: import("@prisma/client").$Enums.MerchantPlan;
         planExpiredAt: Date | null;
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
+        ownerId: string;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
     }>;
     resetOwnerPassword(merchantId: string): Promise<{
         success: boolean;

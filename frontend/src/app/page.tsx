@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import useSWR from "swr";
 import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 
-const PlatformLanding = dynamic(() => import("@/components/home/PlatformLanding"), {
-  loading: () => <div className="min-h-screen bg-[#030712] flex items-center justify-center animate-pulse"><img src="/dagang.png" className="w-24 h-24 object-contain grayscale invert opacity-20" /></div>
+
+const CompanyProfile = dynamic(() => import("@/components/home/CompanyProfile"), {
+  loading: () => <div className="min-h-screen bg-[#020617] flex items-center justify-center animate-pulse text-white font-black uppercase tracking-[.45em] italic">DagangPlay Corp...</div>
 });
 
 const MerchantStorefront = dynamic(() => import("@/components/home/MerchantStorefront"), {
@@ -14,7 +16,7 @@ const MerchantStorefront = dynamic(() => import("@/components/home/MerchantStore
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export default function Home() {
+function Home() {
   const [scrolled, setScrolled] = useState(false);
   const [search, setSearch] = useState("");
   const [mOpen, setMOpen] = useState(false);
@@ -23,27 +25,32 @@ export default function Home() {
 
   const [slug, setSlug] = useState<string | null>(null);
   const [domainMask, setDomainMask] = useState<string | null>(null);
+  const [showStore, setShowStore] = useState(false);
+
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const mParam = params.get('merchant');
-    const domainMaskParam = params.get('domain_mask');
-
-    // LOGIKA MULTI-TENANT:
-    // 1. Cek query param ?merchant= (untuk testing)
-    // 2. Cek ?domain_mask= (dari middleware custom domain routing)
-    // 3. Cek hostname 
+    const mParam = searchParams.get('merchant');
+    const domainMaskParam = searchParams.get('domain_mask');
+    const viewParam = searchParams.get('view');
     const hostname = window.location.hostname;
-    const isMainDomain = hostname === 'dagangplay.com' || hostname === 'localhost';
+    const isMainDomain = hostname === 'dagangplay.com' || hostname === 'localhost' || hostname.includes('trycloudflare.com');
 
     if (mParam) {
       setSlug(mParam);
+      setShowStore(true);
     } else if (domainMaskParam) {
       setDomainMask(domainMaskParam);
+      setShowStore(true);
     } else if (!isMainDomain) {
       setDomainMask(hostname);
+      setShowStore(true);
+    } else if (viewParam === 'store') {
+      setShowStore(true);
+    } else {
+      setShowStore(false);
     }
-  }, []);
+  }, [searchParams]);
 
   const configUrl = slug
     ? `${baseUrl}/public/orders/config?slug=${slug}`
@@ -125,18 +132,25 @@ export default function Home() {
     );
   }
 
+  if (!showStore && config?.isOfficial) {
+    return <CompanyProfile scrolled={scrolled} catalog={catalog} />;
+  }
+
   return (
-    <PlatformLanding
+    <MerchantStorefront
       config={config}
       contentData={contentData}
       filteredProducts={filteredProducts}
       search={search}
       setSearch={setSearch}
-      catalog={catalog}
-      announcements={contentData?.announcements || []}
-      scrolled={scrolled}
-      mOpen={mOpen}
-      setMOpen={setMOpen}
     />
+  );
+}
+
+export default function HomeWithSuspense() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#020617] flex items-center justify-center animate-pulse text-white font-black uppercase tracking-[.45em] italic">DagangPlay Engine...</div>}>
+      <Home />
+    </Suspense>
   );
 }

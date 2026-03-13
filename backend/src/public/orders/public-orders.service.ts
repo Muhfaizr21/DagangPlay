@@ -314,7 +314,8 @@ export class PublicOrdersService {
                 name: 'DagangPlay',
                 logo: null,
                 whiteLabel: false,
-                plan: 'FREE'
+                plan: 'FREE',
+                isOfficial: true
             };
         }
 

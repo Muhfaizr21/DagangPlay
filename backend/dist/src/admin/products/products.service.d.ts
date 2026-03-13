@@ -4,26 +4,26 @@ export declare class ProductsService {
     constructor(prisma: PrismaService);
     getCategories(): Promise<{
         totalSkus: number;
+        _count: {
+            products: number;
+        };
         products: {
             _count: {
                 skus: number;
             };
         }[];
-        _count: {
-            products: number;
-        };
         id: string;
         name: string;
         slug: string;
-        icon: string | null;
-        image: string | null;
         description: string | null;
-        sortOrder: number;
-        isActive: boolean;
-        parentId: string | null;
-        digiflazzCategory: string | null;
         createdAt: Date;
         updatedAt: Date;
+        image: string | null;
+        sortOrder: number;
+        isActive: boolean;
+        icon: string | null;
+        parentId: string | null;
+        digiflazzCategory: string | null;
     }[]>;
     updateCategoryImage(name: string, imageUrl: string): Promise<import("@prisma/client").Prisma.BatchPayload>;
     getProducts(): Promise<({
@@ -31,29 +31,29 @@ export declare class ProductsService {
             id: string;
             name: string;
             slug: string;
-            icon: string | null;
-            image: string | null;
             description: string | null;
-            sortOrder: number;
-            isActive: boolean;
-            parentId: string | null;
-            digiflazzCategory: string | null;
             createdAt: Date;
             updatedAt: Date;
+            image: string | null;
+            sortOrder: number;
+            isActive: boolean;
+            icon: string | null;
+            parentId: string | null;
+            digiflazzCategory: string | null;
         };
         skus: {
             id: string;
             name: string;
-            sortOrder: number;
+            status: import("@prisma/client").$Enums.SkuStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.SkuStatus;
-            basePrice: number;
+            sortOrder: number;
             productId: string;
             supplierId: string;
             supplierCode: string;
             backupSupplierId: string | null;
             backupSupplierCode: string | null;
+            basePrice: number;
             priceNormal: number;
             pricePro: number;
             priceLegend: number;
@@ -70,19 +70,19 @@ export declare class ProductsService {
         name: string;
         slug: string;
         description: string | null;
-        sortOrder: number;
-        digiflazzCategory: string | null;
+        status: import("@prisma/client").$Enums.ProductStatus;
         createdAt: Date;
         updatedAt: Date;
+        sortOrder: number;
+        banner: string | null;
+        digiflazzCategory: string | null;
         categoryId: string;
         thumbnail: string | null;
-        banner: string | null;
         gameIdLabel: string | null;
         gameServerId: boolean;
         serverLabel: string | null;
         digiflazzBrand: string | null;
         instruction: string | null;
-        status: import("@prisma/client").$Enums.ProductStatus;
         isFeatured: boolean;
         isPopular: boolean;
     })[]>;
@@ -94,26 +94,26 @@ export declare class ProductsService {
     }>;
     getAllSkusPricing(): Promise<({
         product: {
+            name: string;
             category: {
                 id: string;
                 name: string;
                 image: string | null;
             };
-            name: string;
         };
     } & {
         id: string;
         name: string;
-        sortOrder: number;
+        status: import("@prisma/client").$Enums.SkuStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.SkuStatus;
-        basePrice: number;
+        sortOrder: number;
         productId: string;
         supplierId: string;
         supplierCode: string;
         backupSupplierId: string | null;
         backupSupplierCode: string | null;
+        basePrice: number;
         priceNormal: number;
         pricePro: number;
         priceLegend: number;
@@ -128,16 +128,16 @@ export declare class ProductsService {
     updateSkuPrice(id: string, prices: any): Promise<{
         id: string;
         name: string;
-        sortOrder: number;
+        status: import("@prisma/client").$Enums.SkuStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.SkuStatus;
-        basePrice: number;
+        sortOrder: number;
         productId: string;
         supplierId: string;
         supplierCode: string;
         backupSupplierId: string | null;
         backupSupplierCode: string | null;
+        basePrice: number;
         priceNormal: number;
         pricePro: number;
         priceLegend: number;
@@ -156,16 +156,16 @@ export declare class ProductsService {
     updateSkuStatus(id: string, status: string): Promise<{
         id: string;
         name: string;
-        sortOrder: number;
+        status: import("@prisma/client").$Enums.SkuStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.SkuStatus;
-        basePrice: number;
+        sortOrder: number;
         productId: string;
         supplierId: string;
         supplierCode: string;
         backupSupplierId: string | null;
         backupSupplierCode: string | null;
+        basePrice: number;
         priceNormal: number;
         pricePro: number;
         priceLegend: number;
@@ -184,24 +184,61 @@ export declare class ProductsService {
         slug: string;
         products: any;
         id: string;
-        icon: string | null;
-        image: string | null;
         description: string | null;
-        sortOrder: number;
-        isActive: boolean;
-        parentId: string | null;
-        digiflazzCategory: string | null;
         createdAt: Date;
         updatedAt: Date;
+        image: string | null;
+        sortOrder: number;
+        isActive: boolean;
+        icon: string | null;
+        parentId: string | null;
+        digiflazzCategory: string | null;
     } | null>;
     getPublicContent(merchantSlug?: string, domain?: string): Promise<{
         banners: never[];
         announcements: never[];
         popupPromos?: undefined;
     } | {
-        banners: any;
-        announcements: any;
-        popupPromos: any;
+        banners: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            merchantId: string | null;
+            title: string;
+            image: string;
+            linkUrl: string | null;
+            position: import("@prisma/client").$Enums.BannerPosition;
+            sortOrder: number;
+            startDate: Date | null;
+            endDate: Date | null;
+            isActive: boolean;
+            clickCount: number;
+        }[];
+        announcements: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            merchantId: string | null;
+            title: string;
+            startDate: Date | null;
+            endDate: Date | null;
+            isActive: boolean;
+            content: string;
+            imageUrl: string | null;
+        }[];
+        popupPromos: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            merchantId: string | null;
+            title: string;
+            image: string | null;
+            linkUrl: string | null;
+            startDate: Date | null;
+            endDate: Date | null;
+            isActive: boolean;
+            content: string | null;
+        }[];
     }>;
     getPublicResellerPrices(merchantSlug?: string, domain?: string): Promise<{
         name: string;

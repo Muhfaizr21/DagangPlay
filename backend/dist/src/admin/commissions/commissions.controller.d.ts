@@ -21,9 +21,9 @@ export declare class CommissionsController {
         createdAt: Date;
         updatedAt: Date;
         userId: string;
+        amount: number;
         orderId: string;
         type: string;
-        amount: number;
         settledAt: Date | null;
     })[]>;
     settle(id: string): Promise<any>;
