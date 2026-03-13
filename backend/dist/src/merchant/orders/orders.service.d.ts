@@ -23,24 +23,21 @@ export declare class OrdersService {
             };
             user: {
                 id: string;
-                name: string;
                 email: string | null;
+                phone: string | null;
+                name: string;
             };
         } & {
             id: string;
-            productId: string;
-            supplierId: string | null;
-            basePrice: number;
-            createdAt: Date;
-            updatedAt: Date;
+            orderNumber: string;
             userId: string;
             merchantId: string;
+            productId: string;
             productSkuId: string;
-            expiredAt: Date | null;
-            orderNumber: string;
             productName: string;
             productSkuName: string;
             priceTierUsed: import("@prisma/client").$Enums.PriceTier;
+            basePrice: number;
             sellingPrice: number;
             totalPrice: number;
             gameUserId: string;
@@ -52,6 +49,7 @@ export declare class OrdersService {
             paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
             paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
             fulfillmentStatus: import("@prisma/client").$Enums.OrderFulfillmentStatus;
+            supplierId: string | null;
             supplierRefId: string | null;
             supplierResponse: import("@prisma/client/runtime/client").JsonValue | null;
             serialNumber: string | null;
@@ -61,6 +59,9 @@ export declare class OrdersService {
             processedAt: Date | null;
             completedAt: Date | null;
             failedAt: Date | null;
+            expiredAt: Date | null;
+            createdAt: Date;
+            updatedAt: Date;
             merchantModalPrice: number | null;
         })[];
         stats: {
@@ -79,32 +80,28 @@ export declare class OrdersService {
         };
         user: {
             id: string;
-            name: string;
             email: string | null;
+            name: string;
         };
         statusHistories: {
             id: string;
-            status: string;
-            createdAt: Date;
             note: string | null;
+            createdAt: Date;
+            status: string;
             orderId: string;
             changedBy: string;
         }[];
     } & {
         id: string;
-        productId: string;
-        supplierId: string | null;
-        basePrice: number;
-        createdAt: Date;
-        updatedAt: Date;
+        orderNumber: string;
         userId: string;
         merchantId: string;
+        productId: string;
         productSkuId: string;
-        expiredAt: Date | null;
-        orderNumber: string;
         productName: string;
         productSkuName: string;
         priceTierUsed: import("@prisma/client").$Enums.PriceTier;
+        basePrice: number;
         sellingPrice: number;
         totalPrice: number;
         gameUserId: string;
@@ -116,6 +113,7 @@ export declare class OrdersService {
         paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
         paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
         fulfillmentStatus: import("@prisma/client").$Enums.OrderFulfillmentStatus;
+        supplierId: string | null;
         supplierRefId: string | null;
         supplierResponse: import("@prisma/client/runtime/client").JsonValue | null;
         serialNumber: string | null;
@@ -125,25 +123,24 @@ export declare class OrdersService {
         processedAt: Date | null;
         completedAt: Date | null;
         failedAt: Date | null;
+        expiredAt: Date | null;
+        createdAt: Date;
+        updatedAt: Date;
         merchantModalPrice: number | null;
     }>;
     retryOrder(merchantId: string, orderId: string): Promise<{
         message: string;
         order: {
             id: string;
-            productId: string;
-            supplierId: string | null;
-            basePrice: number;
-            createdAt: Date;
-            updatedAt: Date;
+            orderNumber: string;
             userId: string;
             merchantId: string;
+            productId: string;
             productSkuId: string;
-            expiredAt: Date | null;
-            orderNumber: string;
             productName: string;
             productSkuName: string;
             priceTierUsed: import("@prisma/client").$Enums.PriceTier;
+            basePrice: number;
             sellingPrice: number;
             totalPrice: number;
             gameUserId: string;
@@ -155,6 +152,7 @@ export declare class OrdersService {
             paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
             paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
             fulfillmentStatus: import("@prisma/client").$Enums.OrderFulfillmentStatus;
+            supplierId: string | null;
             supplierRefId: string | null;
             supplierResponse: import("@prisma/client/runtime/client").JsonValue | null;
             serialNumber: string | null;
@@ -164,6 +162,9 @@ export declare class OrdersService {
             processedAt: Date | null;
             completedAt: Date | null;
             failedAt: Date | null;
+            expiredAt: Date | null;
+            createdAt: Date;
+            updatedAt: Date;
             merchantModalPrice: number | null;
         } | null;
     }>;

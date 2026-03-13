@@ -12,10 +12,6 @@ export declare class FinanceController {
         saasRevenue: number;
     }>;
     getDeposits(status?: string, search?: string): Promise<({
-        confirmedBy: {
-            id: string;
-            name: string;
-        } | null;
         merchant: {
             id: string;
             name: string;
@@ -23,39 +19,43 @@ export declare class FinanceController {
         };
         user: {
             id: string;
-            email: string | null;
             name: string;
+            email: string | null;
             role: import("@prisma/client").$Enums.Role;
         };
+        confirmedBy: {
+            id: string;
+            name: string;
+        } | null;
     } & {
         id: string;
-        userId: string;
-        merchantId: string;
-        amount: number;
-        method: import("@prisma/client").$Enums.PaymentMethod;
         status: import("@prisma/client").$Enums.DepositStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string;
+        note: string | null;
+        expiredAt: Date | null;
+        userId: string;
+        method: import("@prisma/client").$Enums.PaymentMethod;
+        amount: number;
         tripayReference: string | null;
         tripayMerchantRef: string | null;
         tripayPaymentUrl: string | null;
-        tripayVaNumber: string | null;
         tripayQrUrl: string | null;
+        tripayVaNumber: string | null;
         tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
         receiptImage: string | null;
         confirmedById: string | null;
         confirmedAt: Date | null;
         rejectedAt: Date | null;
-        note: string | null;
-        expiredAt: Date | null;
-        createdAt: Date;
-        updatedAt: Date;
     })[]>;
     confirmDeposit(id: string, req: any): Promise<any>;
     rejectDeposit(id: string, reason: string, req: any): Promise<any>;
     getWithdrawals(status?: string): Promise<({
         user: {
             id: string;
-            email: string | null;
             name: string;
+            email: string | null;
             role: import("@prisma/client").$Enums.Role;
         };
         processedBy: {
@@ -64,21 +64,21 @@ export declare class FinanceController {
         } | null;
     } & {
         id: string;
-        userId: string;
-        amount: number;
         status: import("@prisma/client").$Enums.WithdrawalStatus;
-        receiptImage: string | null;
-        rejectedAt: Date | null;
-        note: string | null;
         createdAt: Date;
         updatedAt: Date;
+        note: string | null;
+        processedAt: Date | null;
+        userId: string;
+        amount: number;
         fee: number;
+        receiptImage: string | null;
+        rejectedAt: Date | null;
         netAmount: number;
         bankName: string;
         bankAccountNumber: string;
         bankAccountName: string;
         processedById: string | null;
-        processedAt: Date | null;
     })[]>;
     processWithdrawal(id: string, body: {
         note?: string;

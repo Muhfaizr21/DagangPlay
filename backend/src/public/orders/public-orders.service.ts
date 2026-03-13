@@ -288,9 +288,6 @@ export class PublicOrdersService {
         const order = await this.prisma.order.findUnique({
             where: { orderNumber },
             include: {
-                productSku: {
-                    include: { product: { include: { category: true } } }
-                },
                 payment: true
             }
         });
@@ -300,14 +297,34 @@ export class PublicOrdersService {
         return order;
     }
 
+    async findOrdersByWhatsApp(phone: string) {
+        const user = await this.prisma.user.findFirst({
+            where: { phone }
+        });
+
+        if (!user) throw new BadRequestException('Nomor WhatsApp ini belum memiliki riwayat pesanan');
+
+        return this.prisma.order.findMany({
+            where: { userId: user.id },
+            include: { payment: true },
+            orderBy: { createdAt: 'desc' },
+            take: 10
+        });
+    }
+
     async getStoreConfig(host?: string, merchantSlug?: string) {
+        const isMainDomain = !host || 
+                            host.includes('localhost') || 
+                            host.includes('dagangplay.com') || 
+                            host.includes('trycloudflare.com');
+
         // 1. Find Merchant
-        const merchant = await this.prisma.merchant.findFirst({
+        const merchant = isMainDomain && !merchantSlug ? null : await this.prisma.merchant.findFirst({
             where: {
                 OR: [
                     merchantSlug ? { slug: merchantSlug } : {},
                     { domain: host },
-                    { slug: host?.split('.')[0] }
+                    !isMainDomain ? { slug: host?.split('.')[0] } : {}
                 ].filter(condition => Object.keys(condition).length > 0)
             }
         });

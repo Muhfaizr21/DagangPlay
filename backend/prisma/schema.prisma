@@ -22,8 +22,8 @@ model User {
   referralCode          String                 @unique
   referredById          String?
   merchantId            String?
-  balance               Decimal                @default(0)
-  bonusBalance          Decimal                @default(0)
+  balance               Float                  @default(0)
+  bonusBalance          Float                  @default(0)
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
   deletedAt             DateTime?
@@ -174,13 +174,13 @@ model DeviceTrusted {
 }
 
 model Merchant {
-  id                    String                 @id @default(cuid())
+  id                    String                    @id @default(cuid())
   name                  String
-  slug                  String                 @unique
+  slug                  String                    @unique
   logo                  String?
   favicon               String?
   bannerImage           String?
-  domain                String?                @unique
+  domain                String?                   @unique
   description           String?
   tagline               String?
   contactEmail          String?
@@ -189,25 +189,27 @@ model Merchant {
   address               String?
   city                  String?
   province              String?
-  status                MerchantStatus         @default(PENDING_REVIEW)
-  plan                  MerchantPlan           @default(PRO)
+  status                MerchantStatus            @default(PENDING_REVIEW)
+  plan                  MerchantPlan              @default(FREE)
   planExpiredAt         DateTime?
-  isOfficial            Boolean                @default(false)
+  isOfficial            Boolean                   @default(false)
   settings              Json?
-  ownerId               String                 @unique
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
+  ownerId               String                    @unique
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
   deletedAt             DateTime?
   announcements         Announcement[]
   apiKeys               ApiKey[]
   auditLogs             AuditLog[]
   banners               Banner[]
+  chatRoom              ChatRoom?
   dailySalesSnapshots   DailySalesSnapshot[]
   deposits              Deposit[]
   emailCampaigns        EmailCampaign[]
   invoices              Invoice[]
-  owner                 User                   @relation("MerchantOwner", fields: [ownerId], references: [id])
+  owner                 User                      @relation("MerchantOwner", fields: [ownerId], references: [id])
   members               MerchantMember[]
+  productOverrides      MerchantProductOverride[]
   merchantProductPrices MerchantProductPrice[]
   merchantSettings      MerchantSetting[]
   notifications         Notification[]
@@ -218,8 +220,6 @@ model Merchant {
   subscriptionHistories SubscriptionHistory[]
   supportTickets        SupportTicket[]
   webhookEndpoints      WebhookEndpoint[]
-  chatRoom              ChatRoom?
-  productOverrides      MerchantProductOverride[]
 
   @@index([slug, domain, status, plan, isOfficial, createdAt])
 }
@@ -233,10 +233,9 @@ model MerchantProductOverride {
   description     String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
   merchant        Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
   product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
+
   @@unique([merchantId, productId])
 }
 
@@ -263,7 +262,7 @@ model Supplier {
   apiKey           String
   apiSecret        String
   status           SupplierStatus           @default(ACTIVE)
-  balance          Decimal                  @default(0)
+  balance          Float                    @default(0)
   lastSyncAt       DateTime?
   createdAt        DateTime                 @default(now())
   updatedAt        DateTime                 @updatedAt
@@ -330,35 +329,35 @@ model Category {
 }
 
 model Product {
-  id                String                @id @default(cuid())
+  id                String                    @id @default(cuid())
   name              String
-  slug              String                @unique
+  slug              String                    @unique
   categoryId        String
   description       String?
   thumbnail         String?
   banner            String?
   gameIdLabel       String?
-  gameServerId      Boolean               @default(false)
+  gameServerId      Boolean                   @default(false)
   serverLabel       String?
   digiflazzBrand    String?
   digiflazzCategory String?
   instruction       String?
-  status            ProductStatus         @default(ACTIVE)
-  sortOrder         Int                   @default(0)
-  isFeatured        Boolean               @default(false)
-  isPopular         Boolean               @default(false)
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
+  status            ProductStatus             @default(ACTIVE)
+  sortOrder         Int                       @default(0)
+  isFeatured        Boolean                   @default(false)
+  isPopular         Boolean                   @default(false)
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
   commissionRules   CommissionRule[]
   gameServers       GameServer[]
   maintenances      MaintenanceSchedule[]
-  category          Category              @relation(fields: [categoryId], references: [id])
+  overrides         MerchantProductOverride[]
+  category          Category                  @relation(fields: [categoryId], references: [id])
   reviews           ProductReview[]
   productSalesStats ProductSalesStats[]
   skus              ProductSku[]
   refundPolicy      RefundPolicy?
   userFavorites     UserFavorite[]
-  overrides         MerchantProductOverride[]
 }
 
 model ProductSku {
@@ -1293,6 +1292,29 @@ model AuditLog {
   @@index([entity, entityId])
 }
 
+model ChatRoom {
+  id          String        @id @default(cuid())
+  merchantId  String        @unique
+  lastMessage String?
+  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime      @default(now())
+  messages    ChatMessage[]
+  merchant    Merchant      @relation(fields: [merchantId], references: [id])
+}
+
+model ChatMessage {
+  id         String   @id @default(cuid())
+  chatRoomId String
+  senderId   String
+  message    String
+  isRead     Boolean  @default(false)
+  isAdmin    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id])
+
+  @@index([chatRoomId, createdAt])
+}
+
 enum Role {
   SUPER_ADMIN
   ADMIN_STAFF
@@ -1327,6 +1349,7 @@ enum MerchantStatus {
 }
 
 enum MerchantPlan {
+  FREE
   PRO
   LEGEND
   SUPREME
@@ -1586,27 +1609,4 @@ enum ChangeType {
   SYNC_DIGIFLAZZ
   FORMULA_APPLY
   BULK_UPDATE
-}
-
-model ChatRoom {
-  id          String   @id @default(cuid())
-  merchantId  String   @unique
-  lastMessage String?
-  updatedAt   DateTime @updatedAt
-  createdAt   DateTime @default(now())
-  messages    ChatMessage[]
-  merchant    Merchant @relation(fields: [merchantId], references: [id])
-}
-
-model ChatMessage {
-  id         String   @id @default(cuid())
-  chatRoomId String
-  senderId   String
-  message    String
-  isRead     Boolean  @default(false)
-  isAdmin    Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id])
-
-  @@index([chatRoomId, createdAt])
 }

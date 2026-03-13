@@ -77,12 +77,12 @@ let FinanceService = class FinanceService {
         });
     }
     async rejectDeposit(id, reason, operatorId) {
-        const deposit = await this.prisma.deposit.findUnique({ where: { id } });
-        if (!deposit)
-            throw new common_1.NotFoundException('Deposit tidak ditemukan');
-        if (deposit.status !== 'PENDING')
-            throw new common_1.BadRequestException(`Status tidak bisa ditolak (${deposit.status})`);
         return this.prisma.$transaction(async (tx) => {
+            const deposit = await tx.deposit.findUnique({ where: { id } });
+            if (!deposit)
+                throw new common_1.NotFoundException('Deposit tidak ditemukan');
+            if (deposit.status !== 'PENDING')
+                throw new common_1.BadRequestException(`Status tidak bisa ditolak (${deposit.status})`);
             const updated = await tx.deposit.update({
                 where: { id },
                 data: {
@@ -93,7 +93,14 @@ let FinanceService = class FinanceService {
                 }
             });
             await tx.auditLog.create({
-                data: { action: 'REJECT_DEPOSIT', entity: 'Deposit', entityId: id, newData: { status: 'REJECTED', reason }, oldData: { status: 'PENDING' } }
+                data: {
+                    action: 'REJECT_DEPOSIT',
+                    entity: 'Deposit',
+                    entityId: id,
+                    userId: operatorId,
+                    newData: { status: 'REJECTED', reason },
+                    oldData: { status: 'PENDING' }
+                }
             });
             return updated;
         });

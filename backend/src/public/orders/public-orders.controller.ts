@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, Req, Query } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Req, Query, BadRequestException } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { PublicOrdersService } from './public-orders.service';
 import { TripayService } from '../../tripay/tripay.service';
@@ -28,6 +28,12 @@ export class PublicOrdersController {
         const origin = req.headers.origin;
         const merchantSlug = body.merchant;
         return this.publicOrdersService.createCheckout(body, host, origin, merchantSlug);
+    }
+
+    @Get('search')
+    async searchOrders(@Query('phone') phone?: string) {
+        if (!phone) throw new BadRequestException('Nomor WhatsApp diperlukan');
+        return this.publicOrdersService.findOrdersByWhatsApp(phone);
     }
 
     @Get(':orderNumber')

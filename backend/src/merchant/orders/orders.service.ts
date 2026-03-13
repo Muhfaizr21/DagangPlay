@@ -115,6 +115,7 @@ export class OrdersService {
                 { id: { contains: filters.search, mode: 'insensitive' } },
                 { orderNumber: { contains: filters.search, mode: 'insensitive' } },
                 { gameUserId: { contains: filters.search, mode: 'insensitive' } },
+                { whatsapp: { contains: filters.search, mode: 'insensitive' } },
             ];
         }
 
@@ -129,7 +130,7 @@ export class OrdersService {
         const orders = await this.prisma.order.findMany({
             where: whereClause,
             include: {
-                user: { select: { id: true, name: true, email: true } },
+                user: { select: { id: true, name: true, email: true, phone: true } },
                 productSku: {
                     select: {
                         name: true,
