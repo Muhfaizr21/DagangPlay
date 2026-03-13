@@ -4,6 +4,7 @@ export declare class DashboardService {
     constructor(prisma: PrismaService);
     getDashboardData(userId: string): Promise<{
         merchant: {
+            id: string;
             name: string;
             domain: string | null;
             status: import("@prisma/client").$Enums.MerchantStatus;
@@ -16,8 +17,13 @@ export declare class DashboardService {
             total: number;
             lastMonth: number;
             trendPercentage: number;
-            profitTotal: number;
-            profitMonth: number;
+        };
+        profit: {
+            today: number;
+            month: number;
+            total: number;
+            lastMonth: number;
+            trendPercentage: number;
         };
         transactionsToday: {
             success: number;
@@ -26,17 +32,18 @@ export declare class DashboardService {
             total: number;
         };
         users: {
-            activeResellers: number;
+            activeCustomers: number;
         };
         recentOrders: {
             id: any;
             amount: any;
             status: any;
             customerName: any;
+            whatsapp: any;
             productName: any;
             createdAt: any;
         }[];
-        topResellers: {
+        topCustomers: {
             id: string;
             name: string;
             email: string;
@@ -44,6 +51,10 @@ export declare class DashboardService {
             totalOrders: number;
         }[];
         alerts: string[];
-        chartData: any[];
+        chartData: {
+            date: string;
+            revenue: number;
+            profit: number;
+        }[];
     }>;
 }

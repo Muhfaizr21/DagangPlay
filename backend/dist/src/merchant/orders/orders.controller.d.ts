@@ -7,6 +7,12 @@ export declare class OrdersController {
     createDirectOrder(req: any, body: any): Promise<any>;
     getOrders(req: any, filters: any): Promise<{
         orders: ({
+            user: {
+                id: string;
+                name: string;
+                email: string | null;
+                phone: string | null;
+            };
             productSku: {
                 name: string;
                 product: {
@@ -14,35 +20,28 @@ export declare class OrdersController {
                     thumbnail: string | null;
                 };
             };
-            user: {
-                id: string;
-                email: string | null;
-                phone: string | null;
-                name: string;
-            };
         } & {
             id: string;
-            orderNumber: string;
-            userId: string;
+            createdAt: Date;
+            updatedAt: Date;
             merchantId: string;
             productId: string;
-            productSkuId: string;
+            supplierId: string | null;
+            basePrice: number;
+            orderNumber: string;
             productName: string;
             productSkuName: string;
             priceTierUsed: import("@prisma/client").$Enums.PriceTier;
-            basePrice: number;
             sellingPrice: number;
             totalPrice: number;
             gameUserId: string;
             gameUserServerId: string | null;
             gameUserName: string | null;
             quantity: number;
-            promoCodeId: string | null;
             discountAmount: number;
             paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
             paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
             fulfillmentStatus: import("@prisma/client").$Enums.OrderFulfillmentStatus;
-            supplierId: string | null;
             supplierRefId: string | null;
             supplierResponse: import("@prisma/client/runtime/client").JsonValue | null;
             serialNumber: string | null;
@@ -53,9 +52,10 @@ export declare class OrdersController {
             completedAt: Date | null;
             failedAt: Date | null;
             expiredAt: Date | null;
-            createdAt: Date;
-            updatedAt: Date;
             merchantModalPrice: number | null;
+            userId: string;
+            productSkuId: string;
+            promoCodeId: string | null;
         })[];
         stats: {
             totalCount: number;
@@ -63,6 +63,11 @@ export declare class OrdersController {
         };
     }>;
     getOrderDetails(req: any, orderId: string): Promise<{
+        user: {
+            id: string;
+            name: string;
+            email: string | null;
+        };
         productSku: {
             name: string;
             product: {
@@ -71,42 +76,36 @@ export declare class OrdersController {
                 thumbnail: string | null;
             };
         };
-        user: {
-            id: string;
-            email: string | null;
-            name: string;
-        };
         statusHistories: {
             id: string;
-            note: string | null;
-            createdAt: Date;
             status: string;
+            createdAt: Date;
+            note: string | null;
             orderId: string;
             changedBy: string;
         }[];
     } & {
         id: string;
-        orderNumber: string;
-        userId: string;
+        createdAt: Date;
+        updatedAt: Date;
         merchantId: string;
         productId: string;
-        productSkuId: string;
+        supplierId: string | null;
+        basePrice: number;
+        orderNumber: string;
         productName: string;
         productSkuName: string;
         priceTierUsed: import("@prisma/client").$Enums.PriceTier;
-        basePrice: number;
         sellingPrice: number;
         totalPrice: number;
         gameUserId: string;
         gameUserServerId: string | null;
         gameUserName: string | null;
         quantity: number;
-        promoCodeId: string | null;
         discountAmount: number;
         paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
         paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
         fulfillmentStatus: import("@prisma/client").$Enums.OrderFulfillmentStatus;
-        supplierId: string | null;
         supplierRefId: string | null;
         supplierResponse: import("@prisma/client/runtime/client").JsonValue | null;
         serialNumber: string | null;
@@ -117,35 +116,35 @@ export declare class OrdersController {
         completedAt: Date | null;
         failedAt: Date | null;
         expiredAt: Date | null;
-        createdAt: Date;
-        updatedAt: Date;
         merchantModalPrice: number | null;
+        userId: string;
+        productSkuId: string;
+        promoCodeId: string | null;
     }>;
     retryOrder(req: any, orderId: string): Promise<{
         message: string;
         order: {
             id: string;
-            orderNumber: string;
-            userId: string;
+            createdAt: Date;
+            updatedAt: Date;
             merchantId: string;
             productId: string;
-            productSkuId: string;
+            supplierId: string | null;
+            basePrice: number;
+            orderNumber: string;
             productName: string;
             productSkuName: string;
             priceTierUsed: import("@prisma/client").$Enums.PriceTier;
-            basePrice: number;
             sellingPrice: number;
             totalPrice: number;
             gameUserId: string;
             gameUserServerId: string | null;
             gameUserName: string | null;
             quantity: number;
-            promoCodeId: string | null;
             discountAmount: number;
             paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
             paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
             fulfillmentStatus: import("@prisma/client").$Enums.OrderFulfillmentStatus;
-            supplierId: string | null;
             supplierRefId: string | null;
             supplierResponse: import("@prisma/client/runtime/client").JsonValue | null;
             serialNumber: string | null;
@@ -156,9 +155,10 @@ export declare class OrdersController {
             completedAt: Date | null;
             failedAt: Date | null;
             expiredAt: Date | null;
-            createdAt: Date;
-            updatedAt: Date;
             merchantModalPrice: number | null;
+            userId: string;
+            productSkuId: string;
+            promoCodeId: string | null;
         } | null;
     }>;
     refundOrder(req: any, orderId: string, reason: string): Promise<any>;

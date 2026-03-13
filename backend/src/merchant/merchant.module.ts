@@ -8,12 +8,11 @@ import { CommissionsModule } from './commissions/commissions.module';
 import { PromosModule } from './promos/promos.module';
 import { ContentModule } from './content/content.module';
 import { SettingsModule } from './settings/settings.module';
-import { TeamModule } from './team/team.module';
 import { SupportModule } from './support/support.module';
 import { ReportsModule } from './reports/reports.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 
 @Module({
-  imports: [DashboardModule, ProductsModule, ResellersModule, OrdersModule, FinanceModule, CommissionsModule, PromosModule, ContentModule, SettingsModule, TeamModule, SupportModule, ReportsModule, SubscriptionModule]
+  imports: [DashboardModule, ProductsModule, ResellersModule, OrdersModule, FinanceModule, CommissionsModule, PromosModule, ContentModule, SettingsModule, SupportModule, ReportsModule, SubscriptionModule]
 })
 export class MerchantModule {}

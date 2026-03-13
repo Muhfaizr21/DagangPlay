@@ -131,9 +131,9 @@ let ProductsService = class ProductsService {
             }
         });
     }
-    async bulkUpdateMargin(merchantId, userId, markupPercentage, categoryId) {
-        if (markupPercentage < 0) {
-            throw new Error('CRITICAL_ERROR: Margin markup tidak boleh negatif untuk mencegah minus saat transaksi.');
+    async bulkUpdateMargin(merchantId, userId, markupPercentage, markupAmount = 0, categoryId) {
+        if (markupPercentage < 0 || markupAmount < 0) {
+            throw new Error('CRITICAL_ERROR: Margin markup tidak boleh negatif.');
         }
         const merchant = await this.prisma.merchant.findUnique({ where: { id: merchantId } });
         const mapping = await this.prisma.planTierMapping.findUnique({ where: { plan: merchant?.plan || 'FREE' } });
@@ -156,10 +156,10 @@ let ProductsService = class ProductsService {
                 defaultPrice = Number(sku.priceLegend);
             if (activeTier === 'SUPREME')
                 defaultPrice = Number(sku.priceSupreme);
-            const newPrice = defaultPrice + (defaultPrice * (markupPercentage / 100));
+            const newPrice = defaultPrice + (defaultPrice * (markupPercentage / 100)) + markupAmount;
             return this.prisma.merchantProductPrice.upsert({
                 where: { merchantId_productSkuId: { merchantId, productSkuId: sku.id } },
-                update: { customPrice: newPrice, userId },
+                update: { customPrice: newPrice, userId, isActive: true },
                 create: {
                     merchantId,
                     productSkuId: sku.id,
@@ -170,6 +170,15 @@ let ProductsService = class ProductsService {
             });
         });
         await this.prisma.$transaction(operations);
+        await this.prisma.auditLog.create({
+            data: {
+                userId,
+                merchantId,
+                action: 'BULK_PRICE_UPDATE',
+                entity: 'MERCHANT_PRODUCT_PRICE',
+                newData: { markupPercentage, markupAmount, categoryId, count: skus.length }
+            }
+        });
         return { success: true, count: operations.length };
     }
     async updateProductOverride(merchantId, productId, data) {

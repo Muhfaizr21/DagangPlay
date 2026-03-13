@@ -74,14 +74,13 @@ export declare class PublicOrdersController {
     searchOrders(phone?: string): Promise<({
         payment: {
             id: string;
-            paidAt: Date | null;
-            expiredAt: Date | null;
+            status: import("@prisma/client").$Enums.PaymentStatus;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
             merchantId: string;
-            status: import("@prisma/client").$Enums.PaymentStatus;
-            orderId: string;
+            paidAt: Date | null;
+            expiredAt: Date | null;
+            userId: string;
             method: import("@prisma/client").$Enums.PaymentMethod;
             amount: number;
             fee: number;
@@ -93,15 +92,20 @@ export declare class PublicOrdersController {
             tripayVaNumber: string | null;
             tripayExpiredTime: Date | null;
             tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
+            orderId: string;
         } | null;
     } & {
         id: string;
-        orderNumber: string;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string;
         productId: string;
+        supplierId: string | null;
+        basePrice: number;
+        orderNumber: string;
         productName: string;
         productSkuName: string;
         priceTierUsed: import("@prisma/client").$Enums.PriceTier;
-        basePrice: number;
         sellingPrice: number;
         totalPrice: number;
         gameUserId: string;
@@ -112,7 +116,6 @@ export declare class PublicOrdersController {
         paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
         paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
         fulfillmentStatus: import("@prisma/client").$Enums.OrderFulfillmentStatus;
-        supplierId: string | null;
         supplierRefId: string | null;
         supplierResponse: import("@prisma/client/runtime/client").JsonValue | null;
         serialNumber: string | null;
@@ -123,25 +126,21 @@ export declare class PublicOrdersController {
         completedAt: Date | null;
         failedAt: Date | null;
         expiredAt: Date | null;
-        createdAt: Date;
-        updatedAt: Date;
         merchantModalPrice: number | null;
         userId: string;
-        merchantId: string;
         productSkuId: string;
         promoCodeId: string | null;
     })[]>;
     getOrder(orderNumber: string): Promise<{
         payment: {
             id: string;
-            paidAt: Date | null;
-            expiredAt: Date | null;
+            status: import("@prisma/client").$Enums.PaymentStatus;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
             merchantId: string;
-            status: import("@prisma/client").$Enums.PaymentStatus;
-            orderId: string;
+            paidAt: Date | null;
+            expiredAt: Date | null;
+            userId: string;
             method: import("@prisma/client").$Enums.PaymentMethod;
             amount: number;
             fee: number;
@@ -153,15 +152,20 @@ export declare class PublicOrdersController {
             tripayVaNumber: string | null;
             tripayExpiredTime: Date | null;
             tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
+            orderId: string;
         } | null;
     } & {
         id: string;
-        orderNumber: string;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string;
         productId: string;
+        supplierId: string | null;
+        basePrice: number;
+        orderNumber: string;
         productName: string;
         productSkuName: string;
         priceTierUsed: import("@prisma/client").$Enums.PriceTier;
-        basePrice: number;
         sellingPrice: number;
         totalPrice: number;
         gameUserId: string;
@@ -172,7 +176,6 @@ export declare class PublicOrdersController {
         paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
         paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
         fulfillmentStatus: import("@prisma/client").$Enums.OrderFulfillmentStatus;
-        supplierId: string | null;
         supplierRefId: string | null;
         supplierResponse: import("@prisma/client/runtime/client").JsonValue | null;
         serialNumber: string | null;
@@ -183,11 +186,8 @@ export declare class PublicOrdersController {
         completedAt: Date | null;
         failedAt: Date | null;
         expiredAt: Date | null;
-        createdAt: Date;
-        updatedAt: Date;
         merchantModalPrice: number | null;
         userId: string;
-        merchantId: string;
         productSkuId: string;
         promoCodeId: string | null;
     }>;

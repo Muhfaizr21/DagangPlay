@@ -27,10 +27,10 @@ export class ProductsController {
     }
 
     @Post('bulk-update')
-    async bulkUpdatePricing(@Request() req, @Body() body: { markupPercentage: number, categoryId?: string }) {
+    async bulkUpdatePricing(@Request() req, @Body() body: { markupPercentage: number; markupAmount?: number; categoryId?: string }) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id }, select: { id: true } });
         if (!merchant) throw new Error('Merchant not found');
-        return this.productsService.bulkUpdateMargin(merchant.id, req.user.id, body.markupPercentage, body.categoryId);
+        return this.productsService.bulkUpdateMargin(merchant.id, req.user.id, body.markupPercentage, body.markupAmount || 0, body.categoryId);
     }
 
     @Put(':productId/metadata')

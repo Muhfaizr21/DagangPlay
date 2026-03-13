@@ -136,9 +136,9 @@ export class ProductsService {
         });
     }
 
-    async bulkUpdateMargin(merchantId: string, userId: string, markupPercentage: number, categoryId?: string) {
-        if (markupPercentage < 0) {
-            throw new Error('CRITICAL_ERROR: Margin markup tidak boleh negatif untuk mencegah minus saat transaksi.');
+    async bulkUpdateMargin(merchantId: string, userId: string, markupPercentage: number, markupAmount: number = 0, categoryId?: string) {
+        if (markupPercentage < 0 || markupAmount < 0) {
+            throw new Error('CRITICAL_ERROR: Margin markup tidak boleh negatif.');
         }
 
         // Get Merchant's Tier
@@ -160,20 +160,20 @@ export class ProductsService {
         const skus = products.flatMap(p => p.skus);
 
         // Enforce SaaS Limit for Bulk
-        // We pass skus.length to prevent bypassing limit when selecting bulk
         await this.subscriptionsService.checkFeatureLimit(merchantId, 'maxProducts', skus.length);
+        
         const operations = skus.map(sku => {
-            // we'll calculate margin based on merchant's active tier modal price
             let defaultPrice = Number(sku.priceNormal);
             if (activeTier === 'PRO') defaultPrice = Number(sku.pricePro);
             if (activeTier === 'LEGEND') defaultPrice = Number(sku.priceLegend);
             if (activeTier === 'SUPREME') defaultPrice = Number(sku.priceSupreme);
 
-            const newPrice = defaultPrice + (defaultPrice * (markupPercentage / 100));
+            // Calculate new price: Modal + (Modal * %) + Fixed Amount
+            const newPrice = defaultPrice + (defaultPrice * (markupPercentage / 100)) + markupAmount;
 
             return this.prisma.merchantProductPrice.upsert({
                 where: { merchantId_productSkuId: { merchantId, productSkuId: sku.id } },
-                update: { customPrice: newPrice, userId },
+                update: { customPrice: newPrice, userId, isActive: true },
                 create: {
                     merchantId,
                     productSkuId: sku.id,
@@ -185,6 +185,18 @@ export class ProductsService {
         });
 
         await this.prisma.$transaction(operations);
+
+        // Audit Log
+        await this.prisma.auditLog.create({
+            data: {
+                userId,
+                merchantId,
+                action: 'BULK_PRICE_UPDATE',
+                entity: 'MERCHANT_PRODUCT_PRICE',
+                newData: { markupPercentage, markupAmount, categoryId, count: skus.length }
+            }
+        });
+
         return { success: true, count: operations.length };
     }
 
