@@ -37,6 +37,11 @@ let PublicOrdersController = class PublicOrdersController {
         const merchantSlug = body.merchant;
         return this.publicOrdersService.createCheckout(body, host, origin, merchantSlug);
     }
+    async searchOrders(phone) {
+        if (!phone)
+            throw new common_1.BadRequestException('Nomor WhatsApp diperlukan');
+        return this.publicOrdersService.findOrdersByWhatsApp(phone);
+    }
     async getOrder(orderNumber) {
         return this.publicOrdersService.getOrderDetails(orderNumber);
     }
@@ -66,6 +71,13 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], PublicOrdersController.prototype, "checkout", null);
+__decorate([
+    (0, common_1.Get)('search'),
+    __param(0, (0, common_1.Query)('phone')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], PublicOrdersController.prototype, "searchOrders", null);
 __decorate([
     (0, common_1.Get)(':orderNumber'),
     __param(0, (0, common_1.Param)('orderNumber')),

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import MerchantLayout from '../../../components/merchant/MerchantLayout';
 import useSWR from 'swr';
 import axios from 'axios';
-import { ShoppingCart, Search, RefreshCcw, HandCoins, ExternalLink, Filter } from 'lucide-react';
+import { ShoppingCart, Search, RefreshCcw, HandCoins, ExternalLink, Filter, Phone, Eye, X, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 
 const fetcher = (url: string) => {
     const token = localStorage.getItem('admin_token');
@@ -15,6 +15,7 @@ export default function MerchantOrdersPage() {
     const [search, setSearch] = useState('');
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
     const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [refundReason, setRefundReason] = useState('');
 
     const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
@@ -119,7 +120,7 @@ export default function MerchantOrdersPage() {
                             <tr className="bg-slate-50/80 border-b border-slate-100">
                                 <th className="p-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Tgl & Invoice</th>
                                 <th className="p-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Produk</th>
-                                <th className="p-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Pembeli</th>
+                                <th className="p-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Pembeli / WA</th>
                                 <th className="p-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Nominal</th>
                                 <th className="p-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
                                 <th className="p-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider text-right">Aksi</th>
@@ -147,8 +148,13 @@ export default function MerchantOrdersPage() {
                                             <p className="text-[12px] text-indigo-600 mt-0.5 line-clamp-1">{order.gameUserId} {order.gameUserServerId ? `(${order.gameUserServerId})` : ''}</p>
                                         </td>
                                         <td className="p-4">
-                                            <p className="text-sm font-bold text-slate-700">{order.user?.name || 'Guest'}</p>
-                                            {order.reseller && <span className="inline-block mt-1 px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[10px] font-bold">Reseller</span>}
+                                            <div className="flex flex-col">
+                                                <div className="flex items-center gap-2">
+                                                    <p className="text-sm font-bold text-slate-700">{order.user?.name || 'Guest User'}</p>
+                                                    {!order.user?.email && <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-black uppercase">Guest</span>}
+                                                </div>
+                                                <p className="text-[11px] font-medium text-slate-400 mt-0.5">{order.whatsapp || order.user?.phone || '-'}</p>
+                                            </div>
                                         </td>
                                         <td className="p-4">
                                             <p className="text-sm font-bold text-emerald-600">Rp {Number(order.totalPrice).toLocaleString('id-ID')}</p>
@@ -160,6 +166,29 @@ export default function MerchantOrdersPage() {
                                             </div>
                                         </td>
                                         <td className="p-4 text-right space-x-2 whitespace-nowrap">
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedOrder(order);
+                                                    setIsDetailModalOpen(true);
+                                                }}
+                                                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors border border-transparent"
+                                                title="Lihat Detail"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                            </button>
+
+                                            {(order.whatsapp || order.user?.phone) && (
+                                                <a
+                                                    href={`https://wa.me/${(order.whatsapp || order.user.phone).replace(/\D/g, '')}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border border-transparent hover:border-emerald-200 inline-block"
+                                                    title="Hubungi via WhatsApp"
+                                                >
+                                                    <Phone className="w-4 h-4" />
+                                                </a>
+                                            )}
+
                                             {(order.fulfillmentStatus === 'FAILED' || order.fulfillmentStatus === 'PENDING') && (
                                                 <button
                                                     onClick={() => handleRetry(order.id)}
@@ -218,6 +247,137 @@ export default function MerchantOrdersPage() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Order Detail Modal */}
+            {isDetailModalOpen && selectedOrder && (
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden relative animate-in zoom-in-95 duration-200">
+                        {/* Header */}
+                        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+                            <div>
+                                <h3 className="text-xl font-black text-slate-800 uppercase italic tracking-tighter">Detail Transaksi</h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{selectedOrder.orderNumber}</p>
+                            </div>
+                            <button 
+                                onClick={() => {
+                                    setIsDetailModalOpen(false);
+                                    setSelectedOrder(null);
+                                }}
+                                className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {/* Left Col: Status & Info */}
+                                <div className="space-y-6">
+                                    <section>
+                                        <label className="text-[10px] font-black text-slate-300 uppercase tracking-[.2em] block mb-3">Status Produk</label>
+                                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-4">
+                                            {selectedOrder.fulfillmentStatus === 'SUCCESS' ? (
+                                                <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center"><CheckCircle size={20} /></div>
+                                            ) : selectedOrder.fulfillmentStatus === 'FAILED' ? (
+                                                <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center"><AlertCircle size={20} /></div>
+                                            ) : (
+                                                <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center animate-pulse"><Clock size={20} /></div>
+                                            )}
+                                            <div>
+                                                <p className="text-sm font-black text-slate-800 uppercase italic leading-none">{selectedOrder.fulfillmentStatus}</p>
+                                                <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tight">Fulfillment Status</p>
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    <section>
+                                        <label className="text-[10px] font-black text-slate-300 uppercase tracking-[.2em] block mb-3">Informasi Pembeli</label>
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                                                <span className="text-xs font-bold text-slate-400">Nama Pembeli</span>
+                                                <span className="text-xs font-black text-slate-800">{selectedOrder.user?.name || 'Guest User'}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                                                <span className="text-xs font-bold text-slate-400">WhatsApp</span>
+                                                <span className="text-xs font-black text-slate-800 text-emerald-600 underline cursor-pointer">{selectedOrder.whatsapp || selectedOrder.user?.phone || '-'}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                                                <span className="text-xs font-bold text-slate-400">Waktu Order</span>
+                                                <span className="text-xs font-black text-slate-800">{new Date(selectedOrder.createdAt).toLocaleString('id-ID')}</span>
+                                            </div>
+                                        </div>
+                                    </section>
+                                </div>
+
+                                {/* Right Col: Product & Payment */}
+                                <div className="space-y-6">
+                                    <section>
+                                        <label className="text-[10px] font-black text-slate-300 uppercase tracking-[.2em] block mb-3">Detail Produk</label>
+                                        <div className="p-5 rounded-2xl bg-indigo-50/50 border border-indigo-100">
+                                            <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest leading-none mb-1">Product Items</p>
+                                            <h4 className="text-base font-black text-slate-800 leading-tight">{selectedOrder.productName}</h4>
+                                            <p className="text-sm font-black text-indigo-600 mt-0.5 italic">{selectedOrder.productSkuName}</p>
+                                            
+                                            <div className="mt-4 pt-4 border-t border-indigo-100 flex flex-col gap-2">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase">Target ID</span>
+                                                    <span className="text-xs font-black text-slate-800 bg-white px-2 py-0.5 rounded border border-indigo-100">{selectedOrder.gameUserId}</span>
+                                                </div>
+                                                {selectedOrder.gameUserServerId && (
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase">Server ID</span>
+                                                        <span className="text-xs font-black text-slate-800 bg-white px-2 py-0.5 rounded border border-indigo-100">{selectedOrder.gameUserServerId}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    <section>
+                                        <label className="text-[10px] font-black text-slate-300 uppercase tracking-[.2em] block mb-3">Finance Rincian</label>
+                                        <div className="p-1 px-4 space-y-3">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs font-bold text-slate-400">Metode Bayar</span>
+                                                <span className="text-xs font-black text-slate-800">{selectedOrder.paymentMethod}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs font-bold text-slate-400">Harga Jual</span>
+                                                <span className="text-xs font-black text-slate-800">Rp {Number(selectedOrder.totalPrice).toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center pt-3 border-t border-slate-100">
+                                                <span className="text-[10px] font-black text-slate-800 uppercase italic">Status Bayar</span>
+                                                <span className={`text-[10px] font-black px-2 py-0.5 rounded ${selectedOrder.paymentStatus === 'PAID' ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'}`}>{selectedOrder.paymentStatus}</span>
+                                            </div>
+                                        </div>
+                                    </section>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer Aksi */}
+                        <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 rounded-b-[2rem]">
+                            <button 
+                                onClick={() => {
+                                    setIsDetailModalOpen(false);
+                                    setSelectedOrder(null);
+                                }}
+                                className="px-8 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-black uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-95"
+                            >
+                                Tutup
+                            </button>
+                            {selectedOrder.fulfillmentStatus === 'FAILED' && (
+                                <button 
+                                    onClick={() => handleRetry(selectedOrder.id)}
+                                    className="px-8 py-3 bg-indigo-600 text-white rounded-xl text-sm font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg active:scale-95 flex items-center gap-2"
+                                >
+                                    <RefreshCcw size={16} /> Retry Order
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

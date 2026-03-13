@@ -36,11 +36,6 @@ export default function StoreDemoPage() {
 
     return (
         <div className="relative">
-            {/* Demo Header Banner */}
-            <div className="bg-gold text-black py-2 px-4 text-center text-[10px] font-black uppercase tracking-[.4em] sticky top-0 z-[100] border-b border-black flex items-center justify-center gap-4">
-                <Lock size={12} /> MODE PREVIEW TOKO - VIEW ONLY <Lock size={12} />
-            </div>
-
             <main className="relative">
                 {/* Subtle Click Interceptor para demo */}
                 <div

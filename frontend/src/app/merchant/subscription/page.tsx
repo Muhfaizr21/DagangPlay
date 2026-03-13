@@ -30,11 +30,38 @@ export default function MerchantSubscriptionPage() {
     const [channelsLoading, setChannelsLoading] = useState(false);
     const [createLoading, setCreateLoading] = useState(false);
 
-    const PLAN_PRICES: Record<string, { price: number; description: string; features: string[] }> = {
-        PRO: { price: 199000, description: 'Untuk toko berkembang', features: ['Max 50 Produk Aktif', 'Custom Domain', 'Laporan Penjualan', 'Support Prioritas'] },
-        LEGEND: { price: 349000, description: 'Untuk merchant profesional', features: ['Max 500 Produk Aktif', 'Multi User/Staff', 'White Label', 'Analytics Lanjutan'] },
-        SUPREME: { price: 499000, description: 'Tak terbatas & VIP', features: ['Produk Tanpa Batas', 'All LEGEND Features', 'Tarik Dana Instan', 'SLA 99.9% Uptime'] },
+    // Fetch plan features (Dynamic Prices)
+    const { data: planFeatures, isLoading: plansLoading } = useSWR(`${baseUrl}/public/subscriptions/plans/features`, (url) => axios.get(url).then(res => res.data));
+
+    // Dynamic mapping from backend data
+    const getPlanConfigs = (): Record<string, { price: number; description: string; features: string[] }> => {
+        if (!planFeatures) return {};
+        
+        const validPlans = ['PRO', 'LEGEND', 'SUPREME'];
+        const configs: any = {};
+        
+        validPlans.forEach(plan => {
+            const data = planFeatures[plan];
+            if (data) {
+                configs[plan] = {
+                    price: data.price || 0,
+                    description: plan === 'PRO' ? 'Untuk toko berkembang' : plan === 'LEGEND' ? 'Untuk merchant profesional' : 'Tak terbatas & VIP',
+                    features: [
+                        `Max ${data.maxProducts} Produk Aktif`,
+                        data.customDomain ? 'Custom Domain' : null,
+                        data.multiUser ? 'Multi User/Staff' : null,
+                        data.whiteLabel ? 'White Label' : null,
+                        plan === 'SUPREME' ? 'Tarik Dana Instan' : 'Laporan Penjualan',
+                        'Support Prioritas'
+                    ].filter(Boolean) as string[]
+                };
+            }
+        });
+
+        return configs;
     };
+
+    const PLAN_PRICES = getPlanConfigs();
 
     const openCreateModal = async () => {
         setIsCreateModalOpen(true);
@@ -68,6 +95,13 @@ export default function MerchantSubscriptionPage() {
         try {
             const token = localStorage.getItem('admin_token');
             const planData = PLAN_PRICES[invoiceForm.plan];
+            
+            if (!planData) {
+                alert('Pilih paket yang valid');
+                setCreateLoading(false);
+                return;
+            }
+
             const res = await axios.post(`${baseUrl}/merchant/subscription/invoices`,
                 { plan: invoiceForm.plan, amount: planData.price, method: invoiceForm.method },
                 { headers: { Authorization: `Bearer ${token}` } }
@@ -360,7 +394,7 @@ export default function MerchantSubscriptionPage() {
                                 <div>
                                     <label className="block text-xs font-black text-slate-500 mb-3 uppercase tracking-widest">Pilih Paket</label>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                        {Object.entries(PLAN_PRICES).map(([plan, data]) => (
+                                        {Object.entries(PLAN_PRICES).map(([plan, data]: [string, any]) => (
                                             <button
                                                 key={plan}
                                                 type="button"
@@ -379,7 +413,7 @@ export default function MerchantSubscriptionPage() {
                                                 <p className="text-xl font-black text-slate-800">Rp {data.price.toLocaleString('id-ID')}</p>
                                                 <p className="text-[11px] text-slate-500 font-medium mt-1">{data.description}</p>
                                                 <ul className="mt-3 space-y-1.5">
-                                                    {data.features.map((f, i) => (
+                                                    {data.features.map((f: string, i: number) => (
                                                         <li key={i} className="flex items-center gap-1.5 text-[11px] text-slate-600">
                                                             <Check className="w-3 h-3 text-emerald-500 stroke-[3] flex-shrink-0" />
                                                             {f}
@@ -428,7 +462,7 @@ export default function MerchantSubscriptionPage() {
                                                 {paymentChannels.find((c: any) => c.code === invoiceForm.method)?.name || invoiceForm.method}
                                             </p>
                                         </div>
-                                        <p className="text-2xl font-black text-indigo-700">Rp {PLAN_PRICES[invoiceForm.plan]?.price.toLocaleString('id-ID')}</p>
+                                        <p className="text-2xl font-black text-indigo-700">Rp {Number(PLAN_PRICES?.[invoiceForm.plan]?.price || 0).toLocaleString('id-ID')}</p>
                                     </div>
                                 </div>
 

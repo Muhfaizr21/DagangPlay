@@ -7,18 +7,17 @@ export declare class TransactionsService {
     constructor(prisma: PrismaService, publicOrders: PublicOrdersService);
     getAllTransactions(filters: any): Promise<import("../../common/utils/pagination").PaginatedResult<unknown>>;
     getTransactionDetail(id: string): Promise<{
-        supplierLogs: {
-            method: string;
+        fraudDetections: {
             id: string;
-            supplierId: string;
             createdAt: Date;
-            endpoint: string;
-            requestBody: import("@prisma/client/runtime/client").JsonValue | null;
-            responseBody: import("@prisma/client/runtime/client").JsonValue | null;
-            httpStatus: number | null;
-            duration: number | null;
-            isSuccess: boolean;
+            userId: string;
+            metadata: import("@prisma/client/runtime/client").JsonValue | null;
+            reason: string;
             orderId: string | null;
+            riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
+            isResolved: boolean;
+            resolvedBy: string | null;
+            resolvedAt: Date | null;
         }[];
         merchant: {
             id: string;
@@ -26,77 +25,71 @@ export declare class TransactionsService {
         };
         user: {
             id: string;
-            name: string;
             email: string | null;
+            name: string;
         };
-        fraudDetections: {
-            reason: string;
-            id: string;
-            metadata: import("@prisma/client/runtime/client").JsonValue | null;
-            createdAt: Date;
-            userId: string;
-            orderId: string | null;
-            riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
-            isResolved: boolean;
-            resolvedBy: string | null;
-            resolvedAt: Date | null;
-        }[];
         statusHistories: {
             id: string;
-            status: string;
-            createdAt: Date;
             note: string | null;
+            createdAt: Date;
+            status: string;
             orderId: string;
             changedBy: string;
         }[];
         payment: {
-            method: import("@prisma/client").$Enums.PaymentMethod;
             id: string;
-            status: import("@prisma/client").$Enums.PaymentStatus;
+            paidAt: Date | null;
+            expiredAt: Date | null;
             createdAt: Date;
             updatedAt: Date;
             userId: string;
             merchantId: string;
-            expiredAt: Date | null;
-            paidAt: Date | null;
+            status: import("@prisma/client").$Enums.PaymentStatus;
             orderId: string;
+            method: import("@prisma/client").$Enums.PaymentMethod;
             amount: number;
+            fee: number;
+            totalAmount: number;
             tripayReference: string | null;
             tripayMerchantRef: string | null;
             tripayPaymentUrl: string | null;
-            tripayVaNumber: string | null;
             tripayQrUrl: string | null;
-            tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
-            totalAmount: number;
-            fee: number;
+            tripayVaNumber: string | null;
             tripayExpiredTime: Date | null;
+            tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
         } | null;
+        supplierLogs: {
+            id: string;
+            supplierId: string;
+            createdAt: Date;
+            orderId: string | null;
+            method: string;
+            endpoint: string;
+            requestBody: import("@prisma/client/runtime/client").JsonValue | null;
+            responseBody: import("@prisma/client/runtime/client").JsonValue | null;
+            httpStatus: number | null;
+            duration: number | null;
+            isSuccess: boolean;
+        }[];
     } & {
         id: string;
-        productId: string;
-        supplierId: string | null;
-        basePrice: number;
-        createdAt: Date;
-        updatedAt: Date;
-        userId: string;
-        merchantId: string;
-        productSkuId: string;
-        expiredAt: Date | null;
         orderNumber: string;
+        productId: string;
         productName: string;
         productSkuName: string;
         priceTierUsed: import("@prisma/client").$Enums.PriceTier;
+        basePrice: number;
         sellingPrice: number;
         totalPrice: number;
         gameUserId: string;
         gameUserServerId: string | null;
         gameUserName: string | null;
         quantity: number;
-        promoCodeId: string | null;
         discountAmount: number;
         paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
         paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
         fulfillmentStatus: import("@prisma/client").$Enums.OrderFulfillmentStatus;
+        supplierId: string | null;
         supplierRefId: string | null;
         supplierResponse: import("@prisma/client/runtime/client").JsonValue | null;
         serialNumber: string | null;
@@ -106,7 +99,14 @@ export declare class TransactionsService {
         processedAt: Date | null;
         completedAt: Date | null;
         failedAt: Date | null;
+        expiredAt: Date | null;
+        createdAt: Date;
+        updatedAt: Date;
         merchantModalPrice: number | null;
+        userId: string;
+        merchantId: string;
+        productSkuId: string;
+        promoCodeId: string | null;
     }>;
     retryTransaction(id: string, operatorId: string): Promise<{
         success: boolean;
