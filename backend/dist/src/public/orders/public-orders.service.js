@@ -41,6 +41,7 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var PublicOrdersService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PublicOrdersService = void 0;
 const bcrypt = __importStar(require("bcrypt"));
@@ -49,16 +50,20 @@ const prisma_service_1 = require("../../prisma.service");
 const tripay_service_1 = require("../../tripay/tripay.service");
 const digiflazz_service_1 = require("../../admin/digiflazz/digiflazz.service");
 const subscriptions_service_1 = require("../../admin/subscriptions/subscriptions.service");
-let PublicOrdersService = class PublicOrdersService {
+const whatsapp_service_1 = require("../../common/notifications/whatsapp.service");
+let PublicOrdersService = PublicOrdersService_1 = class PublicOrdersService {
     prisma;
     tripay;
     digiflazz;
     subscriptionsService;
-    constructor(prisma, tripay, digiflazz, subscriptionsService) {
+    whatsappService;
+    logger = new common_1.Logger(PublicOrdersService_1.name);
+    constructor(prisma, tripay, digiflazz, subscriptionsService, whatsappService) {
         this.prisma = prisma;
         this.tripay = tripay;
         this.digiflazz = digiflazz;
         this.subscriptionsService = subscriptionsService;
+        this.whatsappService = whatsappService;
     }
     mapPaymentMethod(code) {
         const mapping = {
@@ -92,6 +97,15 @@ let PublicOrdersService = class PublicOrdersService {
         const availability = await this.digiflazz.checkAvailability(sku.supplierCode);
         if (!availability.isAvailable) {
             throw new common_1.BadRequestException(availability.reason);
+        }
+        try {
+            const supplierBalance = await this.digiflazz.checkBalance();
+            if (supplierBalance < Number(sku.basePrice)) {
+                throw new common_1.BadRequestException('Produk sedang dalam pemeliharaan (Stok sedang kosong di pusat)');
+            }
+        }
+        catch (err) {
+            console.warn('[Checkout] Failed to check supplier balance, skipping check to allow potential order.');
         }
         const targetMerchant = await this.prisma.merchant.findFirst({
             where: {
@@ -196,23 +210,28 @@ let PublicOrdersService = class PublicOrdersService {
                 gameUserServerId: serverId,
             }
         });
+        if (!paymentMethod)
+            throw new common_1.BadRequestException('Metode pembayaran harus dipilih');
+        if (!whatsapp)
+            throw new common_1.BadRequestException('Nomor WhatsApp diperlukan');
         const tripayPayload = {
             method: paymentMethod,
             merchant_ref: order.orderNumber,
-            amount: sellPrice,
-            customer_name: gameId,
+            amount: Math.ceil(sellPrice),
+            customer_name: gameId || 'User',
             customer_email: 'customer@dagangplay.com',
             customer_phone: whatsapp,
             order_items: [
                 {
                     sku: sku.supplierCode,
                     name: `${sku.product.category.name} - ${sku.product.name} - ${sku.name}`,
-                    price: sellPrice,
+                    price: Math.ceil(sellPrice),
                     quantity: 1
                 }
             ],
             return_url: `${origin || process.env.FRONTEND_URL || 'http://localhost:3000'}/invoice/${order.orderNumber}`
         };
+        this.logger.log(`Initiating Tripay Request: ${order.orderNumber} via ${paymentMethod}`);
         const tripayRes = await this.tripay.requestTransaction(tripayPayload);
         await this.prisma.payment.create({
             data: {
@@ -229,6 +248,12 @@ let PublicOrdersService = class PublicOrdersService {
                 tripayResponse: tripayRes.data,
             }
         });
+        this.whatsappService.sendOrderNotification(whatsapp, order.orderNumber, `${sku.product.name} - ${sku.name}`, sellPrice, tripayRes.data.checkout_url).catch(err => this.logger.error(`Failed to send WA: ${err.message}`));
+        this.whatsappService.sendAdminSummary(`🛒 *PESANAN BARU*\n` +
+            `Order: ${order.orderNumber}\n` +
+            `Produk: ${sku.product.name} - ${sku.name}\n` +
+            `Harga: Rp ${sellPrice.toLocaleString('id-ID')}\n` +
+            `Buyer: ${whatsapp}`).catch(() => { });
         return {
             success: true,
             orderNumber: order.orderNumber,
@@ -299,20 +324,24 @@ let PublicOrdersService = class PublicOrdersService {
         });
     }
     async getStoreConfig(host, merchantSlug) {
+        const hostWithoutPort = host?.split(':')[0] || '';
         const isMainDomain = !host ||
-            host.includes('localhost') ||
-            host.includes('dagangplay.com') ||
-            host.includes('trycloudflare.com');
+            hostWithoutPort.includes('localhost') ||
+            hostWithoutPort.includes('127.0.0.1') ||
+            hostWithoutPort.includes('dagangplay.com') ||
+            hostWithoutPort.includes('trycloudflare.com');
         const merchant = isMainDomain && !merchantSlug ? null : await this.prisma.merchant.findFirst({
             where: {
                 OR: [
                     merchantSlug ? { slug: merchantSlug } : {},
-                    { domain: host },
-                    !isMainDomain ? { slug: host?.split('.')[0] } : {}
+                    { domain: hostWithoutPort },
+                    !isMainDomain ? { slug: hostWithoutPort.split('.')[0] } : {}
                 ].filter(condition => Object.keys(condition).length > 0)
             }
         });
-        const targetMerchant = merchant || await this.prisma.merchant.findFirst({ where: { isOfficial: true, status: 'ACTIVE' } });
+        const targetMerchant = merchant || await this.prisma.merchant.findFirst({
+            where: { isOfficial: true, status: 'ACTIVE' }
+        });
         if (!targetMerchant) {
             return {
                 name: 'DagangPlay',
@@ -355,13 +384,33 @@ let PublicOrdersService = class PublicOrdersService {
             theme: targetMerchant.settings?.theme || { active: 'dark' }
         };
     }
+    async getPaymentChannels() {
+        return this.tripay.getPaymentChannels();
+    }
+    async getActiveMerchants() {
+        return this.prisma.merchant.findMany({
+            where: { status: 'ACTIVE', isOfficial: false },
+            select: {
+                id: true,
+                name: true,
+                slug: true,
+                logo: true,
+                bannerImage: true,
+                tagline: true,
+                domain: true
+            },
+            take: 12,
+            orderBy: { createdAt: 'desc' }
+        });
+    }
 };
 exports.PublicOrdersService = PublicOrdersService;
-exports.PublicOrdersService = PublicOrdersService = __decorate([
+exports.PublicOrdersService = PublicOrdersService = PublicOrdersService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         tripay_service_1.TripayService,
         digiflazz_service_1.DigiflazzService,
-        subscriptions_service_1.SubscriptionsService])
+        subscriptions_service_1.SubscriptionsService,
+        whatsapp_service_1.WhatsappService])
 ], PublicOrdersService);
 //# sourceMappingURL=public-orders.service.js.map

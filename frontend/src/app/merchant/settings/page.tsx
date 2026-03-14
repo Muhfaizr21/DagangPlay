@@ -4,12 +4,79 @@ import React, { useState } from 'react';
 import MerchantLayout from '../../../components/merchant/MerchantLayout';
 import useSWR from 'swr';
 import axios from 'axios';
-import { Settings, Globe, CreditCard, Webhook, Save, ShieldAlert, BarChart2, Lock } from 'lucide-react';
+import { Settings, Globe, CreditCard, Webhook, Save, ShieldAlert, BarChart2, Lock, Activity, Zap } from 'lucide-react';
 
 const fetcher = (url: string) => {
     const token = localStorage.getItem('admin_token');
     return axios.get(url, { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data);
 };
+
+function MarkupSettings({ baseUrl }: { baseUrl: string }) {
+    const { data: general, mutate: mutateGeneral } = useSWR(`${baseUrl}/merchant/settings/general`, fetcher);
+    const [markup, setMarkup] = useState('0');
+    const [saving, setSaving] = useState(false);
+
+    React.useEffect(() => {
+        if (general) {
+            const m = general.find((s: any) => s.key === 'MARKUP_PERCENTAGE');
+            if (m) setMarkup(m.value);
+        }
+    }, [general]);
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            const token = localStorage.getItem('admin_token');
+            await axios.put(`${baseUrl}/merchant/settings/general`, [
+                { key: 'MARKUP_PERCENTAGE', value: markup }
+            ], { headers: { Authorization: `Bearer ${token}` } });
+            alert('Markup otomatis berhasil diperbarui!');
+            mutateGeneral();
+        } catch (err) {
+            alert('Gagal menyimpan markup');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-2 border-b border-slate-100 pb-4 flex items-center gap-2">
+                <Zap className="w-5 h-5 text-amber-500" /> Markup Otomatis (Anti-Loss 2.0)
+            </h3>
+            <div className="mb-6 mt-4 p-4 bg-amber-50/50 border border-amber-100 rounded-xl">
+                <p className="text-sm text-amber-800 leading-relaxed">
+                    Fitur ini akan secara otomatis memperbarui harga jual Anda setiap kali harga modal dari supplier naik/turun. 
+                    Sistem akan menjaga keuntungan Anda tetap stabil berdasarkan persentase yang Anda tentukan.
+                </p>
+            </div>
+            <div className="space-y-4">
+                <div>
+                    <label className="block text-[12px] font-bold text-slate-500 mb-2">Target Profit (%)</label>
+                    <div className="flex items-center gap-3">
+                        <input 
+                            type="number" 
+                            value={markup} 
+                            onChange={e => setMarkup(e.target.value)} 
+                            className="w-32 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-lg" 
+                        />
+                        <span className="text-slate-500 font-bold">% dari Modal Supplier</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-2 italic">*Contoh: Jika modal Rp 10.000 dan markup 5%, harga jual otomatis menjadi Rp 10.500.</p>
+                </div>
+                <div className="pt-4 border-t border-slate-50 flex justify-end">
+                    <button 
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-md flex items-center gap-2 disabled:opacity-50"
+                    >
+                        {saving ? 'Menyimpan...' : 'Aktifkan Markup Otomatis'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function MerchantSettingsPage() {
     const [activeTab, setActiveTab] = useState('profile');
@@ -115,11 +182,19 @@ export default function MerchantSettingsPage() {
                         <button onClick={() => setActiveTab('webhook')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'webhook' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
                             <Webhook className="w-4 h-4" /> Webhook & API
                         </button>
+                        <button onClick={() => setActiveTab('markup')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'markup' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
+                            <Activity className="w-4 h-4" /> Markup Otomatis
+                        </button>
                     </div>
                 </div>
 
                 {/* Content Area */}
                 <div className="flex-grow">
+                    {/* ... (existing tabs) */}
+                    
+                    {/* Markup Otomatis */}
+                    {activeTab === 'markup' && <MarkupSettings baseUrl={baseUrl} />}
+                    
                     {/* Profil & Kontak */}
                     {activeTab === 'profile' && (
                         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">

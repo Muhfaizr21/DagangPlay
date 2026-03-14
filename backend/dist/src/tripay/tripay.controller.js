@@ -17,24 +17,34 @@ const common_1 = require("@nestjs/common");
 const tripay_service_1 = require("./tripay.service");
 const prisma_service_1 = require("../prisma.service");
 const digiflazz_service_1 = require("../admin/digiflazz/digiflazz.service");
+const whatsapp_service_1 = require("../common/notifications/whatsapp.service");
 let TripayController = class TripayController {
     tripayService;
     prisma;
     digiflazz;
-    constructor(tripayService, prisma, digiflazz) {
+    whatsappService;
+    constructor(tripayService, prisma, digiflazz, whatsappService) {
         this.tripayService = tripayService;
         this.prisma = prisma;
         this.digiflazz = digiflazz;
+        this.whatsappService = whatsappService;
     }
     async getPaymentChannels() {
         return this.tripayService.getPaymentChannels();
     }
     async tripayCallback(signature, req, res) {
         try {
+            const allowedIps = ['95.111.200.230', '127.0.0.1'];
+            const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+            const isAllowed = allowedIps.some(ip => clientIp.includes(ip)) || process.env.NODE_ENV !== 'production';
+            if (!isAllowed) {
+                console.warn(`[TripayCallback] Blocked unauthorized IP: ${clientIp}`);
+                return res.status(common_1.HttpStatus.FORBIDDEN).json({ success: false, message: 'Unauthorized IP Source' });
+            }
             const rawBody = req.rawBody || JSON.stringify(req.body);
             const isValid = this.tripayService.verifySignature(signature, rawBody);
             if (!isValid) {
-                console.warn('[TripayCallback] Invalid signature from', req.ip);
+                console.warn('[TripayCallback] Invalid signature signature verification failed.');
                 return res.status(common_1.HttpStatus.FORBIDDEN).json({ success: false, message: 'Invalid signature' });
             }
             const data = req.body;
@@ -44,7 +54,8 @@ let TripayController = class TripayController {
                 if (ref.startsWith('ORD-')) {
                     try {
                         const order = await this.prisma.order.findUnique({
-                            where: { orderNumber: ref }
+                            where: { orderNumber: ref },
+                            include: { user: true }
                         });
                         if (!order) {
                             console.warn(`[TripayCallback] Order ${ref} not found.`);
@@ -116,21 +127,23 @@ let TripayController = class TripayController {
                                             }
                                         });
                                     }
-                                    if (platformFeeAmount > 0) {
+                                    const saasMarkup = Math.max(0, Number(order.merchantModalPrice || 0) - Number(order.basePrice || 0));
+                                    const totalPlatformProfit = platformFeeAmount + saasMarkup;
+                                    if (totalPlatformProfit > 0) {
                                         const superAdmin = await tx.user.findFirst({
                                             where: { role: 'SUPER_ADMIN' }
                                         });
                                         if (superAdmin) {
                                             const su = await tx.user.update({
                                                 where: { id: superAdmin.id },
-                                                data: { balance: { increment: platformFeeAmount } }
+                                                data: { balance: { increment: totalPlatformProfit } }
                                             });
                                             await tx.commission.create({
                                                 data: {
                                                     orderId: order.id,
                                                     userId: superAdmin.id,
                                                     type: 'PLATFORM_FEE',
-                                                    amount: platformFeeAmount,
+                                                    amount: totalPlatformProfit,
                                                     status: 'SETTLED',
                                                     settledAt: new Date()
                                                 }
@@ -139,11 +152,11 @@ let TripayController = class TripayController {
                                                 data: {
                                                     userId: superAdmin.id,
                                                     type: 'COMMISSION',
-                                                    amount: platformFeeAmount,
-                                                    balanceBefore: Number(su.balance) - platformFeeAmount,
+                                                    amount: totalPlatformProfit,
+                                                    balanceBefore: Number(su.balance) - totalPlatformProfit,
                                                     balanceAfter: Number(su.balance),
                                                     orderId: order.id,
-                                                    description: `Platform Fee (${platformFeePct}%) dari trx ${order.orderNumber}`
+                                                    description: `Platform Profit ${order.orderNumber} (Fee: ${platformFeeAmount}, Markup: ${saasMarkup})`
                                                 }
                                             });
                                         }
@@ -151,6 +164,17 @@ let TripayController = class TripayController {
                                 }
                             }
                         });
+                        this.whatsappService.sendMessage(order.user.phone || '', `✅ *PEMBAYARAN DITERIMA - ${order.orderNumber}*\n\n` +
+                            `Terima kasih, pembayaran sebesar *Rp ${order.totalPrice.toLocaleString('id-ID')}* telah kami terima.\n` +
+                            `Pesanan *${order.productName} - ${order.productSkuName}* sedang diproses ke akun Anda.\n\n` +
+                            `Tunggu update selanjutnya ya!`).catch(err => console.error(`[TripayCallback] Failed notification:`, err.message));
+                        const adminMarkup = Math.max(0, Number(order.merchantModalPrice || 0) - Number(order.basePrice || 0));
+                        this.whatsappService.sendAdminSummary(`💰 *PEMBAYARAN SUKSES*\n` +
+                            `Order: ${order.orderNumber}\n` +
+                            `Produk: ${order.productName}\n` +
+                            `Total: Rp ${order.totalPrice.toLocaleString('id-ID')}\n` +
+                            `Metode: ${order.paymentMethod}\n` +
+                            `Markup SA: Rp ${adminMarkup.toLocaleString('id-ID')}`).catch(() => { });
                         try {
                             console.log(`[TripayCallback] Triggering fulfillment for order: ${order.orderNumber}`);
                             await this.digiflazz.placeOrder(order.id);
@@ -347,6 +371,7 @@ exports.TripayController = TripayController = __decorate([
     (0, common_1.Controller)('tripay'),
     __metadata("design:paramtypes", [tripay_service_1.TripayService,
         prisma_service_1.PrismaService,
-        digiflazz_service_1.DigiflazzService])
+        digiflazz_service_1.DigiflazzService,
+        whatsapp_service_1.WhatsappService])
 ], TripayController);
 //# sourceMappingURL=tripay.controller.js.map

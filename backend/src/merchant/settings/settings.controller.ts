@@ -47,6 +47,30 @@ export class SettingsController {
         return this.settingsService.togglePaymentChannel(merchant.id, id, isActive);
     }
 
+    @Get('general')
+    async getGeneralSettings(@Request() req) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant) throw new Error('Merchant not found');
+        return this.prisma.merchantSetting.findMany({ where: { merchantId: merchant.id } });
+    }
+
+    @Put('general')
+    async updateGeneralSettings(@Request() req, @Body() data: { key: string, value: string }[]) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant) throw new Error('Merchant not found');
+        
+        const operations = data.map(setting => 
+            this.prisma.merchantSetting.upsert({
+                where: { merchantId_key: { merchantId: merchant.id, key: setting.key } },
+                update: { value: setting.value.toString() },
+                create: { merchantId: merchant.id, key: setting.key, value: setting.value.toString() }
+            })
+        );
+        
+        await this.prisma.$transaction(operations);
+        return { success: true };
+    }
+
     @Get('webhooks')
     async getWebhooks(@Request() req) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });

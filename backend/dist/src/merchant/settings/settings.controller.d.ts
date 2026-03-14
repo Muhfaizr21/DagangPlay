@@ -114,6 +114,20 @@ export declare class SettingsController {
         maxAmount: number | null;
         tripayConfig: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
+    getGeneralSettings(req: any): Promise<{
+        id: string;
+        updatedAt: Date;
+        merchantId: string;
+        key: string;
+        type: import("@prisma/client").$Enums.SettingType;
+        value: string;
+    }[]>;
+    updateGeneralSettings(req: any, data: {
+        key: string;
+        value: string;
+    }[]): Promise<{
+        success: boolean;
+    }>;
     getWebhooks(req: any): Promise<{
         url: string;
         id: string;

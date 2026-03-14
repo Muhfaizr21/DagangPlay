@@ -57,6 +57,24 @@ let SettingsController = class SettingsController {
             throw new Error('Merchant not found');
         return this.settingsService.togglePaymentChannel(merchant.id, id, isActive);
     }
+    async getGeneralSettings(req) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant)
+            throw new Error('Merchant not found');
+        return this.prisma.merchantSetting.findMany({ where: { merchantId: merchant.id } });
+    }
+    async updateGeneralSettings(req, data) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant)
+            throw new Error('Merchant not found');
+        const operations = data.map(setting => this.prisma.merchantSetting.upsert({
+            where: { merchantId_key: { merchantId: merchant.id, key: setting.key } },
+            update: { value: setting.value.toString() },
+            create: { merchantId: merchant.id, key: setting.key, value: setting.value.toString() }
+        }));
+        await this.prisma.$transaction(operations);
+        return { success: true };
+    }
     async getWebhooks(req) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
         if (!merchant)
@@ -110,6 +128,21 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, Boolean]),
     __metadata("design:returntype", Promise)
 ], SettingsController.prototype, "togglePaymentChannel", null);
+__decorate([
+    (0, common_1.Get)('general'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], SettingsController.prototype, "getGeneralSettings", null);
+__decorate([
+    (0, common_1.Put)('general'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Array]),
+    __metadata("design:returntype", Promise)
+], SettingsController.prototype, "updateGeneralSettings", null);
 __decorate([
     (0, common_1.Get)('webhooks'),
     __param(0, (0, common_1.Request)()),

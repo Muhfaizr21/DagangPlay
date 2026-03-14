@@ -129,21 +129,42 @@ let ProductsService = class ProductsService {
                     item.type === 'Games';
                 if (!isGame)
                     continue;
+                const popularBrands = [
+                    'MOBILE LEGENDS', 'FREE FIRE', 'FREE FIRE MAX', 'PUBG MOBILE',
+                    'GENSHIN IMPACT', 'VALORANT', 'HONOR OF KINGS', 'COD MOBILE',
+                    'LEAGUE OF LEGENDS', 'ARENA OF VALOR', 'MAGIC CHESS'
+                ];
+                const gameThumbnails = {
+                    'MOBILE LEGENDS': 'https://cdn1.codashop.com/S/content/common/images/mno/MobileLegends600x600.png',
+                    'FREE FIRE': 'https://cdn1.codashop.com/S/content/common/images/mno/FreeFire600x600.png',
+                    'FREE FIRE MAX': 'https://cdn1.codashop.com/S/content/common/images/mno/FreeFire600x600.png',
+                    'GENSHIN IMPACT': 'https://cdn1.codashop.com/S/content/common/images/mno/GenshinImpact600x600.png',
+                    'PUBG MOBILE': 'https://cdn1.codashop.com/S/content/common/images/mno/PUBGM600x600.png',
+                    'VALORANT': 'https://cdn1.codashop.com/S/content/common/images/mno/Valorant600x600.png',
+                    'HONOR OF KINGS': 'https://cdn1.codashop.com/S/content/common/images/mno/HOK600x600.png',
+                    'POINT BLANK': 'https://cdn1.codashop.com/S/content/common/images/mno/PointBlank600x600.png',
+                    'COD MOBILE': 'https://cdn1.codashop.com/S/content/common/images/mno/Codm600x600.png',
+                    'STEAM WALLET (IDR)': 'https://cdn1.codashop.com/S/content/common/images/mno/Steam600x600.png'
+                };
+                const brandUpper = item.brand.toUpperCase();
                 const brandSlug = item.brand.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                const isPopular = popularBrands.includes(brandUpper);
+                const sortOrder = isPopular ? (100 - popularBrands.indexOf(brandUpper)) : 0;
+                const thumbnail = gameThumbnails[brandUpper] || `https://www.google.com/s2/favicons?sz=128&domain=${brandSlug}.com`;
                 const category = await this.prisma.category.upsert({
                     where: { slug: brandSlug },
-                    update: {},
-                    create: { name: item.brand, slug: brandSlug, isActive: true }
+                    update: { image: thumbnail, icon: thumbnail, sortOrder: sortOrder },
+                    create: { name: item.brand, slug: brandSlug, isActive: true, image: thumbnail, icon: thumbnail, sortOrder: sortOrder }
                 });
                 const productSlug = `${brandSlug}-topup`;
                 const product = await this.prisma.product.upsert({
                     where: { slug: productSlug },
-                    update: {},
-                    create: { name: `${item.brand} Topup`, slug: productSlug, categoryId: category.id, status: 'ACTIVE' }
+                    update: { isPopular: isPopular, sortOrder: sortOrder, thumbnail: thumbnail },
+                    create: { name: `${item.brand} Topup`, slug: productSlug, categoryId: category.id, status: 'ACTIVE', isPopular: isPopular, sortOrder: sortOrder, thumbnail: thumbnail }
                 });
                 const rule = rulesByCategory.get(category.id) || globalRule;
                 const basePrice = Number(item.price);
-                const mNormal = rule?.marginNormal ?? 12;
+                const mNormal = rule?.marginNormal ?? 10;
                 const mPro = rule?.marginPro ?? 8;
                 const mLegend = rule?.marginLegend ?? 5;
                 const mSupreme = rule?.marginSupreme ?? 3;
@@ -152,7 +173,7 @@ let ProductsService = class ProductsService {
                 const priceLegend = Math.ceil(basePrice * (1 + mLegend / 100));
                 const priceSupreme = Math.ceil(basePrice * (1 + mSupreme / 100));
                 const skuRecord = await this.prisma.productSku.findFirst({
-                    where: { supplierCode: item.buyer_sku_code, supplierId: supplier.id }
+                    where: { supplierCode: item.buyer_sku_code, supplierId: supplier.id, productId: product.id }
                 });
                 const isAvailable = item.buyer_product_status && item.seller_product_status;
                 if (skuRecord) {
@@ -417,7 +438,18 @@ let ProductsService = class ProductsService {
                 item.image = fallbacks[item.slug];
             }
         }
-        return result.sort((a, b) => a.name.localeCompare(b.name));
+        const fullCats = await this.prisma.category.findMany({
+            where: { slug: { in: result.map(r => r.slug) } },
+            select: { slug: true, sortOrder: true }
+        });
+        const orderMap = new Map(fullCats.map(c => [c.slug, c.sortOrder]));
+        return result.sort((a, b) => {
+            const orderA = orderMap.get(a.slug) || 0;
+            const orderB = orderMap.get(b.slug) || 0;
+            if (orderB !== orderA)
+                return orderB - orderA;
+            return a.name.localeCompare(b.name);
+        });
     }
     async getPublicCategoryBySlug(slug, merchantSlug, domain) {
         let merchantId;

@@ -2,11 +2,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from 'axios';
 import { PremiumSlider } from "./HomeComponents";
-import { 
-  Search, ShoppingBag, ShieldCheck, Zap, Laptop, Clock, 
-  MessageSquare, ChevronRight, Gamepad, Wallet, Phone, 
-  Smartphone, Star, ArrowRight, TrendingUp, Sparkles,
-  Trophy, Heart, Filter, Monitor, Menu, X, Bell, Lock
+import {
+    Search, ShoppingBag, ShieldCheck, Zap, Laptop, Clock,
+    MessageSquare, ChevronRight, Gamepad, Wallet, Phone,
+    Smartphone, Star, ArrowRight, TrendingUp, Sparkles,
+    Trophy, Heart, Filter, Monitor, Menu, X, Bell, Lock
 } from "lucide-react";
 
 interface MerchantStorefrontProps {
@@ -40,8 +40,9 @@ const MerchantStorefront = ({ config, contentData, filteredProducts, search, set
             setIsTracking(false);
         }
     };
+
     const [selectedCategory, setSelectedCategory] = useState("SEMUA");
-    
+
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
         window.addEventListener("scroll", handleScroll);
@@ -50,226 +51,488 @@ const MerchantStorefront = ({ config, contentData, filteredProducts, search, set
 
     const isPreview = !config?.id;
 
-    // Filter categories dynamically (simulation if not provided)
     const categoryList = useMemo(() => {
         const cats = ["SEMUA", "GAME", "E-WALLET", "PULSA", "APLIKASI"];
         return cats;
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#001D2D] text-white font-outfit selection:bg-[#F77F00] selection:text-white relative overflow-x-hidden">
+        <div className="min-h-screen bg-[#09090F] text-white overflow-x-hidden" style={{ fontFamily: "'Figtree', 'DM Sans', sans-serif" }}>
             <style jsx global>{`
-                @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
-                
-                body {
-                    font-family: 'Outfit', sans-serif;
-                    background-color: #001D2D;
+                @import url('https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&family=DM+Mono:wght@400;500&display=swap');
+
+                :root {
+                    --go-start: #E8B84B;
+                    --go-end:   #F77F00;
+                    --bg:       #09090F;
+                    --bg-2:     #0F0F18;
+                    --bg-3:     #14141E;
+                    --bd:       rgba(255,255,255,0.055);
+                    --bd-h:     rgba(255,255,255,0.11);
+                    --dim:      rgba(255,255,255,0.32);
+                    --mid:      rgba(255,255,255,0.58);
+                    --mono:     'DM Mono', monospace;
                 }
 
-                .bg-mesh-ultra {
-                    background: 
-                        radial-gradient(circle at 0% 0%, rgba(214, 40, 40, 0.08) 0%, transparent 40%),
-                        radial-gradient(circle at 100% 0%, rgba(247, 127, 0, 0.05) 0%, transparent 40%),
-                        radial-gradient(circle at 50% 100%, rgba(0, 48, 73, 1) 0%, transparent 50%),
-                        #001D2D;
-                }
+                * { box-sizing: border-box; }
+                body { font-family: 'Figtree', sans-serif; background: var(--bg); }
 
-                .bento-card {
-                    background: rgba(255, 255, 255, 0.02);
-                    backdrop-filter: blur(16px);
-                    border: 1px solid rgba(255, 255, 255, 0.05);
-                    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-                }
-
-                .bento-card:hover {
-                    background: rgba(255, 255, 255, 0.04);
-                    border-color: rgba(247, 127, 0, 0.2);
-                    transform: translateY(-4px);
-                }
-
-                .premium-gradient-text {
-                    background: linear-gradient(to right, #FCBF49, #F77F00, #D62828);
+                /* gradient helpers */
+                .go-text {
+                    background: linear-gradient(135deg, var(--go-start) 0%, var(--go-end) 100%);
                     -webkit-background-clip: text;
                     -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                }
+                .go-fill { background: linear-gradient(135deg, var(--go-start) 0%, var(--go-end) 100%); }
+
+                /* ── Navbar ── */
+                .ms-nav {
+                    background: rgba(9,9,15,0.82);
+                    backdrop-filter: blur(22px) saturate(160%);
+                    -webkit-backdrop-filter: blur(22px) saturate(160%);
+                    border-bottom: 1px solid var(--bd);
                 }
 
-                .scrollbar-hide::-webkit-scrollbar {
-                    display: none;
+                /* ── Preview banner ── */
+                .preview-bar {
+                    background: linear-gradient(135deg, var(--go-start) 0%, var(--go-end) 100%);
                 }
 
+                /* ── Banner wrapper ── */
+                .banner-wrap {
+                    background: var(--bg-2);
+                    border: 1px solid var(--bd);
+                    border-radius: 20px;
+                    overflow: hidden;
+                }
+
+                /* ── Bento info cards ── */
+                .info-card {
+                    background: var(--bg-2);
+                    border: 1px solid var(--bd);
+                    border-radius: 16px;
+                    padding: 22px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    transition: border-color 0.25s, background 0.25s;
+                }
+                .info-card:hover {
+                    border-color: rgba(232,184,75,0.2);
+                    background: var(--bg-3);
+                }
+                .ic-icon {
+                    width: 36px; height: 36px;
+                    border-radius: 10px;
+                    display: flex; align-items: center; justify-content: center;
+                    background: linear-gradient(135deg, rgba(232,184,75,0.12), rgba(247,127,0,0.1));
+                    border: 1px solid rgba(232,184,75,0.18);
+                }
+
+                /* ── Category pills ── */
+                .cat-pill {
+                    padding: 8px 20px;
+                    border-radius: 99px;
+                    font-size: 10px;
+                    font-weight: 700;
+                    letter-spacing: 0.18em;
+                    text-transform: uppercase;
+                    white-space: nowrap;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    border: 1px solid var(--bd);
+                    background: var(--bg-2);
+                    color: var(--dim);
+                }
+                .cat-pill:hover { border-color: var(--bd-h); color: white; }
+                .cat-pill.active {
+                    background: linear-gradient(135deg, var(--go-start), var(--go-end));
+                    border-color: transparent;
+                    color: #09090F;
+                    box-shadow: 0 4px 16px rgba(247,127,0,0.22);
+                }
+
+                /* ── Search input ── */
+                .ms-search {
+                    width: 100%;
+                    height: 44px;
+                    background: var(--bg-2);
+                    border: 1px solid var(--bd);
+                    border-radius: 12px;
+                    padding: 0 16px 0 42px;
+                    font-size: 12px;
+                    font-weight: 500;
+                    color: white;
+                    outline: none;
+                    transition: border-color 0.2s, background 0.2s;
+                    font-family: 'Figtree', sans-serif;
+                }
+                .ms-search::placeholder { color: var(--dim); }
+                .ms-search:focus {
+                    border-color: rgba(232,184,75,0.35);
+                    background: var(--bg-3);
+                }
+
+                /* ── Product grid card ── */
+                .prod-card {
+                    position: relative;
+                    border-radius: 14px;
+                    overflow: hidden;
+                    border: 1px solid var(--bd);
+                    background: var(--bg-2);
+                    transition: transform 0.3s cubic-bezier(.25,.46,.45,.94), border-color 0.25s, box-shadow 0.3s;
+                    cursor: pointer;
+                    display: block;
+                    text-decoration: none;
+                }
+                .prod-card:hover {
+                    transform: translateY(-5px);
+                    border-color: rgba(232,184,75,0.25);
+                    box-shadow: 0 16px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(232,184,75,0.1);
+                }
+                .prod-card img {
+                    width: 100%; height: 100%;
+                    object-fit: cover;
+                    opacity: 0.68;
+                    transition: opacity 0.35s, transform 0.5s cubic-bezier(.25,.46,.45,.94);
+                }
+                .prod-card:hover img { opacity: 1; transform: scale(1.04); }
+                .prod-overlay {
+                    position: absolute; inset: 0;
+                    background: linear-gradient(to top, rgba(9,9,15,0.96) 0%, rgba(9,9,15,0.3) 45%, transparent 100%);
+                }
+                .prod-info {
+                    position: absolute; bottom: 0; left: 0; right: 0;
+                    padding: 14px 12px 12px;
+                }
+
+                /* ── Shimmer skeleton ── */
                 .shimmer {
-                    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+                    background: var(--bg-2);
+                    background-image: linear-gradient(90deg, var(--bg-2) 0%, rgba(255,255,255,0.04) 50%, var(--bg-2) 100%);
                     background-size: 200% 100%;
-                    animation: shimmer 1.5s infinite;
+                    animation: shimmer 1.6s infinite;
+                    border: 1px solid var(--bd);
+                    border-radius: 14px;
+                }
+                @keyframes shimmer {
+                    0%   { background-position: -200% 0; }
+                    100% { background-position:  200% 0; }
                 }
 
-                @keyframes shimmer {
-                    0% { background-position: -200% 0; }
-                    100% { background-position: 200% 0; }
+                /* ── Scrollbar hide ── */
+                .scroll-hide::-webkit-scrollbar { display: none; }
+                .scroll-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+                /* ── Thin scrollbar ── */
+                .thin-scroll::-webkit-scrollbar { width: 3px; }
+                .thin-scroll::-webkit-scrollbar-track { background: transparent; }
+                .thin-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+
+                /* ── Modal ── */
+                .ms-modal {
+                    background: var(--bg-2);
+                    border: 1px solid rgba(232,184,75,0.12);
+                    border-radius: 24px;
+                    animation: modalPop 0.22s ease;
                 }
+                @keyframes modalPop {
+                    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+                    to   { opacity: 1; transform: none; }
+                }
+
+                /* ── Modal input ── */
+                .ms-modal-input {
+                    width: 100%;
+                    height: 48px;
+                    background: var(--bg-3);
+                    border: 1px solid var(--bd);
+                    border-radius: 10px;
+                    padding: 0 16px;
+                    font-size: 13px;
+                    font-weight: 500;
+                    color: white;
+                    outline: none;
+                    transition: border-color 0.2s;
+                    font-family: 'Figtree', sans-serif;
+                }
+                .ms-modal-input::placeholder { color: var(--dim); }
+                .ms-modal-input:focus { border-color: rgba(232,184,75,0.4); }
+
+                /* ── Track order result card ── */
+                .track-card {
+                    background: var(--bg-3);
+                    border: 1px solid var(--bd);
+                    border-radius: 12px;
+                    padding: 14px 16px;
+                    transition: border-color 0.2s;
+                }
+                .track-card:hover { border-color: var(--bd-h); }
+
+                /* ── Section label ── */
+                .section-label {
+                    font-size: 9px;
+                    font-weight: 700;
+                    letter-spacing: 0.28em;
+                    text-transform: uppercase;
+                    color: var(--dim);
+                    font-family: 'DM Mono', monospace;
+                }
+
+                /* ── Ambient glow ── */
+                .ambient {
+                    position: fixed; top: -200px; left: 50%;
+                    transform: translateX(-50%);
+                    width: 900px; height: 500px;
+                    background: radial-gradient(ellipse at top, rgba(232,184,75,0.055) 0%, transparent 65%);
+                    pointer-events: none; z-index: 0;
+                }
+
+                /* ── Login btn ── */
+                .login-btn {
+                    background: linear-gradient(135deg, var(--go-start) 0%, var(--go-end) 100%);
+                    color: #09090F;
+                    font-weight: 700;
+                    font-size: 11px;
+                    letter-spacing: 0.1em;
+                    text-transform: uppercase;
+                    border: none;
+                    cursor: pointer;
+                    padding: 9px 20px;
+                    border-radius: 10px;
+                    transition: opacity 0.2s, transform 0.2s;
+                }
+                .login-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+                /* status badges */
+                .s-paid    { background: rgba(52,211,153,0.1); color: #34D399; }
+                .s-pending { background: rgba(232,184,75,0.1);  color: #E8B84B; }
+                .s-failed  { background: rgba(239,68,68,0.1);   color: #EF4444; }
             `}</style>
 
-            {/* Background Base */}
-            <div className="fixed inset-0 bg-mesh-ultra pointer-events-none" />
-            
+            {/* Ambient top glow */}
+            <div className="ambient" />
+
             {/* Preview Banner */}
             {isPreview && !isLoading && (
-                <div className="relative z-[200] h-8 bg-gradient-to-r from-[#D62828] via-[#F77F00] to-[#FCBF49] flex items-center justify-center gap-3 overflow-hidden shadow-2xl">
-                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 animate-pulse" />
-                    <span className="text-[9px] font-black text-[#001D2D] uppercase tracking-[0.5em] relative z-10 italic flex items-center gap-2">
-                        <Lock size={10} /> PREVIEW MODE ACTIVE — VIEW ONLY
-                    </span>
+                <div className="relative z-[200] h-8 preview-bar flex items-center justify-center gap-2">
+                    <Lock size={9} className="text-[#09090F]" />
+                    <span className="text-[9px] font-black text-[#09090F] uppercase tracking-[0.45em]">Preview Mode Active — View Only</span>
                 </div>
             )}
 
-            {/* Top Navigation */}
-            <header className={`fixed inset-x-0 z-[100] transition-all duration-500 ${isPreview ? 'top-8' : 'top-0'} ${scrolled ? 'py-4 bg-[#001D2D]/90 backdrop-blur-xl border-b border-white/5' : 'py-8 bg-transparent'}`}>
-                <div className="container mx-auto px-6 flex items-center justify-between">
-                    <div className="flex items-center gap-4 group cursor-pointer" onClick={() => window.location.reload()}>
-                        <div className="relative w-12 h-12 flex items-center justify-center">
-                            <div className="absolute inset-0 bg-[#F77F00] blur-xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
-                            <div className="relative w-full h-full bg-[#003049] border border-white/10 rounded-2xl flex items-center justify-center rotate-3 group-hover:rotate-0 transition-all duration-500 shadow-2xl">
-                                {config?.logo ? (
-                                    <img src={config.logo} alt="Logo" className="w-7 h-7 object-contain" />
-                                ) : (
-                                    <Gamepad className="w-6 h-6 text-[#FCBF49]" />
-                                )}
-                            </div>
+            {/* ── NAVBAR ── */}
+            <header className={`ms-nav fixed inset-x-0 z-[100] transition-all duration-400 ${isPreview ? 'top-8' : 'top-0'}`}>
+                <div className="max-w-[1280px] mx-auto px-6 h-[58px] flex items-center justify-between">
+                    {/* Logo */}
+                    <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.location.reload()}>
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0 transition-transform duration-300 group-hover:scale-95"
+                            style={{ background: 'linear-gradient(135deg, rgba(232,184,75,0.15), rgba(247,127,0,0.1))', border: '1px solid rgba(232,184,75,0.2)' }}>
+                            {config?.logo
+                                ? <img src={config.logo} alt="Logo" className="w-5 h-5 object-contain" />
+                                : <Gamepad className="w-4 h-4" style={{ color: '#E8B84B' }} />}
                         </div>
-                        <div className="flex flex-col">
-                            <h1 className="text-2xl font-black tracking-tighter uppercase italic leading-none">
-                                <span className="text-white">{config?.name?.split(' ')[0] || 'DEMO'}</span>
-                                <span className="premium-gradient-text ml-1.5">{config?.name?.split(' ').slice(1).join(' ') || 'STORE'}</span>
-                            </h1>
-                        </div>
+                        <h1 className="text-[16px] font-extrabold tracking-tight leading-none">
+                            <span className="text-white">{config?.name?.split(' ')[0] || 'DEMO'}</span>
+                            {config?.name?.split(' ').slice(1).join(' ') && (
+                                <span className="go-text ml-1">{config?.name?.split(' ').slice(1).join(' ')}</span>
+                            )}
+                            {!config?.name && <span className="go-text ml-1">STORE</span>}
+                        </h1>
                     </div>
 
-                    <nav className="hidden lg:flex items-center gap-12">
-                        <a href="#" className="text-[10px] font-black uppercase tracking-[0.3em] text-[#F77F00] no-underline">KATALOG</a>
-                        <button onClick={() => setTrackModal(true)} className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 hover:text-white bg-transparent border-none cursor-pointer">PESANAN</button>
-                        <a href="#" className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 hover:text-white no-underline">BANTUAN</a>
+                    {/* Nav */}
+                    <nav className="hidden lg:flex items-center gap-10">
+                        {[
+                            { label: 'Katalog', active: true, onClick: undefined },
+                            { label: 'Pesanan', active: false, onClick: () => setTrackModal(true) },
+                            { label: 'Bantuan', active: false, onClick: undefined },
+                        ].map(item => (
+                            item.onClick
+                                ? <button key={item.label} onClick={item.onClick}
+                                    className="text-[11px] font-semibold uppercase tracking-[0.16em] bg-transparent border-none cursor-pointer transition-colors"
+                                    style={{ color: item.active ? '#E8B84B' : 'var(--dim)' }}>
+                                    {item.label}
+                                </button>
+                                : <a key={item.label} href="#"
+                                    className="text-[11px] font-semibold uppercase tracking-[0.16em] no-underline transition-colors"
+                                    style={{ color: item.active ? '#E8B84B' : 'var(--dim)' }}>
+                                    {item.label}
+                                </a>
+                        ))}
                     </nav>
 
-                    <div className="flex items-center gap-5">
-                        <button className="bg-white text-[#001D2D] px-8 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-[#F77F00] hover:text-white transition-all transform hover:-translate-y-0.5 shadow-xl">
-                            LOGIN
-                        </button>
-                    </div>
+                    <button className="login-btn">Login</button>
                 </div>
             </header>
 
-            <main className="relative z-10 pt-44 pb-20">
-                <div className="container mx-auto px-6">
-                    <div className="grid lg:grid-cols-4 gap-8 mb-16">
-                        <div className="lg:col-span-3">
-                            <div className="rounded-[3rem] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/5 p-2 bg-white/5">
-                                {isLoading ? (
-                                    <div className="aspect-[21/9] bg-white/5 rounded-[2.5rem] shimmer flex items-center justify-center">
-                                         <Zap size={48} className="text-white/5 animate-pulse" />
-                                    </div>
-                                ) : (
-                                    <PremiumSlider banners={contentData?.banners || []} theme="dark" />
-                                )}
-                            </div>
-                        </div>
-                        <div className="lg:col-span-1 grid grid-rows-2 gap-6">
-                            <div className="bento-card p-8 rounded-[2.5rem] flex flex-col justify-center gap-4 group">
-                                <Zap size={24} className="text-[#D62828]" />
-                                <h3 className="text-xl font-black uppercase italic">Instant Delivery</h3>
-                                <p className="text-xs text-white/40 italic">System otomatis memproses pesanan Anda dalam hitungan detik.</p>
-                            </div>
-                            <div className="bento-card p-8 rounded-[2.5rem] bg-gradient-to-br from-[#003049] to-[#001D2D] group">
-                                <Trophy size={24} className="text-[#FCBF49]" />
-                                <h3 className="text-xl font-black uppercase italic mt-4">Best Pricing</h3>
-                                <p className="text-xs text-white/40 italic">Harga kompetitif dengan margin agen langsung.</p>
-                            </div>
-                        </div>
-                    </div>
+            <main className="relative z-10 max-w-[1280px] mx-auto px-6" style={{ paddingTop: isPreview ? '100px' : '84px', paddingBottom: '80px' }}>
 
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-16 px-4">
-                        <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide w-full md:w-auto pb-4 md:pb-0">
-                            {isLoading ? (
-                                Array(5).fill(0).map((_,i) => <div key={i} className="w-32 h-12 bg-white/5 rounded-full shimmer" />)
-                            ) : (
-                                categoryList.map((cat) => (
-                                    <button
-                                        key={cat}
-                                        onClick={() => setSelectedCategory(cat)}
-                                        className={`px-8 py-3.5 rounded-full text-[10px] font-black uppercase tracking-[0.3em] transition-all border whitespace-nowrap ${selectedCategory === cat ? 'bg-[#F77F00] border-[#F77F00] text-white' : 'bg-white/5 border-white/10 text-white/40'}`}
-                                    >
-                                        {cat}
-                                    </button>
-                                ))
-                            )}
-                        </div>
-                        <div className="w-full md:w-96 relative">
-                             <input
-                                type="text"
-                                placeholder="CARI GAME..."
-                                className="w-full bg-[#003049]/40 border border-white/10 rounded-2xl px-6 py-4 text-xs font-black uppercase text-white outline-none"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
+                {/* ── HERO BENTO ── */}
+                <div className="grid lg:grid-cols-[1fr_260px] gap-4 mb-8">
+                    {/* Banner */}
+                    <div className="banner-wrap">
                         {isLoading ? (
-                            Array(12).fill(0).map((_,i) => (
-                                <div key={i} className="aspect-[3.5/5] rounded-[2.5rem] bg-white/5 border border-white/5 shimmer" />
+                            <div className="aspect-[21/9] shimmer flex items-center justify-center">
+                                <Zap size={40} style={{ color: 'rgba(255,255,255,0.04)' }} />
+                            </div>
+                        ) : (
+                            <PremiumSlider banners={contentData?.banners || []} theme="dark" />
+                        )}
+                    </div>
+
+                    {/* Side cards */}
+                    <div className="flex flex-row lg:flex-col gap-4">
+                        <div className="info-card flex-1">
+                            <div className="ic-icon">
+                                <Zap size={16} style={{ color: '#E8B84B' }} />
+                            </div>
+                            <p className="text-[15px] font-bold text-white leading-tight">Instant Delivery</p>
+                            <p className="text-[12px] leading-relaxed" style={{ color: 'var(--dim)' }}>Proses otomatis dalam hitungan detik.</p>
+                        </div>
+                        <div className="info-card flex-1" style={{ background: 'linear-gradient(135deg, rgba(232,184,75,0.06), rgba(247,127,0,0.04))' }}>
+                            <div className="ic-icon">
+                                <Trophy size={16} style={{ color: '#E8B84B' }} />
+                            </div>
+                            <p className="text-[15px] font-bold text-white leading-tight">Harga Terbaik</p>
+                            <p className="text-[12px] leading-relaxed" style={{ color: 'var(--dim)' }}>Margin kompetitif langsung dari agen.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── FILTER BAR ── */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                    {/* Category pills */}
+                    <div className="flex items-center gap-2 overflow-x-auto scroll-hide w-full sm:w-auto pb-1 sm:pb-0">
+                        {isLoading
+                            ? Array(5).fill(0).map((_, i) => (
+                                <div key={i} className="shimmer w-24 h-9 rounded-full flex-shrink-0" />
                             ))
-                        ) : filteredProducts.map((p: any) => (
-                            <a href={`/produk/${p.slug}${config?.slug ? `?merchant=${config.slug}` : ''}`} key={p.id} className="group">
-                                <div className="relative aspect-[3.5/5] rounded-[2.5rem] overflow-hidden bento-card border-white/10 group-hover:border-[#F77F00]/30 shadow-xl">
-                                    <img src={p.image} className="w-full h-full object-cover opacity-70 group-hover:opacity-100" alt={p.name} />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#001D2D] via-transparent to-transparent" />
-                                    <div className="absolute inset-x-0 bottom-0 p-6 text-center">
-                                        <h4 className="font-black text-sm uppercase italic truncate mb-2">{p.name}</h4>
-                                        <span className="text-[8px] font-extrabold text-white/30 uppercase tracking-[0.2em]">{p.categoryName}</span>
-                                    </div>
+                            : categoryList.map(cat => (
+                                <button key={cat}
+                                    onClick={() => setSelectedCategory(cat)}
+                                    className={`cat-pill flex-shrink-0 ${selectedCategory === cat ? 'active' : ''}`}>
+                                    {cat}
+                                </button>
+                            ))
+                        }
+                    </div>
+
+                    {/* Search */}
+                    <div className="relative w-full sm:w-[260px] flex-shrink-0">
+                        <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--dim)' }} />
+                        <input
+                            type="text"
+                            placeholder="Cari game…"
+                            className="ms-search"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                        />
+                    </div>
+                </div>
+
+                {/* ── Section label ── */}
+                <div className="flex items-center gap-3 mb-5">
+                    <span className="section-label">
+                        {isLoading ? 'Memuat' : `${filteredProducts?.length || 0} produk tersedia`}
+                    </span>
+                    <div className="flex-1 h-px" style={{ background: 'var(--bd)' }} />
+                </div>
+
+                {/* ── Product Grid ── */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-3.5">
+                    {isLoading
+                        ? Array(14).fill(0).map((_, i) => (
+                            <div key={i} className="shimmer aspect-[3/4]" />
+                        ))
+                        : filteredProducts.map((p: any) => (
+                            <a
+                                href={`/produk/${p.slug}${config?.slug ? `?merchant=${config.slug}` : ''}`}
+                                key={p.id}
+                                className="prod-card"
+                            >
+                                <div className="aspect-[3/4]">
+                                    <img src={p.image} alt={p.name} />
+                                </div>
+                                <div className="prod-overlay" />
+                                <div className="prod-info">
+                                    <p className="text-[12px] font-bold text-white leading-tight truncate">{p.name}</p>
+                                    <p className="text-[9px] font-medium uppercase tracking-[0.18em] mt-1 truncate" style={{ color: 'rgba(232,184,75,0.55)' }}>{p.categoryName}</p>
                                 </div>
                             </a>
-                        ))}
-                    </div>
+                        ))
+                    }
                 </div>
             </main>
 
-            <footer className="bg-[#00121C] py-20 text-center border-t border-white/5">
-                <p className="text-[8px] font-black uppercase tracking-[0.5em] text-white/10 italic">
-                    © {new Date().getFullYear()} {config?.name?.toUpperCase() || 'STORE'} — SECURE PROTOCOL
+            {/* ── FOOTER ── */}
+            <footer className="relative z-10 py-10 text-center" style={{ borderTop: '1px solid var(--bd)', background: '#06060B' }}>
+                <p className="text-[9px] font-medium uppercase tracking-[0.4em]" style={{ color: 'rgba(255,255,255,0.1)' }}>
+                    © {new Date().getFullYear()} {config?.name?.toUpperCase() || 'STORE'} — Secure Protocol
                 </p>
             </footer>
 
+            {/* ── TRACK ORDER MODAL ── */}
             {trackModal && (
-                <div className="fixed inset-0 z-[300] flex items-center justify-center px-6">
-                    <div className="absolute inset-0 bg-[#001D2D]/90 backdrop-blur-2xl" onClick={() => setTrackModal(false)}></div>
-                    <div className="relative w-full max-w-xl bg-[#001D2D] border border-white/10 rounded-[3rem] p-10 shadow-2xl">
-                        <div className="flex items-center justify-between mb-10">
-                            <h2 className="text-2xl font-black italic uppercase text-white">Lacak Pesanan</h2>
-                            <button onClick={() => setTrackModal(false)} className="text-white/40 hover:text-white"><X size={24} /></button>
+                <div className="fixed inset-0 z-[300] flex items-center justify-center px-5">
+                    <div className="absolute inset-0 bg-[#09090F]/75 backdrop-blur-2xl" onClick={() => setTrackModal(false)} />
+                    <div className="ms-modal relative w-full max-w-[480px] p-7 shadow-2xl">
+
+                        {/* Header */}
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 className="text-[18px] font-bold text-white tracking-tight">Lacak Pesanan</h2>
+                                <p className="text-[10px] uppercase tracking-[0.2em] mt-0.5" style={{ color: 'var(--dim)' }}>Cek Riwayat Pembelian</p>
+                            </div>
+                            <button onClick={() => setTrackModal(false)}
+                                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                                style={{ background: 'var(--bg-3)', border: '1px solid var(--bd)', color: 'var(--dim)' }}>
+                                <X size={15} />
+                            </button>
                         </div>
-                        <form onSubmit={handleTrack}>
-                            <input 
-                                type="text" 
-                                placeholder="Nomor WA (08XXXXXXXXXX)"
+
+                        {/* Search form */}
+                        <form onSubmit={handleTrack} className="flex gap-2 mb-6">
+                            <input
+                                type="text"
+                                placeholder="08XXXXXXXXXX"
                                 value={searchPhone}
-                                onChange={(e) => setSearchPhone(e.target.value)}
-                                className="w-full h-16 px-8 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-[#F77F00]"
+                                onChange={e => setSearchPhone(e.target.value)}
+                                className="ms-modal-input flex-1"
                             />
-                            <button disabled={isTracking} type="submit" className="w-full mt-4 bg-white text-[#001D2D] h-14 rounded-2xl font-black uppercase tracking-widest">
-                                {isTracking ? '...' : 'CARI'}
+                            <button type="submit" disabled={isTracking}
+                                className="login-btn flex-shrink-0 px-5 disabled:opacity-40"
+                                style={{ height: '48px', borderRadius: '10px' }}>
+                                {isTracking ? '…' : 'Cari'}
                             </button>
                         </form>
-                        <div className="mt-10 space-y-4">
-                            {trackingResults.map((order) => (
-                                <div key={order.id} className="p-5 rounded-2xl bg-white/5 border border-white/10">
-                                    <div className="flex justify-between text-[10px] font-black italic text-[#F77F00] mb-2">
-                                        <span>{order.orderNumber}</span>
-                                        <span>{order.paymentStatus}</span>
+
+                        {/* Results */}
+                        <div className="space-y-2.5 max-h-[360px] overflow-y-auto thin-scroll">
+                            {trackingResults.length === 0 && !isTracking && (
+                                <div className="py-10 text-center text-[11px] uppercase tracking-widest font-medium" style={{ color: 'rgba(255,255,255,0.1)' }}>
+                                    Masukkan nomor WA untuk melihat riwayat
+                                </div>
+                            )}
+                            {trackingResults.map(order => (
+                                <div key={order.id} className="track-card">
+                                    <div className="flex items-center justify-between mb-2.5">
+                                        <span className="text-[11px] font-semibold go-text">{order.orderNumber}</span>
+                                        <span className={`text-[9px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider ${order.paymentStatus === 'PAID' ? 's-paid' :
+                                                order.paymentStatus === 'PENDING' ? 's-pending' : 's-failed'
+                                            }`}>
+                                            {order.paymentStatus || 'PENDING'}
+                                        </span>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-sm font-black text-white">{order.productName}</span>
-                                        <span className="text-sm font-black text-white italic">Rp {Number(order.totalPrice).toLocaleString()}</span>
+                                    <div className="flex items-end justify-between">
+                                        <div>
+                                            <p className="text-[13px] font-semibold text-white">{order.productName}</p>
+                                            <p className="text-[10px] mt-0.5 uppercase tracking-wider" style={{ color: 'var(--dim)' }}>{order.productSkuName}</p>
+                                        </div>
+                                        <span className="text-[14px] font-bold text-white ml-4 flex-shrink-0">
+                                            Rp {Number(order.totalPrice).toLocaleString()}
+                                        </span>
                                     </div>
                                 </div>
                             ))}

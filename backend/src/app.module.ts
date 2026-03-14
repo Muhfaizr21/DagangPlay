@@ -30,9 +30,12 @@ import { MarketingModule } from './admin/marketing/marketing.module';
 import { ChatModule } from './chat/chat.module';
 
 import { PublicDigiflazzModule } from './public/digiflazz/public-digiflazz.module';
+import { NotificationsModule } from './common/notifications/notifications.module';
 
 import { TasksService } from './common/tasks/tasks.service';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-yet';
 
 @Module({
   imports: [
@@ -40,7 +43,52 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
       ttl: 60000,
       limit: 20, // Global limit for general usage
     }]),
-    ScheduleModule.forRoot(), DashboardModule, MerchantsModule, ProductsModule, SuppliersModule, UsersModule, TransactionsModule, FinanceModule, CommissionsModule, PromosModule, SubscriptionsModule, ContentModule, SecurityModule, TicketsModule, SettingsModule, AuthModule, UploadModule, WorkersModule, MerchantModule, DigiflazzModule, TripayModule, PublicOrdersModule, WithdrawalsModule, MarketingModule, ChatModule, PublicDigiflazzModule
+    ScheduleModule.forRoot(),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: async () => {
+        try {
+          const store = await redisStore({
+            socket: {
+              host: process.env.REDIS_HOST || 'localhost',
+              port: parseInt(process.env.REDIS_PORT || '6379'),
+            },
+            ttl: 60000, // Default TTL 60s
+          });
+          console.log('[Cache] Redis storage connected successfully.');
+          return { store };
+        } catch (e) {
+          console.warn('[Cache] Could not connect to Redis, falling back to memory storage.', e.message);
+          return { ttl: 60000 }; // Fallback to memory
+        }
+      },
+    }),
+    DashboardModule, 
+    MerchantsModule, 
+    ProductsModule, 
+    SuppliersModule, 
+    UsersModule, 
+    TransactionsModule, 
+    FinanceModule, 
+    CommissionsModule, 
+    PromosModule, 
+    SubscriptionsModule, 
+    ContentModule, 
+    SecurityModule, 
+    TicketsModule, 
+    SettingsModule, 
+    AuthModule, 
+    UploadModule, 
+    WorkersModule, 
+    MerchantModule, 
+    DigiflazzModule, 
+    TripayModule, 
+    PublicOrdersModule, 
+    WithdrawalsModule, 
+    MarketingModule, 
+    ChatModule, 
+    PublicDigiflazzModule,
+    NotificationsModule
   ],
   controllers: [],
   providers: [

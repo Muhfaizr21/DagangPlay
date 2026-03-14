@@ -1,18 +1,23 @@
 import * as bcrypt from 'bcrypt';
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import { TripayService } from '../../tripay/tripay.service';
 import { DigiflazzService } from '../../admin/digiflazz/digiflazz.service';
 import { SubscriptionsService } from '../../admin/subscriptions/subscriptions.service';
 import { Prisma } from '@prisma/client';
 
+import { WhatsappService } from '../../common/notifications/whatsapp.service';
+
 @Injectable()
 export class PublicOrdersService {
+    private readonly logger = new Logger(PublicOrdersService.name);
+
     constructor(
         private prisma: PrismaService,
         private tripay: TripayService,
         private digiflazz: DigiflazzService,
-        private subscriptionsService: SubscriptionsService
+        private subscriptionsService: SubscriptionsService,
+        private whatsappService: WhatsappService
     ) { }
 
     private mapPaymentMethod(code: string): any {
@@ -53,6 +58,16 @@ export class PublicOrdersService {
         const availability = await this.digiflazz.checkAvailability(sku.supplierCode);
         if (!availability.isAvailable) {
             throw new BadRequestException(availability.reason);
+        }
+
+        // 1.2 REAL-TIME BALANCE CHECK (Supplier Side)
+        try {
+            const supplierBalance = await this.digiflazz.checkBalance();
+            if (supplierBalance < Number(sku.basePrice)) {
+                throw new BadRequestException('Produk sedang dalam pemeliharaan (Stok sedang kosong di pusat)');
+            }
+        } catch (err) {
+            console.warn('[Checkout] Failed to check supplier balance, skipping check to allow potential order.');
         }
 
         // 2. TENANT IDENTIFICATION (Isolation Fix)
@@ -188,25 +203,29 @@ export class PublicOrdersService {
             }
         });
 
+        if (!paymentMethod) throw new BadRequestException('Metode pembayaran harus dipilih');
+        if (!whatsapp) throw new BadRequestException('Nomor WhatsApp diperlukan');
+
         // 4. Request Tripay Payment
         const tripayPayload = {
             method: paymentMethod,
             merchant_ref: order.orderNumber,
-            amount: sellPrice,
-            customer_name: gameId,
+            amount: Math.ceil(sellPrice), // Ensure integer rounding matches frontend
+            customer_name: gameId || 'User',
             customer_email: 'customer@dagangplay.com',
             customer_phone: whatsapp,
             order_items: [
                 {
                     sku: sku.supplierCode,
                     name: `${sku.product.category.name} - ${sku.product.name} - ${sku.name}`,
-                    price: sellPrice,
+                    price: Math.ceil(sellPrice), // Ensure integer rounding matches frontend
                     quantity: 1
                 }
             ],
             return_url: `${origin || process.env.FRONTEND_URL || 'http://localhost:3000'}/invoice/${order.orderNumber}`
         };
 
+        this.logger.log(`Initiating Tripay Request: ${order.orderNumber} via ${paymentMethod}`);
         const tripayRes = await this.tripay.requestTransaction(tripayPayload);
 
         // 5. Update Order with Tripay details
@@ -225,6 +244,24 @@ export class PublicOrdersService {
                 tripayResponse: tripayRes.data as any, // Storing everything!
             }
         });
+
+        // 6. Send WhatsApp Notification (Async - Don't block response)
+        this.whatsappService.sendOrderNotification(
+            whatsapp,
+            order.orderNumber,
+            `${sku.product.name} - ${sku.name}`,
+            sellPrice,
+            tripayRes.data.checkout_url
+        ).catch(err => this.logger.error(`Failed to send WA: ${err.message}`));
+
+        // 7. Notify Admin (Async)
+        this.whatsappService.sendAdminSummary(
+            `🛒 *PESANAN BARU*\n` +
+            `Order: ${order.orderNumber}\n` +
+            `Produk: ${sku.product.name} - ${sku.name}\n` +
+            `Harga: Rp ${sellPrice.toLocaleString('id-ID')}\n` +
+            `Buyer: ${whatsapp}`
+        ).catch(() => {});
 
         return {
             success: true,
@@ -313,23 +350,27 @@ export class PublicOrdersService {
     }
 
     async getStoreConfig(host?: string, merchantSlug?: string) {
+        const hostWithoutPort = host?.split(':')[0] || '';
         const isMainDomain = !host || 
-                            host.includes('localhost') || 
-                            host.includes('dagangplay.com') || 
-                            host.includes('trycloudflare.com');
+                            hostWithoutPort.includes('localhost') || 
+                            hostWithoutPort.includes('127.0.0.1') || 
+                            hostWithoutPort.includes('dagangplay.com') || 
+                            hostWithoutPort.includes('trycloudflare.com');
 
         // 1. Find Merchant
         const merchant = isMainDomain && !merchantSlug ? null : await this.prisma.merchant.findFirst({
             where: {
                 OR: [
                     merchantSlug ? { slug: merchantSlug } : {},
-                    { domain: host },
-                    !isMainDomain ? { slug: host?.split('.')[0] } : {}
+                    { domain: hostWithoutPort },
+                    !isMainDomain ? { slug: hostWithoutPort.split('.')[0] } : {}
                 ].filter(condition => Object.keys(condition).length > 0)
             }
         });
 
-        const targetMerchant = merchant || await this.prisma.merchant.findFirst({ where: { isOfficial: true, status: 'ACTIVE' } });
+        const targetMerchant = merchant || await this.prisma.merchant.findFirst({ 
+            where: { isOfficial: true, status: 'ACTIVE' } 
+        });
 
         if (!targetMerchant) {
             return {
@@ -377,5 +418,26 @@ export class PublicOrdersService {
             isOfficial: targetMerchant.isOfficial,
             theme: (targetMerchant.settings as any)?.theme || { active: 'dark' }
         };
+    }
+
+    async getPaymentChannels() {
+        return this.tripay.getPaymentChannels();
+    }
+
+    async getActiveMerchants() {
+        return this.prisma.merchant.findMany({
+            where: { status: 'ACTIVE', isOfficial: false },
+            select: {
+                id: true,
+                name: true,
+                slug: true,
+                logo: true,
+                bannerImage: true,
+                tagline: true,
+                domain: true
+            },
+            take: 12,
+            orderBy: { createdAt: 'desc' }
+        });
     }
 }

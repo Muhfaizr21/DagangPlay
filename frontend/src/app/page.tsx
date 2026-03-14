@@ -45,9 +45,9 @@ function Home() {
     const viewParam = searchParams.get('view');
     const hostname = window.location.hostname;
     
-    const isMain = hostname.toLowerCase() === 'dagangplay.com' || 
-                   hostname.toLowerCase() === 'localhost' || 
-                   hostname.toLowerCase() === '127.0.0.1' || 
+    const isMain = hostname.includes('dagangplay.com') || 
+                   hostname.includes('localhost') || 
+                   hostname.includes('127.0.0.1') || 
                    hostname.includes('trycloudflare.com');
 
     let slug = mParam;
@@ -79,8 +79,11 @@ function Home() {
     ? `${baseUrl}/public/products/full-catalog?merchant=${slug}`
     : domain ? `${baseUrl}/public/products/full-catalog?domain=${domain}` : `${baseUrl}/public/products/full-catalog`;
 
+  const merchantsUrl = `${baseUrl}/public/orders/merchants`;
+
   const { data: contentData, isLoading: contentLoading } = useSWR(contentUrl, fetcher, swrConfig);
   const { data: catalog, isLoading: catalogLoading } = useSWR(catalogUrl, fetcher, swrConfig);
+  const { data: merchants, isLoading: merchantsLoading } = useSWR(merchantsUrl, fetcher, swrConfig);
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 40);
@@ -124,8 +127,11 @@ function Home() {
 
   // FINAL ROUTING LOGIC
   // 1. If Official Platform and not in Store View -> Show Official Company Profile (Landing Perusahaan)
-  if (config?.isOfficial && !showStore) {
-    return <CompanyProfile scrolled={scrolled} catalog={catalog} />;
+  // We prioritize showing the Landing Page if we are on a main domain and no specific store is requested
+  const isPlatformView = config?.isOfficial || (merchantState.isMainDomain && !merchantState.slug && !merchantState.domain);
+  
+  if (isPlatformView && !showStore) {
+    return <CompanyProfile scrolled={scrolled} catalog={catalog} merchants={merchants} />;
   }
 
   // 2. If Merchant is Suspended or Expired (SaaS Protection)

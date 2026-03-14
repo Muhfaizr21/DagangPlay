@@ -68,6 +68,7 @@ export class WorkersService {
                 fulfillmentStatus: { in: [OrderFulfillmentStatus.PENDING, OrderFulfillmentStatus.PROCESSING] },
                 supplierRefId: { not: null }
             },
+            include: { productSku: true },
             take: 50
         });
 
@@ -87,7 +88,7 @@ export class WorkersService {
                 const supplierInfo = await this.digiflazz.checkOrderStatus(
                     order.id,
                     order.supplierRefId!,
-                    order.productSkuName, // Actually this should be buyer_sku_code, but checkOrderStatus handles it.
+                    order.productSku.supplierCode,
                     customerNo
                 );
 
@@ -128,6 +129,127 @@ export class WorkersService {
         }
     }
 
+    // Tiap 6 jam otomatis singkron harga & produk dari Digiflazz (Otomasi Harga & Kebersihan Produk)
+    @Cron(CronExpression.EVERY_6_HOURS)
+    async syncProductsFromSupplier() {
+        this.logger.log('Starting Automated Product & Price Sync from Digiflazz...');
+        try {
+            const products = await this.digiflazz.getDigiflazzProducts();
+            
+            // Filter hanya Games (Sesuai Rule: Jangan ada produk non-game)
+            const gameItems = products.filter((item: any) => {
+                const cat = (item.category || '').toUpperCase();
+                const brand = (item.brand || '').toUpperCase();
+                const type = (item.type || '').toUpperCase();
+
+                const isGameCategory = cat.includes('GAMES') || cat.includes('VOUCHER') || cat.includes('ENTERTAINMENT');
+                const isTelcoBrand = brand.includes('TELKOMSEL') || brand.includes('XL') || brand.includes('AXIS') || brand.includes('INDOSAT') || brand.includes('TRI') || brand.includes('SMARTFREN');
+                const isShopping = brand.includes('ALFAMART') || brand.includes('INDOMARET') || brand.includes('GRAB') || brand.includes('GOJEK') || brand.includes('PLN');
+
+                return (isGameCategory || type === 'GAMES') && !isTelcoBrand && !isShopping;
+            });
+
+            this.logger.log(`Found ${gameItems.length} game items to sync.`);
+
+            // Popular Games for Priority Sorting
+            const popularBrands = [
+                'MOBILE LEGENDS', 'FREE FIRE', 'FREE FIRE MAX', 'PUBG MOBILE', 
+                'GENSHIN IMPACT', 'VALORANT', 'HONOR OF KINGS', 'COD MOBILE',
+                'LEAGUE OF LEGENDS', 'ARENA OF VALOR', 'MAGIC CHESS'
+            ];
+
+            const gameThumbnails: Record<string, string> = {
+                'MOBILE LEGENDS': 'https://cdn1.codashop.com/S/content/common/images/mno/MobileLegends600x600.png',
+                'FREE FIRE': 'https://cdn1.codashop.com/S/content/common/images/mno/FreeFire600x600.png',
+                'FREE FIRE MAX': 'https://cdn1.codashop.com/S/content/common/images/mno/FreeFire600x600.png',
+                'GENSHIN IMPACT': 'https://cdn1.codashop.com/S/content/common/images/mno/GenshinImpact600x600.png',
+                'PUBG MOBILE': 'https://cdn1.codashop.com/S/content/common/images/mno/PUBGM600x600.png',
+                'VALORANT': 'https://cdn1.codashop.com/S/content/common/images/mno/Valorant600x600.png',
+                'HONOR OF KINGS': 'https://cdn1.codashop.com/S/content/common/images/mno/HOK600x600.png',
+                'POINT BLANK': 'https://cdn1.codashop.com/S/content/common/images/mno/PointBlank600x600.png',
+                'COD MOBILE': 'https://cdn1.codashop.com/S/content/common/images/mno/Codm600x600.png',
+                'STEAM WALLET (IDR)': 'https://cdn1.codashop.com/S/content/common/images/mno/Steam600x600.png'
+            };
+
+            for (const item of gameItems) {
+                const brand = item.brand || 'UMUM';
+                const brandUpper = brand.toUpperCase();
+                const catSlug = brand.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                const isPopular = popularBrands.includes(brandUpper);
+                const sortOrder = isPopular ? (100 - popularBrands.indexOf(brandUpper)) : 0;
+                const thumbnail = gameThumbnails[brandUpper] || `https://www.google.com/s2/favicons?sz=128&domain=${catSlug}.com`;
+
+                // Logic Upsert Category & Product (Ported from manual_sync)
+                const category = await this.prisma.category.upsert({
+                    where: { slug: catSlug },
+                    update: { name: brand, image: thumbnail, icon: thumbnail, sortOrder: sortOrder },
+                    create: { name: brand, slug: catSlug, isActive: true, image: thumbnail, icon: thumbnail, sortOrder: sortOrder }
+                });
+
+                const productSlug = `${catSlug}-topup`;
+                const product = await this.prisma.product.upsert({
+                    where: { slug: productSlug },
+                    update: { categoryId: category.id, status: 'ACTIVE', thumbnail: thumbnail, isPopular: isPopular, sortOrder: sortOrder },
+                    create: { name: `${brand} Topup`, slug: productSlug, categoryId: category.id, status: 'ACTIVE', thumbnail: thumbnail, isPopular: isPopular, sortOrder: sortOrder }
+                });
+
+                // Price Recalculation (Anti-Loss)
+                const basePrice = Number(item.price);
+                const marginNormal = 10; // Default 10%
+                const marginPro = 8;
+                const marginLegend = 5;
+                const marginSupreme = 3;
+
+                const priceNormal = Math.ceil(basePrice * (1 + marginNormal / 100));
+                const pricePro = Math.ceil(basePrice * (1 + marginPro / 100));
+                const priceLegend = Math.ceil(basePrice * (1 + marginLegend / 100));
+                const priceSupreme = Math.ceil(basePrice * (1 + marginSupreme / 100));
+
+                const supplier = await this.prisma.supplier.findUnique({ where: { code: 'DIGIFLAZZ' } });
+                if (!supplier) continue;
+
+                const existingSku = await this.prisma.productSku.findFirst({
+                    where: { 
+                        productId: product.id, 
+                        supplierCode: item.buyer_sku_code,
+                        supplierId: supplier.id
+                    }
+                });
+
+                const skuData = {
+                    productId: product.id,
+                    name: item.product_name,
+                    supplierId: supplier.id,
+                    supplierCode: item.buyer_sku_code,
+                    basePrice: basePrice,
+                    priceNormal: priceNormal,
+                    pricePro: pricePro,
+                    priceLegend: priceLegend,
+                    priceSupreme: priceSupreme,
+                    marginNormal: priceNormal - basePrice,
+                    marginPro: pricePro - basePrice,
+                    marginLegend: priceLegend - basePrice,
+                    marginSupreme: priceSupreme - basePrice,
+                    status: (item.buyer_product_status && item.seller_product_status) ? ('ACTIVE' as any) : ('INACTIVE' as any)
+                };
+
+                if (existingSku) {
+                    await this.prisma.productSku.update({
+                        where: { id: existingSku.id },
+                        data: skuData
+                    });
+                } else {
+                    await this.prisma.productSku.create({
+                        data: skuData
+                    });
+                }
+            }
+            this.logger.log('Automated Sync Finished Successfully!');
+        } catch (err: any) {
+            this.logger.error(`Automated Sync Failed: ${err.message}`);
+        }
+    }
+
     // Tiap jam otomatis singkron saldo supplier (Audit & Alert)
     @Cron(CronExpression.EVERY_HOUR)
     async syncSupplierBalance() {
@@ -145,23 +267,8 @@ export class WorkersService {
                 data: { balance: currentBalance, lastSyncAt: new Date() }
             });
 
-            if (currentBalance < 500000) {
-                this.logger.warn(`LOW BALANCE ALERT: Digiflazz balance is Rp ${currentBalance.toLocaleString('id-ID')}. Setting products to MAINTENANCE.`);
-                // Auto-Maintenance: Lock all products to prevent unpaid orders failing at fulfillment
-                await this.prisma.product.updateMany({
-                    where: { status: 'ACTIVE' },
-                    data: { status: 'MAINTENANCE' }
-                });
-            } else {
-                // Auto-Recovery: Re-activate products if balance is sufficient (Optional: only reactivate what we closed)
-                const maintenanceCount = await this.prisma.product.count({ where: { status: 'MAINTENANCE' } });
-                if (maintenanceCount > 0) {
-                    await this.prisma.product.updateMany({
-                        where: { status: 'MAINTENANCE' },
-                        data: { status: 'ACTIVE' }
-                    });
-                    this.logger.log(`Balance recovered (${currentBalance}). Products set back to ACTIVE.`);
-                }
+            if (currentBalance < 200000) { // Turunkan limit alert ke 200rb
+                this.logger.warn(`LOW BALANCE ALERT: Rp ${currentBalance.toLocaleString('id-ID')}.`);
             }
         } catch (err: any) {
             this.logger.error(`Failed to sync supplier balance: ${err.message}`);
