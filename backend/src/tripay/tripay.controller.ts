@@ -4,13 +4,15 @@ import type { Request, Response } from 'express';
 import { PrismaService } from '../prisma.service';
 
 import { DigiflazzService } from '../admin/digiflazz/digiflazz.service';
+import { WhatsappService } from '../common/notifications/whatsapp.service';
 
 @Controller('tripay')
 export class TripayController {
     constructor(
         private readonly tripayService: TripayService,
         private prisma: PrismaService,
-        private digiflazz: DigiflazzService
+        private digiflazz: DigiflazzService,
+        private whatsappService: WhatsappService
     ) { }
 
     /**
@@ -32,16 +34,26 @@ export class TripayController {
         @Res() res: Response
     ) {
         try {
-            // Raw body should be used for accurate signature verification.
-            // In NestJS, you typically need a custom middleware (e.g., in main.ts)
-            // to attach the raw body to the request object.
-            // Example: app.use(json({ verify: (req, res, buf) => { (req as any).rawBody = buf; } }));
+            // 1. IP WHITELISTING (Security Audit Requirement)
+            const allowedIps = ['95.111.200.230', '127.0.0.1'];
+            const clientIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '';
+            
+            // Check if IP is allowed or if we are in dev mode
+            const isAllowed = allowedIps.some(ip => clientIp.includes(ip)) || process.env.NODE_ENV !== 'production';
+
+            if (!isAllowed) {
+                console.warn(`[TripayCallback] Blocked unauthorized IP: ${clientIp}`);
+                return res.status(HttpStatus.FORBIDDEN).json({ success: false, message: 'Unauthorized IP Source' });
+            }
+
+            // 2. RAW BODY SIGNATURE VERIFICATION
+            // rawBody is attached by NestJS because of 'rawBody: true' in main.ts
             const rawBody = (req as any).rawBody || JSON.stringify(req.body);
 
             const isValid = this.tripayService.verifySignature(signature, rawBody);
 
             if (!isValid) {
-                console.warn('[TripayCallback] Invalid signature from', req.ip);
+                console.warn('[TripayCallback] Invalid signature signature verification failed.');
                 return res.status(HttpStatus.FORBIDDEN).json({ success: false, message: 'Invalid signature' });
             }
 
@@ -55,7 +67,8 @@ export class TripayController {
                 if (ref.startsWith('ORD-')) {
                     try {
                         const order = await this.prisma.order.findUnique({
-                            where: { orderNumber: ref }
+                            where: { orderNumber: ref },
+                            include: { user: true }
                         });
 
                         if (!order) {
@@ -148,23 +161,28 @@ export class TripayController {
                                         });
                                     }
 
-                                    if (platformFeeAmount > 0) {
+                                    // 3.1 Credit SaaS Markup to Super Admin (modalPrice - basePrice)
+                                    // This is the markup from wholesale price (modal) - supplier price (base)
+                                    const saasMarkup = Math.max(0, Number(order.merchantModalPrice || 0) - Number(order.basePrice || 0));
+                                    const totalPlatformProfit = platformFeeAmount + saasMarkup;
+
+                                    if (totalPlatformProfit > 0) {
                                         const superAdmin = await tx.user.findFirst({
                                             where: { role: 'SUPER_ADMIN' }
                                         });
                                         if (superAdmin) {
                                             const su = await tx.user.update({
                                                 where: { id: superAdmin.id },
-                                                data: { balance: { increment: platformFeeAmount } }
+                                                data: { balance: { increment: totalPlatformProfit } }
                                             });
 
-                                            // Register commission to super admin so it can be reversed if failed
+                                            // Register commission to super admin
                                             await tx.commission.create({
                                                 data: {
                                                     orderId: order.id,
                                                     userId: superAdmin.id,
                                                     type: 'PLATFORM_FEE',
-                                                    amount: platformFeeAmount,
+                                                    amount: totalPlatformProfit,
                                                     status: 'SETTLED',
                                                     settledAt: new Date()
                                                 }
@@ -174,11 +192,11 @@ export class TripayController {
                                                 data: {
                                                     userId: superAdmin.id,
                                                     type: 'COMMISSION',
-                                                    amount: platformFeeAmount,
-                                                    balanceBefore: Number(su.balance) - platformFeeAmount,
+                                                    amount: totalPlatformProfit,
+                                                    balanceBefore: Number(su.balance) - totalPlatformProfit,
                                                     balanceAfter: Number(su.balance),
                                                     orderId: order.id,
-                                                    description: `Platform Fee (${platformFeePct}%) dari trx ${order.orderNumber}`
+                                                    description: `Platform Profit ${order.orderNumber} (Fee: ${platformFeeAmount}, Markup: ${saasMarkup})`
                                                 }
                                             });
                                         }
@@ -186,6 +204,28 @@ export class TripayController {
                                 }
                             }
                         });
+
+                        // SEND NOTIFICATION: Payment Received & Processing
+                        this.whatsappService.sendMessage(
+                            order.user.phone || '',
+                            `✅ *PEMBAYARAN DITERIMA - ${order.orderNumber}*\n\n` +
+                            `Terima kasih, pembayaran sebesar *Rp ${order.totalPrice.toLocaleString('id-ID')}* telah kami terima.\n` +
+                            `Pesanan *${order.productName} - ${order.productSkuName}* sedang diproses ke akun Anda.\n\n` +
+                            `Tunggu update selanjutnya ya!`
+                        ).catch(err => console.error(`[TripayCallback] Failed notification:`, err.message));
+
+                        // 3. Notify Admin (Async)
+                        // Note: saasMarkup and platformFee are calculated during processing. 
+                        // For simplicity in notification outside tx scope, we'll use order values.
+                        const adminMarkup = Math.max(0, Number(order.merchantModalPrice || 0) - Number(order.basePrice || 0));
+                        this.whatsappService.sendAdminSummary(
+                            `💰 *PEMBAYARAN SUKSES*\n` +
+                            `Order: ${order.orderNumber}\n` +
+                            `Produk: ${order.productName}\n` +
+                            `Total: Rp ${order.totalPrice.toLocaleString('id-ID')}\n` +
+                            `Metode: ${order.paymentMethod}\n` +
+                            `Markup SA: Rp ${adminMarkup.toLocaleString('id-ID')}`
+                        ).catch(() => {});
 
                         // TRIGGER FULFILLMENT AUTOMATICALLY
                         try {

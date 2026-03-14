@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const throttler_1 = require("@nestjs/throttler");
 const public_orders_service_1 = require("./public-orders.service");
 const tripay_service_1 = require("../../tripay/tripay.service");
+const cache_manager_1 = require("@nestjs/cache-manager");
 let PublicOrdersController = class PublicOrdersController {
     publicOrdersService;
     tripayService;
@@ -26,6 +27,9 @@ let PublicOrdersController = class PublicOrdersController {
     }
     async getPaymentChannels() {
         return this.tripayService.getPaymentChannels();
+    }
+    async getMerchants() {
+        return this.publicOrdersService.getActiveMerchants();
     }
     async getConfig(req, merchantSlug, domainMask) {
         const host = domainMask || req.headers.host || req.headers.origin;
@@ -49,12 +53,24 @@ let PublicOrdersController = class PublicOrdersController {
 exports.PublicOrdersController = PublicOrdersController;
 __decorate([
     (0, common_1.Get)('payment-channels'),
+    (0, common_1.UseInterceptors)(cache_manager_1.CacheInterceptor),
+    (0, cache_manager_1.CacheTTL)(3600000),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], PublicOrdersController.prototype, "getPaymentChannels", null);
 __decorate([
+    (0, common_1.Get)('merchants'),
+    (0, common_1.UseInterceptors)(cache_manager_1.CacheInterceptor),
+    (0, cache_manager_1.CacheTTL)(300000),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], PublicOrdersController.prototype, "getMerchants", null);
+__decorate([
     (0, common_1.Get)('config'),
+    (0, common_1.UseInterceptors)(cache_manager_1.CacheInterceptor),
+    (0, cache_manager_1.CacheTTL)(60000),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Query)('slug')),
     __param(2, (0, common_1.Query)('domain')),

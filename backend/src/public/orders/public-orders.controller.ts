@@ -1,7 +1,8 @@
-import { Controller, Post, Body, Get, Param, Req, Query, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Req, Query, BadRequestException, UseInterceptors } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { PublicOrdersService } from './public-orders.service';
 import { TripayService } from '../../tripay/tripay.service';
+import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 
 @Controller('public/orders')
 export class PublicOrdersController {
@@ -11,11 +12,22 @@ export class PublicOrdersController {
     ) { }
 
     @Get('payment-channels')
+    @UseInterceptors(CacheInterceptor)
+    @CacheTTL(3600000) // Cache for 1 hour
     async getPaymentChannels() {
         return this.tripayService.getPaymentChannels();
     }
 
+    @Get('merchants')
+    @UseInterceptors(CacheInterceptor)
+    @CacheTTL(300000) // Cache for 5 minutes
+    async getMerchants() {
+        return this.publicOrdersService.getActiveMerchants();
+    }
+
     @Get('config')
+    @UseInterceptors(CacheInterceptor)
+    @CacheTTL(60000) // Cache for 1 minute
     async getConfig(@Req() req: any, @Query('slug') merchantSlug?: string, @Query('domain') domainMask?: string) {
         const host = domainMask || req.headers.host || req.headers.origin;
         return this.publicOrdersService.getStoreConfig(host, merchantSlug);

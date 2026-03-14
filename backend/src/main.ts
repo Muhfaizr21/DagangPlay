@@ -15,6 +15,9 @@ async function bootstrap() {
     logger: WinstonModule.createLogger(winstonConfig),
   });
 
+  // Enable trust proxy for accurate IP logging and checking (Tripay/Cloudflare)
+  app.set('trust proxy', 1);
+
   // 1. Security Headers (Helmet)
   app.use(helmet({
     crossOriginEmbedderPolicy: false,

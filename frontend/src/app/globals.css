@@ -63,7 +63,7 @@
 
   /* Bento Card Glass */
   .bento-card {
-    @apply relative overflow-hidden rounded-[2.5rem] border border-white/[0.06] transition-all duration-700 bg-white/[0.01];
+    @apply relative overflow-hidden rounded-3xl border border-white/[0.06] transition-all duration-700 bg-white/[0.01];
     backdrop-filter: blur(12px);
   }
 
@@ -74,7 +74,7 @@
 
   /* High-End Buttons */
   .btn-primary-luxe {
-    @apply relative inline-flex items-center justify-center px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[.3em] transition-all duration-500 overflow-hidden border-none;
+    @apply relative inline-flex items-center justify-center px-8 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[.3em] transition-all duration-500 overflow-hidden border-none;
     background: #ffffff;
     color: #030712;
   }
@@ -85,7 +85,7 @@
   }
 
   .btn-outline-luxe {
-    @apply inline-flex items-center justify-center px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[.3em] border border-white/10 text-white/60 transition-all duration-500 hover:text-white hover:border-white/30 hover:bg-white/5;
+    @apply inline-flex items-center justify-center px-8 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[.3em] border border-white/10 text-white/60 transition-all duration-500 hover:text-white hover:border-white/30 hover:bg-white/5;
   }
 
   /* Marquee Styling */

@@ -27,11 +27,11 @@ export const LuxuryAnnouncement = ({ announcements }: any) => {
 };
 
 export const PaymentTicker = () => {
-    const methods = ["QRIS", "BCA", "BNI", "MANDIRI", "OVO", "DANA", "GOPAY", "LINKAJA", "ALFAMART", "INDOMARET"];
+    const methods = ["QRIS", "BCA", "BNI", "BRI", "MANDIRI", "PERMATA", "CIMB", "BSI", "DANAMON", "DANA", "OVO", "GOPAY", "LINKAJA", "SHOPEEPAY", "ALFAMART", "INDOMARET"];
     return (
         <div className="py-4 border-y border-white/[0.02] bg-black/40 overflow-hidden">
             <div className="flex animate-marquee whitespace-nowrap opacity-10 hover:opacity-100 transition-opacity duration-700">
-                {[...methods, ...methods, ...methods].map((m, i) => (
+                {[...methods, ...methods, ...methods, ...methods].map((m, i) => (
                     <span key={i} className="mx-8 text-[8px] font-black tracking-[.6em] text-white uppercase italic">{m}</span>
                 ))}
             </div>
@@ -48,23 +48,23 @@ export const PremiumSlider = ({ banners }: any) => {
     }, [banners]);
 
     if (!banners?.length) return (
-        <div className="w-full h-[250px] md:h-[400px] border border-white/10 flex items-center justify-center relative rounded-[3rem] bg-[#001D2D]">
+        <div className="w-full h-[180px] md:h-[320px] border border-white/10 flex items-center justify-center relative rounded-3xl bg-[#001D2D]">
             <div className="absolute inset-0 bg-gradient-to-tr from-[#D62828]/5 to-[#F77F00]/5" />
             <p className="font-heading text-[10px] uppercase font-black tracking-[1em] text-white/10 italic">PROMO EKSKLUSIF</p>
         </div>
     );
 
     return (
-        <div className="relative w-full h-[250px] md:h-[400px] overflow-hidden group shadow-[0_40px_100px_rgba(0,0,0,0.8)] rounded-[3rem]">
+        <div className="relative w-full h-[180px] md:h-[320px] overflow-hidden group shadow-[0_40px_100px_rgba(0,0,0,0.8)] rounded-3xl">
             {banners.map((b: any, i: number) => (
                 <div key={i} className={`absolute inset-0 transition-all duration-[2s] transform ease-in-out ${i === curr ? "opacity-100 scale-100" : "opacity-0 scale-105"}`}>
                     <img src={b.image} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-[3s]" alt="Banner" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#001D2D] via-transparent to-transparent opacity-80"></div>
                 </div>
             ))}
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-3 z-20">
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-20">
                 {banners.map((_: any, i: number) => (
-                    <button key={i} onClick={() => setCurr(i)} className={`h-1.5 cursor-pointer transition-all duration-700 rounded-full ${i === curr ? "w-12 bg-white shadow-[0_0_15px_rgba(255,255,255,0.5)]" : "w-2 bg-white/20 hover:bg-white/40"}`} />
+                    <button key={i} onClick={() => setCurr(i)} className={`h-1 cursor-pointer transition-all duration-700 rounded-full ${i === curr ? "w-8 bg-white shadow-[0_0_15px_rgba(255,255,255,0.5)]" : "w-1.5 bg-white/20 hover:bg-white/40"}`} />
                 ))}
             </div>
         </div>

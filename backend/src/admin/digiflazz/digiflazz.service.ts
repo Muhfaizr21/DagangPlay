@@ -1,12 +1,19 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
+import axios from 'axios';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { WhatsappService } from '../../common/notifications/whatsapp.service';
+
 @Injectable()
 export class DigiflazzService {
-    constructor(private prisma: PrismaService) { }
+    private readonly logger = new Logger(DigiflazzService.name);
+    constructor(
+        private prisma: PrismaService,
+        private whatsappService: WhatsappService
+    ) { }
 
     private getDigiflazzConfig() {
         const username = process.env.DIGIFLAZZ_USERNAME;
@@ -41,19 +48,18 @@ export class DigiflazzService {
                 // Digiflazz Authentication: md5(username + apikey + "pricelist")
                 const sign = crypto.createHash('md5').update(username + key + 'pricelist').digest('hex');
 
-                const response = await fetch(`${url}/price-list`, {
-                    method: 'POST',
+                const response = await axios.post(`${url}/price-list`, {
+                    cmd: "prepaid",
+                    username: username,
+                    sign: sign
+                }, {
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        cmd: "prepaid",
-                        username: username,
-                        sign: sign
-                    })
+                    timeout: 10000
                 });
 
-                const jsonResp = await response.json() as any;
+                const jsonResp = response.data;
 
-                if (!response.ok || !jsonResp.data) {
+                if (response.status !== 200 || !jsonResp.data) {
                     throw new InternalServerErrorException(`Digiflazz Error: ${JSON.stringify(jsonResp)}`);
                 }
 
@@ -131,8 +137,9 @@ export class DigiflazzService {
                 };
             });
         } catch (err: any) {
-            console.error('[DigiflazzService] Error fetching price list:', err);
-            throw new InternalServerErrorException(err.message || 'Gagal mengambil data dari Digiflazz');
+            const msg = err.response?.data?.message || err.message;
+            this.logger.error('[Digiflazz] Error fetching price list:', msg);
+            throw new InternalServerErrorException(`Digiflazz Connection Error: ${msg}`);
         }
     }
 
@@ -318,20 +325,18 @@ export class DigiflazzService {
         // Sign: md5(username + apikey + ref_id)
         const sign = crypto.createHash('md5').update(username + key + supplierRefId).digest('hex');
 
-        const response = await fetch(`${url}/transaction`, {
-            method: 'POST',
+        const response = await axios.post(`${url}/transaction`, {
+            username,
+            buyer_sku_code: buyerSkuCode,
+            customer_no: customerNo,
+            ref_id: supplierRefId,
+            sign
+        }, {
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                username,
-                buyer_sku_code: buyerSkuCode,
-                customer_no: customerNo,
-                ref_id: supplierRefId,
-                sign
-            })
+            timeout: 10000
         });
 
-        const resJson = await response.json() as any;
-        return resJson.data;
+        return response.data?.data;
     }
 
     /**
@@ -342,17 +347,16 @@ export class DigiflazzService {
         // Sign: md5(username + apikey + "depo")
         const sign = crypto.createHash('md5').update(username + key + 'depo').digest('hex');
 
-        const response = await fetch(`${url}/cek-saldo`, {
-            method: 'POST',
+        const response = await axios.post(`${url}/cek-saldo`, {
+            cmd: 'deposit',
+            username,
+            sign
+        }, {
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                cmd: 'deposit',
-                username,
-                sign
-            })
+            timeout: 8000
         });
 
-        const resJson = await response.json() as any;
+        const resJson = response.data;
         if (resJson.data) {
             return Number(resJson.data.deposit || 0);
         }
@@ -388,7 +392,7 @@ export class DigiflazzService {
     async placeOrder(orderId: string) {
         const order = await this.prisma.order.findUnique({
             where: { id: orderId },
-            include: { productSku: true }
+            include: { productSku: true, user: true }
         });
 
         if (!order) throw new NotFoundException('Order not found for fulfillment');
@@ -411,14 +415,13 @@ export class DigiflazzService {
         };
 
         let resJson: any;
+        let response: any;
         try {
-            const response = await fetch(`${url}/transaction`, {
-                method: 'POST',
+            response = await axios.post(`${url}/transaction`, payload, {
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                timeout: 15000
             });
-
-            resJson = await response.json() as any;
+            resJson = response.data;
 
             // Log fulfillment attempt
             await this.prisma.supplierLog.create({
@@ -462,6 +465,17 @@ export class DigiflazzService {
                 if (fulfillmentStatus === 'FAILED') {
                     await this.handleCommissionReversal(order.id);
                     await this.handleCustomerRefund(order.id);
+                }
+
+                // SEND NOTIFICATION (SUCCESS/FAILED)
+                if (fulfillmentStatus === 'SUCCESS' || fulfillmentStatus === 'FAILED') {
+                    this.whatsappService.sendFulfillmentNotification(
+                        order.user.phone || '',
+                        order.orderNumber,
+                        `${order.productName} - ${order.productSkuName}`,
+                        fulfillmentStatus,
+                        data.sn || 'N/A'
+                    ).catch(err => this.logger.error(`[FulfillmentNotification] Failed: ${err.message}`));
                 }
 
                 return data;
@@ -553,15 +567,41 @@ export class DigiflazzService {
         const isGuest = !order.user.email && order.user.name.startsWith('Guest ');
 
         if (isGuest) {
-            console.log(`[CustomerRefund] Order ${order.orderNumber} is a GUEST order. Marking for manual refund.`);
-            await this.prisma.order.update({
-                where: { id: order.id },
-                data: { 
-                    paymentStatus: 'PAID',
-                    fulfillmentStatus: 'FAILED',
-                    failReason: `GUEST REFUND REQUIRED: Pembeli Guest (No Whatsapp: ${order.user.phone}). Selesaikan refund manual.`
-                }
+            const refundCode = `REF-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${order.orderNumber.split('-').pop()}`;
+            console.log(`[CustomerRefund] Order ${order.orderNumber} is a GUEST order. Generating Refund Ticket: ${refundCode}`);
+            
+            await this.prisma.$transaction(async (tx) => {
+                // 1. Increment Guest Balance
+                const user = await tx.user.update({
+                    where: { id: order.userId },
+                    data: { balance: { increment: order.totalPrice } }
+                });
+
+                // 2. Update Order with Refund Code
+                await tx.order.update({
+                    where: { id: order.id },
+                    data: { 
+                        paymentStatus: 'REFUNDED',
+                        fulfillmentStatus: 'FAILED',
+                        failReason: `AUTOMATED REFUND TICKET ISSUED: ${refundCode}. Dana dikreditkan ke saldo akun sementara Anda.`,
+                        note: `KODE REFUND GUEST: ${refundCode} (Simpan kode ini untuk klaim / pembelian ulang via Admin/WhatsApp)`
+                    }
+                });
+
+                // 3. Log the balance transaction
+                await tx.balanceTransaction.create({
+                    data: {
+                        userId: order.userId,
+                        type: 'REFUND',
+                        amount: order.totalPrice,
+                        balanceBefore: Number(user.balance) - Number(order.totalPrice),
+                        balanceAfter: Number(user.balance),
+                        orderId: order.id,
+                        description: `Refund Ticket and Balance for Guest: ${refundCode}`
+                    }
+                });
             });
+
             return;
         }
 
@@ -578,7 +618,7 @@ export class DigiflazzService {
                     userId: order.userId,
                     type: 'REFUND',
                     amount: order.totalPrice,
-                    balanceBefore: Number(user.balance) - order.totalPrice,
+                    balanceBefore: Number(user.balance) - Number(order.totalPrice),
                     balanceAfter: Number(user.balance),
                     orderId: order.id,
                     description: `Refund otomatis (Order Gagal): ${order.orderNumber}`
@@ -655,15 +695,33 @@ export class DigiflazzService {
                         if (plan === 'LEGEND') currentModalPrice = updatedPriceLegend;
                         else if (plan === 'SUPREME') currentModalPrice = updatedPriceSupreme;
 
-                        // Jika harga jual custom merchant < harga modal barunya, matikan agar merchant tidak rugi
-                        if (Number(mp.customPrice) < currentModalPrice) {
+                        // NEW: DYNAMIC MARKUP PERCENTAGE LOGIC
+                        const merchantSettings = await tx.merchantSetting.findMany({
+                            where: { merchantId: mp.merchantId }
+                        });
+                        const markupSetting = merchantSettings.find(s => s.key === 'MARKUP_PERCENTAGE');
+                        const markupPercentage = markupSetting ? parseFloat(markupSetting.value) : 0;
+
+                        if (markupPercentage > 0) {
+                            // Automatically update price to maintain margin
+                            const newDynamicPrice = Math.ceil(currentModalPrice + (currentModalPrice * (markupPercentage / 100)));
+                            console.log(`[DynamicMarkup] Updating Price for Merchant ${mp.merchant.name}: ${mp.customPrice} -> ${newDynamicPrice} (${markupPercentage}%)`);
+                            
                             await tx.merchantProductPrice.update({
                                 where: { id: mp.id },
-                                data: {
-                                    isActive: false,
-                                    reason: `Otomatis: Modal (${currentModalPrice}) > Harga Jual (${mp.customPrice})`
-                                }
+                                data: { customPrice: newDynamicPrice }
                             });
+                        } else {
+                            // FALLBACK TO ANTI-LOSS (Status Quo)
+                            if (Number(mp.customPrice) < currentModalPrice) {
+                                await tx.merchantProductPrice.update({
+                                    where: { id: mp.id },
+                                    data: {
+                                        isActive: false,
+                                        reason: `Otomatis: Modal (${currentModalPrice}) > Harga Jual (${mp.customPrice})`
+                                    }
+                                });
+                            }
                         }
                     }
                 });

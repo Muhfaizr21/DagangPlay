@@ -17,6 +17,7 @@ async function bootstrap() {
         rawBody: true,
         logger: nest_winston_1.WinstonModule.createLogger(winston_config_1.winstonConfig),
     });
+    app.set('trust proxy', 1);
     app.use((0, helmet_1.default)({
         crossOriginEmbedderPolicy: false,
         contentSecurityPolicy: {

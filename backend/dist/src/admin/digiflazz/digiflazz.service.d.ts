@@ -1,7 +1,10 @@
 import { PrismaService } from '../../prisma.service';
+import { WhatsappService } from '../../common/notifications/whatsapp.service';
 export declare class DigiflazzService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private whatsappService;
+    private readonly logger;
+    constructor(prisma: PrismaService, whatsappService: WhatsappService);
     private getDigiflazzConfig;
     private priceListCache;
     private lastFetchTime;

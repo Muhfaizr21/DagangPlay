@@ -50,10 +50,10 @@ const axios_1 = __importDefault(require("axios"));
 const crypto = __importStar(require("crypto"));
 let TripayService = TripayService_1 = class TripayService {
     logger = new common_1.Logger(TripayService_1.name);
-    baseUrl = process.env.TRIPAY_URL || 'https://tripay.co.id/api-sandbox';
-    apiKey = process.env.TRIPAY_API_KEY;
-    privateKey = process.env.TRIPAY_PRIVATE_KEY;
-    merchantCode = process.env.TRIPAY_MERCHANT_CODE;
+    baseUrl = (process.env.TRIPAY_URL || 'https://tripay.co.id/api-sandbox').trim().replace(/\/$/, '');
+    apiKey = (process.env.TRIPAY_API_KEY || '').trim().replace(/^"|"$/g, '');
+    privateKey = (process.env.TRIPAY_PRIVATE_KEY || '').trim().replace(/^"|"$/g, '');
+    merchantCode = (process.env.TRIPAY_MERCHANT_CODE || '').trim().replace(/^"|"$/g, '');
     async getPaymentChannels() {
         try {
             const response = await axios_1.default.get(`${this.baseUrl}/merchant/payment-channel`, {
@@ -90,49 +90,71 @@ let TripayService = TripayService_1 = class TripayService {
     async requestTransaction(payload) {
         try {
             const amount = Math.floor(Number(payload.amount));
-            const signatureStr = `${this.merchantCode}${payload.merchant_ref}${amount}`;
-            this.logger.debug(`Signature Debug:`);
-            this.logger.debug(`- Merchant Code: [${this.merchantCode}]`);
-            this.logger.debug(`- Merchant Ref: [${payload.merchant_ref}]`);
-            this.logger.debug(`- Amount: [${amount}]`);
-            this.logger.debug(`- Full Signature String: [${signatureStr}]`);
-            this.logger.debug(`- Private Key used (ends with): ...${this.privateKey.slice(-5)}`);
+            this.logger.log(`Tripay Auth Debug:`);
+            this.logger.log(`- API Key: ${this.apiKey.substring(0, 8)}... (Length: ${this.apiKey.length})`);
+            this.logger.log(`- API Key Hex: ${Buffer.from(this.apiKey).toString('hex')}`);
+            this.logger.log(`- Merchant Code: [${this.merchantCode}]`);
+            this.logger.log(`- Base URL: ${this.baseUrl}`);
             const signature = crypto.createHmac('sha256', this.privateKey)
-                .update(signatureStr)
+                .update(this.merchantCode + payload.merchant_ref + amount)
                 .digest('hex');
-            this.logger.debug(`- Generated Signature: [${signature}]`);
-            const items = (payload.order_items || []).map((item) => ({
-                ...item,
-                subtotal: item.subtotal || (item.price * item.quantity)
-            }));
+            const items = (payload.order_items || []).map((item) => {
+                const itemPrice = Math.floor(Number(item.price));
+                const itemQty = Math.floor(Number(item.quantity));
+                return {
+                    sku: (item.sku || 'PROD').toString(),
+                    name: (item.name || 'Product').toString(),
+                    price: itemPrice,
+                    quantity: itemQty,
+                    subtotal: itemPrice * itemQty,
+                    product_url: item.product_url || undefined,
+                    image_url: item.image_url || undefined
+                };
+            });
             const data = {
                 method: payload.method,
                 merchant_ref: payload.merchant_ref,
                 amount: amount,
-                customer_name: payload.customer_name || 'Pelanggan DagangPlay',
-                customer_email: payload.customer_email || 'guest@dagangplay.com',
-                customer_phone: payload.customer_phone,
+                customer_name: (payload.customer_name || 'Pelanggan').toString().trim(),
+                customer_email: (payload.customer_email || 'guest@dagangplay.com').toString().trim(),
+                customer_phone: payload.customer_phone || undefined,
                 order_items: items,
-                callback_url: process.env.TRIPAY_CALLBACK_URL,
-                return_url: payload.return_url || process.env.FRONTEND_URL || 'http://localhost:3000',
+                callback_url: (process.env.TRIPAY_CALLBACK_URL || '').trim().replace(/^"|"$/g, ''),
+                return_url: (payload.return_url || process.env.FRONTEND_URL || 'http://localhost:3000').toString().trim(),
                 expired_time: payload.expired_time || (Math.floor(Date.now() / 1000) + (24 * 60 * 60)),
                 signature
             };
+            this.logger.log(`Requesting Tripay Transaction: ${payload.merchant_ref} - Amount: ${amount} - Method: ${payload.method}`);
             const response = await axios_1.default.post(`${this.baseUrl}/transaction/create`, data, {
                 headers: {
-                    'Authorization': `Bearer ${this.apiKey}`
+                    'Authorization': `Bearer ${this.apiKey}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'User-Agent': 'DagangPlay-Backend/1.0'
                 }
             });
-            return response.data;
+            if (response.data?.success) {
+                return response.data;
+            }
+            else {
+                this.logger.error('Tripay API Error Response:', JSON.stringify(response.data));
+                throw new Error(response.data?.message || 'Gagal membuat transaksi di Tripay');
+            }
         }
         catch (error) {
-            this.logger.error('Failed to request Tripay transaction:', error.response?.data || error.message);
-            throw error.response?.data || new Error('Gagal memproses transaksi');
+            const errorData = error.response?.data;
+            const errorMsg = errorData?.message || error.message || 'Unknown Error';
+            this.logger.error('Tripay Request Failed:', {
+                message: errorMsg,
+                status: error.response?.status,
+                data: errorData ? JSON.stringify(errorData) : 'No data'
+            });
+            throw new Error(`Tripay Error: ${errorMsg}`);
         }
     }
-    verifySignature(callbackSignature, jsonPayload) {
+    verifySignature(callbackSignature, payload) {
         const signature = crypto.createHmac('sha256', this.privateKey)
-            .update(jsonPayload)
+            .update(payload)
             .digest('hex');
         return signature === callbackSignature;
     }

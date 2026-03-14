@@ -8,5 +8,6 @@ export declare class WorkersService {
     handleJobQueue(): Promise<void>;
     checkSubscriptions(): Promise<void>;
     syncFulfillmentStatus(): Promise<void>;
+    syncProductsFromSupplier(): Promise<void>;
     syncSupplierBalance(): Promise<void>;
 }
