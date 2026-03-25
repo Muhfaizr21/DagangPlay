@@ -131,7 +131,8 @@ let TripayController = class TripayController {
                                     const totalPlatformProfit = platformFeeAmount + saasMarkup;
                                     if (totalPlatformProfit > 0) {
                                         const superAdmin = await tx.user.findFirst({
-                                            where: { role: 'SUPER_ADMIN' }
+                                            where: { role: 'SUPER_ADMIN' },
+                                            orderBy: { createdAt: 'asc' }
                                         });
                                         if (superAdmin) {
                                             const su = await tx.user.update({

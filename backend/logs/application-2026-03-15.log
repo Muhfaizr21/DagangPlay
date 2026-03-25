@@ -11576,3 +11576,7 @@
 {"context":"NestApplication","level":"info","message":"Nest application successfully started","timestamp":"2026-03-14T20:56:51.416Z"}
 {"context":"WorkersService","level":"warn","message":"Order ORD-1773519045225-140 is stuck in PROCESSING for over 10 minutes. Manual check recommended.","timestamp":"2026-03-14T20:58:00.046Z"}
 {"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-14T20:58:00.222Z"}
+{"context":"WorkersService","level":"warn","message":"Order ORD-1773519045225-140 is stuck in PROCESSING for over 10 minutes. Manual check recommended.","timestamp":"2026-03-14T21:00:00.047Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-14T21:00:00.201Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync supplier balance: Request failed with status code 400","stack":[null],"timestamp":"2026-03-14T21:00:01.679Z"}
+{"context":"WorkersService","level":"warn","message":"Order ORD-1773519045225-140 is stuck in PROCESSING for over 10 minutes. Manual check recommended.","timestamp":"2026-03-14T21:02:00.030Z"}

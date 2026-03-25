@@ -25,6 +25,14 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
         this.prisma = prisma;
     }
     async validate(payload) {
+        if (payload.sessionId) {
+            const session = await this.prisma.userSession.findUnique({
+                where: { id: payload.sessionId }
+            });
+            if (!session) {
+                throw new common_1.UnauthorizedException('Sesi Anda telah berakhir atau Anda telah logout.');
+            }
+        }
         const user = await this.prisma.user.findUnique({
             where: { id: payload.sub }
         });

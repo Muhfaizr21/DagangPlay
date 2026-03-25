@@ -67,6 +67,7 @@ exports.AppModule = AppModule = __decorate([
                                 host: process.env.REDIS_HOST || 'localhost',
                                 port: parseInt(process.env.REDIS_PORT || '6379'),
                             },
+                            password: process.env.REDIS_PASSWORD || undefined,
                             ttl: 60000,
                         });
                         console.log('[Cache] Redis storage connected successfully.');

@@ -1,12 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma.service';
+import { WhatsappService } from '../notifications/whatsapp.service';
 
 @Injectable()
 export class TasksService {
     private readonly logger = new Logger(TasksService.name);
 
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private whatsappService: WhatsappService
+    ) { }
 
     /**
      * Cleans up expired/unpaid invoices and old audit logs daily at midnight.
@@ -68,6 +72,77 @@ export class TasksService {
 
         } catch (error) {
             this.logger.error('Error during cleanup task:', error);
+        }
+    }
+
+    /**
+     * Checks frequently for expired orders (to avoid them getting stuck if callbacks fail)
+     * and downgrades merchants whose subscriptions have expired.
+     */
+    @Cron(CronExpression.EVERY_10_MINUTES)
+    async handleFrequentChecks() {
+        this.logger.log('Starting frequent checks (Expired Orders & Plans)...');
+        try {
+            // Cancel expired orders that are still pending
+            const expiredOrders = await this.prisma.order.updateMany({
+                where: {
+                    paymentStatus: 'PENDING',
+                    expiredAt: { lt: new Date() }
+                },
+                data: {
+                    paymentStatus: 'EXPIRED',
+                    fulfillmentStatus: 'FAILED',
+                    failReason: 'Pesanan dibatalkan otomatis karena melewati batas waktu pembayaran.'
+                }
+            });
+            if (expiredOrders.count > 0) this.logger.log(`Cancelled ${expiredOrders.count} expired orders.`);
+
+            // Downgrade expired merchant plans
+            const expiredPlans = await this.prisma.merchant.updateMany({
+                where: {
+                    plan: { not: 'FREE' },
+                    planExpiredAt: { lt: new Date() }
+                },
+                data: {
+                    plan: 'FREE'
+                }
+            });
+            if (expiredPlans.count > 0) this.logger.log(`Downgraded ${expiredPlans.count} merchants to FREE plan.`);
+        } catch (error) {
+            this.logger.error('Error during frequent checks:', error);
+        }
+    }
+
+    /**
+     * Alerting for MASS FULFILLMENT failures.
+     * Cek jika dalam 15 menit terakhir ada banyak transaksi GAGAL.
+     */
+    @Cron('*/15 * * * *')
+    async monitorFails() {
+        // Find failed orders in the last 15 minutes
+        const fifteenMinsAgo = new Date();
+        fifteenMinsAgo.setMinutes(fifteenMinsAgo.getMinutes() - 15);
+
+        try {
+            const failedCount = await this.prisma.order.count({
+                where: {
+                    fulfillmentStatus: 'FAILED',
+                    failedAt: { gte: fifteenMinsAgo }
+                }
+            });
+
+            // Threshold: jika ada >= 3 kegagalan dalam 15 menit
+            if (failedCount >= 3) {
+                this.logger.error(`[ALERT] Detected ${failedCount} fulfillment failures in the last 15 minutes!`);
+                
+                await this.whatsappService.sendAdminSummary(
+                    `🚨 *CRITICAL ALERT: MASS FULFILLMENT FAILURE*\n\n` +
+                    `Terdeteksi *${failedCount} pesanan GAGAL* diproses (fulfillment error) dalam 15 menit terakhir.\n\n` +
+                    `Segera cek Dashboard / log sistem! Pastikan saldo Digiflazz mencukupi atau tidak ada maintenance dari supplier.`
+                ).catch(() => {});
+            }
+        } catch (e) {
+            this.logger.error('Error monitoring failures:', e);
         }
     }
 }

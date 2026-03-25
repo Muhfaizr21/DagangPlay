@@ -399,6 +399,36 @@ export class DigiflazzService {
         if (order.fulfillmentStatus === 'SUCCESS') return;
 
         const { username, key, url } = this.getDigiflazzConfig();
+
+        // 1. SUPPLIER BALANCE CHECK (To prevent blind API requests and properly handle failure)
+        try {
+            const currentBalance = await this.checkBalance();
+            if (currentBalance < order.basePrice) {
+                this.logger.error(`[SupplierBalance] Insufficient balance for ${order.orderNumber}. Have: ${currentBalance}, Need: ${order.basePrice}`);
+                
+                await this.prisma.order.update({
+                    where: { id: order.id },
+                    data: {
+                        fulfillmentStatus: 'FAILED',
+                        failReason: 'Gagal diproses: Saldo supplier sedang tidak mencukupi (Refund Otomatis).'
+                    }
+                });
+                
+                await this.handleCommissionReversal(order.id);
+                await this.handleCustomerRefund(order.id);
+                
+                // Notify admin of zero balance risk
+                this.whatsappService.sendAdminSummary(
+                    `⚠️ *SALDO SUPPLIER HABIS*\n` +
+                    `Order ${order.orderNumber} gagal karena saldo Digiflazz (${currentBalance}) kurang dari harga modal dasar (${order.basePrice}). Segera top-up!`
+                ).catch(() => {});
+                
+                return null;
+            }
+        } catch (balErr: any) {
+            this.logger.error(`[SupplierBalance] Failed to verify balance, proceeding normally: ${balErr.message}`);
+        }
+
         // Sign: md5(username + apikey + ref_id)
         const sign = crypto.createHash('md5').update(username + key + order.orderNumber).digest('hex');
 
@@ -574,7 +604,7 @@ export class DigiflazzService {
                 // 1. Increment Guest Balance
                 const user = await tx.user.update({
                     where: { id: order.userId },
-                    data: { balance: { increment: order.totalPrice } }
+                    data: { balance: { increment: order.sellingPrice } }
                 });
 
                 // 2. Update Order with Refund Code
@@ -593,8 +623,8 @@ export class DigiflazzService {
                     data: {
                         userId: order.userId,
                         type: 'REFUND',
-                        amount: order.totalPrice,
-                        balanceBefore: Number(user.balance) - Number(order.totalPrice),
+                        amount: order.sellingPrice,
+                        balanceBefore: Number(user.balance) - Number(order.sellingPrice),
                         balanceAfter: Number(user.balance),
                         orderId: order.id,
                         description: `Refund Ticket and Balance for Guest: ${refundCode}`
@@ -609,7 +639,7 @@ export class DigiflazzService {
             // 1. Credit balance to User
             const user = await tx.user.update({
                 where: { id: order.userId },
-                data: { balance: { increment: order.totalPrice } }
+                data: { balance: { increment: order.sellingPrice } }
             });
 
             // 2. Log Balance Transaction
@@ -617,8 +647,8 @@ export class DigiflazzService {
                 data: {
                     userId: order.userId,
                     type: 'REFUND',
-                    amount: order.totalPrice,
-                    balanceBefore: Number(user.balance) - Number(order.totalPrice),
+                    amount: order.sellingPrice,
+                    balanceBefore: Number(user.balance) - Number(order.sellingPrice),
                     balanceAfter: Number(user.balance),
                     orderId: order.id,
                     description: `Refund otomatis (Order Gagal): ${order.orderNumber}`

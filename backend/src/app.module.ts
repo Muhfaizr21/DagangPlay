@@ -53,6 +53,7 @@ import { redisStore } from 'cache-manager-redis-yet';
               host: process.env.REDIS_HOST || 'localhost',
               port: parseInt(process.env.REDIS_PORT || '6379'),
             },
+            password: process.env.REDIS_PASSWORD || undefined,
             ttl: 60000, // Default TTL 60s
           });
           console.log('[Cache] Redis storage connected successfully.');

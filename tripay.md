@@ -1,295 +1,536 @@
-PANDUAN INTEGRASI API TRIPAY
-Untuk Digunakan oleh Antigravity AI
-Versi 1.0  •  Maret 2025
-1. Overview Singkat TriPay
-TriPay adalah payment gateway Indonesia yang menyediakan API untuk memproses pembayaran. Integrasi dilakukan via HTTP REST API dengan autentikasi Bearer Token.
+# Integrasi Tripay Payment Gateway dengan NestJS
 
-Base URL Production: https://payment.tripay.co.id
+Panduan lengkap untuk mengintegrasikan Tripay sebagai payment gateway pada aplikasi NestJS.
 
-Base URL Sandbox: https://payment.tripay.co.id  (dengan endpoint /api-sandbox/...)
+---
 
-2. Credential yang Dibutuhkan
-Sebelum bisa hit API, siapkan 3 credential berikut dari Dashboard TriPay:
+## Daftar Isi
 
-Credential	Fungsi	Cara Dapat
-API Key	Autentikasi di header request	Dashboard → API & Integrasi
-Private Key	Generate signature HMAC-SHA256	Dashboard → API & Integrasi
-Merchant Code	Identifier merchant unik	Dashboard → API & Integrasi
+- [Prasyarat](#prasyarat)
+- [Instalasi](#instalasi)
+- [Konfigurasi Environment](#konfigurasi-environment)
+- [Struktur Folder](#struktur-folder)
+- [Implementasi](#implementasi)
+  - [TripayModule](#1-tripaymodule)
+  - [TripayService](#2-tripayservice)
+  - [PaymentController](#3-paymentcontroller)
+  - [WebhookController](#4-webhookcontroller)
+  - [DTO](#5-dto)
+- [Daftarkan ke AppModule](#6-daftarkan-ke-appmodule)
+- [Contoh Request & Response](#contoh-request--response)
+- [Alur Transaksi](#alur-transaksi)
+- [Catatan Penting](#catatan-penting)
 
-⚠️ PENTING: Sandbox dan Production punya credential berbeda. Jangan campur keduanya!
+---
 
-3. Header Request Wajib
-Setiap request ke API TriPay HARUS menyertakan header berikut:
+## Prasyarat
 
-Content-Type: application/json
-Authorization: Bearer {API_KEY}
+- Node.js >= 18
+- NestJS >= 10
+- Akun Tripay (https://tripay.co.id)
+- API Key, Private Key, dan Merchant Code dari dashboard Tripay
 
-Ganti {API_KEY} dengan API Key milik merchant. Tanpa header ini, semua request akan ditolak (HTTP 401).
+---
 
-4. Cara Generate Signature (Krusial!)
-Signature adalah hash HMAC-SHA256 yang wajib disertakan saat membuat transaksi. Ini untuk memverifikasi bahwa request benar-benar dari merchant.
+## Instalasi
 
-Formula Signature:
-HMAC-SHA256( merchant_code + merchant_ref + amount , private_key )
+```bash
+npm install @nestjs/axios @nestjs/config axios
+```
 
-Contoh Kode NestJS (tripay.service.ts):
-import { createHmac } from 'crypto';
+---
 
-generateSignature(merchantRef: string, amount: number): string {
-  const merchantCode = process.env.TRIPAY_MERCHANT_CODE;
-  const privateKey   = process.env.TRIPAY_PRIVATE_KEY;
+## Konfigurasi Environment
 
-  return createHmac('sha256', privateKey)
-    .update(merchantCode + merchantRef + amount)
-    .digest('hex');
-}
+Buat atau tambahkan variabel berikut di file `.env`:
 
-❌ Jika signature salah: Request akan ditolak dengan error 'Invalid Signature'. Pastikan urutan konkatenasi benar: merchantCode + merchantRef + amount.
+```env
+TRIPAY_API_KEY=your_api_key_here
+TRIPAY_PRIVATE_KEY=your_private_key_here
+TRIPAY_MERCHANT_CODE=your_merchant_code
 
-5. Membuat Transaksi (Create Transaction)
-5.1 Endpoint
-Mode	Endpoint
-Sandbox	POST https://payment.tripay.co.id/api-sandbox/transaction/create
-Production	POST https://payment.tripay.co.id/api/transaction/create
+# Production
+TRIPAY_BASE_URL=https://tripay.co.id/api
 
-5.2 Parameter Body (JSON)
-Parameter	Tipe	Wajib?	Keterangan
-method	string	✅ Ya	Kode channel bayar (ex: BRIVA, BCAVA, QRIS)
-merchant_ref	string	✅ Ya	ID invoice unik dari sisi merchant
-amount	integer	✅ Ya	Nominal transaksi dalam Rupiah (tanpa desimal)
-customer_name	string	✅ Ya	Nama lengkap pelanggan
-customer_email	string	✅ Ya	Email pelanggan
-customer_phone	string	⬜ Opsional	Nomor HP pelanggan
-order_items	array	✅ Ya	Array produk yang dibeli (lihat struktur di bawah)
-callback_url	string	⬜ Opsional	URL untuk terima notifikasi dari TriPay
-return_url	string	⬜ Opsional	URL redirect setelah bayar (REDIRECT channel)
-expired_time	integer	⬜ Opsional	Unix timestamp batas waktu bayar
-signature	string	✅ Ya	Hash HMAC-SHA256 (lihat Section 4)
+# Sandbox (untuk testing)
+# TRIPAY_BASE_URL=https://tripay.co.id/api-sandbox
+```
 
-5.3 Contoh Body Request Lengkap
-{
-  "method": "BRIVA",
-  "merchant_ref": "INV-2025-001",
-  "amount": 150000,
-  "customer_name": "Budi Santoso",
-  "customer_email": "budi@email.com",
-  "customer_phone": "081234567890",
-  "order_items": [
-    {
-      "sku": "PROD-001",
-      "name": "Paket Premium 1 Bulan",
-      "price": 150000,
-      "quantity": 1,
-      "subtotal": 150000
-    }
-  ],
-  "callback_url": "https://situmu.com/callback/tripay",
-  "return_url": "https://situmu.com/thankyou",
-  "expired_time": 1743000000,
-  "signature": "abc123def456..."
-}
+---
 
-5.4 Contoh Response Sukses
-{
-  "success": true,
-  "message": "Transaksi berhasil dibuat",
-  "data": {
-    "reference": "DEV-XXXX",
-    "merchant_ref": "INV-2025-001",
-    "payment_method": "BRIVA",
-    "payment_name": "BRI Virtual Account",
-    "customer_name": "Budi Santoso",
-    "amount": 150000,
-    "fee_merchant": 1000,
-    "fee_customer": 0,
-    "total_fee": 1000,
-    "amount_received": 149000,
-    "pay_code": "1234567890123",
-    "pay_url": null,
-    "checkout_url": "https://payment.tripay.co.id/checkout/...",
-    "status": "UNPAID",
-    "expired_time": 1743000000
-  }
-}
+## Struktur Folder
 
-6. Daftar Channel Pembayaran (method)
-Beberapa kode channel yang umum digunakan:
+```
+src/
+└── tripay/
+    ├── tripay.module.ts
+    ├── tripay.service.ts
+    ├── payment.controller.ts
+    ├── webhook.controller.ts
+    └── dto/
+        └── create-transaction.dto.ts
+```
 
-Kode	Nama Channel	Tipe	Catatan
-BRIVA	BRI Virtual Account	DIRECT	
-BCAVA	BCA Virtual Account	DIRECT	
-BNIVA	BNI Virtual Account	DIRECT	
-MANDIRIVA	Mandiri Virtual Account	DIRECT	
-QRIS	QRIS (semua e-wallet)	DIRECT	Tampilkan QR code
-GOPAY	GoPay	REDIRECT	User diarahkan ke halaman TriPay
-OVO	OVO	REDIRECT	User diarahkan ke halaman TriPay
+---
 
-DIRECT vs REDIRECT: DIRECT = kamu tampilkan sendiri halaman instruksi bayar. REDIRECT = user diarahkan ke halaman pembayaran TriPay (lebih mudah diimplementasi).
+## Implementasi
 
-7. Menangani Callback (Notifikasi Pembayaran)
-Callback adalah notifikasi POST dari server TriPay ke server kamu ketika ada update status transaksi (dibayar, expired, dll).
+### 1. TripayModule
 
-7.1 Cara Kerja Callback
-1.	Pelanggan melakukan pembayaran
-2.	Server TriPay mendeteksi pembayaran
-3.	TriPay POST data ke callback_url yang kamu daftarkan
-4.	Server kamu memvalidasi signature, lalu update status order
+**`src/tripay/tripay.module.ts`**
 
-7.2 Validasi Signature Callback
-WAJIB validasi signature dari TriPay sebelum memproses callback, untuk menghindari request palsu.
-
-tripay.controller.ts
-import { Controller, Post, Headers, RawBodyRequest, Req, HttpCode } from '@nestjs/common';
-import { Request } from 'express';
+```typescript
+import { Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
 import { TripayService } from './tripay.service';
+import { PaymentController } from './payment.controller';
+import { WebhookController } from './webhook.controller';
 
-@Controller('callback')
-export class TripayController {
-  constructor(private readonly tripayService: TripayService) {}
+@Module({
+  imports: [HttpModule],
+  providers: [TripayService],
+  controllers: [PaymentController, WebhookController],
+  exports: [TripayService],
+})
+export class TripayModule {}
+```
 
-  @Post('tripay')
-  @HttpCode(200)
-  async handleCallback(
-    @Headers('x-callback-signature') signature: string,
-    @Req() req: RawBodyRequest<Request>,
-  ) {
-    return this.tripayService.processCallback(signature, req.rawBody);
-  }
-}
+---
 
-tripay.service.ts
+### 2. TripayService
+
+**`src/tripay/tripay.service.ts`**
+
+```typescript
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { createHmac } from 'crypto';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
+import { firstValueFrom } from 'rxjs';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class TripayService {
-  private readonly privateKey = process.env.TRIPAY_PRIVATE_KEY;
-  private readonly apiKey    = process.env.TRIPAY_API_KEY;
-  private readonly merchantCode = process.env.TRIPAY_MERCHANT_CODE;
+  private readonly apiKey: string;
+  private readonly privateKey: string;
+  private readonly merchantCode: string;
+  private readonly baseUrl: string;
 
-  // ── CREATE TRANSACTION ──────────────────────────────────
-  async createTransaction(payload: {
+  constructor(
+    private readonly http: HttpService,
+    private readonly config: ConfigService,
+  ) {
+    this.apiKey = this.config.get<string>('TRIPAY_API_KEY');
+    this.privateKey = this.config.get<string>('TRIPAY_PRIVATE_KEY');
+    this.merchantCode = this.config.get<string>('TRIPAY_MERCHANT_CODE');
+    this.baseUrl = this.config.get<string>('TRIPAY_BASE_URL');
+  }
+
+  // Generate signature untuk request transaksi
+  private generateSignature(merchantRef: string, amount: number): string {
+    return crypto
+      .createHmac('sha256', this.privateKey)
+      .update(`${this.merchantCode}${merchantRef}${amount}`)
+      .digest('hex');
+  }
+
+  // Verifikasi signature dari callback webhook Tripay
+  verifyWebhookSignature(rawBody: string, callbackSignature: string): boolean {
+    const expected = crypto
+      .createHmac('sha256', this.privateKey)
+      .update(rawBody)
+      .digest('hex');
+    return expected === callbackSignature;
+  }
+
+  // Membuat transaksi baru (closed payment)
+  async createTransaction(data: {
+    method: string;
     merchantRef: string;
     amount: number;
     customerName: string;
     customerEmail: string;
-    items: { sku: string; name: string; price: number; quantity: number }[];
+    customerPhone: string;
+    orderItems: { name: string; price: number; quantity: number }[];
+    returnUrl?: string;
+    expiredTime?: number;
   }) {
-    const amount = Math.floor(payload.amount); // Pastikan integer
-    const signature = createHmac('sha256', this.privateKey)
-      .update(this.merchantCode + payload.merchantRef + amount)
-      .digest('hex');
+    const signature = this.generateSignature(data.merchantRef, data.amount);
 
-    const body = {
-      method: 'BRIVA',
-      merchant_ref: payload.merchantRef,
-      amount: payload.amount,
-      customer_name: payload.customerName,
-      customer_email: payload.customerEmail,
-      order_items: payload.items,
+    const payload = {
+      method: data.method,
+      merchant_ref: data.merchantRef,
+      amount: data.amount,
+      customer_name: data.customerName,
+      customer_email: data.customerEmail,
+      customer_phone: data.customerPhone,
+      order_items: data.orderItems,
+      return_url: data.returnUrl ?? '',
+      expired_time: data.expiredTime ?? Math.floor(Date.now() / 1000) + 24 * 60 * 60,
       signature,
     };
 
-    const res = await fetch(
-      'https://payment.tripay.co.id/api-sandbox/transaction/create',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-        body: JSON.stringify(body),
-      },
-    );
-
-    return res.json();
+    try {
+      const response = await firstValueFrom(
+        this.http.post(`${this.baseUrl}/transaction/create`, payload, {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+        }),
+      );
+      return response.data;
+    } catch (error) {
+      throw new BadRequestException(
+        error.response?.data?.message ?? 'Gagal membuat transaksi Tripay',
+      );
+    }
   }
 
-  // ── VALIDATE CALLBACK ───────────────────────────────────
-  processCallback(incomingSignature: string, rawBody: Buffer) {
-    const expected = createHmac('sha256', this.privateKey)
-      .update(rawBody)
-      .digest('hex');
+  // Cek status transaksi berdasarkan referensi merchant
+  async getTransactionDetail(merchantRef: string) {
+    try {
+      const response = await firstValueFrom(
+        this.http.get(`${this.baseUrl}/transaction/detail`, {
+          params: { reference: merchantRef },
+          headers: { Authorization: `Bearer ${this.apiKey}` },
+        }),
+      );
+      return response.data;
+    } catch (error) {
+      throw new BadRequestException(
+        error.response?.data?.message ?? 'Gagal mengambil detail transaksi',
+      );
+    }
+  }
 
-    if (incomingSignature !== expected) {
-      throw new BadRequestException('Invalid signature');
+  // Ambil daftar channel pembayaran yang tersedia
+  async getPaymentChannels() {
+    try {
+      const response = await firstValueFrom(
+        this.http.get(`${this.baseUrl}/merchant/payment-channel`, {
+          headers: { Authorization: `Bearer ${this.apiKey}` },
+        }),
+      );
+      return response.data;
+    } catch (error) {
+      throw new BadRequestException('Gagal mengambil daftar channel pembayaran');
+    }
+  }
+}
+```
+
+---
+
+### 3. PaymentController
+
+**`src/tripay/payment.controller.ts`**
+
+```typescript
+import { Controller, Post, Get, Body, Param } from '@nestjs/common';
+import { TripayService } from './tripay.service';
+import { CreateTransactionDto } from './dto/create-transaction.dto';
+
+@Controller('payment')
+export class PaymentController {
+  constructor(private readonly tripayService: TripayService) {}
+
+  // Buat transaksi baru
+  @Post('create')
+  async create(@Body() dto: CreateTransactionDto) {
+    const merchantRef = `ORDER-${Date.now()}`;
+
+    const result = await this.tripayService.createTransaction({
+      method: dto.method,
+      merchantRef,
+      amount: dto.amount,
+      customerName: dto.customerName,
+      customerEmail: dto.customerEmail,
+      customerPhone: dto.customerPhone,
+      orderItems: dto.orderItems,
+      returnUrl: dto.returnUrl,
+    });
+
+    return {
+      success: true,
+      merchantRef,
+      data: result.data,
+    };
+  }
+
+  // Cek status transaksi
+  @Get('status/:merchantRef')
+  async status(@Param('merchantRef') merchantRef: string) {
+    return this.tripayService.getTransactionDetail(merchantRef);
+  }
+
+  // Daftar channel pembayaran
+  @Get('channels')
+  async channels() {
+    return this.tripayService.getPaymentChannels();
+  }
+}
+```
+
+---
+
+### 4. WebhookController
+
+**`src/tripay/webhook.controller.ts`**
+
+> Tripay mengirim notifikasi ke endpoint ini setelah pembayaran berhasil atau gagal.
+
+```typescript
+import {
+  Controller,
+  Post,
+  Req,
+  Headers,
+  BadRequestException,
+  HttpCode,
+} from '@nestjs/common';
+import { Request } from 'express';
+import { TripayService } from './tripay.service';
+
+@Controller('payment')
+export class WebhookController {
+  constructor(private readonly tripayService: TripayService) {}
+
+  @Post('callback')
+  @HttpCode(200)
+  async handleCallback(
+    @Req() req: Request,
+    @Headers('X-Callback-Signature') signature: string,
+  ) {
+    // Ambil raw body sebagai string untuk verifikasi signature
+    const rawBody = JSON.stringify(req.body);
+
+    const isValid = this.tripayService.verifyWebhookSignature(rawBody, signature);
+    if (!isValid) {
+      throw new BadRequestException('Signature tidak valid');
     }
 
-    const data = JSON.parse(rawBody.toString());
+    const {
+      reference,
+      merchant_ref,
+      payment_method,
+      total_amount,
+      status,
+    } = req.body;
 
-    if (data.status === 'PAID') {
-      // Update status order di database
-      // this.orderService.markAsPaid(data.merchant_ref);
-    }
+    // TODO: Update status order di database kamu di sini
+    // Contoh: await this.orderService.updateStatus(merchant_ref, status);
+
+    console.log(`Pembayaran ${merchant_ref} | Status: ${status} | Ref: ${reference}`);
 
     return { success: true };
   }
 }
+```
 
-main.ts — Aktifkan rawBody
+> **Penting:** Agar `req.body` bisa dipakai untuk verifikasi signature, pastikan raw body tersedia. Tambahkan middleware berikut di `main.ts`:
+
+```typescript
+// main.ts
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    rawBody: true,  // <-- WAJIB agar rawBody tersedia di callback
-  });
+  const app = await NestFactory.create(AppModule);
+
+  // Simpan raw body untuk keperluan verifikasi webhook
+  app.use(
+    bodyParser.json({
+      verify: (req: any, res, buf) => {
+        req.rawBody = buf;
+      },
+    }),
+  );
+
   await app.listen(3000);
 }
 bootstrap();
+```
 
-7.3 Status Transaksi yang Dikirim via Callback
-Status	Arti
-UNPAID	Transaksi dibuat, belum dibayar
-PAID	Pembayaran berhasil diterima ✅
-FAILED	Pembayaran gagal
-REFUND	Dana telah direfund
-EXPIRED	Melewati batas waktu bayar ⏰
+---
 
-8. Syarat, Ketentuan & Batasan Penting
-8.1 Teknis
-•	IP server wajib didaftarkan di whitelist Dashboard TriPay → Keamanan API
-•	Signature wajib benar di setiap request create transaksi
-•	merchant_ref harus UNIK per transaksi — tidak boleh duplikat
-•	amount harus integer (bilangan bulat Rupiah, tanpa titik/koma/desimal)
-•	expired_time menggunakan Unix Timestamp (integer)
-•	Server kamu wajib balas callback dengan HTTP 200, jika tidak TriPay akan retry
+### 5. DTO
 
-8.2 Bisnis & Legal
-•	Akun TriPay tidak boleh dipindahtangankan atau dijual ke pihak lain
-•	Chargeback berlebihan bisa menyebabkan akun dibekukan
-•	Merchant bertanggung jawab penuh atas penipuan dari sisi pelanggan
-•	TriPay berhak membekukan akun sewaktu-waktu jika ditemukan pelanggaran
+**`src/tripay/dto/create-transaction.dto.ts`**
 
-⚠️ Tentang Sandbox: Di mode sandbox, transaksi tidak nyata. Gunakan simulator di Dashboard TriPay untuk mensimulasikan pembayaran berhasil/gagal. Jangan gunakan credential sandbox di production!
+```typescript
+import { IsString, IsNumber, IsEmail, IsArray, IsOptional, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
-9. Alur Integrasi Lengkap (End-to-End)
+class OrderItemDto {
+  @IsString()
+  name: string;
 
-┌─────────────────────────────────────────────────────────┐
-│                   ALUR INTEGRASI TRIPAY                │
-├─────────────────────────────────────────────────────────┤
-│  1. Daftarkan IP server di Dashboard TriPay             │
-│  2. Ambil API Key, Private Key, Merchant Code           │
-│  3. Generate signature HMAC-SHA256                      │
-│     → HMAC(merchantCode + merchantRef + amount, privKey)│
-│  4. POST ke /api/transaction/create                     │
-│     dengan header: Authorization: Bearer {API_KEY}      │
-│  5. Tampilkan pay_code / redirect ke checkout_url       │
-│  6. Tunggu callback dari TriPay (POST ke callback_url)  │
-│  7. Validasi signature callback                         │
-│  8. Cek status === 'PAID' → update order di database    │
-│  9. Balas callback dengan HTTP 200                      │
-└─────────────────────────────────────────────────────────┘
+  @IsNumber()
+  price: number;
 
-10. Checklist Sebelum Go Live
-•	✅  IP server sudah didaftarkan di whitelist
-•	✅  Menggunakan credential Production (bukan Sandbox)
-•	✅  Signature generate dengan benar di setiap transaksi
-•	✅  Callback URL bisa diakses publik (bukan localhost)
-•	✅  Validasi signature callback sudah diimplementasi
-•	✅  Server membalas callback dengan HTTP 200
-•	✅  merchant_ref selalu unik per transaksi
-•	✅  Sudah tes dengan mode Sandbox terlebih dahulu
+  @IsNumber()
+  quantity: number;
+}
 
-📖 Dokumentasi Resmi: https://tripay.co.id/developer
+export class CreateTransactionDto {
+  @IsString()
+  method: string; // Contoh: 'BRIVA', 'BCAVA', 'MANDIRIVA', 'OVO', 'QRIS'
 
+  @IsNumber()
+  amount: number;
+
+  @IsString()
+  customerName: string;
+
+  @IsEmail()
+  customerEmail: string;
+
+  @IsString()
+  customerPhone: string;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => OrderItemDto)
+  orderItems: OrderItemDto[];
+
+  @IsOptional()
+  @IsString()
+  returnUrl?: string;
+}
+```
+
+---
+
+### 6. Daftarkan ke AppModule
+
+**`src/app.module.ts`**
+
+```typescript
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { TripayModule } from './tripay/tripay.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    TripayModule,
+  ],
+})
+export class AppModule {}
+```
+
+---
+
+## Contoh Request & Response
+
+### Buat Transaksi
+
+**Request:**
+
+```http
+POST /payment/create
+Content-Type: application/json
+
+{
+  "method": "BRIVA",
+  "amount": 150000,
+  "customerName": "Budi Santoso",
+  "customerEmail": "budi@email.com",
+  "customerPhone": "08123456789",
+  "orderItems": [
+    {
+      "name": "Produk A",
+      "price": 100000,
+      "quantity": 1
+    },
+    {
+      "name": "Produk B",
+      "price": 50000,
+      "quantity": 1
+    }
+  ],
+  "returnUrl": "https://yourapp.com/payment/success"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "merchantRef": "ORDER-1718000000000",
+  "data": {
+    "reference": "T0001000000000000006",
+    "merchant_ref": "ORDER-1718000000000",
+    "payment_selection_type": "static",
+    "payment_method": "BRIVA",
+    "payment_name": "BRI Virtual Account",
+    "customer_name": "Budi Santoso",
+    "customer_email": "budi@email.com",
+    "customer_phone": "08123456789",
+    "callback_url": "https://yourapp.com/payment/callback",
+    "return_url": "https://yourapp.com/payment/success",
+    "amount": 150000,
+    "fee_merchant": 1500,
+    "fee_customer": 0,
+    "total_fee": 1500,
+    "amount_received": 148500,
+    "pay_code": "70017000000001",
+    "pay_url": null,
+    "checkout_url": "https://tripay.co.id/checkout/T0001000000000000006",
+    "status": "UNPAID",
+    "expired_time": 1718086400
+  }
+}
+```
+
+---
+
+## Alur Transaksi
+
+```
+Client App
+   │
+   │  POST /payment/create
+   ▼
+PaymentController
+   │
+   │  Panggil createTransaction()
+   ▼
+TripayService ──── HTTPS POST ───▶ Tripay API
+                                        │
+                                        │ Kembalikan payment_url / pay_code
+                                        ▼
+                                   TripayService
+                                        │
+                                        │ Return ke Client
+                                        ▼
+                                   Client (tampilkan instruksi bayar)
+
+--- Setelah user bayar ---
+
+Tripay Server
+   │
+   │  POST /payment/callback  (+ Header: X-Callback-Signature)
+   ▼
+WebhookController
+   │
+   │  Verifikasi HMAC-SHA256 Signature
+   │  Update status order di database
+   ▼
+  200 OK
+```
+
+---
+
+## Catatan Penting
+
+| Hal | Keterangan |
+|---|---|
+| **Signature** | Selalu verifikasi `X-Callback-Signature` di setiap webhook masuk untuk mencegah pemalsuan notifikasi |
+| **Idempotency** | Tripay bisa mengirim webhook lebih dari sekali; pastikan logika update status idempotent |
+| **Raw Body** | Gunakan raw body string (bukan parsed object) saat menghitung signature webhook |
+| **Sandbox** | Gunakan `https://tripay.co.id/api-sandbox` dan kredensial sandbox untuk testing |
+| **Channel Kode** | Daftar kode metode pembayaran: `BRIVA`, `BCAVA`, `MANDIRIVA`, `PERMATAVA`, `OVO`, `DANA`, `GOPAY`, `QRIS`, dll — cek endpoint `/merchant/payment-channel` |
+| **Expired Time** | Default expired 24 jam dari waktu pembuatan transaksi; bisa dikustomisasi dengan unix timestamp |

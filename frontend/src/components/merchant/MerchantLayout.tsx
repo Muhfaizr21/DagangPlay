@@ -80,8 +80,13 @@ export default function MerchantLayout({ children, title, demoUser }: { children
         }
 
         const parsed = JSON.parse(userData);
+        if (parsed.role === 'SUPER_ADMIN' || parsed.role === 'ADMIN_STAFF') {
+            // Admin perusahaan yang salah redirect → kirim ke admin dashboard
+            router.replace('/admin');
+            return;
+        }
         if (parsed.role !== 'MERCHANT') {
-            router.push('/admin/login');
+            router.replace('/admin/login');
             return;
         }
 
@@ -95,9 +100,17 @@ export default function MerchantLayout({ children, title, demoUser }: { children
         </div>;
     }
 
-    const handleLogout = () => {
-        localStorage.clear();
-        router.push('/admin/login');
+    const handleLogout = async () => {
+        const token = localStorage.getItem('admin_token');
+        const baseUrlLogout = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+        try {
+            await axios.post(`${baseUrlLogout}/api/auth/logout`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+        } catch { /* ignore */ }
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        router.replace('/admin/login');
     };
 
     return (

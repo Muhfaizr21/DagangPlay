@@ -807,6 +807,7 @@ const RESELLER_PLANS = [{ id: 'PRO', name: 'Pro' }, { id: 'LEGEND', name: 'Legen
 
 export default function ResellerLandingPage() {
   const [isMounted, setIsMounted] = useState(false);
+  const [loginUrl, setLoginUrl] = useState("/admin/login");
   const [selectedPlan, setSelectedPlan] = useState('PRO');
   const [hargaModal, setHargaModal] = useState(37500);
   const [hargaJual, setHargaJual] = useState(40000);
@@ -843,6 +844,17 @@ export default function ResellerLandingPage() {
 
   useEffect(() => {
     setIsMounted(true);
+
+    try {
+        const userData = localStorage.getItem('admin_user');
+        const token = localStorage.getItem('admin_token');
+        if (userData && token) {
+            const parsed = JSON.parse(userData);
+            if (parsed.role === 'MERCHANT') setLoginUrl('/merchant');
+            else if (parsed.role === 'SUPER_ADMIN' || parsed.role === 'ADMIN_STAFF') setLoginUrl('/admin');
+        }
+    } catch { }
+
     const fb = [
       { name: 'Mobile Legends 86 Diamonds', normal: 19500, pro: 18800, legend: 18500, supreme: 18100, img: 'https://cdn.unipin.com/images/icon_product_channels/1592285005-icon-ml.png' },
       { name: 'Free Fire 70 Diamonds', normal: 10000, pro: 9500, legend: 9300, supreme: 9000, img: 'https://cdn.unipin.com/images/icon_product_channels/1598282333-icon-ff.png' },
@@ -895,7 +907,7 @@ export default function ResellerLandingPage() {
           <a href="#pricing" className="nav-lk">Harga Modal</a>
           <a href="#demo" className="nav-lk">Demo</a>
         </div>
-        <Link href="/admin/login" className="nav-login">Masuk</Link>
+        <Link href={loginUrl} className="nav-login">{loginUrl === '/admin/login' ? 'Masuk' : 'Dashboard'}</Link>
         <Link href="/reseller/register" className="nav-cta">Daftar Reseller <ArrowUpRight size={13} /></Link>
       </nav>
 
