@@ -24,6 +24,19 @@ const MerchantStorefront = ({ config, contentData, filteredProducts, search, set
     const [searchPhone, setSearchPhone] = useState('');
     const [trackingResults, setTrackingResults] = useState<any[]>([]);
     const [isTracking, setIsTracking] = useState(false);
+    const [loginUrl, setLoginUrl] = useState("/admin/login");
+
+    useEffect(() => {
+        try {
+            const userData = localStorage.getItem('admin_user');
+            const token = localStorage.getItem('admin_token');
+            if (userData && token) {
+                const parsed = JSON.parse(userData);
+                if (parsed.role === 'MERCHANT') setLoginUrl('/merchant');
+                else if (parsed.role === 'SUPER_ADMIN' || parsed.role === 'ADMIN_STAFF') setLoginUrl('/admin');
+            }
+        } catch { }
+    }, []);
 
     const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
@@ -363,7 +376,9 @@ const MerchantStorefront = ({ config, contentData, filteredProducts, search, set
                         ))}
                     </nav>
 
-                    <button className="login-btn">Login</button>
+                    <a href={loginUrl} className="login-btn no-underline flex items-center justify-center">
+                        {loginUrl === '/admin/login' ? 'Login' : 'Dashboard'}
+                    </a>
                 </div>
             </header>
 

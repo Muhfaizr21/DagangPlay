@@ -72,8 +72,23 @@ export class AuthService {
             }
         });
 
-        const payload = { sub: user.id, email: user.email, role: user.role };
+        // Track session for revokation
+        const session = await this.prisma.userSession.create({
+            data: {
+                userId: user.id,
+                token: 'placeholder_' + Date.now(),
+                refreshToken: 'rt_' + Date.now() + Math.random().toString(36).substring(7),
+                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 1 day
+            }
+        });
+
+        const payload = { sub: user.id, email: user.email, role: user.role, sessionId: session.id };
         const token = this.jwtService.sign(payload);
+
+        await this.prisma.userSession.update({
+            where: { id: session.id },
+            data: { token: token }
+        });
 
         return {
             statusCode: 200,
@@ -89,5 +104,30 @@ export class AuthService {
                 merchantSlug: user.ownedMerchant?.slug
             }
         };
+    }
+
+    async logout(token: string) {
+        try {
+            await this.prisma.userSession.delete({
+                where: { token: token }
+            });
+        } catch (e) {
+            // ignore if not found
+        }
+    }
+
+    async verifyEmail(token: string, code: string) {
+        const otp = await this.prisma.otpVerification.findFirst({
+            where: { token, code, type: 'EMAIL_VERIFY' }
+        });
+        if (!otp || otp.expiresAt < new Date()) {
+            throw new UnauthorizedException('Token/Kode tidak valid atau sudah kadaluarsa.');
+        }
+        await this.prisma.user.update({
+            where: { id: otp.userId },
+            data: { isVerified: true, verifiedAt: new Date() }
+        });
+        await this.prisma.otpVerification.delete({ where: { id: otp.id } });
+        return { statusCode: 200, message: 'Email berhasil diverifikasi' };
     }
 }

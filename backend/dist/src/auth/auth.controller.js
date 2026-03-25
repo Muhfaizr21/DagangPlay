@@ -32,17 +32,41 @@ let AuthController = class AuthController {
         };
         return this.authService.adminLogin(loginData);
     }
+    async logout(req) {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (token) {
+            await this.authService.logout(token);
+        }
+        return { statusCode: 200, message: 'Berhasil logout' };
+    }
+    async verifyEmail(body) {
+        return this.authService.verifyEmail(body.token, body.code);
+    }
 };
 exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('admin/login'),
-    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60000 } }),
+    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 900000 } }),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "adminLogin", null);
+__decorate([
+    (0, common_1.Post)('logout'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "logout", null);
+__decorate([
+    (0, common_1.Post)('verify-email'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "verifyEmail", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('api/auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])

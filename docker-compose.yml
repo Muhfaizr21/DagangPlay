@@ -20,8 +20,9 @@ services:
   redis:
     image: redis:alpine
     container_name: dagangplay-redis
-    ports:
-      - "6379:6379"
+    command: redis-server --requirepass dagangplayredis2026
+    expose:
+      - "6379"
     restart: unless-stopped
 
   backend:
@@ -37,7 +38,10 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://postgres:admin@db:5432/dagangplay?schema=public
       - REDIS_HOST=redis
+      - REDIS_PASSWORD=dagangplayredis2026
     restart: unless-stopped
+    volumes:
+      - uploads_data:/app/public
     depends_on:
       db:
         condition: service_healthy
@@ -57,10 +61,11 @@ services:
       - ./frontend/.env
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
+      - NEXT_PUBLIC_BACKEND_URL=http://backend:3001
     restart: unless-stopped
     depends_on:
       - backend
 
 volumes:
   postgres_data:
+  uploads_data:

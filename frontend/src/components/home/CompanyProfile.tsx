@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
     Zap, ShieldCheck, BarChart3, Globe, Users,
     ArrowRight, ChevronRight, Activity,
@@ -13,6 +13,22 @@ interface Props {
 }
 
 const CompanyProfile = ({ scrolled, catalog, merchants }: Props) => {
+    const [dashboardUrl, setDashboardUrl] = useState("/admin/login");
+
+    useEffect(() => {
+        try {
+            const userData = localStorage.getItem('admin_user');
+            const token = localStorage.getItem('admin_token');
+            if (userData && token) {
+                const parsed = JSON.parse(userData);
+                if (parsed.role === 'MERCHANT') {
+                    setDashboardUrl('/merchant');
+                } else if (parsed.role === 'SUPER_ADMIN' || parsed.role === 'ADMIN_STAFF') {
+                    setDashboardUrl('/admin');
+                }
+            }
+        } catch { }
+    }, []);
 
     const stats = [
         { label: "Transaksi Sukses", value: "2.4M+", icon: Activity },
@@ -216,7 +232,7 @@ const CompanyProfile = ({ scrolled, catalog, merchants }: Props) => {
                     </nav>
 
                     <div className="flex items-center gap-6">
-                        <a href="/admin/login" className="hidden md:block nav-a-dp font-sans-dp text-[10px]">Dashboard</a>
+                        <a href={dashboardUrl} className="hidden md:block nav-a-dp font-sans-dp text-[10px]">Dashboard</a>
                         <a href="/reseller" className="btn-primary-dp font-sans-dp px-5 py-[10px] rounded-[6px]">
                             Mulai Sekarang
                         </a>

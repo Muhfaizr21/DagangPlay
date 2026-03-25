@@ -105,3 +105,5 @@
 {"context":"NestApplication","level":"error","message":"Error: listen EADDRINUSE: address already in use :::3001","stack":[null],"timestamp":"2026-03-14T20:56:51.496Z"}
 {"context":"NestApplication","level":"error","message":"Error: listen EADDRINUSE: address already in use :::3001","stack":[null],"timestamp":"2026-03-14T20:56:51.504Z"}
 {"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-14T20:58:00.222Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-14T21:00:00.201Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync supplier balance: Request failed with status code 400","stack":[null],"timestamp":"2026-03-14T21:00:01.680Z"}

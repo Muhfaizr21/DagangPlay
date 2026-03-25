@@ -38,7 +38,8 @@ export default function AdminLoginPage() {
                 router.push('/dashboard');
             }
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Gagal login. Cek kredensial Anda.');
+            console.error('Login error:', err);
+            setError(err.response?.data?.message || err.message || 'Gagal login. Cek kredensial Anda.');
         } finally {
             setLoading(false);
         }

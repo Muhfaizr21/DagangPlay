@@ -18,4 +18,9 @@ export declare class AuthService {
             merchantSlug: string | undefined;
         };
     }>;
+    logout(token: string): Promise<void>;
+    verifyEmail(token: string, code: string): Promise<{
+        statusCode: number;
+        message: string;
+    }>;
 }

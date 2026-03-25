@@ -16,17 +16,24 @@ import {
     Loader2
 } from 'lucide-react';
 
-const fetcher = (url: string) => {
+const fetcher = async (url: string) => {
     const token = localStorage.getItem('admin_token');
-    return axios.get(url, {
-        headers: {
-            Authorization: `Bearer ${token}`
+    try {
+        const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+        return res.data;
+    } catch (error: any) {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_user');
+            window.location.href = '/admin/login';
         }
-    }).then(res => res.data);
+        throw error;
+    }
 };
 
 export default function AdminDashboardPage() {
-    const { data, error, isLoading } = useSWR('http://localhost:3001/admin/dashboard/summary', fetcher, {
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const { data, error, isLoading } = useSWR(`${baseUrl}/admin/dashboard/summary`, fetcher, {
         refreshInterval: 30000 // auto-refresh every 30s
     });
 

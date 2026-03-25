@@ -1,22 +1,19 @@
 "use client";
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import axios from 'axios';
 import {
     LayoutDashboard,
     Store,
-    Users,
     Gamepad2,
     ReceiptText,
-    Wallet, // Changed from WalletCards
-    Bell,   // Changed from LifeBuoy
+    Wallet,
+    Bell,
     Settings,
     LogOut,
-    Zap,
     Server,
-    Network,
     Tag,
     CreditCard,
     Megaphone,
@@ -40,7 +37,7 @@ const MENU_ITEMS = [
     { href: '/admin/suppliers', label: 'Manajemen Supplier', icon: Server },
     { href: '/admin/transactions', label: 'Transaksi', icon: ReceiptText },
     { href: '/admin/finance', label: 'Deposit & Keuangan', icon: Wallet },
-    { href: '/admin/promos', label: 'Promo & Diskon', icon: Megaphone }, // Changed from Tag to avoid conflict
+    { href: '/admin/promos', label: 'Promo & Diskon', icon: Megaphone },
     { href: '/admin/support', label: 'Support Ticket', icon: LifeBuoy },
     { href: '/admin/security', label: 'Keamanan & Audit', icon: ShieldAlert },
     { href: '/admin/settings', label: 'Pengaturan', icon: Settings },
@@ -53,14 +50,59 @@ const fetcher = (url: string) => {
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
     const pathname = usePathname();
+    const router = useRouter();
     const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-    const { data: chatRooms } = useSWR(`${baseUrl}/chat/admin/rooms`, fetcher, { refreshInterval: 10000 });
+    const [currentUser, setCurrentUser] = useState<{ name: string; email: string; role: string } | null>(null);
 
+    // ── Route Guard: Only SUPER_ADMIN & ADMIN_STAFF can access /admin ──
+    useEffect(() => {
+        const token = localStorage.getItem('admin_token');
+        const userRaw = localStorage.getItem('admin_user');
+
+        if (!token || !userRaw) {
+            router.replace('/admin/login');
+            return;
+        }
+
+        try {
+            const user = JSON.parse(userRaw);
+            setCurrentUser(user);
+
+            if (user.role === 'MERCHANT') {
+                // Merchant login ke area salah → redirect ke merchant dashboard
+                router.replace('/merchant');
+            } else if (!['SUPER_ADMIN', 'ADMIN_STAFF'].includes(user.role)) {
+                // Role tidak diizinkan
+                router.replace('/admin/login');
+            }
+        } catch {
+            router.replace('/admin/login');
+        }
+    }, [router]);
+
+    const handleLogout = async () => {
+        const token = localStorage.getItem('admin_token');
+        try {
+            await axios.post(`${baseUrl}/api/auth/logout`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+        } catch { /* ignore */ }
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        router.replace('/admin/login');
+    };
+
+    const { data: chatRooms } = useSWR(`${baseUrl}/chat/admin/rooms`, fetcher, { refreshInterval: 10000 });
     const totalChatUnread = chatRooms?.reduce((acc: number, room: any) => acc + (room._count?.messages || 0), 0) || 0;
+
+    const roleLabel: Record<string, string> = {
+        SUPER_ADMIN: 'Super Admin',
+        ADMIN_STAFF: 'Admin Staff',
+    };
 
     return (
         <div className="min-h-screen bg-[#fafafa] flex text-slate-800 font-body selection:bg-blue-500/20">
-            {/* Sidebar - Clean White */}
+            {/* Sidebar */}
             <aside className="w-64 border-r border-slate-200/60 bg-white flex flex-col z-20">
                 <div className="h-16 flex items-center px-6 border-b border-slate-100">
                     <Link href="/admin" className="flex items-center gap-2.5">
@@ -80,10 +122,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-[13px] transition-all duration-200 group
-                  ${isActive
-                                        ? 'bg-indigo-50/80 text-indigo-700'
-                                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-[13px] transition-all duration-200 group ${isActive
+                                    ? 'bg-indigo-50/80 text-indigo-700'
+                                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                                     }`}
                             >
                                 <Icon strokeWidth={2} className={`w-4 h-4 ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
@@ -98,35 +139,34 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     })}
                 </nav>
 
-                {/* Profile Card Bottom */}
+                {/* Profile Card — Dynamic dari localStorage */}
                 <div className="p-4 border-t border-slate-100">
                     <div className="flex items-center gap-3 px-3 py-2">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold text-xs">
-                            SA
+                        <div className="w-8 h-8 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center text-indigo-700 font-bold text-xs">
+                            {currentUser?.name?.charAt(0)?.toUpperCase() || 'A'}
                         </div>
                         <div className="overflow-hidden">
-                            <p className="text-[13px] font-semibold text-slate-800 truncate leading-tight">Super Admin</p>
-                            <p className="text-[11px] text-slate-500 truncate mt-0.5">Admin Hak Penuh</p>
+                            <p className="text-[13px] font-semibold text-slate-800 truncate leading-tight">{currentUser?.name || 'Admin'}</p>
+                            <p className="text-[11px] text-slate-500 truncate mt-0.5">{roleLabel[currentUser?.role || ''] || currentUser?.role}</p>
                         </div>
                     </div>
-                    <Link href="/admin/login" className="mt-3 px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2 group">
+                    <button
+                        onClick={handleLogout}
+                        className="mt-3 w-full px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2 group cursor-pointer"
+                    >
                         <LogOut className="w-4 h-4 text-slate-400 group-hover:text-red-500" strokeWidth={2} />
                         Logout Akun
-                    </Link>
+                    </button>
                 </div>
             </aside>
 
-            {/* Main Content Wrapper */}
+            {/* Main Content */}
             <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-                {/* Header - Soft border logic */}
                 <header className="h-16 border-b border-slate-200/60 bg-white/80 backdrop-blur-md flex items-center justify-between px-8 z-10 sticky top-0">
-                    <div className="flex items-center gap-4">
-                        {/* Dynamic Breadcrumbs based on path could go here */}
-                        <div className="flex items-center gap-2 text-[13px]">
-                            <span className="text-slate-400">Admin</span>
-                            <span className="text-slate-300">/</span>
-                            <span className="text-slate-800 font-medium">Dashboard</span>
-                        </div>
+                    <div className="flex items-center gap-2 text-[13px]">
+                        <span className="text-slate-400">Admin</span>
+                        <span className="text-slate-300">/</span>
+                        <span className="text-slate-800 font-medium">Dashboard</span>
                     </div>
                     <div className="flex items-center gap-4">
                         <button className="text-slate-400 hover:text-indigo-600 transition-colors relative p-2 bg-slate-50 hover:bg-indigo-50 rounded-full">
@@ -139,7 +179,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     </div>
                 </header>
 
-                {/* Page Content */}
                 <main className="flex-1 overflow-x-hidden overflow-y-auto p-8">
                     <div className="max-w-7xl mx-auto">
                         {children}

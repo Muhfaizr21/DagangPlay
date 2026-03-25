@@ -14,6 +14,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     async validate(payload: any) {
+        // Validasi token berdasarkan session ID yang aktif (Revokasi session / Logout)
+        if (payload.sessionId) {
+            const session = await this.prisma.userSession.findUnique({
+                where: { id: payload.sessionId }
+            });
+            if (!session) {
+                throw new UnauthorizedException('Sesi Anda telah berakhir atau Anda telah logout.');
+            }
+        }
+
         // Validasi token ID di database jika diperlukan, atau cukup kembalikan payload
         const user = await this.prisma.user.findUnique({
             where: { id: payload.sub }

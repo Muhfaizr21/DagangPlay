@@ -14,6 +14,12 @@ export declare class OrdersService {
     }): Promise<any>;
     getOrders(merchantId: string, filters: any): Promise<{
         orders: ({
+            user: {
+                id: string;
+                name: string;
+                email: string | null;
+                phone: string | null;
+            };
             productSku: {
                 name: string;
                 product: {
@@ -21,23 +27,14 @@ export declare class OrdersService {
                     thumbnail: string | null;
                 };
             };
-            user: {
-                id: string;
-                name: string;
-                email: string | null;
-                phone: string | null;
-            };
         } & {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            merchantId: string;
             productId: string;
             supplierId: string | null;
             basePrice: number;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string;
-            merchantId: string;
-            productSkuId: string;
-            expiredAt: Date | null;
             orderNumber: string;
             productName: string;
             productSkuName: string;
@@ -48,7 +45,6 @@ export declare class OrdersService {
             gameUserServerId: string | null;
             gameUserName: string | null;
             quantity: number;
-            promoCodeId: string | null;
             discountAmount: number;
             paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
             paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
@@ -62,7 +58,11 @@ export declare class OrdersService {
             processedAt: Date | null;
             completedAt: Date | null;
             failedAt: Date | null;
+            expiredAt: Date | null;
             merchantModalPrice: number | null;
+            userId: string;
+            productSkuId: string;
+            promoCodeId: string | null;
         })[];
         stats: {
             totalCount: number;
@@ -70,6 +70,11 @@ export declare class OrdersService {
         };
     }>;
     getOrderDetails(merchantId: string, orderId: string): Promise<{
+        user: {
+            id: string;
+            name: string;
+            email: string | null;
+        };
         productSku: {
             name: string;
             product: {
@@ -77,11 +82,6 @@ export declare class OrdersService {
                 categoryId: string;
                 thumbnail: string | null;
             };
-        };
-        user: {
-            id: string;
-            name: string;
-            email: string | null;
         };
         statusHistories: {
             id: string;
@@ -93,15 +93,12 @@ export declare class OrdersService {
         }[];
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string;
         productId: string;
         supplierId: string | null;
         basePrice: number;
-        createdAt: Date;
-        updatedAt: Date;
-        userId: string;
-        merchantId: string;
-        productSkuId: string;
-        expiredAt: Date | null;
         orderNumber: string;
         productName: string;
         productSkuName: string;
@@ -112,7 +109,6 @@ export declare class OrdersService {
         gameUserServerId: string | null;
         gameUserName: string | null;
         quantity: number;
-        promoCodeId: string | null;
         discountAmount: number;
         paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
         paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
@@ -126,21 +122,22 @@ export declare class OrdersService {
         processedAt: Date | null;
         completedAt: Date | null;
         failedAt: Date | null;
+        expiredAt: Date | null;
         merchantModalPrice: number | null;
+        userId: string;
+        productSkuId: string;
+        promoCodeId: string | null;
     }>;
     retryOrder(merchantId: string, orderId: string): Promise<{
         message: string;
         order: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            merchantId: string;
             productId: string;
             supplierId: string | null;
             basePrice: number;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string;
-            merchantId: string;
-            productSkuId: string;
-            expiredAt: Date | null;
             orderNumber: string;
             productName: string;
             productSkuName: string;
@@ -151,7 +148,6 @@ export declare class OrdersService {
             gameUserServerId: string | null;
             gameUserName: string | null;
             quantity: number;
-            promoCodeId: string | null;
             discountAmount: number;
             paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
             paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
@@ -165,7 +161,11 @@ export declare class OrdersService {
             processedAt: Date | null;
             completedAt: Date | null;
             failedAt: Date | null;
+            expiredAt: Date | null;
             merchantModalPrice: number | null;
+            userId: string;
+            productSkuId: string;
+            promoCodeId: string | null;
         } | null;
     }>;
     refundOrder(merchantId: string, orderId: string, reason: string): Promise<any>;

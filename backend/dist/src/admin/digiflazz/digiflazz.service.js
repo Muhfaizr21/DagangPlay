@@ -355,6 +355,27 @@ let DigiflazzService = DigiflazzService_1 = class DigiflazzService {
         if (order.fulfillmentStatus === 'SUCCESS')
             return;
         const { username, key, url } = this.getDigiflazzConfig();
+        try {
+            const currentBalance = await this.checkBalance();
+            if (currentBalance < order.basePrice) {
+                this.logger.error(`[SupplierBalance] Insufficient balance for ${order.orderNumber}. Have: ${currentBalance}, Need: ${order.basePrice}`);
+                await this.prisma.order.update({
+                    where: { id: order.id },
+                    data: {
+                        fulfillmentStatus: 'FAILED',
+                        failReason: 'Gagal diproses: Saldo supplier sedang tidak mencukupi (Refund Otomatis).'
+                    }
+                });
+                await this.handleCommissionReversal(order.id);
+                await this.handleCustomerRefund(order.id);
+                this.whatsappService.sendAdminSummary(`⚠️ *SALDO SUPPLIER HABIS*\n` +
+                    `Order ${order.orderNumber} gagal karena saldo Digiflazz (${currentBalance}) kurang dari harga modal dasar (${order.basePrice}). Segera top-up!`).catch(() => { });
+                return null;
+            }
+        }
+        catch (balErr) {
+            this.logger.error(`[SupplierBalance] Failed to verify balance, proceeding normally: ${balErr.message}`);
+        }
         const sign = crypto.createHash('md5').update(username + key + order.orderNumber).digest('hex');
         const customerNo = order.gameUserServerId ? `${order.gameUserId}${order.gameUserServerId}` : order.gameUserId;
         const payload = {
@@ -490,7 +511,7 @@ let DigiflazzService = DigiflazzService_1 = class DigiflazzService {
             await this.prisma.$transaction(async (tx) => {
                 const user = await tx.user.update({
                     where: { id: order.userId },
-                    data: { balance: { increment: order.totalPrice } }
+                    data: { balance: { increment: order.sellingPrice } }
                 });
                 await tx.order.update({
                     where: { id: order.id },
@@ -505,8 +526,8 @@ let DigiflazzService = DigiflazzService_1 = class DigiflazzService {
                     data: {
                         userId: order.userId,
                         type: 'REFUND',
-                        amount: order.totalPrice,
-                        balanceBefore: Number(user.balance) - Number(order.totalPrice),
+                        amount: order.sellingPrice,
+                        balanceBefore: Number(user.balance) - Number(order.sellingPrice),
                         balanceAfter: Number(user.balance),
                         orderId: order.id,
                         description: `Refund Ticket and Balance for Guest: ${refundCode}`
@@ -518,14 +539,14 @@ let DigiflazzService = DigiflazzService_1 = class DigiflazzService {
         await this.prisma.$transaction(async (tx) => {
             const user = await tx.user.update({
                 where: { id: order.userId },
-                data: { balance: { increment: order.totalPrice } }
+                data: { balance: { increment: order.sellingPrice } }
             });
             await tx.balanceTransaction.create({
                 data: {
                     userId: order.userId,
                     type: 'REFUND',
-                    amount: order.totalPrice,
-                    balanceBefore: Number(user.balance) - Number(order.totalPrice),
+                    amount: order.sellingPrice,
+                    balanceBefore: Number(user.balance) - Number(order.sellingPrice),
                     balanceAfter: Number(user.balance),
                     orderId: order.id,
                     description: `Refund otomatis (Order Gagal): ${order.orderNumber}`

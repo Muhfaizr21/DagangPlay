@@ -16,4 +16,15 @@ export declare class AuthController {
             merchantSlug: string | undefined;
         };
     }>;
+    logout(req: any): Promise<{
+        statusCode: number;
+        message: string;
+    }>;
+    verifyEmail(body: {
+        token: string;
+        code: string;
+    }): Promise<{
+        statusCode: number;
+        message: string;
+    }>;
 }
