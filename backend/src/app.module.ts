@@ -36,6 +36,8 @@ import { TasksService } from './common/tasks/tasks.service';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
+import { QueueConfigModule } from './common/queue/queue.module';
+import { SaasModule } from './saas/saas.module';
 
 @Module({
   imports: [
@@ -89,7 +91,9 @@ import { redisStore } from 'cache-manager-redis-yet';
     MarketingModule, 
     ChatModule, 
     PublicDigiflazzModule,
-    NotificationsModule
+    NotificationsModule,
+    QueueConfigModule,
+    SaasModule
   ],
   controllers: [],
   providers: [

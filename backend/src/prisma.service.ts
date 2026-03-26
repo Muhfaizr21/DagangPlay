@@ -97,7 +97,11 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     get deviceTrusted() { return this.client.deviceTrusted; }
     get userProfile() { return this.client.userProfile; }
     get apiKey() { return this.client.apiKey; }
-
+    get webhookDeliveryLog() { return this.client.webhookDeliveryLog; }
+    get deadLetterQueue() { return this.client.deadLetterQueue; }
+    get merchantLedgerMovement() { return this.client.merchantLedgerMovement; }
+    get flashSaleEvent() { return this.client.flashSaleEvent; }
+    get flashSaleItem() { return this.client.flashSaleItem; }
     async onModuleInit() {
         await this.client.$connect();
     }

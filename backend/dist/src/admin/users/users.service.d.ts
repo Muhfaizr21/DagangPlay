@@ -49,6 +49,12 @@ export declare class UsersService {
                 isOfficial: boolean;
                 settings: import("@prisma/client/runtime/client").JsonValue | null;
                 ownerId: string;
+                autoPayoutEnabled: boolean;
+                autoPayoutThreshold: number;
+                autoPayoutSchedule: string | null;
+                forceHttps: boolean;
+                escrowBalance: number;
+                availableBalance: number;
                 createdAt: Date;
                 updatedAt: Date;
                 deletedAt: Date | null;
@@ -58,8 +64,8 @@ export declare class UsersService {
             createdAt: Date;
             updatedAt: Date;
             merchantId: string;
-            role: import("@prisma/client").$Enums.MerchantMemberRole;
             userId: string;
+            role: import("@prisma/client").$Enums.MerchantMemberRole;
             permissions: import("@prisma/client/runtime/client").JsonValue | null;
         })[];
         profile: {
@@ -70,14 +76,14 @@ export declare class UsersService {
             createdAt: Date;
             updatedAt: Date;
             userId: string;
-            bankName: string | null;
-            bankAccountNumber: string | null;
-            bankAccountName: string | null;
             fullName: string | null;
             birthDate: Date | null;
             gender: import("@prisma/client").$Enums.Gender | null;
             postalCode: string | null;
             idCardNumber: string | null;
+            bankName: string | null;
+            bankAccountNumber: string | null;
+            bankAccountName: string | null;
         } | null;
     } & {
         id: string;
@@ -96,6 +102,7 @@ export declare class UsersService {
         role: import("@prisma/client").$Enums.Role;
         adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
         isVerified: boolean;
+        isGuest: boolean;
         verifiedAt: Date | null;
         referredById: string | null;
         balance: number;
@@ -118,6 +125,7 @@ export declare class UsersService {
         role: import("@prisma/client").$Enums.Role;
         adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
         isVerified: boolean;
+        isGuest: boolean;
         verifiedAt: Date | null;
         referredById: string | null;
         balance: number;
@@ -128,8 +136,8 @@ export declare class UsersService {
         id: string;
         description: string | null;
         createdAt: Date;
-        note: string | null;
         userId: string;
+        note: string | null;
         amount: number;
         orderId: string | null;
         type: import("@prisma/client").$Enums.BalanceTrxType;
@@ -144,10 +152,10 @@ export declare class UsersService {
         userId: string;
         ipAddress: string | null;
         userAgent: string | null;
+        expiresAt: Date;
         token: string;
         refreshToken: string;
         device: string | null;
-        expiresAt: Date;
         lastActiveAt: Date;
     }[]>;
     forceLogoutAllSessions(id: string): Promise<{

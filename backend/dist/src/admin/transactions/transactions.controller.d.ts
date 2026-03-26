@@ -9,23 +9,23 @@ export declare class TransactionsController {
             id: string;
             name: string;
         };
-        fraudDetections: {
-            id: string;
-            createdAt: Date;
-            metadata: import("@prisma/client/runtime/client").JsonValue | null;
-            userId: string;
-            orderId: string | null;
-            reason: string;
-            riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
-            isResolved: boolean;
-            resolvedBy: string | null;
-            resolvedAt: Date | null;
-        }[];
         user: {
             id: string;
             name: string;
             email: string | null;
         };
+        fraudDetections: {
+            id: string;
+            createdAt: Date;
+            userId: string;
+            reason: string;
+            metadata: import("@prisma/client/runtime/client").JsonValue | null;
+            orderId: string | null;
+            resolvedBy: string | null;
+            resolvedAt: Date | null;
+            riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
+            isResolved: boolean;
+        }[];
         supplierLogs: {
             id: string;
             createdAt: Date;
@@ -53,9 +53,9 @@ export declare class TransactionsController {
             createdAt: Date;
             updatedAt: Date;
             merchantId: string;
-            paidAt: Date | null;
-            expiredAt: Date | null;
             userId: string;
+            expiredAt: Date | null;
+            paidAt: Date | null;
             method: import("@prisma/client").$Enums.PaymentMethod;
             amount: number;
             fee: number;
@@ -74,6 +74,9 @@ export declare class TransactionsController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
+        productSkuId: string;
+        userId: string;
+        expiredAt: Date | null;
         productId: string;
         supplierId: string | null;
         basePrice: number;
@@ -100,10 +103,7 @@ export declare class TransactionsController {
         processedAt: Date | null;
         completedAt: Date | null;
         failedAt: Date | null;
-        expiredAt: Date | null;
         merchantModalPrice: number | null;
-        userId: string;
-        productSkuId: string;
         promoCodeId: string | null;
     }>;
     retryTransaction(id: string): Promise<{

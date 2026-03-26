@@ -7,24 +7,24 @@ export declare class MerchantOverridesController {
             name: string;
             slug: string;
         };
-        user: {
-            name: string;
-        };
         productSku: {
             name: string;
             basePrice: number;
+        };
+        user: {
+            name: string;
         };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
-        isActive: boolean;
-        expiredAt: Date | null;
-        userId: string;
         productSkuId: string;
+        userId: string;
         customPrice: number;
+        isActive: boolean;
         reason: string | null;
+        expiredAt: Date | null;
         customModalPrice: number | null;
     })[]>;
     getOverridesByMerchant(merchantId: string): Promise<({
@@ -57,12 +57,12 @@ export declare class MerchantOverridesController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
-        isActive: boolean;
-        expiredAt: Date | null;
-        userId: string;
         productSkuId: string;
+        userId: string;
         customPrice: number;
+        isActive: boolean;
         reason: string | null;
+        expiredAt: Date | null;
         customModalPrice: number | null;
     })[]>;
     createOverride(dto: any, req: any): Promise<{
@@ -70,12 +70,12 @@ export declare class MerchantOverridesController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
-        isActive: boolean;
-        expiredAt: Date | null;
-        userId: string;
         productSkuId: string;
+        userId: string;
         customPrice: number;
+        isActive: boolean;
         reason: string | null;
+        expiredAt: Date | null;
         customModalPrice: number | null;
     }>;
     deleteOverride(id: string): Promise<{
@@ -83,12 +83,12 @@ export declare class MerchantOverridesController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
-        isActive: boolean;
-        expiredAt: Date | null;
-        userId: string;
         productSkuId: string;
+        userId: string;
         customPrice: number;
+        isActive: boolean;
         reason: string | null;
+        expiredAt: Date | null;
         customModalPrice: number | null;
     }>;
 }

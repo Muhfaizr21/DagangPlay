@@ -43,12 +43,16 @@ function Home() {
     const mParam = searchParams.get('merchant');
     const domainMaskParam = searchParams.get('domain_mask');
     const viewParam = searchParams.get('view');
-    const hostname = window.location.hostname;
+    const rawHostname = window.location.hostname;
+    const cleanHostname = rawHostname.split(':')[0];
     
-    const isMain = hostname.includes('dagangplay.com') || 
-                   hostname.includes('localhost') || 
-                   hostname.includes('127.0.0.1') || 
-                   hostname.includes('trycloudflare.com');
+    // Strict match untuk main domain, sehingga subdomain (.dagangplay.com) akan ditangkap sebagai toko/store
+    const isMain = cleanHostname === 'dagangplay.com' || 
+                   cleanHostname === 'www.dagangplay.com' || 
+                   cleanHostname === 'localhost' || 
+                   cleanHostname === '127.0.0.1' || 
+                   cleanHostname.includes('trycloudflare.com') ||
+                   cleanHostname.includes('vercel.app');
 
     let slug = mParam;
     let domain = domainMaskParam;

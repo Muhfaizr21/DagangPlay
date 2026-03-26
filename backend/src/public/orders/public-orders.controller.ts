@@ -25,6 +25,12 @@ export class PublicOrdersController {
         return this.publicOrdersService.getActiveMerchants();
     }
 
+    @Get('resolve-domain')
+    async resolveDomain(@Query('domain') domain: string) {
+        if (!domain) throw new BadRequestException('Domain required');
+        return this.publicOrdersService.resolveCustomDomain(domain);
+    }
+
     @Get('config')
     @UseInterceptors(CacheInterceptor)
     @CacheTTL(60000) // Cache for 1 minute
@@ -36,7 +42,7 @@ export class PublicOrdersController {
     @Post('checkout')
     @Throttle({ default: { limit: 3, ttl: 60000 } })
     async checkout(@Body() body: any, @Req() req: any) {
-        const host = req.headers.host;
+        const host = body.domain || req.headers.host;
         const origin = req.headers.origin;
         const merchantSlug = body.merchant;
         return this.publicOrdersService.createCheckout(body, host, origin, merchantSlug);
@@ -46,6 +52,16 @@ export class PublicOrdersController {
     async searchOrders(@Query('phone') phone?: string) {
         if (!phone) throw new BadRequestException('Nomor WhatsApp diperlukan');
         return this.publicOrdersService.findOrdersByWhatsApp(phone);
+    }
+
+    @Get('validate-nickname')
+    async validateNickname(
+        @Query('productId') productId: string,
+        @Query('gameId') gameId: string,
+        @Query('serverId') serverId?: string
+    ) {
+        if (!productId || !gameId) throw new BadRequestException('Produk ID dan Game ID wajib diisi');
+        return this.publicOrdersService.validateNickname(productId, gameId, serverId);
     }
 
     @Get(':orderNumber')

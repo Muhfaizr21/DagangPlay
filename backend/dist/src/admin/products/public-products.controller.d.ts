@@ -11,9 +11,9 @@ export declare class PublicProductsController {
         description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        isActive: boolean;
         image: string | null;
         sortOrder: number;
-        isActive: boolean;
         icon: string | null;
         parentId: string | null;
         digiflazzCategory: string | null;
@@ -28,6 +28,7 @@ export declare class PublicProductsController {
             createdAt: Date;
             updatedAt: Date;
             merchantId: string | null;
+            isActive: boolean;
             title: string;
             image: string;
             linkUrl: string | null;
@@ -35,7 +36,6 @@ export declare class PublicProductsController {
             sortOrder: number;
             startDate: Date | null;
             endDate: Date | null;
-            isActive: boolean;
             clickCount: number;
         }[];
         announcements: {
@@ -43,10 +43,10 @@ export declare class PublicProductsController {
             createdAt: Date;
             updatedAt: Date;
             merchantId: string | null;
+            isActive: boolean;
             title: string;
             startDate: Date | null;
             endDate: Date | null;
-            isActive: boolean;
             content: string;
             imageUrl: string | null;
         }[];
@@ -55,12 +55,12 @@ export declare class PublicProductsController {
             createdAt: Date;
             updatedAt: Date;
             merchantId: string | null;
+            isActive: boolean;
             title: string;
             image: string | null;
             linkUrl: string | null;
             startDate: Date | null;
             endDate: Date | null;
-            isActive: boolean;
             content: string | null;
         }[];
     }>;

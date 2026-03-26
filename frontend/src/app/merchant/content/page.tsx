@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import MerchantLayout from '../../../components/merchant/MerchantLayout';
 import useSWR from 'swr';
 import axios from 'axios';
-import { Palette, Image as ImageIcon, MessageSquare, Plus, Trash2, Power, Lock, CheckCircle2, Megaphone, Monitor, Pointer } from 'lucide-react';
+import { Palette, Image as ImageIcon, MessageSquare, Plus, Trash2, Power, Lock, CheckCircle2, Megaphone, Monitor, Pointer, Pencil } from 'lucide-react';
 
 const fetcher = (url: string) => {
     const token = localStorage.getItem('admin_token');
@@ -14,15 +14,20 @@ const fetcher = (url: string) => {
 export default function MerchantContentPage() {
     const [activeTab, setActiveTab] = useState('banners');
 
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+
     // Data Fetching
-    const { data: banners, mutate: mutateBanners } = useSWR('http://localhost:3001/merchant/content/banners', fetcher);
-    const { data: announcements, mutate: mutateAnnc } = useSWR('http://localhost:3001/merchant/content/announcements', fetcher);
-    const { data: popupPromos, mutate: mutatePopup } = useSWR('http://localhost:3001/merchant/content/popup-promos', fetcher);
+    const { data: banners, mutate: mutateBanners } = useSWR(`${baseUrl}/merchant/content/banners`, fetcher);
+    const { data: announcements, mutate: mutateAnnc } = useSWR(`${baseUrl}/merchant/content/announcements`, fetcher);
+    const { data: popupPromos, mutate: mutatePopup } = useSWR(`${baseUrl}/merchant/content/popup-promos`, fetcher);
 
     // Modals
     const [isAddBannerModal, setIsAddBannerModal] = useState(false);
     const [isAddAnncModal, setIsAddAnncModal] = useState(false);
     const [isAddPopupModal, setIsAddPopupModal] = useState(false);
+    
+    // Edit tracking
+    const [editId, setEditId] = useState<string | null>(null);
 
     // Forms
     const [bannerForm, setBannerForm] = useState({ title: '', imageUrl: '', linkUrl: '', location: 'HERO', sequence: 0 });
@@ -43,7 +48,6 @@ export default function MerchantContentPage() {
         // Sync active theme from backend settings
         const fetchSettings = async () => {
             try {
-                const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
                 const token = localStorage.getItem('admin_token');
                 const res = await axios.get(`${baseUrl}/merchant/settings`, { headers: { Authorization: `Bearer ${token}` } });
                 if (res.data?.settings?.theme?.active) {
@@ -56,24 +60,61 @@ export default function MerchantContentPage() {
         fetchSettings();
     }, []);
 
+    const openAddModal = (type: string) => {
+        setEditId(null);
+        if (type === 'banner') {
+            setBannerForm({ title: '', imageUrl: '', linkUrl: '', location: 'HERO', sequence: 0 });
+            setIsAddBannerModal(true);
+        } else if (type === 'annc') {
+            setAnncForm({ title: '', content: '' });
+            setIsAddAnncModal(true);
+        } else if (type === 'popup') {
+            setPopupForm({ title: '', imageUrl: '', content: '', linkUrl: '' });
+            setIsAddPopupModal(true);
+        }
+    };
+
+    const openEditBanner = (b: any) => {
+        setEditId(b.id);
+        setBannerForm({ title: b.title, imageUrl: b.image, linkUrl: b.linkUrl || '', location: b.position, sequence: b.sortOrder });
+        setIsAddBannerModal(true);
+    };
+
+    const openEditAnnc = (a: any) => {
+        setEditId(a.id);
+        setAnncForm({ title: a.title, content: a.content });
+        setIsAddAnncModal(true);
+    };
+
+    const openEditPopup = (p: any) => {
+        setEditId(p.id);
+        setPopupForm({ title: p.title, imageUrl: p.image, content: p.content || '', linkUrl: p.linkUrl || '' });
+        setIsAddPopupModal(true);
+    };
+
     // Banner Handlers
     const handleCreateBanner = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.post('http://localhost:3001/merchant/content/banners', bannerForm, { headers: { Authorization: `Bearer ${token}` } });
+            if (editId) {
+                await axios.put(`${baseUrl}/merchant/content/banners/${editId}`, bannerForm, { headers: { Authorization: `Bearer ${token}` } });
+            } else {
+                await axios.post(`${baseUrl}/merchant/content/banners`, bannerForm, { headers: { Authorization: `Bearer ${token}` } });
+            }
             setIsAddBannerModal(false);
+            setEditId(null);
             setBannerForm({ title: '', imageUrl: '', linkUrl: '', location: 'HERO', sequence: 0 });
             mutateBanners();
         } catch (err: any) {
-            alert(err.response?.data?.message || 'Gagal membuat banner');
+            alert(err.response?.data?.message || 'Gagal menyimpan banner');
         }
     };
 
     const handleToggleBanner = async (id: string, currentStatus: boolean) => {
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.put(`http://localhost:3001/merchant/content/banners/${id}/toggle`, { isActive: !currentStatus }, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.put(`${baseUrl}/merchant/content/banners/${id}/toggle`, { isActive: !currentStatus }, { headers: { Authorization: `Bearer ${token}` } });
             mutateBanners();
         } catch (err) {
             alert('Gagal ubah status banner');
@@ -84,10 +125,38 @@ export default function MerchantContentPage() {
         if (!confirm('Hapus banner ini?')) return;
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.delete(`http://localhost:3001/merchant/content/banners/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.delete(`${baseUrl}/merchant/content/banners/${id}`, { headers: { Authorization: `Bearer ${token}` } });
             mutateBanners();
         } catch (err) {
             alert('Gagal hapus banner');
+        }
+    };
+
+    // Image Upload Handler
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, formSetter: Function, currentForm: any) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const token = localStorage.getItem('admin_token');
+            // Adding a visual cue to users that upload is in progress could be good, but simple alert for now
+            const res = await axios.post(`${baseUrl}/merchant/content/upload`, formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            
+            // `res.data.url` returns something like /uploads/123.webp
+            // For the frontend to show it, we append baseUrl unless we are proxying
+            const imagePath = res.data.url.startsWith('http') ? res.data.url : `${baseUrl}${res.data.url}`;
+            formSetter({ ...currentForm, imageUrl: imagePath });
+            alert('Gambar berhasil diupload dan dioptimasi!');
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Gagal mengupload gambar');
         }
     };
 
@@ -96,19 +165,24 @@ export default function MerchantContentPage() {
         e.preventDefault();
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.post('http://localhost:3001/merchant/content/announcements', anncForm, { headers: { Authorization: `Bearer ${token}` } });
+            if (editId) {
+                await axios.put(`${baseUrl}/merchant/content/announcements/${editId}`, anncForm, { headers: { Authorization: `Bearer ${token}` } });
+            } else {
+                await axios.post(`${baseUrl}/merchant/content/announcements`, anncForm, { headers: { Authorization: `Bearer ${token}` } });
+            }
             setIsAddAnncModal(false);
+            setEditId(null);
             setAnncForm({ title: '', content: '' });
             mutateAnnc();
         } catch (err: any) {
-            alert(err.response?.data?.message || 'Gagal membuat pengumuman');
+            alert(err.response?.data?.message || 'Gagal menyimpan pengumuman');
         }
     };
 
     const handleToggleAnnc = async (id: string, currentStatus: boolean) => {
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.put(`http://localhost:3001/merchant/content/announcements/${id}/toggle`, { isActive: !currentStatus }, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.put(`${baseUrl}/merchant/content/announcements/${id}/toggle`, { isActive: !currentStatus }, { headers: { Authorization: `Bearer ${token}` } });
             mutateAnnc();
         } catch (err) {
             alert('Gagal ubah status pengumuman');
@@ -119,7 +193,7 @@ export default function MerchantContentPage() {
         if (!confirm('Hapus pengumuman ini?')) return;
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.delete(`http://localhost:3001/merchant/content/announcements/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.delete(`${baseUrl}/merchant/content/announcements/${id}`, { headers: { Authorization: `Bearer ${token}` } });
             mutateAnnc();
         } catch (err) {
             alert('Gagal hapus pengumuman');
@@ -131,19 +205,24 @@ export default function MerchantContentPage() {
         e.preventDefault();
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.post('http://localhost:3001/merchant/content/popup-promos', popupForm, { headers: { Authorization: `Bearer ${token}` } });
+            if (editId) {
+                await axios.put(`${baseUrl}/merchant/content/popup-promos/${editId}`, popupForm, { headers: { Authorization: `Bearer ${token}` } });
+            } else {
+                await axios.post(`${baseUrl}/merchant/content/popup-promos`, popupForm, { headers: { Authorization: `Bearer ${token}` } });
+            }
             setIsAddPopupModal(false);
+            setEditId(null);
             setPopupForm({ title: '', imageUrl: '', content: '', linkUrl: '' });
             mutatePopup();
         } catch (err: any) {
-            alert(err.response?.data?.message || 'Gagal membuat popup promo');
+            alert(err.response?.data?.message || 'Gagal menyimpan popup promo');
         }
     };
 
     const handleTogglePopup = async (id: string, currentStatus: boolean) => {
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.put(`http://localhost:3001/merchant/content/popup-promos/${id}/toggle`, { isActive: !currentStatus }, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.put(`${baseUrl}/merchant/content/popup-promos/${id}/toggle`, { isActive: !currentStatus }, { headers: { Authorization: `Bearer ${token}` } });
             mutatePopup();
         } catch (err) {
             alert('Gagal ubah status popup');
@@ -154,7 +233,7 @@ export default function MerchantContentPage() {
         if (!confirm('Hapus popup ini?')) return;
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.delete(`http://localhost:3001/merchant/content/popup-promos/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.delete(`${baseUrl}/merchant/content/popup-promos/${id}`, { headers: { Authorization: `Bearer ${token}` } });
             mutatePopup();
         } catch (err) {
             alert('Gagal hapus popup');
@@ -209,7 +288,7 @@ export default function MerchantContentPage() {
                                     <h3 className="text-lg font-bold text-slate-800">Manajemen Banner</h3>
                                     <p className="text-xs text-slate-500">Slide gambar promo di halaman depan</p>
                                 </div>
-                                <button onClick={() => setIsAddBannerModal(true)} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md">
+                                <button onClick={() => openAddModal('banner')} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md">
                                     <Plus className="w-4 h-4" /> Tambah Banner
                                 </button>
                             </div>
@@ -230,11 +309,14 @@ export default function MerchantContentPage() {
                                                 ) : (
                                                     <div className="flex items-center justify-center w-full h-full text-slate-400">Broken Image</div>
                                                 )}
-                                                <div className="absolute top-2 right-2 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={() => handleToggleBanner(b.id, b.isActive)} className="p-2 bg-white rounded-lg shadow-sm border border-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600">
+                                                <div className="absolute top-2 right-2 flex gap-1 bg-white/50 backdrop-blur-md p-1 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.1)] opacity-100 transition-opacity">
+                                                    <button onClick={() => handleToggleBanner(b.id, b.isActive)} className="p-2 bg-white rounded-lg shadow-sm border border-slate-100/50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600">
                                                         <Power className="w-4 h-4" />
                                                     </button>
-                                                    <button onClick={() => handleDeleteBanner(b.id)} className="p-2 bg-white rounded-lg shadow-sm border border-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-600">
+                                                    <button onClick={() => openEditBanner(b)} className="p-2 bg-white rounded-lg shadow-sm border border-slate-100/50 hover:bg-amber-50 text-slate-600 hover:text-amber-600">
+                                                        <Pencil className="w-4 h-4" />
+                                                    </button>
+                                                    <button onClick={() => handleDeleteBanner(b.id)} className="p-2 bg-white rounded-lg shadow-sm border border-slate-100/50 hover:bg-red-50 hover:text-red-600 text-slate-600">
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 </div>
@@ -266,7 +348,7 @@ export default function MerchantContentPage() {
                                     <h3 className="text-lg font-bold text-slate-800">Papan Pengumuman</h3>
                                     <p className="text-xs text-slate-500">Teks berjalan atau informasi di dashboard user</p>
                                 </div>
-                                <button onClick={() => setIsAddAnncModal(true)} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md">
+                                <button onClick={() => openAddModal('annc')} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md">
                                     <Plus className="w-4 h-4" /> Tambah Pengumuman
                                 </button>
                             </div>
@@ -294,6 +376,9 @@ export default function MerchantContentPage() {
                                                 <button onClick={() => handleToggleAnnc(a.id, a.isActive)} className={`p-2 rounded-lg border transition-colors ${a.isActive ? 'bg-white border-indigo-200 text-indigo-600 hover:bg-indigo-50' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>
                                                     <Power className="w-4 h-4" />
                                                 </button>
+                                                <button onClick={() => openEditAnnc(a)} className={`p-2 rounded-lg border bg-white border-amber-200 text-amber-500 hover:bg-amber-50`}>
+                                                    <Pencil className="w-4 h-4" />
+                                                </button>
                                                 <button onClick={() => handleDeleteAnnc(a.id)} className="p-2 bg-white border border-red-100 text-red-500 rounded-lg hover:bg-red-50">
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
@@ -313,7 +398,7 @@ export default function MerchantContentPage() {
                                     <h3 className="text-lg font-bold text-slate-800">Popup Promo</h3>
                                     <p className="text-xs text-slate-500">Muncul saat pelanggan pertama kali buka toko</p>
                                 </div>
-                                <button onClick={() => setIsAddPopupModal(true)} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md">
+                                <button onClick={() => openAddModal('popup')} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md">
                                     <Plus className="w-4 h-4" /> Tambah Popup
                                 </button>
                             </div>
@@ -338,6 +423,9 @@ export default function MerchantContentPage() {
                                                 <div className="absolute top-2 right-2 flex gap-1">
                                                     <button onClick={() => handleTogglePopup(p.id, p.isActive)} className="p-2 bg-white rounded-lg shadow-sm text-slate-600 hover:text-indigo-600">
                                                         <Power className="w-4 h-4" />
+                                                    </button>
+                                                    <button onClick={() => openEditPopup(p)} className="p-2 bg-white rounded-lg shadow-sm text-slate-600 hover:text-amber-600">
+                                                        <Pencil className="w-4 h-4" />
                                                     </button>
                                                     <button onClick={() => handleDeletePopup(p.id)} className="p-2 bg-white rounded-lg shadow-sm text-slate-600 hover:text-red-600">
                                                         <Trash2 className="w-4 h-4" />
@@ -435,12 +523,12 @@ export default function MerchantContentPage() {
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Judul Banner</label>
-                                    <input type="text" required value={bannerForm.title} onChange={e => setBannerForm({ ...bannerForm, title: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm" placeholder="Contoh: Promo Ramadhan" />
+                                    <input type="text" required value={bannerForm.title} onChange={e => setBannerForm({ ...bannerForm, title: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-slate-800 text-sm" placeholder="Contoh: Promo Ramadhan" />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Posisi / Lokasi</label>
-                                        <select value={bannerForm.location} onChange={e => setBannerForm({ ...bannerForm, location: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm">
+                                        <select value={bannerForm.location} onChange={e => setBannerForm({ ...bannerForm, location: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-slate-800 text-sm">
                                             <option value="HERO">Main Hero (Slider)</option>
                                             <option value="SIDEBAR">Sidebar</option>
                                             <option value="FOOTER">Footer</option>
@@ -448,21 +536,26 @@ export default function MerchantContentPage() {
                                     </div>
                                     <div>
                                         <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Urutan (0-9)</label>
-                                        <input type="number" value={bannerForm.sequence} onChange={e => setBannerForm({ ...bannerForm, sequence: parseInt(e.target.value) })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm" />
+                                        <input type="number" value={bannerForm.sequence} onChange={e => setBannerForm({ ...bannerForm, sequence: parseInt(e.target.value) })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-slate-800 text-sm" />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Image URL</label>
-                                    <input type="url" required value={bannerForm.imageUrl} onChange={e => setBannerForm({ ...bannerForm, imageUrl: e.target.value })} placeholder="https://..." className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm" />
-                                    <p className="text-[10px] text-slate-400 mt-1 italic">*Gunakan ukuran 1200x400 untuk hasil terbaik</p>
+                                    <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Upload Gambar Banner (Otomatis WebP)</label>
+                                    <input type="file" accept="image/*" onChange={e => handleImageUpload(e, setBannerForm, bannerForm)} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+                                    {bannerForm.imageUrl && <div className="mt-2 h-20 w-full rounded-xl bg-slate-100 overflow-hidden border border-slate-200"><img src={bannerForm.imageUrl} className="h-full w-full object-cover" alt="Preview"/></div>}
+                                    <p className="text-[10px] text-slate-400 mt-1 italic">*Gunakan ukuran rasio memanjang untuk hasil terbaik</p>
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Atau Gunakan Image URL Langsung</label>
+                                    <input type="url" value={bannerForm.imageUrl} onChange={e => setBannerForm({ ...bannerForm, imageUrl: e.target.value })} placeholder="https://..." className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-slate-800 text-sm" />
                                 </div>
                                 <div>
                                     <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Link Tujuan (Opsional)</label>
-                                    <input type="text" value={bannerForm.linkUrl} onChange={e => setBannerForm({ ...bannerForm, linkUrl: e.target.value })} placeholder="/produk/mobile-legends-topup" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm" />
+                                    <input type="text" value={bannerForm.linkUrl} onChange={e => setBannerForm({ ...bannerForm, linkUrl: e.target.value })} placeholder="/produk/mobile-legends-topup" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-slate-800 text-sm" />
                                 </div>
                             </div>
                             <button type="submit" className="w-full mt-8 py-4 bg-indigo-600 text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-200">
-                                Apply & Sinkronisasi
+                                {editId ? 'Simpan Perubahan' : 'Apply & Sinkronisasi'}
                             </button>
                         </form>
                     </div>
@@ -474,22 +567,22 @@ export default function MerchantContentPage() {
                 <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-3xl shadow-xl w-full max-w-[400px] overflow-hidden">
                         <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                            <h3 className="text-lg font-bold text-slate-800 text-center flex-grow pl-6">Informasi Baru</h3>
+                            <h3 className="text-lg font-bold text-slate-800 text-center flex-grow pl-6">{editId ? 'Edit Info' : 'Informasi Baru'}</h3>
                             <button onClick={() => setIsAddAnncModal(false)} className="text-slate-400 hover:text-slate-600 text-xl font-light">&times;</button>
                         </div>
                         <form onSubmit={handleCreateAnnc} className="p-6">
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Judul Info</label>
-                                    <input type="text" required value={anncForm.title} onChange={e => setAnncForm({ ...anncForm, title: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm" placeholder="Contoh: Maintenance Sistem" />
+                                    <input type="text" required value={anncForm.title} onChange={e => setAnncForm({ ...anncForm, title: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-slate-800 text-sm" placeholder="Contoh: Maintenance Sistem" />
                                 </div>
                                 <div>
                                     <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Konten / Isi Pesan</label>
-                                    <textarea required value={anncForm.content} onChange={e => setAnncForm({ ...anncForm, content: e.target.value })} rows={4} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm resize-none" placeholder="Tulis pengumuman di sini..."></textarea>
+                                    <textarea required value={anncForm.content} onChange={e => setAnncForm({ ...anncForm, content: e.target.value })} rows={4} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-slate-800 text-sm resize-none" placeholder="Tulis pengumuman di sini..."></textarea>
                                 </div>
                             </div>
                             <button type="submit" className="w-full mt-8 py-4 bg-indigo-600 text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-200">
-                                Publikasikan Info
+                                {editId ? 'Simpan Perubahan' : 'Publikasikan Info'}
                             </button>
                         </form>
                     </div>
@@ -501,30 +594,35 @@ export default function MerchantContentPage() {
                 <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-3xl shadow-xl w-full max-w-[400px] overflow-hidden">
                         <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                            <h3 className="text-lg font-bold text-slate-800 text-center flex-grow pl-6">Popup Promo Strategis</h3>
+                            <h3 className="text-lg font-bold text-slate-800 text-center flex-grow pl-6">{editId ? 'Edit Popup' : 'Popup Promo Strategis'}</h3>
                             <button onClick={() => setIsAddPopupModal(false)} className="text-slate-400 hover:text-slate-600 text-xl font-light">&times;</button>
                         </div>
                         <form onSubmit={handleCreatePopup} className="p-6">
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Nama Promo</label>
-                                    <input type="text" required value={popupForm.title} onChange={e => setPopupForm({ ...popupForm, title: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm" placeholder="Contoh: Flash Sale Diamonds" />
+                                    <input type="text" required value={popupForm.title} onChange={e => setPopupForm({ ...popupForm, title: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-slate-800 text-sm" placeholder="Contoh: Flash Sale Diamonds" />
                                 </div>
                                 <div>
-                                    <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Banner Image URL</label>
-                                    <input type="url" required value={popupForm.imageUrl} onChange={e => setPopupForm({ ...popupForm, imageUrl: e.target.value })} placeholder="https://..." className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm" />
+                                    <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Upload Gambar Popup (Otomatis WebP)</label>
+                                    <input type="file" accept="image/*" onChange={e => handleImageUpload(e, setPopupForm, popupForm)} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100" />
+                                    {popupForm.imageUrl && <div className="mt-2 h-20 w-32 rounded-xl bg-slate-100 overflow-hidden border border-slate-200"><img src={popupForm.imageUrl} className="h-full w-full object-cover" alt="Preview"/></div>}
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Atau Gunakan Image URL Langsung</label>
+                                    <input type="url" required value={popupForm.imageUrl} onChange={e => setPopupForm({ ...popupForm, imageUrl: e.target.value })} placeholder="https://..." className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-slate-800 text-sm" />
                                 </div>
                                 <div>
                                     <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Penjelasan Singkat</label>
-                                    <input type="text" value={popupForm.content} onChange={e => setPopupForm({ ...popupForm, content: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm" placeholder="Opsional" />
+                                    <input type="text" value={popupForm.content} onChange={e => setPopupForm({ ...popupForm, content: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-slate-800 text-sm" placeholder="Opsional" />
                                 </div>
                                 <div>
                                     <label className="block text-[11px] font-black uppercase text-slate-400 mb-1">Direct Link (Opsional)</label>
-                                    <input type="text" value={popupForm.linkUrl} onChange={e => setPopupForm({ ...popupForm, linkUrl: e.target.value })} placeholder="/promo/special" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm" />
+                                    <input type="text" value={popupForm.linkUrl} onChange={e => setPopupForm({ ...popupForm, linkUrl: e.target.value })} placeholder="/promo/special" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-slate-800 text-sm" />
                                 </div>
                             </div>
                             <button type="submit" className="w-full mt-8 py-4 bg-emerald-600 text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-emerald-700 transition-all shadow-lg hover:shadow-emerald-200">
-                                Aktifkan Popup Sekarang
+                                {editId ? 'Simpan Perubahan' : 'Aktifkan Popup Sekarang'}
                             </button>
                         </form>
                     </div>

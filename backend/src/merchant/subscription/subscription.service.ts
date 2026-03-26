@@ -16,8 +16,16 @@ export class SubscriptionService {
             orderBy: { createdAt: 'desc' }
         });
 
+        // Look up latest subscription history to find when it started
+        const latestHistory = await this.prisma.subscriptionHistory.findFirst({
+            where: { merchantId },
+            orderBy: { createdAt: 'desc' }
+        });
+        const startedAt = latestHistory ? latestHistory.startDate : merchant.createdAt;
+
         return {
             plan: merchant.plan,
+            planStartedAt: startedAt,
             planExpiredAt: merchant.planExpiredAt,
             // FREE plan (no planExpiredAt) is always considered active
             isActive: !merchant.planExpiredAt || new Date() < new Date(merchant.planExpiredAt),

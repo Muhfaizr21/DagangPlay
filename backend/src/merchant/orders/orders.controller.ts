@@ -5,6 +5,7 @@ import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
+import { CreateDirectOrderDto } from './dto/create-order.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.MERCHANT, Role.SUPER_ADMIN)
@@ -13,7 +14,7 @@ export class OrdersController {
     constructor(private readonly ordersService: OrdersService, private prisma: PrismaService) { }
 
     @Post('create-direct')
-    async createDirectOrder(@Request() req, @Body() body: any) {
+    async createDirectOrder(@Request() req, @Body() body: CreateDirectOrderDto) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
         if (!merchant) throw new Error('Merchant not found');
         return this.ordersService.createDirectOrder(merchant.id, req.user.id, body);

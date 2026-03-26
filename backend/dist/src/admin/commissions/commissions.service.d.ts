@@ -1,6 +1,7 @@
 import { PrismaService } from '../../prisma.service';
 export declare class CommissionsService {
     private prisma;
+    private readonly logger;
     constructor(prisma: PrismaService);
     getPendingCommissions(search?: string): Promise<({
         user: {
@@ -30,6 +31,7 @@ export declare class CommissionsService {
     settleBulkCommissions(operatorId: string): Promise<{
         message: string;
     }>;
+    autoSettleCommissions(): Promise<void>;
     getDownlineTree(userId?: string): Promise<({
         parent: {
             id: string;

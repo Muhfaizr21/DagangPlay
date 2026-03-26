@@ -46,6 +46,12 @@ export declare class MerchantsService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
+        autoPayoutEnabled: boolean;
+        autoPayoutThreshold: number;
+        autoPayoutSchedule: string | null;
+        forceHttps: boolean;
+        escrowBalance: number;
+        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
@@ -72,8 +78,8 @@ export declare class MerchantsService {
             createdAt: Date;
             updatedAt: Date;
             merchantId: string;
-            role: import("@prisma/client").$Enums.MerchantMemberRole;
             userId: string;
+            role: import("@prisma/client").$Enums.MerchantMemberRole;
             permissions: import("@prisma/client/runtime/client").JsonValue | null;
         })[];
         _count: {
@@ -102,6 +108,12 @@ export declare class MerchantsService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
+        autoPayoutEnabled: boolean;
+        autoPayoutThreshold: number;
+        autoPayoutSchedule: string | null;
+        forceHttps: boolean;
+        escrowBalance: number;
+        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
@@ -128,6 +140,12 @@ export declare class MerchantsService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
+        autoPayoutEnabled: boolean;
+        autoPayoutThreshold: number;
+        autoPayoutSchedule: string | null;
+        forceHttps: boolean;
+        escrowBalance: number;
+        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;

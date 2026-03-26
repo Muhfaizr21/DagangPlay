@@ -57,42 +57,90 @@ export class ResellersService {
     }
 
     async adjustBalance(merchantId: string, userId: string, resellerId: string, type: 'ADD' | 'SUBTRACT', amount: number, notes: string) {
-        const reseller = await this.prisma.user.findFirst({
-            where: { id: resellerId, merchantId, role: 'CUSTOMER' }
-        });
-
-        if (!reseller) throw new NotFoundException('Reseller tidak ditemukan');
         if (amount <= 0) throw new BadRequestException('Amount harus lebih dari 0');
 
-        // Here we assume merchant balance is central or not deducted right now, 
-        // or we only track reseller balance. For realistic SAAS, modifying reseller balance
-        // might also deduct from merchant's omset or main balance, but we'll stick to a simple 
-        // ledger for now as requested.
-
         return this.prisma.$transaction(async (tx) => {
-            // Create transaction log
-            const log = await tx.balanceTransaction.create({
-                data: {
-                    userId: resellerId,
-                    type: type === 'ADD' ? 'DEPOSIT' : 'WITHDRAWAL',
-                    amount: type === 'SUBTRACT' ? -amount : amount,
-                    description: `Adjustment by Merchant: ${notes}`
+            const reseller = await tx.user.findFirst({
+                where: { id: resellerId, merchantId, role: 'CUSTOMER' }
+            });
+
+            if (!reseller) throw new NotFoundException('Reseller tidak ditemukan');
+
+            const merchant = await tx.merchant.findUnique({
+                where: { id: merchantId },
+                include: { owner: true }
+            });
+
+            if (!merchant) throw new NotFoundException('Merchant tidak valid');
+
+            if (type === 'ADD') {
+                if (Number(merchant.owner.balance) < amount) {
+                    throw new BadRequestException('Saldo platform utama Toko (Merchant) tidak mencukupi untuk ditransfer ke Reseller.');
                 }
-            });
+                
+                await tx.user.update({
+                    where: { id: merchant.ownerId },
+                    data: { balance: { decrement: amount } }
+                });
+                
+                await tx.balanceTransaction.create({
+                    data: {
+                        userId: merchant.ownerId,
+                        type: 'WITHDRAWAL',
+                        amount: -amount,
+                        description: `Transfer mutasi saldo (Modal) ke akun Reseller: ${reseller.name} - ${notes}`
+                    }
+                });
 
-            // Update user balance
-            const action = type === 'ADD' ? { increment: amount } : { decrement: amount };
+                await tx.user.update({
+                    where: { id: resellerId },
+                    data: { balance: { increment: amount } }
+                });
 
-            if (type === 'SUBTRACT' && Number(reseller.balance) < amount) {
-                throw new BadRequestException('Saldo reseller tidak mencukupi untuk pengurangan');
+                return tx.balanceTransaction.create({
+                    data: {
+                        userId: resellerId,
+                        type: 'DEPOSIT',
+                        amount: amount,
+                        description: `Deposit saldo dari Merchant Toko: ${notes}`
+                    }
+                });
+
+            } else {
+                if (Number(reseller.balance) < amount) {
+                    throw new BadRequestException('Saldo reseller tidak mencukupi untuk ditarik kembali/dikurangi.');
+                }
+
+                await tx.user.update({
+                    where: { id: resellerId },
+                    data: { balance: { decrement: amount } }
+                });
+
+                const log = await tx.balanceTransaction.create({
+                    data: {
+                        userId: resellerId,
+                        type: 'WITHDRAWAL',
+                        amount: -amount,
+                        description: `Pengurangan/Penarikan Saldo oleh Merchant Toko: ${notes}`
+                    }
+                });
+
+                await tx.user.update({
+                    where: { id: merchant.ownerId },
+                    data: { balance: { increment: amount } }
+                });
+
+                await tx.balanceTransaction.create({
+                    data: {
+                        userId: merchant.ownerId,
+                        type: 'DEPOSIT',
+                        amount: amount,
+                        description: `Pengembalian mutasi saldo (Modal) dari Reseller: ${reseller.name} - ${notes}`
+                    }
+                });
+
+                return log;
             }
-
-            await tx.user.update({
-                where: { id: resellerId },
-                data: { balance: action }
-            });
-
-            return log;
         });
     }
 

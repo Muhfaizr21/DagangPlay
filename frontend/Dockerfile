@@ -1,25 +1,31 @@
-FROM node:20-alpine
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install dependencies needed for node-gyp and Alpine specific deps
 RUN apk add --no-cache libc6-compat
 
-# Copy package files
 COPY package*.json ./
-
-# Install dependencies (ignoring scripts in case of native build errors)
 RUN npm install
 
-# Copy application files
 COPY . .
 
-# Build Next.js application (Needs env vars)
-# Note: Since it builds static pages, NEXT_PUBLIC vars from .env will be baked in
+# Build-time env (baked into Next.js static output)
+ARG NEXT_PUBLIC_BACKEND_URL=http://157.66.56.62:3001
+ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
+
 RUN npm run build
 
-# Expose Next.js default port
+# ── Production Stage ──
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
 EXPOSE 3000
 
-# Start production server
-CMD ["npm", "run", "start"]
+CMD ["node", "server.js"]

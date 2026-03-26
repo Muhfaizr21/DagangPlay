@@ -58,7 +58,7 @@ function MarkupSettings({ baseUrl }: { baseUrl: string }) {
                             type="number" 
                             value={markup} 
                             onChange={e => setMarkup(e.target.value)} 
-                            className="w-32 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-lg" 
+                            className="w-32 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-lg text-slate-800" 
                         />
                         <span className="text-slate-500 font-bold">% dari Modal Supplier</span>
                     </div>
@@ -170,7 +170,7 @@ export default function MerchantSettingsPage() {
                         <button onClick={() => setActiveTab('profile')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'profile' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
                             <Settings className="w-4 h-4" /> Profil & Kontak
                         </button>
-                        <button onClick={() => setActiveTab('domain')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'domain' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
+                        <button onClick={() => window.location.href='/merchant/settings/domain'} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'domain' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
                             <Globe className="w-4 h-4" /> Custom Domain
                         </button>
                         <button onClick={() => setActiveTab('payment')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'payment' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
@@ -203,39 +203,39 @@ export default function MerchantSettingsPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div className="col-span-1 md:col-span-2">
                                         <label className="block text-[12px] font-bold text-slate-500 mb-2">Nama Toko</label>
-                                        <input type="text" value={profileForm.name} onChange={e => setProfileForm({ ...profileForm, name: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all" />
+                                        <input type="text" value={profileForm.name} onChange={e => setProfileForm({ ...profileForm, name: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all text-slate-800" />
                                     </div>
                                     <div className="col-span-1 md:col-span-2">
                                         <label className="block text-[12px] font-bold text-slate-500 mb-2">URL Logo Toko</label>
-                                        <input type="url" placeholder="https://..." value={profileForm.logo} onChange={e => setProfileForm({ ...profileForm, logo: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all" />
+                                        <input type="url" placeholder="https://..." value={profileForm.logo} onChange={e => setProfileForm({ ...profileForm, logo: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all text-slate-800" />
                                     </div>
                                     <div className="col-span-1 md:col-span-2">
                                         <label className="block text-[12px] font-bold text-slate-500 mb-2">URL Banner Toko</label>
-                                        <input type="url" placeholder="https://..." value={profileForm.bannerImage} onChange={e => setProfileForm({ ...profileForm, bannerImage: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all" />
+                                        <input type="url" placeholder="https://..." value={profileForm.bannerImage} onChange={e => setProfileForm({ ...profileForm, bannerImage: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all text-slate-800" />
                                     </div>
                                     <div>
                                         <label className="block text-[12px] font-bold text-slate-500 mb-2">Tagline (Opsional)</label>
-                                        <input type="text" value={profileForm.tagline} onChange={e => setProfileForm({ ...profileForm, tagline: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all" />
+                                        <input type="text" value={profileForm.tagline} onChange={e => setProfileForm({ ...profileForm, tagline: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all text-slate-800" />
                                     </div>
                                     <div>
                                         <label className="block text-[12px] font-bold text-slate-500 mb-2">Email Kontak</label>
-                                        <input type="email" value={profileForm.contactEmail} onChange={e => setProfileForm({ ...profileForm, contactEmail: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all" />
+                                        <input type="email" value={profileForm.contactEmail} onChange={e => setProfileForm({ ...profileForm, contactEmail: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all text-slate-800" />
                                     </div>
                                     <div>
                                         <label className="block text-[12px] font-bold text-slate-500 mb-2">Nomor Telepon</label>
-                                        <input type="text" value={profileForm.contactPhone} onChange={e => setProfileForm({ ...profileForm, contactPhone: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all" />
+                                        <input type="text" value={profileForm.contactPhone} onChange={e => setProfileForm({ ...profileForm, contactPhone: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all text-slate-800" />
                                     </div>
                                     <div>
                                         <label className="block text-[12px] font-bold text-slate-500 mb-2">Nomor WhatsApp CS</label>
-                                        <input type="text" value={profileForm.contactWhatsapp} onChange={e => setProfileForm({ ...profileForm, contactWhatsapp: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all" placeholder="628..." />
+                                        <input type="text" value={profileForm.contactWhatsapp} onChange={e => setProfileForm({ ...profileForm, contactWhatsapp: e.target.value })} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all text-slate-800" placeholder="628..." />
                                     </div>
                                     <div className="col-span-1 md:col-span-2">
                                         <label className="block text-[12px] font-bold text-slate-500 mb-2">Deskripsi Toko</label>
-                                        <textarea value={profileForm.description} onChange={e => setProfileForm({ ...profileForm, description: e.target.value })} rows={3} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all"></textarea>
+                                        <textarea value={profileForm.description} onChange={e => setProfileForm({ ...profileForm, description: e.target.value })} rows={3} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all text-slate-800"></textarea>
                                     </div>
                                     <div className="col-span-1 md:col-span-2">
                                         <label className="block text-[12px] font-bold text-slate-500 mb-2">Alamat Fisik (Opsional)</label>
-                                        <textarea value={profileForm.address} onChange={e => setProfileForm({ ...profileForm, address: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all"></textarea>
+                                        <textarea value={profileForm.address} onChange={e => setProfileForm({ ...profileForm, address: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all text-slate-800"></textarea>
                                     </div>
                                 </div>
                                 <div className="flex justify-end pt-4">
@@ -275,7 +275,7 @@ export default function MerchantSettingsPage() {
                             <form onSubmit={handleSaveDomain}>
                                 <div className="mb-6">
                                     <label className="block text-[12px] font-bold text-slate-500 mb-2">Nama Domain</label>
-                                    <input type="text" value={domainForm.domain} onChange={e => setDomainForm({ ...domainForm, domain: e.target.value })} placeholder="Contoh: topupdewa.com" className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all font-mono" />
+                                    <input type="text" value={domainForm.domain} onChange={e => setDomainForm({ ...domainForm, domain: e.target.value })} placeholder="Contoh: topupdewa.com" className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all font-mono text-slate-800" />
                                 </div>
                                 <button type="submit" className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-md flex items-center gap-2">
                                     Verifikasi & Simpan
@@ -306,15 +306,15 @@ export default function MerchantSettingsPage() {
                             <form onSubmit={handleSaveSeo} className="space-y-5">
                                 <div>
                                     <label className="block text-[12px] font-bold text-slate-500 mb-2">Google Analytics (G-XXXXX)</label>
-                                    <input type="text" value={seoForm.googleAnalytics} onChange={e => setSeoForm({ ...seoForm, googleAnalytics: e.target.value })} placeholder="Contoh: G-12345ABCDE" className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all font-mono text-sm" />
+                                    <input type="text" value={seoForm.googleAnalytics} onChange={e => setSeoForm({ ...seoForm, googleAnalytics: e.target.value })} placeholder="Contoh: G-12345ABCDE" className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all font-mono text-sm text-slate-800" />
                                 </div>
                                 <div>
                                     <label className="block text-[12px] font-bold text-slate-500 mb-2">Facebook Pixel ID</label>
-                                    <input type="text" value={seoForm.facebookPixel} onChange={e => setSeoForm({ ...seoForm, facebookPixel: e.target.value })} placeholder="Contoh: 123456789012345" className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all font-mono text-sm" />
+                                    <input type="text" value={seoForm.facebookPixel} onChange={e => setSeoForm({ ...seoForm, facebookPixel: e.target.value })} placeholder="Contoh: 123456789012345" className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all font-mono text-sm text-slate-800" />
                                 </div>
                                 <div>
                                     <label className="block text-[12px] font-bold text-slate-500 mb-2">TikTok Pixel ID</label>
-                                    <input type="text" value={seoForm.tiktokPixel} onChange={e => setSeoForm({ ...seoForm, tiktokPixel: e.target.value })} placeholder="Contoh: CE123ABCDEF456" className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all font-mono text-sm" />
+                                    <input type="text" value={seoForm.tiktokPixel} onChange={e => setSeoForm({ ...seoForm, tiktokPixel: e.target.value })} placeholder="Contoh: CE123ABCDEF456" className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all font-mono text-sm text-slate-800" />
                                 </div>
                                 <div className="flex justify-end pt-4 border-t border-slate-100 mt-6">
                                     <button type="submit" className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-md flex items-center gap-2">

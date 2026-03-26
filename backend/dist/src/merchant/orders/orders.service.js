@@ -53,16 +53,22 @@ let OrdersService = class OrdersService {
         }
         const orderNumber = `DIR-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         return this.prisma.$transaction(async (tx) => {
-            const updatedUser = await tx.user.update({
-                where: { id: merchant.ownerId },
+            const updatedUsers = await tx.user.updateMany({
+                where: {
+                    id: merchant.ownerId,
+                    balance: { gte: modalPrice }
+                },
                 data: { balance: { decrement: modalPrice } }
             });
+            if (updatedUsers.count === 0) {
+                throw new common_1.BadRequestException('Saldo Anda tidak mencukupi atau sedang dikunci oleh sistem. Silakan top-up terlebih dahulu.');
+            }
             await tx.balanceTransaction.create({
                 data: {
                     userId: merchant.ownerId,
                     type: 'PURCHASE',
                     amount: -modalPrice,
-                    description: `Pembelian Produk: ${sku.product.name} - ${sku.name} (${orderNumber})`
+                    description: `Pembelian Produk (Direct): ${sku.product.name} - ${sku.name} (${orderNumber})`
                 }
             });
             const order = await tx.order.create({
@@ -94,7 +100,11 @@ let OrdersService = class OrdersService {
                 await this.digiflazz.placeOrder(order.id);
             }
             catch (err) {
-                console.error('[DirectOrder] Fulfillment failed, but order is paid. Merchant should retry manually.', err);
+                console.error('[DirectOrder] Ghost timeout saat fulfillment, Order PAID tapi Digiflazz gagal/timeout.', err.message);
+                await this.prisma.order.update({
+                    where: { id: order.id },
+                    data: { failReason: 'Koneksi ke server pusat terputus (Timeout). Silakan lakukan RETRY manual.' }
+                });
             }
             return order;
         });
@@ -160,19 +170,18 @@ let OrdersService = class OrdersService {
         return order;
     }
     async retryOrder(merchantId, orderId) {
-        const order = await this.prisma.order.findFirst({
-            where: { id: orderId, merchantId }
+        const updatedCount = await this.prisma.order.updateMany({
+            where: {
+                id: orderId,
+                merchantId,
+                paymentStatus: 'PAID',
+                fulfillmentStatus: { in: ['PENDING', 'FAILED'] }
+            },
+            data: { fulfillmentStatus: 'PROCESSING', failReason: null }
         });
-        if (!order)
-            throw new common_1.NotFoundException('Order not found');
-        if (order.fulfillmentStatus === 'SUCCESS')
-            throw new common_1.BadRequestException('Order already SUCCESS');
-        if (order.paymentStatus !== 'PAID')
-            throw new common_1.BadRequestException('Order belum terbayar, tidak bisa diretry');
-        await this.prisma.order.update({
-            where: { id: orderId },
-            data: { fulfillmentStatus: 'PROCESSING' }
-        });
+        if (updatedCount.count === 0) {
+            throw new common_1.BadRequestException('Order tidak bisa diretry. Pastikan order sudah terbayar dan tidak sedang/sudah diproses (SUCCESS/PROCESSING).');
+        }
         await this.prisma.orderStatusHistory.create({
             data: {
                 orderId,
@@ -214,17 +223,18 @@ let OrdersService = class OrdersService {
             });
             if (order.paymentStatus === 'PAID' && order.paymentMethod === 'BALANCE') {
                 const buyerId = order.userId;
+                const refundAmount = order.merchantModalPrice || order.sellingPrice;
                 if (buyerId) {
                     await tx.user.update({
                         where: { id: buyerId },
-                        data: { balance: { increment: order.totalPrice } }
+                        data: { balance: { increment: refundAmount } }
                     });
                     await tx.balanceTransaction.create({
                         data: {
                             userId: buyerId,
                             type: 'REFUND',
-                            amount: order.totalPrice,
-                            description: `Refund for order ${order.orderNumber}`
+                            amount: refundAmount,
+                            description: `Refund Modal untuk order langsung ${order.orderNumber}`
                         }
                     });
                 }

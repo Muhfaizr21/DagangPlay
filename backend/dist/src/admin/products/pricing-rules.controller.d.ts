@@ -12,9 +12,9 @@ export declare class PricingRulesController {
             description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            isActive: boolean;
             image: string | null;
             sortOrder: number;
-            isActive: boolean;
             icon: string | null;
             parentId: string | null;
             digiflazzCategory: string | null;

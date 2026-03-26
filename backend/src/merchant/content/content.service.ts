@@ -31,6 +31,21 @@ export class ContentService {
         return this.prisma.banner.update({ where: { id }, data: { isActive } });
     }
 
+    async updateBanner(merchantId: string, id: string, data: any) {
+        const banner = await this.prisma.banner.findFirst({ where: { id, merchantId } });
+        if (!banner) throw new NotFoundException('Banner not found');
+        return this.prisma.banner.update({
+            where: { id },
+            data: {
+                title: data.title,
+                image: data.imageUrl,
+                linkUrl: data.linkUrl,
+                position: data.location || 'HERO',
+                sortOrder: data.sequence || 0
+            }
+        });
+    }
+
     async deleteBanner(merchantId: string, id: string) {
         const banner = await this.prisma.banner.findFirst({ where: { id, merchantId } });
         if (!banner) throw new NotFoundException('Banner not found');
@@ -56,6 +71,18 @@ export class ContentService {
         const ann = await this.prisma.announcement.findFirst({ where: { id, merchantId } });
         if (!ann) throw new NotFoundException('Announcement not found');
         return this.prisma.announcement.update({ where: { id }, data: { isActive } });
+    }
+
+    async updateAnnouncement(merchantId: string, id: string, data: any) {
+        const ann = await this.prisma.announcement.findFirst({ where: { id, merchantId } });
+        if (!ann) throw new NotFoundException('Announcement not found');
+        return this.prisma.announcement.update({
+            where: { id },
+            data: {
+                title: data.title,
+                content: data.content
+            }
+        });
     }
 
     async deleteAnnouncement(merchantId: string, id: string) {
@@ -116,6 +143,20 @@ export class ContentService {
         const promo = await this.prisma.popupPromo.findFirst({ where: { id, merchantId } });
         if (!promo) throw new NotFoundException('Popup Promo not found');
         return this.prisma.popupPromo.update({ where: { id }, data: { isActive } });
+    }
+
+    async updatePopupPromo(merchantId: string, id: string, data: any) {
+        const promo = await this.prisma.popupPromo.findFirst({ where: { id, merchantId } });
+        if (!promo) throw new NotFoundException('Popup Promo not found');
+        return this.prisma.popupPromo.update({
+            where: { id },
+            data: {
+                title: data.title,
+                content: data.content,
+                image: data.imageUrl,
+                linkUrl: data.linkUrl
+            }
+        });
     }
 
     async deletePopupPromo(merchantId: string, id: string) {

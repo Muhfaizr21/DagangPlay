@@ -18,6 +18,7 @@ model User {
   status                UserStatus             @default(ACTIVE)
   adminPermissions      Json?                  @default("[]")
   isVerified            Boolean                @default(false)
+  isGuest               Boolean                @default(false)
   verifiedAt            DateTime?
   referralCode          String                 @unique
   referredById          String?
@@ -174,27 +175,38 @@ model DeviceTrusted {
 }
 
 model Merchant {
-  id                    String                    @id @default(cuid())
-  name                  String
-  slug                  String                    @unique
-  logo                  String?
-  favicon               String?
-  bannerImage           String?
-  domain                String?                   @unique
-  description           String?
-  tagline               String?
-  contactEmail          String?
-  contactPhone          String?
-  contactWhatsapp       String?
-  address               String?
-  city                  String?
-  province              String?
-  status                MerchantStatus            @default(PENDING_REVIEW)
-  plan                  MerchantPlan              @default(FREE)
-  planExpiredAt         DateTime?
-  isOfficial            Boolean                   @default(false)
-  settings              Json?
-  ownerId               String                    @unique
+  id              String         @id @default(cuid())
+  name            String
+  slug            String         @unique
+  logo            String?
+  favicon         String?
+  bannerImage     String?
+  domain          String?        @unique
+  description     String?
+  tagline         String?
+  contactEmail    String?
+  contactPhone    String?
+  contactWhatsapp String?
+  address         String?
+  city            String?
+  province        String?
+  status          MerchantStatus @default(PENDING_REVIEW)
+  plan            MerchantPlan   @default(FREE)
+  planExpiredAt   DateTime?
+  isOfficial      Boolean        @default(false)
+  settings        Json?
+  ownerId         String         @unique
+
+  // Custom Domain & Payout Config Fields
+  autoPayoutEnabled   Boolean @default(false)
+  autoPayoutThreshold Float   @default(500000)
+  autoPayoutSchedule  String? @default("DAILY")
+  forceHttps          Boolean @default(true)
+
+  // Two-Ledger Balance Storage
+  escrowBalance    Float @default(0)
+  availableBalance Float @default(0)
+
   createdAt             DateTime                  @default(now())
   updatedAt             DateTime                  @updatedAt
   deletedAt             DateTime?
@@ -220,6 +232,9 @@ model Merchant {
   subscriptionHistories SubscriptionHistory[]
   supportTickets        SupportTicket[]
   webhookEndpoints      WebhookEndpoint[]
+  webhookDeliveryLogs   WebhookDeliveryLog[]
+  ledgerMovements       MerchantLedgerMovement[]
+  flashSaleEvents       FlashSaleEvent[]
 
   @@index([slug, domain, status, plan, isOfficial, createdAt])
 }
@@ -389,6 +404,7 @@ model ProductSku {
   supplier              Supplier               @relation(fields: [supplierId], references: [id])
   promoCodes            PromoCode[]
   tierPriceHistories    TierPriceHistory[]
+  flashSaleItems        FlashSaleItem[]
 
   @@index([productId, supplierId, status, supplierCode])
 }
@@ -1609,4 +1625,95 @@ enum ChangeType {
   SYNC_DIGIFLAZZ
   FORMULA_APPLY
   BULK_UPDATE
+}
+
+// -------------------------------------------------------------
+// NEW SAAS ARCHITECTURE TABLES (QUEUE, WEBHOOKS, LEDGER LOGS)
+// -------------------------------------------------------------
+
+model WebhookDeliveryLog {
+  id              String   @id @default(cuid())
+  merchantId      String
+  endpointUrl     String
+  event           String
+  requestHeaders  Json?
+  requestPayload  Json
+  responseStatus  Int?
+  responseHeaders Json?
+  responseBody    Json?
+  latencyMs       Int?
+  isSuccess       Boolean  @default(false)
+  attemptCount    Int      @default(1)
+  errorReason     String?  @db.Text
+  createdAt       DateTime @default(now())
+
+  merchant Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@index([merchantId, isSuccess, createdAt])
+}
+
+model DeadLetterQueue {
+  id            String   @id @default(cuid())
+  queueName     String
+  jobId         String   @unique
+  jobData       Json
+  failedReason  String   @db.Text
+  attemptCount  Int
+  lastAttemptAt DateTime
+  isResolved    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([queueName, isResolved, createdAt])
+}
+
+model MerchantLedgerMovement {
+  id              String   @id @default(cuid())
+  merchantId      String
+  orderId         String?
+  type            String // ESCROW_IN, ESCROW_OUT, AVAILABLE_IN, AVAILABLE_OUT, PAYOUT, COMMISSION, FEE
+  amount          Float
+  description     String
+  escrowBefore    Float
+  escrowAfter     Float
+  availableBefore Float
+  availableAfter  Float
+  createdAt       DateTime @default(now())
+
+  merchant Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@index([merchantId, type, createdAt])
+}
+
+model FlashSaleEvent {
+  id            String    @id @default(cuid())
+  merchantId    String
+  name          String
+  description   String?
+  startTime     DateTime
+  endTime       DateTime
+  isActive      Boolean   @default(false)
+  discountType  String    @default("PERCENTAGE") // PERCENTAGE | FLAT
+  discountValue Float     @default(0)
+  bannerImageUrl String?
+  maxUsage      Int?
+  usedCount     Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  items         FlashSaleItem[]
+  merchant      Merchant  @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@index([merchantId, isActive, startTime, endTime])
+}
+
+model FlashSaleItem {
+  id              String @id @default(cuid())
+  flashSaleId     String
+  productSkuId    String
+  originalPrice   Float
+  salePrice       Float
+  stockLimit      Int?
+  soldCount       Int    @default(0)
+  flashSale       FlashSaleEvent @relation(fields: [flashSaleId], references: [id], onDelete: Cascade)
+  productSku      ProductSku     @relation(fields: [productSkuId], references: [id])
 }

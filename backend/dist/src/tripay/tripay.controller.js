@@ -101,29 +101,13 @@ let TripayController = class TripayController {
                                     const platformFeeAmount = Math.round(netProfit * (platformFeePct / 100));
                                     const merchantNetProfit = netProfit - platformFeeAmount;
                                     if (merchantNetProfit > 0) {
-                                        const user = await tx.user.update({
-                                            where: { id: merchant.ownerId },
-                                            data: { balance: { increment: merchantNetProfit } }
-                                        });
                                         await tx.commission.create({
                                             data: {
                                                 orderId: order.id,
                                                 userId: merchant.ownerId,
                                                 type: 'MERCHANT_RETAIL_PROFIT',
                                                 amount: merchantNetProfit,
-                                                status: 'SETTLED',
-                                                settledAt: new Date()
-                                            }
-                                        });
-                                        await tx.balanceTransaction.create({
-                                            data: {
-                                                userId: merchant.ownerId,
-                                                type: 'COMMISSION',
-                                                amount: merchantNetProfit,
-                                                balanceBefore: Number(user.balance) - merchantNetProfit,
-                                                balanceAfter: Number(user.balance),
-                                                orderId: order.id,
-                                                description: `Profit penjualan bersih ${order.orderNumber} (Tripay M-Fee: ${tripayFeeMerchant}, Platform: ${platformFeeAmount})`
+                                                status: 'PENDING'
                                             }
                                         });
                                     }
@@ -135,29 +119,13 @@ let TripayController = class TripayController {
                                             orderBy: { createdAt: 'asc' }
                                         });
                                         if (superAdmin) {
-                                            const su = await tx.user.update({
-                                                where: { id: superAdmin.id },
-                                                data: { balance: { increment: totalPlatformProfit } }
-                                            });
                                             await tx.commission.create({
                                                 data: {
                                                     orderId: order.id,
                                                     userId: superAdmin.id,
                                                     type: 'PLATFORM_FEE',
                                                     amount: totalPlatformProfit,
-                                                    status: 'SETTLED',
-                                                    settledAt: new Date()
-                                                }
-                                            });
-                                            await tx.balanceTransaction.create({
-                                                data: {
-                                                    userId: superAdmin.id,
-                                                    type: 'COMMISSION',
-                                                    amount: totalPlatformProfit,
-                                                    balanceBefore: Number(su.balance) - totalPlatformProfit,
-                                                    balanceAfter: Number(su.balance),
-                                                    orderId: order.id,
-                                                    description: `Platform Profit ${order.orderNumber} (Fee: ${platformFeeAmount}, Markup: ${saasMarkup})`
+                                                    status: 'PENDING'
                                                 }
                                             });
                                         }
@@ -176,13 +144,15 @@ let TripayController = class TripayController {
                             `Total: Rp ${order.totalPrice.toLocaleString('id-ID')}\n` +
                             `Metode: ${order.paymentMethod}\n` +
                             `Markup SA: Rp ${adminMarkup.toLocaleString('id-ID')}`).catch(() => { });
-                        try {
-                            console.log(`[TripayCallback] Triggering fulfillment for order: ${order.orderNumber}`);
-                            await this.digiflazz.placeOrder(order.id);
-                        }
-                        catch (fulfillErr) {
-                            console.error(`[TripayCallback] Fulfillment failed for ${order.orderNumber}:`, fulfillErr.message);
-                        }
+                        setTimeout(async () => {
+                            try {
+                                console.log(`[TripayQueue / Background Worker] Triggering fulfillment for order: ${order.orderNumber}`);
+                                await this.digiflazz.placeOrder(order.id);
+                            }
+                            catch (fulfillErr) {
+                                console.error(`[TripayQueue / Background Worker] Fulfillment failed for ${order.orderNumber}:`, fulfillErr.message);
+                            }
+                        }, 0);
                     }
                     catch (err) {
                         if (err.code === 'P2025') {
@@ -239,12 +209,19 @@ let TripayController = class TripayController {
                         });
                         if (invoice && (invoice.status === 'UNPAID' || invoice.status === 'PENDING')) {
                             await this.prisma.$transaction(async (tx) => {
-                                await tx.invoice.update({
-                                    where: { id: invoice.id },
+                                const updatedInvoice = await tx.invoice.updateMany({
+                                    where: {
+                                        id: invoice.id,
+                                        status: { in: ['UNPAID', 'PENDING'] }
+                                    },
                                     data: { status: 'PAID', paidAt: new Date(), tripayResponse: data }
                                 });
+                                if (updatedInvoice.count === 0) {
+                                    console.log(`[TripayCallback] Race condition detected for invoice ${ref}. Already processed.`);
+                                    return;
+                                }
                                 const expireAt = new Date();
-                                expireAt.setDate(expireAt.getDate() + 30);
+                                expireAt.setDate(expireAt.getDate() + 365);
                                 await tx.merchant.update({
                                     where: { id: invoice.merchantId },
                                     data: {

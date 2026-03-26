@@ -56,6 +56,57 @@ let PromosService = class PromosService {
             throw new common_1.NotFoundException('Promo not found');
         return this.prisma.promoCode.delete({ where: { id } });
     }
+    async getFlashSales(merchantId) {
+        return this.prisma.flashSaleEvent.findMany({
+            where: { merchantId },
+            include: {
+                items: {
+                    include: {
+                        productSku: {
+                            select: { name: true, priceNormal: true }
+                        }
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+    async createFlashSale(merchantId, data) {
+        return this.prisma.flashSaleEvent.create({
+            data: {
+                merchantId,
+                name: data.name,
+                startTime: new Date(data.startTime),
+                endTime: new Date(data.endTime),
+                isActive: data.isActive !== undefined ? data.isActive : true,
+                discountType: data.discountType || 'PERCENTAGE',
+                discountValue: Number(data.discountValue || 0),
+                items: {
+                    create: (data.items || []).map((item) => ({
+                        productSkuId: item.productSkuId,
+                        originalPrice: Number(item.originalPrice),
+                        salePrice: Number(item.salePrice),
+                        stockLimit: item.stockLimit ? Number(item.stockLimit) : null
+                    }))
+                }
+            }
+        });
+    }
+    async toggleFlashSale(merchantId, id, isActive) {
+        const flashSale = await this.prisma.flashSaleEvent.findFirst({ where: { id, merchantId } });
+        if (!flashSale)
+            throw new common_1.NotFoundException('Flash Sale not found');
+        return this.prisma.flashSaleEvent.update({
+            where: { id },
+            data: { isActive }
+        });
+    }
+    async deleteFlashSale(merchantId, id) {
+        const flashSale = await this.prisma.flashSaleEvent.findFirst({ where: { id, merchantId } });
+        if (!flashSale)
+            throw new common_1.NotFoundException('Flash Sale not found');
+        return this.prisma.flashSaleEvent.delete({ where: { id } });
+    }
 };
 exports.PromosService = PromosService;
 exports.PromosService = PromosService = __decorate([

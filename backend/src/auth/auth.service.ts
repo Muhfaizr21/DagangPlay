@@ -24,6 +24,12 @@ export class AuthService {
             throw new UnauthorizedException('Email administrator tidak terdaftar.');
         }
 
+        // Add Guest Check
+        if (user.isGuest) {
+            console.log('Result: FAILED - isGuest is true');
+            throw new UnauthorizedException('Akun Guest tidak dapat login ke Admin Panel.');
+        }
+
         // Verify Role
         if (!['SUPER_ADMIN', 'ADMIN_STAFF', 'MERCHANT'].includes(user.role)) {
             console.log('Result: FAILED - Invalid Role:', user.role);

@@ -1,18 +1,13 @@
 import { OrdersService } from './orders.service';
 import { PrismaService } from '../../prisma.service';
+import { CreateDirectOrderDto } from './dto/create-order.dto';
 export declare class OrdersController {
     private readonly ordersService;
     private prisma;
     constructor(ordersService: OrdersService, prisma: PrismaService);
-    createDirectOrder(req: any, body: any): Promise<any>;
+    createDirectOrder(req: any, body: CreateDirectOrderDto): Promise<any>;
     getOrders(req: any, filters: any): Promise<{
         orders: ({
-            user: {
-                id: string;
-                name: string;
-                email: string | null;
-                phone: string | null;
-            };
             productSku: {
                 name: string;
                 product: {
@@ -20,11 +15,20 @@ export declare class OrdersController {
                     thumbnail: string | null;
                 };
             };
+            user: {
+                id: string;
+                name: string;
+                email: string | null;
+                phone: string | null;
+            };
         } & {
             id: string;
             createdAt: Date;
             updatedAt: Date;
             merchantId: string;
+            productSkuId: string;
+            userId: string;
+            expiredAt: Date | null;
             productId: string;
             supplierId: string | null;
             basePrice: number;
@@ -51,10 +55,7 @@ export declare class OrdersController {
             processedAt: Date | null;
             completedAt: Date | null;
             failedAt: Date | null;
-            expiredAt: Date | null;
             merchantModalPrice: number | null;
-            userId: string;
-            productSkuId: string;
             promoCodeId: string | null;
         })[];
         stats: {
@@ -63,11 +64,6 @@ export declare class OrdersController {
         };
     }>;
     getOrderDetails(req: any, orderId: string): Promise<{
-        user: {
-            id: string;
-            name: string;
-            email: string | null;
-        };
         productSku: {
             name: string;
             product: {
@@ -75,6 +71,11 @@ export declare class OrdersController {
                 categoryId: string;
                 thumbnail: string | null;
             };
+        };
+        user: {
+            id: string;
+            name: string;
+            email: string | null;
         };
         statusHistories: {
             id: string;
@@ -89,6 +90,9 @@ export declare class OrdersController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
+        productSkuId: string;
+        userId: string;
+        expiredAt: Date | null;
         productId: string;
         supplierId: string | null;
         basePrice: number;
@@ -115,10 +119,7 @@ export declare class OrdersController {
         processedAt: Date | null;
         completedAt: Date | null;
         failedAt: Date | null;
-        expiredAt: Date | null;
         merchantModalPrice: number | null;
-        userId: string;
-        productSkuId: string;
         promoCodeId: string | null;
     }>;
     retryOrder(req: any, orderId: string): Promise<{
@@ -128,6 +129,9 @@ export declare class OrdersController {
             createdAt: Date;
             updatedAt: Date;
             merchantId: string;
+            productSkuId: string;
+            userId: string;
+            expiredAt: Date | null;
             productId: string;
             supplierId: string | null;
             basePrice: number;
@@ -154,10 +158,7 @@ export declare class OrdersController {
             processedAt: Date | null;
             completedAt: Date | null;
             failedAt: Date | null;
-            expiredAt: Date | null;
             merchantModalPrice: number | null;
-            userId: string;
-            productSkuId: string;
             promoCodeId: string | null;
         } | null;
     }>;

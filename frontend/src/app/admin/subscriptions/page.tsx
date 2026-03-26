@@ -284,6 +284,7 @@ export default function SaaSManagementPage() {
                                     <thead className="bg-slate-50/50 border-b border-slate-100">
                                         <tr className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
                                             <th className="px-6 py-4">Invoice / Merchant</th>
+                                            <th className="px-6 py-4">Plan Saat Ini</th>
                                             <th className="px-6 py-4">Plan Target</th>
                                             <th className="px-6 py-4">Total Tagihan</th>
                                             <th className="px-6 py-4">Dibuat / Tempo</th>
@@ -305,6 +306,18 @@ export default function SaaSManagementPage() {
                                                             <p className="font-bold text-slate-800 text-[13px]">{inv.invoiceNo}</p>
                                                             <p className="text-[11px] text-slate-500 font-medium">{inv.merchant.name}</p>
                                                         </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase truncate ${inv.merchant.plan === 'SUPREME' ? 'bg-orange-50 text-orange-600' :
+                                                            inv.merchant.plan === 'LEGEND' ? 'bg-purple-50 text-purple-600' :
+                                                                inv.merchant.plan === 'PRO' ? 'bg-blue-50 text-blue-600' :
+                                                                    'bg-slate-100 text-slate-500'
+                                                            }`}>
+                                                            {inv.merchant.plan || 'FREE'}
+                                                        </span>
+                                                        <ArrowRight className="w-3 h-3 text-slate-300 flex-shrink-0" />
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
@@ -420,41 +433,96 @@ export default function SaaSManagementPage() {
                                                 className="w-full mt-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:ring-1 focus:ring-indigo-500 transition"
                                             />
                                         </div>
-                                        <div className="flex items-center justify-between bg-white px-3 py-2 border border-slate-200 rounded-lg">
-                                            <span className="text-[11px] font-bold text-slate-600">Custom Domain</span>
-                                            <input
-                                                type="checkbox"
-                                                checked={plansConfig[planKey]?.customDomain || false}
-                                                onChange={e => updatePlanConfig(planKey, 'customDomain', e.target.checked)}
-                                                className="w-4 h-4 rounded text-indigo-600"
-                                            />
-                                        </div>
-                                        <div className="flex items-center justify-between bg-white px-3 py-2 border border-slate-200 rounded-lg">
-                                            <span className="text-[11px] font-bold text-slate-600">Multi User (Staff)</span>
-                                            <input
-                                                type="checkbox"
-                                                checked={plansConfig[planKey]?.multiUser || false}
-                                                onChange={e => updatePlanConfig(planKey, 'multiUser', e.target.checked)}
-                                                className="w-4 h-4 rounded text-indigo-600"
-                                            />
-                                        </div>
-                                        <div className="flex items-center justify-between bg-white px-3 py-2 border border-slate-200 rounded-lg">
-                                            <span className="text-[11px] font-bold text-slate-600">White Label</span>
-                                            <input
-                                                type="checkbox"
-                                                checked={plansConfig[planKey]?.whiteLabel || false}
-                                                onChange={e => updatePlanConfig(planKey, 'whiteLabel', e.target.checked)}
-                                                className="w-4 h-4 rounded text-indigo-600"
-                                            />
+                                        {/* Harga */}
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-400 uppercase">Harga / Bulan (Rp)</label>
+                                                <input
+                                                    type="number"
+                                                    value={plansConfig[planKey]?.price || 0}
+                                                    onChange={e => updatePlanConfig(planKey, 'price', Number(e.target.value))}
+                                                    className="w-full mt-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-indigo-700 focus:ring-1 focus:ring-indigo-500 transition"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-400 uppercase">Harga / Tahun (Rp)</label>
+                                                <input
+                                                    type="number"
+                                                    value={plansConfig[planKey]?.yearlyPrice || 0}
+                                                    onChange={e => updatePlanConfig(planKey, 'yearlyPrice', Number(e.target.value))}
+                                                    className="w-full mt-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-emerald-700 focus:ring-1 focus:ring-emerald-500 transition"
+                                                />
+                                            </div>
                                         </div>
                                         <div>
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Harga Langganan Bulanan/Tahunan Final (Rp)</label>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Potensi Profit Label</label>
                                             <input
-                                                type="number"
-                                                value={plansConfig[planKey]?.price || 0}
-                                                onChange={e => updatePlanConfig(planKey, 'price', Number(e.target.value))}
-                                                className="w-full mt-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-indigo-700 focus:ring-1 focus:ring-indigo-500 transition"
+                                                type="text"
+                                                value={plansConfig[planKey]?.maxProfitLabel || ''}
+                                                onChange={e => updatePlanConfig(planKey, 'maxProfitLabel', e.target.value)}
+                                                placeholder="Contoh: Rp30jt/bln"
+                                                className="w-full mt-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-orange-600 focus:ring-1 focus:ring-orange-400 transition"
                                             />
+                                        </div>
+
+                                        {/* Domain */}
+                                        <div className="border-t border-slate-200 pt-3">
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Domain & Akses</p>
+                                            <div className="space-y-1.5">
+                                                {[
+                                                    { key: 'customDomain', label: 'Custom Domain' },
+                                                    { key: 'multiUser', label: 'Multi User (Staff)' },
+                                                    { key: 'whiteLabel', label: 'White Label' },
+                                                    { key: 'tldDomain', label: 'Dapat Domain TLD' },
+                                                ].map(({ key, label }) => (
+                                                    <div key={key} className="flex items-center justify-between bg-white px-3 py-2 border border-slate-200 rounded-lg">
+                                                        <span className="text-[11px] font-bold text-slate-600">{label}</span>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={plansConfig[planKey]?.[key] || false}
+                                                            onChange={e => updatePlanConfig(planKey, key, e.target.checked)}
+                                                            className="w-4 h-4 rounded text-indigo-600"
+                                                        />
+                                                    </div>
+                                                ))}
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase">Pilihan Domain (jumlah)</label>
+                                                    <input
+                                                        type="number"
+                                                        value={plansConfig[planKey]?.domainChoices || 0}
+                                                        onChange={e => updatePlanConfig(planKey, 'domainChoices', Number(e.target.value))}
+                                                        className="w-full mt-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:ring-1 focus:ring-indigo-500 transition"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Fitur Premium */}
+                                        <div className="border-t border-slate-200 pt-3">
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Fitur Premium</p>
+                                            <div className="space-y-1.5">
+                                                {[
+                                                    { key: 'seoPixel', label: 'Optimasi SEO & Pixel' },
+                                                    { key: 'couponManagement', label: 'Manajemen Kupon Diskon' },
+                                                    { key: 'templateVariants', label: 'Variasi Template Website' },
+                                                    { key: 'flashSale', label: '⚡ Flash Sale / Countdown Timer' },
+                                                    { key: 'instantWithdrawal', label: '💸 Penarikan Saldo Instan' },
+                                                    { key: 'customProductDetail', label: '🎮 Kustomisasi Detail Produk' },
+                                                    { key: 'buildApk', label: '📱 Build Your APK' },
+                                                    { key: 'resellerAcademy', label: '🎓 Reseller Academy' },
+                                                    { key: 'prioritySupport', label: '🟢 Prioritized Support (WhatsApp)' },
+                                                ].map(({ key, label }) => (
+                                                    <div key={key} className="flex items-center justify-between bg-white px-3 py-2 border border-slate-200 rounded-lg">
+                                                        <span className="text-[11px] font-bold text-slate-600">{label}</span>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={plansConfig[planKey]?.[key] || false}
+                                                            onChange={e => updatePlanConfig(planKey, key, e.target.checked)}
+                                                            className="w-4 h-4 rounded text-indigo-600"
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
 
                                         <div className="pt-2 border-t border-slate-200 mt-2">
@@ -503,6 +571,7 @@ export default function SaaSManagementPage() {
                                                 )}
                                             </div>
                                         </div>
+
                                     </div>
                                 </div>
                             ))}

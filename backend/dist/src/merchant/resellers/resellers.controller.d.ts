@@ -35,6 +35,7 @@ export declare class ResellersController {
         role: import("@prisma/client").$Enums.Role;
         adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
         isVerified: boolean;
+        isGuest: boolean;
         verifiedAt: Date | null;
         referredById: string | null;
         balance: number;
@@ -62,6 +63,7 @@ export declare class ResellersController {
         role: import("@prisma/client").$Enums.Role;
         adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
         isVerified: boolean;
+        isGuest: boolean;
         verifiedAt: Date | null;
         referredById: string | null;
         balance: number;

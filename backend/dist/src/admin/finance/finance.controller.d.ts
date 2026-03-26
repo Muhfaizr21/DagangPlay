@@ -2,15 +2,7 @@ import { FinanceService } from './finance.service';
 export declare class FinanceController {
     private readonly financeService;
     constructor(financeService: FinanceService);
-    getSummary(): Promise<{
-        totalDepositIn: number;
-        totalWithdrawalOut: number;
-        wdFeesCollected: number;
-        grossSales: number;
-        netMarginProfit: number;
-        todaySales: number;
-        saasRevenue: number;
-    }>;
+    getSummary(): Promise<any>;
     getDeposits(status?: string, search?: string): Promise<({
         merchant: {
             id: string;
@@ -33,9 +25,9 @@ export declare class FinanceController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
-        note: string | null;
-        expiredAt: Date | null;
         userId: string;
+        expiredAt: Date | null;
+        note: string | null;
         method: import("@prisma/client").$Enums.PaymentMethod;
         amount: number;
         tripayReference: string | null;
@@ -67,17 +59,17 @@ export declare class FinanceController {
         status: import("@prisma/client").$Enums.WithdrawalStatus;
         createdAt: Date;
         updatedAt: Date;
+        userId: string;
         note: string | null;
         processedAt: Date | null;
-        userId: string;
         amount: number;
         fee: number;
         receiptImage: string | null;
         rejectedAt: Date | null;
-        netAmount: number;
         bankName: string;
         bankAccountNumber: string;
         bankAccountName: string;
+        netAmount: number;
         processedById: string | null;
     })[]>;
     processWithdrawal(id: string, body: {

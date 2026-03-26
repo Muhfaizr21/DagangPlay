@@ -30,6 +30,7 @@ export declare class SettingsService {
         role: import("@prisma/client").$Enums.Role;
         adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
         isVerified: boolean;
+        isGuest: boolean;
         verifiedAt: Date | null;
         referredById: string | null;
         balance: number;
@@ -52,6 +53,7 @@ export declare class SettingsService {
         role: import("@prisma/client").$Enums.Role;
         adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
         isVerified: boolean;
+        isGuest: boolean;
         verifiedAt: Date | null;
         referredById: string | null;
         balance: number;
@@ -74,6 +76,7 @@ export declare class SettingsService {
         role: import("@prisma/client").$Enums.Role;
         adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
         isVerified: boolean;
+        isGuest: boolean;
         verifiedAt: Date | null;
         referredById: string | null;
         balance: number;

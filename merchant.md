@@ -52,10 +52,14 @@ Pemilik toko voucher dengan branding & domain sendiri
 •	Monitor transaksi pending terlalu lama
 •	Statistik success rate transaksi toko
 
-2.5 Manajemen Keuangan Toko
-•	Saldo toko real-time
-•	Riwayat mutasi saldo: deposit, transaksi, komisi, withdrawal
-•	Pengajuan deposit saldo: transfer bank, QRIS, e-wallet
+2.5 Manajemen Keuangan Toko (Two-Ledger System)
+•	Dashboard Saldo Terpisah (Visualisasi Ganda):
+    - Escrow / Pending Balance: Dana masuk dari Customer, namun status Settlement di pihak Payment Gateway (Misal Tripay) masih belum cair (biasanya H+1 / H+2).
+    - Available Balance / Saldo Tersedia: Dana riil bersih yang siap sedia ditarik / dicairkan (Withdrawal) ke bank merchant.
+•	Estimasi Pencairan Dana (Settlement Schedule): Tampilan list / kalender yang memprediksi kapan dana 'Pending/Escrow' hari ini akan di-rekap berubah menjadi 'Available'.
+•	Riwayat Mutasi Saldo Terperinci (Ledger Movement): deposit, penjualan, komisi reseller, potongan biaya layanan (MDR Gateway), potongan admin platform, penarikan (withdrawal).
+•	Pengajuan deposit saldo (Add funds): transfer bank, QRIS, e-wallet
+•	Konfigurasi Penarikan Otomatis (Auto-Payout System): Sistem autopilot tarik dana ke Rekening Bank merchant secara periodik (Mingguan/Bulanan) jika telah melewati limit minimal.
 •	Upload bukti transfer deposit
 •	Riwayat semua deposit: status, tanggal, jumlah
 •	Pengajuan withdrawal ke rekening bank
@@ -148,3 +152,16 @@ Pemilik toko voucher dengan branding & domain sendiri
 •	Download invoice PDF
 •	Status pembayaran invoice: paid, unpaid, overdue
 •	Konfirmasi pembayaran manual (upload bukti)
+
+2.14 Integrasi Domain & Keamanan (Whitelabel / SaaS)
+•	Domain Setup Checker & Helper: Panduan live-sync menghubungkan custom domain dan checklist indikator sukses A Record & CNAME (misal: topupdewa.com).
+•	Status Pemrosesan SSL (Gembok Hijau): Indikator realtime status permintaan sertifikat SSL dan tanggal kedaluwarsa HTTPS.
+•	Force HTTPS Routing Config: Toggle 1-klik untuk memaksa semua akses http dialihkan ke https secara presisi.
+
+2.15 Pusat API, Developer & Integrasi Webhook
+•	Generate & Revoke API Credentials (Public & Private Key): Manajemen identitas pengembang toko.
+•	API Secret Signature Generator: Kunci rahasia HMAC SHA-256 bagi merchant yang mau memvalidasi header request dari sistem (Anti Hacking/Spoofing URL).
+•	Konfigurasi Endpoint Webhook URL: Seting alamat tujuan (callback) kemana sistem internal akan mengirim informasi transaksi lunas.
+•	Webhook Delivery Event Logs: Tabel live log history pengiriman pesan Webhook DagangPlay -> URL toko. Isinya: Timestamp, URL Target, Request Body JSON, Response Body HTTP Code (200, 404, 500, Timeout).
+•	1-Click Resend Webhook: Tombol "Retry Payload" spesifik di tiap log error bilamana server merchant mati/gangguan, bisa ditrigger uang ketika server Merchant normal lagi.
+•	Monitor Latency Respons Webhook Toko: Indikator merah/hijau kecepatan server/hosting merchant saat dihantam trigger webhooks.

@@ -20,14 +20,15 @@ async function bootstrap() {
     app.set('trust proxy', 1);
     app.use((0, helmet_1.default)({
         crossOriginEmbedderPolicy: false,
+        crossOriginResourcePolicy: { policy: 'cross-origin' },
         contentSecurityPolicy: {
             directives: {
                 defaultSrc: ["'self'"],
                 scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
                 styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
                 fontSrc: ["'self'", "https://fonts.gstatic.com"],
-                imgSrc: ["'self'", "data:", "https://*", "blob:"],
-                connectSrc: ["'self'", "https://*", "wss://*"],
+                imgSrc: ["'self'", "data:", "https://*", "http://*", "blob:"],
+                connectSrc: ["'self'", "https://*", "http://*", "wss://*"],
             },
         },
     }));
@@ -51,7 +52,9 @@ async function bootstrap() {
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
         credentials: true,
     });
-    app.useStaticAssets((0, path_1.join)(__dirname, '..', 'public'));
+    const publicPath = (0, path_1.join)(process.cwd(), 'public');
+    console.log('Serving static files from:', publicPath);
+    app.useStaticAssets(publicPath);
     app.useGlobalPipes(new common_1.ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
     app.useGlobalFilters(new global_exception_filter_1.GlobalExceptionFilter());
     await app.listen(process.env.PORT ?? 3001);

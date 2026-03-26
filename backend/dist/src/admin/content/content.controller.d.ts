@@ -7,6 +7,7 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string;
         linkUrl: string | null;
@@ -14,7 +15,6 @@ export declare class ContentController {
         sortOrder: number;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         clickCount: number;
     }[]>;
     createBanner(data: any): Promise<{
@@ -22,6 +22,7 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string;
         linkUrl: string | null;
@@ -29,7 +30,6 @@ export declare class ContentController {
         sortOrder: number;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         clickCount: number;
     }>;
     updateBanner(id: string, data: any): Promise<{
@@ -37,6 +37,7 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string;
         linkUrl: string | null;
@@ -44,7 +45,6 @@ export declare class ContentController {
         sortOrder: number;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         clickCount: number;
     }>;
     deleteBanner(id: string): Promise<{
@@ -52,6 +52,7 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string;
         linkUrl: string | null;
@@ -59,7 +60,6 @@ export declare class ContentController {
         sortOrder: number;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         clickCount: number;
     }>;
     toggleBanner(id: string): Promise<{
@@ -67,6 +67,7 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string;
         linkUrl: string | null;
@@ -74,7 +75,6 @@ export declare class ContentController {
         sortOrder: number;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         clickCount: number;
     }>;
     getAnnouncements(): Promise<{
@@ -82,10 +82,10 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string;
         imageUrl: string | null;
     }[]>;
@@ -94,10 +94,10 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string;
         imageUrl: string | null;
     }>;
@@ -106,10 +106,10 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string;
         imageUrl: string | null;
     }>;
@@ -118,10 +118,10 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string;
         imageUrl: string | null;
     }>;
@@ -130,10 +130,10 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string;
         imageUrl: string | null;
     }>;

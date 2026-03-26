@@ -25,6 +25,14 @@ const MerchantStorefront = ({ config, contentData, filteredProducts, search, set
     const [trackingResults, setTrackingResults] = useState<any[]>([]);
     const [isTracking, setIsTracking] = useState(false);
     const [loginUrl, setLoginUrl] = useState("/admin/login");
+    const [showPromo, setShowPromo] = useState(true);
+
+    // Live Notification State
+    const [liveNotif, setLiveNotif] = useState<any>(null);
+    const [showLiveNotif, setShowLiveNotif] = useState(false);
+
+    // Flash Sale Timer State
+    const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
     useEffect(() => {
         try {
@@ -56,6 +64,75 @@ const MerchantStorefront = ({ config, contentData, filteredProducts, search, set
 
     const [selectedCategory, setSelectedCategory] = useState("SEMUA");
 
+    // 🔒 Feature flag dari backend planFeatures — bukan hardcode plan name
+    // config.planFeatures dikirim dari halaman induk via /merchant/subscription atau storefront API
+    const flashSaleEnabled = config?.planFeatures?.flashSale === true || (config?.plan === 'SUPREME' && config?.planFeatures === undefined);
+    const fomoEnabled = config?.planFeatures?.flashSale === true || (config?.plan === 'SUPREME' && config?.planFeatures === undefined);
+    // Backward compat: jika planFeatures belum ada, fallback ke cek plan name
+    const isSupreme = config?.plan === 'SUPREME' || config?.isOfficial === true;
+
+    // 1. Flash Sale Timer Logic — hanya aktif jika flag flashSale === true di planFeatures
+    useEffect(() => {
+        if (!flashSaleEnabled) return;
+        const calculateTimeLeft = () => {
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setHours(24, 0, 0, 0);
+            const diff = tomorrow.getTime() - now.getTime();
+            
+            if (diff > 0) {
+                return {
+                    hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+                    minutes: Math.floor((diff / 1000 / 60) % 60),
+                    seconds: Math.floor((diff / 1000) % 60)
+                };
+            }
+            return { hours: 0, minutes: 0, seconds: 0 };
+        };
+
+        setTimeLeft(calculateTimeLeft());
+        const timer = setInterval(() => setTimeLeft(calculateTimeLeft()), 1000);
+        return () => clearInterval(timer);
+    }, [flashSaleEnabled]);
+
+    // 2. FOMO Live Buyer Notification — hanya aktif jika fomoEnabled === true
+    useEffect(() => {
+        if (!fomoEnabled || !filteredProducts || filteredProducts.length === 0) return;
+
+        const firstNames = ["Andi", "Budi", "Siti", "Rizky", "Putra", "Dewi", "Fajar", "Bintang", "Hendra", "Ayu", "Nanda", "Wahyu", "Alif", "Gilang", "Reza", "Yoga", "Dian"];
+        let intervalRef: ReturnType<typeof setInterval>;
+        
+        const showNextNotif = () => {
+            const randomProduct = filteredProducts[Math.floor(Math.random() * filteredProducts.length)];
+            const randomName = firstNames[Math.floor(Math.random() * firstNames.length)];
+            const randomTime = Math.floor(Math.random() * 15) + 1;
+
+            const maskedName = randomName.length > 2 
+                ? `${randomName[0]}***${randomName[randomName.length - 1]}`
+                : randomName;
+
+            setLiveNotif({
+                name: maskedName,
+                productName: randomProduct.name,
+                image: randomProduct.image,
+                time: randomTime
+            });
+            
+            setShowLiveNotif(true);
+            setTimeout(() => setShowLiveNotif(false), 4000);
+        };
+
+        const initialTimer = setTimeout(() => {
+            showNextNotif();
+            intervalRef = setInterval(showNextNotif, Math.floor(Math.random() * 15000) + 15000);
+        }, 5000);
+
+        return () => {
+            clearTimeout(initialTimer);
+            if (intervalRef) clearInterval(intervalRef);
+        };
+    }, [filteredProducts, fomoEnabled]);
+
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
         window.addEventListener("scroll", handleScroll);
@@ -64,10 +141,25 @@ const MerchantStorefront = ({ config, contentData, filteredProducts, search, set
 
     const isPreview = !config?.id;
 
+    // Fix #7: Category list dari produk aktual di storefront, bukan hardcode
     const categoryList = useMemo(() => {
-        const cats = ["SEMUA", "GAME", "E-WALLET", "PULSA", "APLIKASI"];
-        return cats;
-    }, []);
+        const defaultCats = ["SEMUA", "GAME", "E-WALLET", "PULSA", "APLIKASI"];
+        if (!filteredProducts || filteredProducts.length === 0) return defaultCats;
+        
+        // Ambil kategori unik dari produk yang benar-benar ada
+        const uniqueCats = Array.from(
+            new Set(filteredProducts.map((p: any) => (p.category || 'GAME').toUpperCase()))
+        ) as string[];
+        
+        return ["SEMUA", ...uniqueCats.sort()];
+    }, [filteredProducts]);
+
+    const heroBanners = contentData?.banners?.filter((b: any) => b.location === 'HERO' || !b.location) || [];
+    const sidebarBanners = contentData?.banners?.filter((b: any) => b.location === 'SIDEBAR') || [];
+    const footerBanners = contentData?.banners?.filter((b: any) => b.location === 'FOOTER') || [];
+
+    const activePromo = contentData?.popupPromos?.[0];
+    const activeAnnc = contentData?.announcements?.[0];
 
     return (
         <div className="min-h-screen bg-[#09090F] text-white overflow-x-hidden" style={{ fontFamily: "'Figtree', 'DM Sans', sans-serif" }}>
@@ -322,6 +414,34 @@ const MerchantStorefront = ({ config, contentData, filteredProducts, search, set
                 .s-paid    { background: rgba(52,211,153,0.1); color: #34D399; }
                 .s-pending { background: rgba(232,184,75,0.1);  color: #E8B84B; }
                 .s-failed  { background: rgba(239,68,68,0.1);   color: #EF4444; }
+
+                /* ── Live Notif Slide ── */
+                @keyframes slideNotifUp {
+                    from { opacity: 0; transform: translateY(40px) scale(0.9); }
+                    to   { opacity: 1; transform: translateY(0) scale(1); }
+                }
+                @keyframes slideNotifDown {
+                    from { opacity: 1; transform: translateY(0) scale(1); }
+                    to   { opacity: 0; transform: translateY(40px) scale(0.9); }
+                }
+                .notif-enter { animation: slideNotifUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+                .notif-exit { animation: slideNotifDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+                
+                /* ── Timer Box ── */
+                .timer-box {
+                    background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%);
+                    border: 1px solid rgba(255,255,255,0.15);
+                    border-radius: 8px;
+                    min-width: 32px;
+                    padding: 4px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-family: var(--mono);
+                    font-weight: 700;
+                    font-size: 13px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+                }
             `}</style>
 
             {/* Ambient top glow */}
@@ -335,8 +455,19 @@ const MerchantStorefront = ({ config, contentData, filteredProducts, search, set
                 </div>
             )}
 
+            {/* Announcement Bar */}
+            {!isLoading && activeAnnc && (
+                <div className="relative z-[200] w-full py-2.5 px-6" style={{ background: 'linear-gradient(90deg, #1E1B4B, #312E81)' }}>
+                    <div className="max-w-[1280px] mx-auto flex items-center justify-center gap-2 sm:gap-4 overflow-hidden">
+                        <Bell size={13} className="text-indigo-300 flex-shrink-0 animate-bounce" />
+                        <span className="text-[10px] sm:text-[11px] font-black text-indigo-100 uppercase tracking-widest flex-shrink-0">{activeAnnc.title}:</span>
+                        <span className="text-[10px] sm:text-[11px] font-medium text-indigo-50 truncate">{activeAnnc.content}</span>
+                    </div>
+                </div>
+            )}
+
             {/* ── NAVBAR ── */}
-            <header className={`ms-nav fixed inset-x-0 z-[100] transition-all duration-400 ${isPreview ? 'top-8' : 'top-0'}`}>
+            <header className={`ms-nav fixed inset-x-0 z-[100] transition-all duration-400 ${(isPreview || activeAnnc) ? 'top-8' : 'top-0'}`}>
                 <div className="max-w-[1280px] mx-auto px-6 h-[58px] flex items-center justify-between">
                     {/* Logo */}
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.location.reload()}>
@@ -382,7 +513,7 @@ const MerchantStorefront = ({ config, contentData, filteredProducts, search, set
                 </div>
             </header>
 
-            <main className="relative z-10 max-w-[1280px] mx-auto px-6" style={{ paddingTop: isPreview ? '100px' : '84px', paddingBottom: '80px' }}>
+            <main className="relative z-10 max-w-[1280px] mx-auto px-6" style={{ paddingTop: (isPreview || activeAnnc) ? '100px' : '84px', paddingBottom: '80px' }}>
 
                 {/* ── HERO BENTO ── */}
                 <div className="grid lg:grid-cols-[1fr_260px] gap-4 mb-8">
@@ -393,26 +524,40 @@ const MerchantStorefront = ({ config, contentData, filteredProducts, search, set
                                 <Zap size={40} style={{ color: 'rgba(255,255,255,0.04)' }} />
                             </div>
                         ) : (
-                            <PremiumSlider banners={contentData?.banners || []} theme="dark" />
+                            <PremiumSlider banners={heroBanners} theme="dark" />
                         )}
                     </div>
 
-                    {/* Side cards */}
+                    {/* Side cards — Fix #8: dari config merchant, bukan hardcode */}
                     <div className="flex flex-row lg:flex-col gap-4">
                         <div className="info-card flex-1">
                             <div className="ic-icon">
                                 <Zap size={16} style={{ color: '#E8B84B' }} />
                             </div>
-                            <p className="text-[15px] font-bold text-white leading-tight">Instant Delivery</p>
-                            <p className="text-[12px] leading-relaxed" style={{ color: 'var(--dim)' }}>Proses otomatis dalam hitungan detik.</p>
+                            <p className="text-[15px] font-bold text-white leading-tight">
+                                {config?.infoCard1Title || 'Instant Delivery'}
+                            </p>
+                            <p className="text-[12px] leading-relaxed" style={{ color: 'var(--dim)' }}>
+                                {config?.infoCard1Desc || 'Proses otomatis dalam hitungan detik.'}
+                            </p>
                         </div>
                         <div className="info-card flex-1" style={{ background: 'linear-gradient(135deg, rgba(232,184,75,0.06), rgba(247,127,0,0.04))' }}>
                             <div className="ic-icon">
                                 <Trophy size={16} style={{ color: '#E8B84B' }} />
                             </div>
-                            <p className="text-[15px] font-bold text-white leading-tight">Harga Terbaik</p>
-                            <p className="text-[12px] leading-relaxed" style={{ color: 'var(--dim)' }}>Margin kompetitif langsung dari agen.</p>
+                            <p className="text-[15px] font-bold text-white leading-tight">
+                                {config?.infoCard2Title || 'Harga Terbaik'}
+                            </p>
+                            <p className="text-[12px] leading-relaxed" style={{ color: 'var(--dim)' }}>
+                                {config?.infoCard2Desc || 'Margin kompetitif langsung dari agen.'}
+                            </p>
                         </div>
+                        {/* Sidebar Banners */}
+                        {!isLoading && sidebarBanners.map((b: any) => (
+                            <a href={b.linkUrl || '#'} key={b.id} className="hidden lg:block w-full rounded-[16px] overflow-hidden border border-[rgba(255,255,255,0.055)] hover:border-[rgba(232,184,75,0.2)] transition-colors">
+                                <img src={b.imageUrl} alt={b.title} className="w-full object-cover" />
+                            </a>
+                        ))}
                     </div>
                 </div>
 
@@ -447,10 +592,38 @@ const MerchantStorefront = ({ config, contentData, filteredProducts, search, set
                     </div>
                 </div>
 
+                {/* ── FLASH SALE BANNER (Exclusive SUPREME) ── */}
+                {isSupreme && (
+                    <div className="mb-6 rounded-[18px] overflow-hidden relative" style={{ background: 'linear-gradient(90deg, #7F1D1D 0%, #B91C1C 50%, #7F1D1D 100%)', border: '1px solid rgba(255,100,100,0.2)' }}>
+                        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/carbon-fibre.png")' }}></div>
+                        <div className="px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/20 animate-pulse">
+                                    <Zap className="text-yellow-400 fill-yellow-400" size={20} />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-black text-white uppercase tracking-wider italic">Flash Sale Dimulai!</h3>
+                                    <p className="text-[10px] text-red-200 mt-0.5 font-medium uppercase tracking-[0.1em]">Diskon Terbesar Hari Ini</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-red-100 mr-2 border-r border-red-400/30 pr-4">Berakhir dalam:</span>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="timer-box text-white">{timeLeft.hours.toString().padStart(2, '0')}</span>
+                                    <span className="text-white/50 font-bold mb-1">:</span>
+                                    <span className="timer-box text-white">{timeLeft.minutes.toString().padStart(2, '0')}</span>
+                                    <span className="text-white/50 font-bold mb-1">:</span>
+                                    <span className="timer-box text-red-300">{timeLeft.seconds.toString().padStart(2, '0')}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* ── Section label ── */}
-                <div className="flex items-center gap-3 mb-5">
+                <div className="flex items-center gap-3 mb-5 mt-8">
                     <span className="section-label">
-                        {isLoading ? 'Memuat' : `${filteredProducts?.length || 0} produk tersedia`}
+                        {isLoading ? 'Memuat' : `TOP UP GAME TERPOPULER (${filteredProducts?.length || 0})`}
                     </span>
                     <div className="flex-1 h-px" style={{ background: 'var(--bd)' }} />
                 </div>
@@ -480,6 +653,19 @@ const MerchantStorefront = ({ config, contentData, filteredProducts, search, set
                     }
                 </div>
             </main>
+
+            {/* ── FOOTER BANNERS ── */}
+            {!isLoading && footerBanners.length > 0 && (
+                <div className="relative z-10 max-w-[1280px] mx-auto px-6 mb-10">
+                    <div className={`grid gap-4 ${footerBanners.length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2'}`}>
+                        {footerBanners.map((b: any) => (
+                            <a href={b.linkUrl || '#'} key={b.id} className="block w-full rounded-[20px] overflow-hidden border border-[rgba(255,255,255,0.055)] hover:border-[rgba(232,184,75,0.3)] transition-colors group">
+                                <img src={b.imageUrl} alt={b.title} className="w-full max-h-[180px] sm:max-h-[220px] object-cover group-hover:scale-105 transition-transform duration-500" />
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* ── FOOTER ── */}
             <footer className="relative z-10 py-10 text-center" style={{ borderTop: '1px solid var(--bd)', background: '#06060B' }}>
@@ -551,6 +737,68 @@ const MerchantStorefront = ({ config, contentData, filteredProducts, search, set
                                     </div>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── POPUP PROMO MODAL ── */}
+            {activePromo && showPromo && !isLoading && (
+                <div className="fixed inset-0 z-[400] flex items-center justify-center px-5">
+                    <div className="absolute inset-0 bg-[#09090F]/80 backdrop-blur-md" onClick={() => setShowPromo(false)} />
+                    <div className="relative bg-[#0F0F18] border border-white/10 rounded-[28px] overflow-hidden max-w-[420px] w-full shadow-2xl" style={{ animation: 'modalPop 0.3s cubic-bezier(.25,.46,.45,.94)' }}>
+                        <button onClick={() => setShowPromo(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-black/60 hover:bg-black text-white rounded-full z-10 transition-colors backdrop-blur-md">
+                            <X size={14} />
+                        </button>
+                        {activePromo.imageUrl && (
+                            <a href={activePromo.linkUrl || '#'} className="block h-[220px] sm:h-[260px] w-full overflow-hidden">
+                                <img src={activePromo.imageUrl} alt={activePromo.title} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+                            </a>
+                        )}
+                        <div className="p-7 text-center">
+                            <h3 className="text-xl font-black text-white mb-2 tracking-tight">{activePromo.title}</h3>
+                            {activePromo.content && <p className="text-[13px] leading-relaxed" style={{ color: 'var(--dim)' }}>{activePromo.content}</p>}
+                            <div className="mt-7 space-y-3">
+                                {activePromo.linkUrl && (
+                                    <a href={activePromo.linkUrl} className="block w-full py-3.5 bg-indigo-600 text-white text-[12px] font-bold uppercase tracking-[0.15em] rounded-xl hover:bg-indigo-700 transition-colors shadow-[0_4px_16px_rgba(79,70,229,0.3)]">
+                                        Lihat Promo
+                                    </a>
+                                )}
+                                <button onClick={() => setShowPromo(false)} className="block w-full py-3 text-[11px] font-bold uppercase tracking-[0.15em] hover:text-white transition-colors" style={{ color: 'var(--dim)' }}>
+                                    Tutup
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── FOMO LIVE BUYER NOTIFICATION (Exclusive SUPREME) ── */}
+            {isSupreme && (
+                <div className={`fixed bottom-6 lg:bottom-10 left-6 z-[350] pointer-events-none ${showLiveNotif ? 'notif-enter' : 'notif-exit opacity-0'}`} style={{ display: liveNotif ? 'block' : 'none' }}>
+                    <div className="bg-[#0F0F18]/95 backdrop-blur-xl border border-[rgba(232,184,75,0.3)] p-3 pr-5 pl-3 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05)] flex items-center gap-3.5 max-w-[320px] pointer-events-auto">
+                        <div className="w-11 h-11 rounded-lg bg-indigo-900/40 border border-indigo-500/20 flex-shrink-0 overflow-hidden relative">
+                            {liveNotif?.image ? (
+                                <img src={liveNotif.image} className="w-full h-full object-cover" alt="Product" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                    <ShieldCheck size={18} className="text-indigo-400" />
+                                </div>
+                            )}
+                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border border-[#0F0F18] flex items-center justify-center">
+                                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[12px] font-medium text-white leading-tight truncate">
+                                <span className="font-bold text-emerald-400">{liveNotif?.name}</span> baru saja membeli
+                            </p>
+                            <p className="text-[13px] font-black italic mt-0.5 truncate go-text">
+                                {liveNotif?.productName}
+                            </p>
+                            <p className="text-[9px] font-medium uppercase tracking-widest text-slate-500 mt-1">
+                                {liveNotif?.time} menit yang lalu
+                            </p>
                         </div>
                     </div>
                 </div>

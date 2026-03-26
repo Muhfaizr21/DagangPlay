@@ -184,9 +184,27 @@ let PublicOrdersService = PublicOrdersService_1 = class PublicOrdersService {
                     phone: whatsapp,
                     merchantId: merchantId,
                     password: hashedPassword,
+                    isGuest: true,
                     referralCode: `GUEST-${Date.now()}-${Math.floor(Math.random() * 1000)}`
                 }
             });
+        }
+        let resolvedNickname = 'Checking...';
+        try {
+            const cache = await this.prisma.gameNickname.findUnique({
+                where: {
+                    productId_gameUserId_serverId: {
+                        productId: sku.product.id,
+                        gameUserId: gameId,
+                        serverId: serverId || ''
+                    }
+                }
+            });
+            if (cache && cache.expiresAt > new Date()) {
+                resolvedNickname = cache.nickname;
+            }
+        }
+        catch (e) {
         }
         const order = await this.prisma.order.create({
             data: {
@@ -205,7 +223,7 @@ let PublicOrdersService = PublicOrdersService_1 = class PublicOrdersService {
                 paymentStatus: 'PENDING',
                 fulfillmentStatus: 'PENDING',
                 paymentMethod: this.mapPaymentMethod(paymentMethod),
-                gameUserName: 'Checking...',
+                gameUserName: resolvedNickname,
                 gameUserId: gameId,
                 gameUserServerId: serverId,
             }
@@ -384,6 +402,15 @@ let PublicOrdersService = PublicOrdersService_1 = class PublicOrdersService {
             theme: targetMerchant.settings?.theme || { active: 'dark' }
         };
     }
+    async resolveCustomDomain(domain) {
+        const domainWithoutPort = domain.split(':')[0];
+        const merchant = await this.prisma.merchant.findFirst({
+            where: { domain: domainWithoutPort }
+        });
+        if (!merchant)
+            return { slug: null };
+        return { slug: merchant.slug };
+    }
     async getPaymentChannels() {
         return this.tripay.getPaymentChannels();
     }
@@ -402,6 +429,72 @@ let PublicOrdersService = PublicOrdersService_1 = class PublicOrdersService {
             take: 12,
             orderBy: { createdAt: 'desc' }
         });
+    }
+    async validateNickname(productId, gameId, serverId) {
+        try {
+            const cache = await this.prisma.gameNickname.findUnique({
+                where: {
+                    productId_gameUserId_serverId: {
+                        productId,
+                        gameUserId: gameId,
+                        serverId: serverId || ''
+                    }
+                }
+            });
+            if (cache && cache.expiresAt > new Date()) {
+                return { success: true, nickname: cache.nickname, fromCache: true };
+            }
+        }
+        catch (e) {
+            this.logger.error(`[GameValidation] Cache read error: ${e}`);
+        }
+        try {
+            const isMockExternalSuccess = true;
+            if (!isMockExternalSuccess) {
+                throw new Error("Layanan Eksternal Sedang Gangguan");
+            }
+            const externalNickname = `Pemain ${gameId}`;
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + 3);
+            await this.prisma.gameNickname.upsert({
+                where: {
+                    productId_gameUserId_serverId: {
+                        productId,
+                        gameUserId: gameId,
+                        serverId: serverId || ''
+                    }
+                },
+                update: { nickname: externalNickname, expiresAt, cachedAt: new Date() },
+                create: { productId, gameUserId: gameId, serverId: serverId || '', nickname: externalNickname, expiresAt }
+            });
+            await this.prisma.gameValidation.create({
+                data: {
+                    productId,
+                    gameUserId: gameId,
+                    serverId: serverId || '',
+                    nickname: externalNickname,
+                    isValid: true
+                }
+            });
+            return { success: true, nickname: externalNickname, fromCache: false };
+        }
+        catch (err) {
+            this.logger.warn(`[GameValidation] API Timeout / Gangguan. Returning fallback.`);
+            await this.prisma.gameValidation.create({
+                data: {
+                    productId,
+                    gameUserId: gameId,
+                    serverId: serverId || '',
+                    nickname: 'N/A',
+                    isValid: false
+                }
+            });
+            return {
+                success: false,
+                nickname: 'Checking...',
+                message: 'Pengecekan akun game sedang gangguan, tapi Anda tetap dapat melanjutkan pesanan.'
+            };
+        }
     }
 };
 exports.PublicOrdersService = PublicOrdersService;

@@ -9,6 +9,7 @@ export declare class SubscriptionsService {
             id: string;
             name: string;
             domain: string | null;
+            plan: import("@prisma/client").$Enums.MerchantPlan;
         };
     } & {
         id: string;
@@ -52,14 +53,14 @@ export declare class SubscriptionsService {
     updateMerchantPlanManual(merchantId: string, plan: string, durationDays: number, operator: string): Promise<any>;
     getPlanFeatures(): Promise<any>;
     getMerchantPlanFeatures(merchantId: string): Promise<any>;
-    checkFeatureLimit(merchantId: string, feature: 'maxProducts' | 'multiUser' | 'whiteLabel' | 'customDomain', addingCount?: number): Promise<boolean>;
+    checkFeatureLimit(merchantId: string, feature: 'maxProducts' | 'multiUser' | 'whiteLabel' | 'customDomain' | 'flashSale' | 'templateVariants' | 'instantWithdrawal' | 'customProductDetail' | 'buildApk' | 'prioritySupport' | 'resellerAcademy' | 'tldDomain', addingCount?: number): Promise<boolean>;
     updatePlanFeatures(features: any, operator: string): Promise<{
         id: string;
         description: string | null;
         updatedAt: Date;
         key: string;
-        type: import("@prisma/client").$Enums.SettingType;
         value: string;
+        type: import("@prisma/client").$Enums.SettingType;
         group: string | null;
         updatedBy: string | null;
     }>;

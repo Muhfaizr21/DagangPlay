@@ -8,9 +8,9 @@ export declare class MarketingService {
         slug: string;
         createdAt: Date;
         updatedAt: Date;
+        isActive: boolean;
         title: string;
         sortOrder: number;
-        isActive: boolean;
         content: string | null;
         imageUrl: string | null;
         category: string | null;
@@ -23,9 +23,9 @@ export declare class MarketingService {
         slug: string;
         createdAt: Date;
         updatedAt: Date;
+        isActive: boolean;
         title: string;
         sortOrder: number;
-        isActive: boolean;
         content: string | null;
         imageUrl: string | null;
         category: string | null;
@@ -38,9 +38,9 @@ export declare class MarketingService {
         slug: string;
         createdAt: Date;
         updatedAt: Date;
+        isActive: boolean;
         title: string;
         sortOrder: number;
-        isActive: boolean;
         content: string | null;
         imageUrl: string | null;
         category: string | null;
@@ -53,9 +53,9 @@ export declare class MarketingService {
         slug: string;
         createdAt: Date;
         updatedAt: Date;
+        isActive: boolean;
         title: string;
         sortOrder: number;
-        isActive: boolean;
         content: string | null;
         imageUrl: string | null;
         category: string | null;
@@ -68,9 +68,9 @@ export declare class MarketingService {
         slug: string;
         createdAt: Date;
         updatedAt: Date;
+        isActive: boolean;
         title: string;
         sortOrder: number;
-        isActive: boolean;
         content: string | null;
         imageUrl: string | null;
         category: string | null;
@@ -83,9 +83,9 @@ export declare class MarketingService {
         slug: string;
         createdAt: Date;
         updatedAt: Date;
+        isActive: boolean;
         title: string;
         sortOrder: number;
-        isActive: boolean;
         content: string | null;
         imageUrl: string | null;
         category: string | null;

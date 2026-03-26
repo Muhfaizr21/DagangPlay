@@ -11,7 +11,7 @@ export class ContentService {
     // =====================================
     async getBanners(merchantId?: string) {
         return this.prisma.banner.findMany({
-            where: merchantId ? { merchantId } : {},
+            where: merchantId ? { merchantId } : { merchantId: null },
             orderBy: [{ position: 'asc' }, { sortOrder: 'asc' }]
         });
     }
@@ -61,8 +61,9 @@ export class ContentService {
     // =====================================
     // ANNOUNCEMENTS & POPUPS
     // =====================================
-    async getAnnouncements() {
+    async getAnnouncements(merchantId?: string) {
         return this.prisma.announcement.findMany({
+            where: merchantId ? { merchantId } : { merchantId: null },
             orderBy: { createdAt: 'desc' }
         });
     }
@@ -110,8 +111,9 @@ export class ContentService {
     // =====================================
     // BROADCAST / EMAIL CAMPAIGNS
     // =====================================
-    async getCampaigns() {
+    async getCampaigns(merchantId?: string) {
         return this.prisma.emailCampaign.findMany({
+            where: merchantId ? { merchantId } : { merchantId: null },
             orderBy: { createdAt: 'desc' }
         });
     }
@@ -134,8 +136,9 @@ export class ContentService {
     // =====================================
     // TEMPLATES
     // =====================================
-    async getTemplates() {
+    async getTemplates(merchantId?: string) {
         return this.prisma.notificationTemplate.findMany({
+            where: merchantId ? { merchantId } : { merchantId: null },
             orderBy: { type: 'asc' }
         });
     }

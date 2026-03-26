@@ -68,36 +68,26 @@ let WithdrawalsService = class WithdrawalsService {
         });
     }
     async approveWithdrawal(withdrawalId, adminId, receiptImage) {
-        const withdrawal = await this.prisma.withdrawal.findUnique({
-            where: { id: withdrawalId }
-        });
-        if (!withdrawal || withdrawal.status !== 'PENDING') {
-            throw new common_1.BadRequestException('Permintaan penarikan tidak ditemukan atau sudah diproses.');
-        }
-        return this.prisma.withdrawal.update({
-            where: { id: withdrawalId },
-            data: {
-                status: 'COMPLETED',
-                processedById: adminId,
-                processedAt: new Date(),
-                receiptImage
+        return this.prisma.$transaction(async (tx) => {
+            const updateResult = await tx.withdrawal.updateMany({
+                where: { id: withdrawalId, status: 'PENDING' },
+                data: {
+                    status: 'COMPLETED',
+                    processedById: adminId,
+                    processedAt: new Date(),
+                    receiptImage
+                }
+            });
+            if (updateResult.count === 0) {
+                throw new common_1.BadRequestException('Permintaan penarikan tidak ditemukan, diproses ganda, atau bukan PENDING.');
             }
+            return tx.withdrawal.findUnique({ where: { id: withdrawalId } });
         });
     }
     async rejectWithdrawal(withdrawalId, adminId, reason) {
         return this.prisma.$transaction(async (tx) => {
-            const withdrawal = await tx.withdrawal.findUnique({
-                where: { id: withdrawalId }
-            });
-            if (!withdrawal || withdrawal.status !== 'PENDING') {
-                throw new common_1.BadRequestException('Permintaan penarikan tidak ditemukan atau sudah diproses.');
-            }
-            const user = await tx.user.update({
-                where: { id: withdrawal.userId },
-                data: { balance: { increment: withdrawal.amount } }
-            });
-            const updatedWd = await tx.withdrawal.update({
-                where: { id: withdrawalId },
+            const updateResult = await tx.withdrawal.updateMany({
+                where: { id: withdrawalId, status: 'PENDING' },
                 data: {
                     status: 'REJECTED',
                     processedById: adminId,
@@ -105,13 +95,23 @@ let WithdrawalsService = class WithdrawalsService {
                     note: reason
                 }
             });
+            if (updateResult.count === 0) {
+                throw new common_1.BadRequestException('Permintaan penarikan tidak ditemukan, diproses ganda, atau status bukan PENDING.');
+            }
+            const updatedWd = await tx.withdrawal.findUnique({ where: { id: withdrawalId } });
+            if (!updatedWd)
+                throw new Error('Withdrawal not found after atomic update');
+            const user = await tx.user.update({
+                where: { id: updatedWd.userId },
+                data: { balance: { increment: updatedWd.amount } }
+            });
             await tx.balanceTransaction.create({
                 data: {
-                    userId: withdrawal.userId,
+                    userId: updatedWd.userId,
                     type: 'REFUND',
-                    amount: withdrawal.amount,
-                    balanceBefore: user.balance - withdrawal.amount,
-                    balanceAfter: user.balance,
+                    amount: updatedWd.amount,
+                    balanceBefore: Number(user.balance) - Number(updatedWd.amount),
+                    balanceAfter: Number(user.balance),
                     withdrawalId: updatedWd.id,
                     description: `Refund penarikan saldo ditolak: ${reason}`
                 }

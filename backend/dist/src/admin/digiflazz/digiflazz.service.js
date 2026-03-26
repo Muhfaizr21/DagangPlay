@@ -49,6 +49,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DigiflazzService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma.service");
+const schedule_1 = require("@nestjs/schedule");
 const axios_1 = __importDefault(require("axios"));
 const crypto = __importStar(require("crypto"));
 const fs = __importStar(require("fs"));
@@ -282,22 +283,30 @@ let DigiflazzService = DigiflazzService_1 = class DigiflazzService {
         }
     }
     async bulkSyncProducts(payload) {
-        let successCount = 0;
-        for (const p of payload) {
-            await this.syncProduct({
-                buyer_sku_code: p.buyer_sku_code,
-                product_name: p.product_name,
-                brand: p.brand,
-                category_digiflazz: p.category,
-                digiflazz_price: p.price,
-                categoryId: p.categoryId,
-                productId: p.productId,
-                priceNormal: p.sellingPrice || p.priceNormal,
-                status: p.status
-            });
-            successCount++;
-        }
-        return { success: true, message: `${successCount} produk berhasil di-sync secara massal.` };
+        setImmediate(async () => {
+            let successCount = 0;
+            for (const p of payload) {
+                try {
+                    await this.syncProduct({
+                        buyer_sku_code: p.buyer_sku_code,
+                        product_name: p.product_name,
+                        brand: p.brand,
+                        category_digiflazz: p.category,
+                        digiflazz_price: p.price,
+                        categoryId: p.categoryId,
+                        productId: p.productId,
+                        priceNormal: p.sellingPrice || p.priceNormal,
+                        status: p.status
+                    });
+                    successCount++;
+                }
+                catch (err) {
+                    console.error(`[BulkSync] Gagal sync produk ${p.buyer_sku_code}:`, err);
+                }
+            }
+            console.log(`[BulkSync] Selesai: ${successCount} dari ${payload.length} produk tersinkronisasi.`);
+        });
+        return { success: true, message: `Proses sinkronisasi massal untuk ${payload.length} produk sedang berjalan di latar belakang.` };
     }
     async checkOrderStatus(orderId, supplierRefId, buyerSkuCode, customerNo) {
         const { username, key, url } = this.getDigiflazzConfig();
@@ -428,8 +437,16 @@ let DigiflazzService = DigiflazzService_1 = class DigiflazzService {
                     }
                 });
                 if (fulfillmentStatus === 'FAILED') {
-                    await this.handleCommissionReversal(order.id);
-                    await this.handleCustomerRefund(order.id);
+                    await this.prisma.disputeCase.create({
+                        data: {
+                            orderId: order.id,
+                            userId: order.userId,
+                            reason: `Sistem Otomatis: Transaksi Digiflazz merespons GAGAL. Lakukan pengecekan manual ke Live Chat Digiflazz sebelum Refund.`,
+                            status: 'OPEN'
+                        }
+                    });
+                    this.whatsappService.sendAdminSummary(`⚠️ *POTENSI SENGKETA (DISPUTE)*\nOrder ${order.orderNumber} merespons Gagal dari Digiflazz.\n` +
+                        `Otomatis masuk ke antrean Sengketa. Segera cek manual ke Digiflazz sebelum Refund!`).catch(() => { });
                 }
                 if (fulfillmentStatus === 'SUCCESS' || fulfillmentStatus === 'FAILED') {
                     this.whatsappService.sendFulfillmentNotification(order.user.phone || '', order.orderNumber, `${order.productName} - ${order.productSkuName}`, fulfillmentStatus, data.sn || 'N/A').catch(err => this.logger.error(`[FulfillmentNotification] Failed: ${err.message}`));
@@ -444,8 +461,14 @@ let DigiflazzService = DigiflazzService_1 = class DigiflazzService {
                         failReason: resJson.data?.message || 'Digiflazz API connection error'
                     }
                 });
-                await this.handleCommissionReversal(order.id);
-                await this.handleCustomerRefund(order.id);
+                await this.prisma.disputeCase.create({
+                    data: {
+                        orderId: order.id,
+                        userId: order.userId,
+                        reason: `Sistem Otomatis: API Digiflazz Error (${resJson.data?.message || 'Error'}). Lakukan pengecekan manual.`,
+                        status: 'OPEN'
+                    }
+                });
                 return resJson;
             }
         }
@@ -462,26 +485,39 @@ let DigiflazzService = DigiflazzService_1 = class DigiflazzService {
         }
     }
     async handleCommissionReversal(orderId) {
-        const commissions = await this.prisma.commission.findMany({
-            where: { orderId, status: 'SETTLED' }
-        });
-        if (commissions.length === 0)
-            return;
         await this.prisma.$transaction(async (tx) => {
+            const commissions = await tx.commission.findMany({
+                where: { orderId, status: { in: ['SETTLED', 'PENDING'] } }
+            });
+            if (commissions.length === 0)
+                return;
             for (const comm of commissions) {
+                if (comm.status === 'PENDING') {
+                    await tx.commission.update({
+                        where: { id: comm.id },
+                        data: { status: 'CANCELLED' }
+                    });
+                    continue;
+                }
+                const userPrior = await tx.user.findUnique({ where: { id: comm.userId } });
+                const currentBalance = Number(userPrior?.balance || 0);
+                const isDebt = currentBalance < comm.amount;
                 const user = await tx.user.update({
                     where: { id: comm.userId },
-                    data: { balance: { decrement: comm.amount } }
+                    data: {
+                        balance: { decrement: comm.amount },
+                        status: isDebt ? 'SUSPENDED' : undefined
+                    }
                 });
                 await tx.balanceTransaction.create({
                     data: {
                         userId: comm.userId,
                         type: 'REFUND',
                         amount: -comm.amount,
-                        balanceBefore: Number(user.balance) + comm.amount,
+                        balanceBefore: currentBalance,
                         balanceAfter: Number(user.balance),
                         orderId,
-                        description: `Reversal profit (Digiflazz Gagal): ${orderId}`
+                        description: `Reversal profit (Digiflazz Gagal): ${orderId}${isDebt ? ' [SISTEM DEBT - SALDO MINUS]' : ''}`
                     }
                 });
                 await tx.commission.update({
@@ -493,22 +529,22 @@ let DigiflazzService = DigiflazzService_1 = class DigiflazzService {
         console.log(`[FinanceProtect] Automated reversal for ${orderId} completed.`);
     }
     async handleCustomerRefund(orderId) {
-        const order = await this.prisma.order.findUnique({
-            where: { id: orderId },
-            include: { user: true }
-        });
-        if (!order || order.paymentStatus !== 'PAID')
-            return;
-        const existingRefund = await this.prisma.balanceTransaction.findFirst({
-            where: { orderId, type: 'REFUND', userId: order.userId, amount: { gt: 0 } }
-        });
-        if (existingRefund)
-            return;
-        const isGuest = !order.user.email && order.user.name.startsWith('Guest ');
-        if (isGuest) {
-            const refundCode = `REF-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${order.orderNumber.split('-').pop()}`;
-            console.log(`[CustomerRefund] Order ${order.orderNumber} is a GUEST order. Generating Refund Ticket: ${refundCode}`);
-            await this.prisma.$transaction(async (tx) => {
+        await this.prisma.$transaction(async (tx) => {
+            const order = await tx.order.findUnique({
+                where: { id: orderId },
+                include: { user: true }
+            });
+            if (!order || order.paymentStatus !== 'PAID' || order.fulfillmentStatus === 'REFUNDED')
+                return;
+            const existingRefund = await tx.balanceTransaction.findFirst({
+                where: { orderId, type: 'REFUND', userId: order.userId, amount: { gt: 0 } }
+            });
+            if (existingRefund)
+                return;
+            const isGuest = !order.user.email && order.user.name.startsWith('Guest ');
+            if (isGuest) {
+                const refundCode = `REF-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${order.orderNumber.split('-').pop()}`;
+                console.log(`[CustomerRefund] Order ${order.orderNumber} is a GUEST order. Generating Refund Ticket: ${refundCode}`);
                 const user = await tx.user.update({
                     where: { id: order.userId },
                     data: { balance: { increment: order.sellingPrice } }
@@ -533,10 +569,8 @@ let DigiflazzService = DigiflazzService_1 = class DigiflazzService {
                         description: `Refund Ticket and Balance for Guest: ${refundCode}`
                     }
                 });
-            });
-            return;
-        }
-        await this.prisma.$transaction(async (tx) => {
+                return;
+            }
             const user = await tx.user.update({
                 where: { id: order.userId },
                 data: { balance: { increment: order.sellingPrice } }
@@ -556,81 +590,84 @@ let DigiflazzService = DigiflazzService_1 = class DigiflazzService {
                 where: { id: order.id },
                 data: { paymentStatus: 'REFUNDED', fulfillmentStatus: 'REFUNDED' }
             });
+            console.log(`[CustomerRefund] Order ${order.orderNumber} fully refunded to user ${order.user.name}.`);
         });
-        console.log(`[CustomerRefund] Order ${order.orderNumber} fully refunded to user ${order.user.name}.`);
     }
     async processPriceWebhook(payload) {
         if (!Array.isArray(payload))
             return;
-        for (const item of payload) {
-            const skuCode = item.buyer_sku_code;
-            const newPrice = Number(item.price);
-            const skus = await this.prisma.productSku.findMany({
-                where: { supplierCode: skuCode, supplier: { code: 'DIGIFLAZZ' } }
-            });
-            for (const sku of skus) {
-                if (newPrice > Number(sku.priceNormal)) {
-                    console.error(`[AntiLoss] Price Spike! New Base (${newPrice}) > Current Retail (${sku.priceNormal}). DEACTIVATING ${skuCode}.`);
-                    await this.prisma.productSku.update({
-                        where: { id: sku.id },
-                        data: { status: 'INACTIVE' }
-                    });
-                    continue;
-                }
-                await this.prisma.$transaction(async (tx) => {
-                    const updatedPriceNormal = newPrice + Number(sku.marginNormal);
-                    const updatedPricePro = newPrice + Number(sku.marginPro);
-                    const updatedPriceLegend = newPrice + Number(sku.marginLegend);
-                    const updatedPriceSupreme = newPrice + Number(sku.marginSupreme);
-                    const updatedSku = await tx.productSku.update({
-                        where: { id: sku.id },
-                        data: {
-                            basePrice: newPrice,
-                            priceNormal: updatedPriceNormal,
-                            pricePro: updatedPricePro,
-                            priceLegend: updatedPriceLegend,
-                            priceSupreme: updatedPriceSupreme
-                        }
-                    });
-                    const merchantPrices = await tx.merchantProductPrice.findMany({
-                        where: { productSkuId: sku.id, isActive: true },
-                        include: { merchant: true }
-                    });
-                    for (const mp of merchantPrices) {
-                        const plan = mp.merchant.plan;
-                        let currentModalPrice = updatedPricePro;
-                        if (plan === 'LEGEND')
-                            currentModalPrice = updatedPriceLegend;
-                        else if (plan === 'SUPREME')
-                            currentModalPrice = updatedPriceSupreme;
-                        const merchantSettings = await tx.merchantSetting.findMany({
-                            where: { merchantId: mp.merchantId }
+        setImmediate(async () => {
+            for (const item of payload) {
+                const skuCode = item.buyer_sku_code;
+                const newPrice = Number(item.price);
+                const skus = await this.prisma.productSku.findMany({
+                    where: { supplierCode: skuCode, supplier: { code: 'DIGIFLAZZ' } }
+                });
+                for (const sku of skus) {
+                    if (newPrice > Number(sku.priceNormal)) {
+                        console.error(`[AntiLoss] Price Spike! New Base (${newPrice}) > Current Retail (${sku.priceNormal}). DEACTIVATING ${skuCode}.`);
+                        await this.prisma.productSku.update({
+                            where: { id: sku.id },
+                            data: { status: 'INACTIVE' }
                         });
-                        const markupSetting = merchantSettings.find(s => s.key === 'MARKUP_PERCENTAGE');
-                        const markupPercentage = markupSetting ? parseFloat(markupSetting.value) : 0;
-                        if (markupPercentage > 0) {
-                            const newDynamicPrice = Math.ceil(currentModalPrice + (currentModalPrice * (markupPercentage / 100)));
-                            console.log(`[DynamicMarkup] Updating Price for Merchant ${mp.merchant.name}: ${mp.customPrice} -> ${newDynamicPrice} (${markupPercentage}%)`);
-                            await tx.merchantProductPrice.update({
-                                where: { id: mp.id },
-                                data: { customPrice: newDynamicPrice }
+                        continue;
+                    }
+                    await this.prisma.$transaction(async (tx) => {
+                        const updatedPriceNormal = newPrice + Number(sku.marginNormal);
+                        const updatedPricePro = newPrice + Number(sku.marginPro);
+                        const updatedPriceLegend = newPrice + Number(sku.marginLegend);
+                        const updatedPriceSupreme = newPrice + Number(sku.marginSupreme);
+                        const updatedSku = await tx.productSku.update({
+                            where: { id: sku.id },
+                            data: {
+                                basePrice: newPrice,
+                                priceNormal: updatedPriceNormal,
+                                pricePro: updatedPricePro,
+                                priceLegend: updatedPriceLegend,
+                                priceSupreme: updatedPriceSupreme
+                            }
+                        });
+                        const merchantPrices = await tx.merchantProductPrice.findMany({
+                            where: { productSkuId: sku.id, isActive: true },
+                            include: { merchant: true }
+                        });
+                        for (const mp of merchantPrices) {
+                            const plan = mp.merchant.plan;
+                            let currentModalPrice = updatedPricePro;
+                            if (plan === 'LEGEND')
+                                currentModalPrice = updatedPriceLegend;
+                            else if (plan === 'SUPREME')
+                                currentModalPrice = updatedPriceSupreme;
+                            const merchantSettings = await tx.merchantSetting.findMany({
+                                where: { merchantId: mp.merchantId }
                             });
-                        }
-                        else {
-                            if (Number(mp.customPrice) < currentModalPrice) {
+                            const markupSetting = merchantSettings.find(s => s.key === 'MARKUP_PERCENTAGE');
+                            const markupPercentage = markupSetting ? parseFloat(markupSetting.value) : 0;
+                            if (markupPercentage > 0) {
+                                const newDynamicPrice = Math.ceil(currentModalPrice + (currentModalPrice * (markupPercentage / 100)));
+                                console.log(`[DynamicMarkup] Updating Price for Merchant ${mp.merchant.name}: ${mp.customPrice} -> ${newDynamicPrice} (${markupPercentage}%)`);
                                 await tx.merchantProductPrice.update({
                                     where: { id: mp.id },
-                                    data: {
-                                        isActive: false,
-                                        reason: `Otomatis: Modal (${currentModalPrice}) > Harga Jual (${mp.customPrice})`
-                                    }
+                                    data: { customPrice: newDynamicPrice }
                                 });
                             }
+                            else {
+                                if (Number(mp.customPrice) < currentModalPrice) {
+                                    await tx.merchantProductPrice.update({
+                                        where: { id: mp.id },
+                                        data: {
+                                            isActive: false,
+                                            reason: `Otomatis: Modal (${currentModalPrice}) > Harga Jual (${mp.customPrice})`
+                                        }
+                                    });
+                                }
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
-        }
+        });
+        return { success: true };
     }
     verifyWebhookSignature(signature, event, refId) {
         const { username, key } = this.getDigiflazzConfig();
@@ -677,8 +714,16 @@ let DigiflazzService = DigiflazzService_1 = class DigiflazzService {
             }
         });
         if (newStatus === 'FAILED') {
-            await this.handleCommissionReversal(order.id);
-            await this.handleCustomerRefund(order.id);
+            await this.prisma.disputeCase.create({
+                data: {
+                    orderId: order.id,
+                    userId: order.userId,
+                    reason: `Sistem Otomatis (Webhook): Transaksi Digiflazz merespons GAGAL. Lakukan pengecekan manual ke Live Chat Digiflazz sebelum Refund.`,
+                    status: 'OPEN'
+                }
+            });
+            this.whatsappService.sendAdminSummary(`⚠️ *POTENSI SENGKETA (DISPUTE)*\nOrder ${order.orderNumber} merespons Gagal dari Webhook Digiflazz.\n` +
+                `Otomatis masuk ke antrean Sengketa. Segera cek manual ke Digiflazz sebelum Refund!`).catch(() => { });
         }
         console.log(`[DigiflazzWebhook] Transaksi ${data.ref_id} diupdate ke status ${newStatus}`);
     }
@@ -697,8 +742,38 @@ let DigiflazzService = DigiflazzService_1 = class DigiflazzService {
         }
         return masked;
     }
+    async retryStuckOrders() {
+        const fiveMinsAgo = new Date();
+        fiveMinsAgo.setMinutes(fiveMinsAgo.getMinutes() - 5);
+        const stuckOrders = await this.prisma.order.findMany({
+            where: {
+                paymentStatus: 'PAID',
+                fulfillmentStatus: 'PROCESSING',
+                updatedAt: { lt: fiveMinsAgo }
+            },
+            take: 20
+        });
+        if (stuckOrders.length > 0) {
+            this.logger.log(`[Cron] Found ${stuckOrders.length} stuck PROCESSING orders. Retrying...`);
+        }
+        for (const order of stuckOrders) {
+            try {
+                await this.placeOrder(order.id);
+                this.logger.log(`[Cron] Successfully hit retry for ${order.orderNumber}`);
+            }
+            catch (err) {
+                this.logger.error(`[Cron] Failed to retry order ${order.orderNumber}: ${err.message}`);
+            }
+        }
+    }
 };
 exports.DigiflazzService = DigiflazzService;
+__decorate([
+    (0, schedule_1.Cron)('*/5 * * * *'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], DigiflazzService.prototype, "retryStuckOrders", null);
 exports.DigiflazzService = DigiflazzService = DigiflazzService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,

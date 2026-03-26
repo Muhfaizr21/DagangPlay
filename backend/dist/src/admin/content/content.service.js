@@ -19,7 +19,7 @@ let ContentService = class ContentService {
     }
     async getBanners(merchantId) {
         return this.prisma.banner.findMany({
-            where: merchantId ? { merchantId } : {},
+            where: merchantId ? { merchantId } : { merchantId: null },
             orderBy: [{ position: 'asc' }, { sortOrder: 'asc' }]
         });
     }
@@ -65,8 +65,9 @@ let ContentService = class ContentService {
     async deleteBanner(id) {
         return this.prisma.banner.delete({ where: { id } });
     }
-    async getAnnouncements() {
+    async getAnnouncements(merchantId) {
         return this.prisma.announcement.findMany({
+            where: merchantId ? { merchantId } : { merchantId: null },
             orderBy: { createdAt: 'desc' }
         });
     }
@@ -107,8 +108,9 @@ let ContentService = class ContentService {
     async deleteAnnouncement(id) {
         return this.prisma.announcement.delete({ where: { id } });
     }
-    async getCampaigns() {
+    async getCampaigns(merchantId) {
         return this.prisma.emailCampaign.findMany({
+            where: merchantId ? { merchantId } : { merchantId: null },
             orderBy: { createdAt: 'desc' }
         });
     }
@@ -125,8 +127,9 @@ let ContentService = class ContentService {
             }
         });
     }
-    async getTemplates() {
+    async getTemplates(merchantId) {
         return this.prisma.notificationTemplate.findMany({
+            where: merchantId ? { merchantId } : { merchantId: null },
             orderBy: { type: 'asc' }
         });
     }

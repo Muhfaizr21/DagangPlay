@@ -7,6 +7,7 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string;
         linkUrl: string | null;
@@ -14,7 +15,6 @@ export declare class ContentService {
         sortOrder: number;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         clickCount: number;
     }[]>;
     createBanner(merchantId: string, data: any): Promise<{
@@ -22,6 +22,7 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string;
         linkUrl: string | null;
@@ -29,7 +30,6 @@ export declare class ContentService {
         sortOrder: number;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         clickCount: number;
     }>;
     toggleBanner(merchantId: string, id: string, isActive: boolean): Promise<{
@@ -37,6 +37,7 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string;
         linkUrl: string | null;
@@ -44,7 +45,21 @@ export declare class ContentService {
         sortOrder: number;
         startDate: Date | null;
         endDate: Date | null;
+        clickCount: number;
+    }>;
+    updateBanner(merchantId: string, id: string, data: any): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         isActive: boolean;
+        title: string;
+        image: string;
+        linkUrl: string | null;
+        position: import("@prisma/client").$Enums.BannerPosition;
+        sortOrder: number;
+        startDate: Date | null;
+        endDate: Date | null;
         clickCount: number;
     }>;
     deleteBanner(merchantId: string, id: string): Promise<{
@@ -52,6 +67,7 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string;
         linkUrl: string | null;
@@ -59,7 +75,6 @@ export declare class ContentService {
         sortOrder: number;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         clickCount: number;
     }>;
     getAnnouncements(merchantId: string): Promise<{
@@ -67,10 +82,10 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string;
         imageUrl: string | null;
     }[]>;
@@ -79,10 +94,10 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string;
         imageUrl: string | null;
     }>;
@@ -91,10 +106,22 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
+        content: string;
+        imageUrl: string | null;
+    }>;
+    updateAnnouncement(merchantId: string, id: string, data: any): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         isActive: boolean;
+        title: string;
+        startDate: Date | null;
+        endDate: Date | null;
         content: string;
         imageUrl: string | null;
     }>;
@@ -103,10 +130,10 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string;
         imageUrl: string | null;
     }>;
@@ -132,6 +159,12 @@ export declare class ContentService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
+        autoPayoutEnabled: boolean;
+        autoPayoutThreshold: number;
+        autoPayoutSchedule: string | null;
+        forceHttps: boolean;
+        escrowBalance: number;
+        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
@@ -158,6 +191,12 @@ export declare class ContentService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
+        autoPayoutEnabled: boolean;
+        autoPayoutThreshold: number;
+        autoPayoutSchedule: string | null;
+        forceHttps: boolean;
+        escrowBalance: number;
+        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
@@ -167,12 +206,12 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string | null;
         linkUrl: string | null;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string | null;
     }[]>;
     createPopupPromo(merchantId: string, data: any): Promise<{
@@ -180,12 +219,12 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string | null;
         linkUrl: string | null;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string | null;
     }>;
     togglePopupPromo(merchantId: string, id: string, isActive: boolean): Promise<{
@@ -193,12 +232,25 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string | null;
         linkUrl: string | null;
         startDate: Date | null;
         endDate: Date | null;
+        content: string | null;
+    }>;
+    updatePopupPromo(merchantId: string, id: string, data: any): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         isActive: boolean;
+        title: string;
+        image: string | null;
+        linkUrl: string | null;
+        startDate: Date | null;
+        endDate: Date | null;
         content: string | null;
     }>;
     deletePopupPromo(merchantId: string, id: string): Promise<{
@@ -206,12 +258,12 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string | null;
         linkUrl: string | null;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string | null;
     }>;
 }

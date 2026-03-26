@@ -19,15 +19,16 @@ export function middleware(request: NextRequest) {
 
     // Mendapatkan Hostname
     const hostname = request.headers.get('host') || '';
+    const cleanHostname = hostname.split(':')[0]; // Buang port jika ada (contoh: localhost:3000)
 
     // Daftar domain root dari platform kita sendiri (Disesuaikan nanti dengan domain asli perusahaan)
-    // local development: localhost, ip, dan domain trycloudflare
     const isMainDomain =
-        hostname.includes('localhost') ||
-        hostname.includes('127.0.0.1') ||
-        hostname.includes('dagangplay.com') ||
-        hostname.includes('trycloudflare.com') || // if we use cloudflare tunnel for testing
-        hostname.includes('vercel.app');
+        cleanHostname === 'localhost' ||
+        cleanHostname === '127.0.0.1' ||
+        cleanHostname === 'dagangplay.com' ||
+        cleanHostname === 'www.dagangplay.com' ||
+        cleanHostname.includes('trycloudflare.com') || // if we use cloudflare tunnel for testing
+        cleanHostname.includes('vercel.app');
 
     // Skip jika ini adalah domain utama, atau jika sedang akses /admin atau /merchant dll
     if (isMainDomain) {

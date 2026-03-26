@@ -33,7 +33,7 @@ let SubscriptionsService = SubscriptionsService_1 = class SubscriptionsService {
         return this.prisma.invoice.findMany({
             where,
             include: {
-                merchant: { select: { id: true, name: true, domain: true } }
+                merchant: { select: { id: true, name: true, domain: true, plan: true } }
             },
             orderBy: { createdAt: 'desc' }
         });
@@ -56,7 +56,7 @@ let SubscriptionsService = SubscriptionsService_1 = class SubscriptionsService {
                     confirmedBy: operator
                 }
             });
-            const durationDays = 30;
+            const durationDays = 365;
             const now = new Date();
             const currentExpiry = invoice.merchant.planExpiredAt || now;
             const baseDate = currentExpiry > now ? currentExpiry : now;
@@ -126,16 +126,113 @@ let SubscriptionsService = SubscriptionsService_1 = class SubscriptionsService {
         });
     }
     async getPlanFeatures() {
+        const defaultFeatures = {
+            FREE: {
+                price: 0,
+                yearlyPrice: 0,
+                maxProfitLabel: '',
+                maxProducts: 100,
+                customDomain: false,
+                domainChoices: 0,
+                multiUser: false,
+                whiteLabel: false,
+                flashSale: false,
+                templateVariants: false,
+                seoPixel: false,
+                couponManagement: false,
+                instantWithdrawal: false,
+                customProductDetail: false,
+                buildApk: false,
+                prioritySupport: false,
+                resellerAcademy: false,
+                tldDomain: false,
+                description: 'Coba platform gratis, cocok untuk pemula.'
+            },
+            PRO: {
+                price: 83167,
+                yearlyPrice: 998000,
+                maxProfitLabel: 'Rp5jt/bln',
+                maxProducts: 2000,
+                customDomain: true,
+                domainChoices: 2,
+                multiUser: false,
+                whiteLabel: false,
+                flashSale: false,
+                templateVariants: false,
+                seoPixel: true,
+                couponManagement: true,
+                instantWithdrawal: false,
+                customProductDetail: false,
+                buildApk: false,
+                prioritySupport: false,
+                resellerAcademy: false,
+                tldDomain: false,
+                description: 'Mulai bisnis reseller game dengan domain sendiri dan harga modal murah.'
+            },
+            LEGEND: {
+                price: 91500,
+                yearlyPrice: 1098000,
+                maxProfitLabel: 'Rp15jt/bln',
+                maxProducts: 5000,
+                customDomain: true,
+                domainChoices: 2,
+                multiUser: true,
+                whiteLabel: false,
+                flashSale: false,
+                templateVariants: true,
+                seoPixel: true,
+                couponManagement: true,
+                instantWithdrawal: false,
+                customProductDetail: false,
+                buildApk: false,
+                prioritySupport: false,
+                resellerAcademy: false,
+                tldDomain: false,
+                description: 'Skalakan bisnis dengan member staf, variasi tampilan, dan harga lebih kompetitif.'
+            },
+            SUPREME: {
+                price: 110667,
+                yearlyPrice: 1328000,
+                maxProfitLabel: 'Rp30jt/bln',
+                maxProducts: 99999,
+                customDomain: true,
+                domainChoices: 12,
+                multiUser: true,
+                whiteLabel: true,
+                flashSale: true,
+                templateVariants: true,
+                seoPixel: true,
+                couponManagement: true,
+                instantWithdrawal: true,
+                customProductDetail: true,
+                buildApk: true,
+                prioritySupport: true,
+                resellerAcademy: true,
+                tldDomain: true,
+                description: 'Platform bisnis game paling lengkap. Maksimalkan profit tanpa batas.'
+            }
+        };
         const setting = await this.prisma.systemSetting.findUnique({ where: { key: 'saas_plan_features' } });
         if (!setting) {
-            return {
-                FREE: { maxProducts: 10, customDomain: false, multiUser: false },
-                PRO: { maxProducts: 50, customDomain: true, multiUser: false, price: 74917 },
-                LEGEND: { maxProducts: 500, customDomain: true, multiUser: true, price: 82250 },
-                SUPREME: { maxProducts: 99999, customDomain: true, multiUser: true, whiteLabel: true, price: 99917 }
-            };
+            return defaultFeatures;
         }
-        return JSON.parse(setting.value);
+        const dbFeatures = JSON.parse(setting.value);
+        for (const tier of Object.keys(defaultFeatures)) {
+            if (dbFeatures[tier]) {
+                for (const key of Object.keys(defaultFeatures[tier])) {
+                    if (dbFeatures[tier][key] === undefined || dbFeatures[tier][key] === null) {
+                        dbFeatures[tier][key] = defaultFeatures[tier][key];
+                    }
+                }
+                if ((dbFeatures[tier].maxProducts ?? 0) < defaultFeatures[tier].maxProducts) {
+                    dbFeatures[tier].maxProducts = defaultFeatures[tier].maxProducts;
+                }
+            }
+            else {
+                dbFeatures[tier] = defaultFeatures[tier];
+            }
+        }
+        return dbFeatures;
     }
     async getMerchantPlanFeatures(merchantId) {
         const merchant = await this.prisma.merchant.findUnique({
@@ -159,14 +256,21 @@ let SubscriptionsService = SubscriptionsService_1 = class SubscriptionsService {
         if (features.isExpired) {
             throw new common_1.BadRequestException('Masa aktif paket Anda telah habis. Silakan lakukan perpanjangan.');
         }
-        if (feature === 'multiUser' && !features.multiUser) {
-            throw new common_1.BadRequestException('Paket Anda tidak mendukung fitur Multi-User (Staff). Silakan upgrade ke LEGEND/SUPREME.');
-        }
-        if (feature === 'whiteLabel' && !features.whiteLabel) {
-            throw new common_1.BadRequestException('Paket Anda tidak mendukung fitur White-Label. Silakan upgrade ke SUPREME.');
-        }
-        if (feature === 'customDomain' && !features.customDomain) {
-            throw new common_1.BadRequestException('Paket Anda tidak mendukung fitur Custom Domain. Silakan upgrade ke PRO+');
+        const booleanFeatures = {
+            multiUser: 'Multi-User (Staff). Silakan upgrade ke LEGEND/SUPREME.',
+            whiteLabel: 'White-Label. Silakan upgrade ke SUPREME.',
+            customDomain: 'Custom Domain. Silakan upgrade ke PRO+',
+            flashSale: 'Flash Sale Countdown. Silakan upgrade ke SUPREME.',
+            templateVariants: 'Variasi Template Website. Silakan upgrade ke LEGEND/SUPREME.',
+            instantWithdrawal: 'Penarikan Saldo Instan. Silakan upgrade ke SUPREME.',
+            customProductDetail: 'Kustomisasi Detail Produk. Silakan upgrade ke SUPREME.',
+            buildApk: 'Build Your APK. Silakan upgrade ke SUPREME.',
+            prioritySupport: 'Prioritized Support (WhatsApp). Silakan upgrade ke SUPREME.',
+            resellerAcademy: 'Reseller Academy. Silakan upgrade ke SUPREME.',
+            tldDomain: 'Domain TLD. Silakan upgrade ke SUPREME.',
+        };
+        if (booleanFeatures[feature] && !features[feature]) {
+            throw new common_1.BadRequestException(`Paket Anda tidak mendukung fitur ${booleanFeatures[feature]}`);
         }
         if (feature === 'maxProducts') {
             const count = await this.prisma.merchantProductPrice.count({

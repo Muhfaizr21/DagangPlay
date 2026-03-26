@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
+import Link from 'next/link';
 import MerchantLayout from '@/components/merchant/MerchantLayout';
 import {
     Play,
@@ -11,13 +12,23 @@ import {
     ChevronRight,
     Search,
     Video,
-    Zap
+    Zap,
+    Crown,
+    Lock,
+    ArrowRight
 } from 'lucide-react';
 
 const fetcher = (url: string) => {
     const token = localStorage.getItem('admin_token');
     const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-    return axios.get(url, { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data);
+    return axios.get(url, { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(err => {
+        if (err.response?.status === 401) {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_user');
+            window.location.href = '/admin/login';
+        }
+        throw err;
+    });
 };
 
 export default function MerchantAcademy() {
@@ -25,12 +36,63 @@ export default function MerchantAcademy() {
     const [selectedGuide, setSelectedGuide] = useState<any>(null);
     const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
-    const { data: guides, isLoading } = useSWR(`${baseUrl}/admin/marketing/my-guides`, fetcher);
+    // Fetch plan features untuk cek apakah merchant eligible (optional ui enhancement, tapi logic utama ada di 403)
+    const { data: planData } = useSWR(`${baseUrl}/merchant/subscription`, fetcher);
+
+    // Fetch guides — akan 403 jika tidak eligible (dari backend)
+    const { data: guides, isLoading, error } = useSWR(`${baseUrl}/admin/marketing/my-guides`, fetcher);
+
+    const isBlocked = error && error.response?.status === 403;
 
     const filteredGuides = guides?.filter((g: any) =>
         g.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         g.category.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    // 🔒 GATING WALL — tampilkan upgrade wall jika tidak eligible
+    if (isBlocked) {
+        return (
+            <MerchantLayout>
+                <div className="min-h-[60vh] flex items-center justify-center">
+                    <div className="max-w-md w-full text-center px-6">
+                        <div className="w-20 h-20 bg-amber-50 border-2 border-amber-200 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                            <Lock className="w-9 h-9 text-amber-500" />
+                        </div>
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-50 border border-amber-200 rounded-full text-amber-700 text-xs font-bold uppercase tracking-wider mb-4">
+                            <Crown className="w-3 h-3" />
+                            Fitur SUPREME
+                        </div>
+                        <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-3">
+                            Reseller Academy
+                        </h1>
+                        <p className="text-slate-500 text-sm leading-relaxed mb-8">
+                            Akses panduan eksklusif, strategi marketing terbukti, dan video tutorial dari tim expert DagangPlay. 
+                            Fitur ini hanya tersedia untuk paket <span className="font-bold text-amber-600">SUPREME</span>.
+                        </p>
+                        <div className="bg-slate-50 rounded-2xl border border-slate-200 p-5 mb-6 text-left space-y-3">
+                            {['Video Tutorial & Strategi Jualan', 'Panduan SEO untuk Toko Top Up', 'Teknik FOMO & Copywriting', 'Tips Scale Up ke Rp30jt/bulan'].map((f, i) => (
+                                <div key={i} className="flex items-center gap-3 text-sm">
+                                    <div className="w-5 h-5 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <GraduationCap className="w-3 h-3 text-amber-600" />
+                                    </div>
+                                    <span className="text-slate-600 font-medium">{f}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <Link
+                            href="/merchant/subscription"
+                            className="inline-flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-2xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-200"
+                        >
+                            <Crown className="w-4 h-4" />
+                            Upgrade ke SUPREME
+                            <ArrowRight className="w-4 h-4" />
+                        </Link>
+                        <p className="text-xs text-slate-400 mt-4">Paket mulai Rp1.328.000/tahun</p>
+                    </div>
+                </div>
+            </MerchantLayout>
+        );
+    }
 
     if (selectedGuide) {
         return (
@@ -163,8 +225,8 @@ export default function MerchantAcademy() {
                     )) : (
                         <div className="col-span-full py-20 text-center bg-slate-50 rounded-[32px] border border-dashed border-slate-300">
                             <GraduationCap className="w-16 h-16 text-slate-300 mx-auto mb-4 opacity-20" />
-                            <p className="text-slate-400 font-bold tracking-tight">Belum ada materi tersedia untuk plan Anda.</p>
-                            <p className="text-slate-400 text-sm mt-1">Upgrade ke SUPREME untuk akses penuh academy.</p>
+                            <p className="text-slate-400 font-bold tracking-tight">Belum ada materi tersedia.</p>
+                            <p className="text-slate-400 text-sm mt-1">Admin sedang menyiapkan konten untuk Anda.</p>
                         </div>
                     )}
                 </div>

@@ -1,5 +1,6 @@
 import { Injectable, InternalServerErrorException, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
+import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
@@ -299,22 +300,32 @@ export class DigiflazzService {
      * Bulk Sync Selected Products
      */
     async bulkSyncProducts(payload: any[]) {
-        let successCount = 0;
-        for (const p of payload) {
-            await this.syncProduct({
-                buyer_sku_code: p.buyer_sku_code,
-                product_name: p.product_name,
-                brand: p.brand,
-                category_digiflazz: p.category,
-                digiflazz_price: p.price,
-                categoryId: p.categoryId,
-                productId: p.productId,
-                priceNormal: p.sellingPrice || p.priceNormal,
-                status: p.status
-            });
-            successCount++;
-        }
-        return { success: true, message: `${successCount} produk berhasil di-sync secara massal.` };
+        // CRITICAL FIX: Jalankan sinkronisasi secara asinkron di belakang layar (Background Job)
+        // untuk mencegah 504 Gateway Timeout pada panel frontend Admin
+        setImmediate(async () => {
+            let successCount = 0;
+            for (const p of payload) {
+                try {
+                    await this.syncProduct({
+                        buyer_sku_code: p.buyer_sku_code,
+                        product_name: p.product_name,
+                        brand: p.brand,
+                        category_digiflazz: p.category,
+                        digiflazz_price: p.price,
+                        categoryId: p.categoryId,
+                        productId: p.productId,
+                        priceNormal: p.sellingPrice || p.priceNormal,
+                        status: p.status
+                    });
+                    successCount++;
+                } catch (err) {
+                    console.error(`[BulkSync] Gagal sync produk ${p.buyer_sku_code}:`, err);
+                }
+            }
+            console.log(`[BulkSync] Selesai: ${successCount} dari ${payload.length} produk tersinkronisasi.`);
+        });
+
+        return { success: true, message: `Proses sinkronisasi massal untuk ${payload.length} produk sedang berjalan di latar belakang.` };
     }
 
     /**
@@ -491,10 +502,21 @@ export class DigiflazzService {
                     }
                 });
 
-                // REVERSAL LOGIC: Jika Gagal, tarik kembali profit merchant yang sudah terlanjur masuk
+                // REVERSAL LOGIC: DIBATALKAN. Gunakan Sistem Dispute Case manual.
                 if (fulfillmentStatus === 'FAILED') {
-                    await this.handleCommissionReversal(order.id);
-                    await this.handleCustomerRefund(order.id);
+                    await this.prisma.disputeCase.create({
+                        data: {
+                            orderId: order.id,
+                            userId: order.userId,
+                            reason: `Sistem Otomatis: Transaksi Digiflazz merespons GAGAL. Lakukan pengecekan manual ke Live Chat Digiflazz sebelum Refund.`,
+                            status: 'OPEN'
+                        }
+                    });
+
+                    this.whatsappService.sendAdminSummary(
+                        `⚠️ *POTENSI SENGKETA (DISPUTE)*\nOrder ${order.orderNumber} merespons Gagal dari Digiflazz.\n` +
+                        `Otomatis masuk ke antrean Sengketa. Segera cek manual ke Digiflazz sebelum Refund!`
+                    ).catch(() => {});
                 }
 
                 // SEND NOTIFICATION (SUCCESS/FAILED)
@@ -518,8 +540,16 @@ export class DigiflazzService {
                         failReason: resJson.data?.message || 'Digiflazz API connection error'
                     }
                 });
-                await this.handleCommissionReversal(order.id);
-                await this.handleCustomerRefund(order.id);
+                
+                // create dispute case
+                await this.prisma.disputeCase.create({
+                    data: {
+                        orderId: order.id,
+                        userId: order.userId,
+                        reason: `Sistem Otomatis: API Digiflazz Error (${resJson.data?.message || 'Error'}). Lakukan pengecekan manual.`,
+                        status: 'OPEN'
+                    }
+                });
                 return resJson;
             }
         } catch (err: any) {
@@ -542,17 +572,36 @@ export class DigiflazzService {
      * Logic Reversal Profit (untuk Digiflazz Gagal)
      */
     public async handleCommissionReversal(orderId: string) {
-        const commissions = await this.prisma.commission.findMany({
-            where: { orderId, status: 'SETTLED' }
-        });
-
-        if (commissions.length === 0) return;
-
         await this.prisma.$transaction(async (tx) => {
+            const commissions = await tx.commission.findMany({
+                where: { orderId, status: { in: ['SETTLED', 'PENDING'] } }
+            });
+
+            if (commissions.length === 0) return;
+
             for (const comm of commissions) {
+                // Jika masih PENDING, belum sempat masuk saldo utama. Langsung batalkan saja.
+                if (comm.status === 'PENDING') {
+                    await tx.commission.update({
+                        where: { id: comm.id },
+                        data: { status: 'CANCELLED' }
+                    });
+                    continue;
+                }
+
+                // Jika sudah terlanjur SETTLED (cair ke saldo), kita harus potong saldonya.
+                const userPrior = await tx.user.findUnique({ where: { id: comm.userId } });
+                const currentBalance = Number(userPrior?.balance || 0);
+                
+                // CRITICAL FIX: Penanganan Saldo Minus (Hutang)
+                const isDebt = currentBalance < comm.amount;
+
                 const user = await tx.user.update({
                     where: { id: comm.userId },
-                    data: { balance: { decrement: comm.amount } }
+                    data: { 
+                        balance: { decrement: comm.amount },
+                        status: isDebt ? 'SUSPENDED' : undefined // Suspend user temporarily to prevent abuse if negative balance
+                    }
                 });
 
                 await tx.balanceTransaction.create({
@@ -560,10 +609,10 @@ export class DigiflazzService {
                         userId: comm.userId,
                         type: 'REFUND',
                         amount: -comm.amount,
-                        balanceBefore: Number(user.balance) + comm.amount,
+                        balanceBefore: currentBalance,
                         balanceAfter: Number(user.balance),
                         orderId,
-                        description: `Reversal profit (Digiflazz Gagal): ${orderId}`
+                        description: `Reversal profit (Digiflazz Gagal): ${orderId}${isDebt ? ' [SISTEM DEBT - SALDO MINUS]' : ''}`
                     }
                 });
 
@@ -580,27 +629,28 @@ export class DigiflazzService {
      * Logic Refund to Customer (Buyer) saat fulfillment gagal total
      */
     public async handleCustomerRefund(orderId: string) {
-        const order = await this.prisma.order.findUnique({
-            where: { id: orderId },
-            include: { user: true }
-        });
+        // CRITICAL FIX: "Check-then-Act" Race Condition. Semuanya harus di dalam 1 transaksi.
+        await this.prisma.$transaction(async (tx) => {
+            const order = await tx.order.findUnique({
+                where: { id: orderId },
+                include: { user: true }
+            });
 
-        if (!order || order.paymentStatus !== 'PAID') return;
+            if (!order || order.paymentStatus !== 'PAID' || order.fulfillmentStatus === 'REFUNDED') return;
 
-        // Cek apakah sudah pernah direfund sebelumnya
-        const existingRefund = await this.prisma.balanceTransaction.findFirst({
-            where: { orderId, type: 'REFUND', userId: order.userId, amount: { gt: 0 } }
-        });
-        if (existingRefund) return;
+            // Cek apakah sudah pernah direfund sebelumnya
+            const existingRefund = await tx.balanceTransaction.findFirst({
+                where: { orderId, type: 'REFUND', userId: order.userId, amount: { gt: 0 } }
+            });
+            if (existingRefund) return;
 
-        // IDENTIFIKASI GUEST: Jika user tidak punya email dan namanya diawali "Guest "
-        const isGuest = !order.user.email && order.user.name.startsWith('Guest ');
+            // IDENTIFIKASI GUEST: Jika user tidak punya email dan namanya diawali "Guest "
+            const isGuest = !order.user.email && order.user.name.startsWith('Guest ');
 
-        if (isGuest) {
-            const refundCode = `REF-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${order.orderNumber.split('-').pop()}`;
-            console.log(`[CustomerRefund] Order ${order.orderNumber} is a GUEST order. Generating Refund Ticket: ${refundCode}`);
-            
-            await this.prisma.$transaction(async (tx) => {
+            if (isGuest) {
+                const refundCode = `REF-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${order.orderNumber.split('-').pop()}`;
+                console.log(`[CustomerRefund] Order ${order.orderNumber} is a GUEST order. Generating Refund Ticket: ${refundCode}`);
+                
                 // 1. Increment Guest Balance
                 const user = await tx.user.update({
                     where: { id: order.userId },
@@ -630,12 +680,9 @@ export class DigiflazzService {
                         description: `Refund Ticket and Balance for Guest: ${refundCode}`
                     }
                 });
-            });
+                return;
+            }
 
-            return;
-        }
-
-        await this.prisma.$transaction(async (tx) => {
             // 1. Credit balance to User
             const user = await tx.user.update({
                 where: { id: order.userId },
@@ -660,9 +707,8 @@ export class DigiflazzService {
                 where: { id: order.id },
                 data: { paymentStatus: 'REFUNDED', fulfillmentStatus: 'REFUNDED' }
             });
+            console.log(`[CustomerRefund] Order ${order.orderNumber} fully refunded to user ${order.user.name}.`);
         });
-
-        console.log(`[CustomerRefund] Order ${order.orderNumber} fully refunded to user ${order.user.name}.`);
     }
 
     /**
@@ -671,6 +717,7 @@ export class DigiflazzService {
     async processPriceWebhook(payload: any) {
         if (!Array.isArray(payload)) return;
 
+        setImmediate(async () => {
         for (const item of payload) {
             const skuCode = item.buyer_sku_code;
             const newPrice = Number(item.price);
@@ -757,6 +804,8 @@ export class DigiflazzService {
                 });
             }
         }
+        });
+        return { success: true };
     }
 
     /**
@@ -821,8 +870,19 @@ export class DigiflazzService {
         });
 
         if (newStatus === 'FAILED') {
-            await this.handleCommissionReversal(order.id);
-            await this.handleCustomerRefund(order.id);
+            await this.prisma.disputeCase.create({
+                data: {
+                    orderId: order.id,
+                    userId: order.userId,
+                    reason: `Sistem Otomatis (Webhook): Transaksi Digiflazz merespons GAGAL. Lakukan pengecekan manual ke Live Chat Digiflazz sebelum Refund.`,
+                    status: 'OPEN'
+                }
+            });
+
+            this.whatsappService.sendAdminSummary(
+                `⚠️ *POTENSI SENGKETA (DISPUTE)*\nOrder ${order.orderNumber} merespons Gagal dari Webhook Digiflazz.\n` +
+                `Otomatis masuk ke antrean Sengketa. Segera cek manual ke Digiflazz sebelum Refund!`
+            ).catch(() => {});
         }
 
         console.log(`[DigiflazzWebhook] Transaksi ${data.ref_id} diupdate ke status ${newStatus}`);
@@ -845,5 +905,37 @@ export class DigiflazzService {
             }
         }
         return masked;
+    }
+
+    /**
+     * Cron Job to re-process ALL Stuck/PROCESSING orders automatically
+     */
+    @Cron('*/5 * * * *')
+    async retryStuckOrders() {
+        const fiveMinsAgo = new Date();
+        fiveMinsAgo.setMinutes(fiveMinsAgo.getMinutes() - 5);
+
+        const stuckOrders = await this.prisma.order.findMany({
+            where: {
+                paymentStatus: 'PAID',
+                fulfillmentStatus: 'PROCESSING',
+                updatedAt: { lt: fiveMinsAgo }
+            },
+            take: 20
+        });
+
+        if (stuckOrders.length > 0) {
+            this.logger.log(`[Cron] Found ${stuckOrders.length} stuck PROCESSING orders. Retrying...`);
+        }
+
+        for (const order of stuckOrders) {
+            try {
+                // By re-calling placeOrder with same ref_id, Digiflazz acts as status checker (idempotent)
+                await this.placeOrder(order.id);
+                this.logger.log(`[Cron] Successfully hit retry for ${order.orderNumber}`);
+            } catch (err: any) {
+                this.logger.error(`[Cron] Failed to retry order ${order.orderNumber}: ${err.message}`);
+            }
+        }
     }
 }

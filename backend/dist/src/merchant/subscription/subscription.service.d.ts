@@ -6,6 +6,7 @@ export declare class SubscriptionService {
     constructor(prisma: PrismaService, tripay: TripayService);
     getSubscriptionStatus(merchantId: string): Promise<{
         plan: import("@prisma/client").$Enums.MerchantPlan;
+        planStartedAt: Date;
         planExpiredAt: Date | null;
         isActive: boolean;
         latestInvoice: {

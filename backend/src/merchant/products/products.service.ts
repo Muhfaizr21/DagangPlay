@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import { SubscriptionsService } from '../../admin/subscriptions/subscriptions.service';
 
@@ -64,7 +64,7 @@ export class ProductsService {
                 if (activeTier === 'SUPREME') defaultTierPrice = Number(sku.priceSupreme);
 
                 const finalPrice = merchantPriceDetails ? Number(merchantPriceDetails.customPrice) : defaultTierPrice;
-                const isActive = merchantPriceDetails ? merchantPriceDetails.isActive : (merchant?.isOfficial ? true : false);
+                const isActive = merchantPriceDetails ? merchantPriceDetails.isActive : true; // Default to true so they are visibly ON
                 const margin = finalPrice - Number(sku.basePrice);
 
                 return {
@@ -106,7 +106,7 @@ export class ProductsService {
         if (activeTier === 'SUPREME') merchantModalPrice = Number(sku.priceSupreme);
 
         if (customPrice < merchantModalPrice) {
-            throw new Error(`CRITICAL_ERROR: Harga jual (Rp ${customPrice}) tidak boleh lebih rendah dari harga modal (Rp ${merchantModalPrice}) atas plan ${merchant?.plan}.`);
+            throw new BadRequestException(`Harga jual (Rp ${customPrice.toLocaleString('id-ID')}) tidak boleh lebih rendah dari harga modal (Rp ${merchantModalPrice.toLocaleString('id-ID')}) untuk Plan ${merchant?.plan}.`);
         }
 
         // Enforce SaaS Limit
@@ -138,7 +138,7 @@ export class ProductsService {
 
     async bulkUpdateMargin(merchantId: string, userId: string, markupPercentage: number, markupAmount: number = 0, categoryId?: string) {
         if (markupPercentage < 0 || markupAmount < 0) {
-            throw new Error('CRITICAL_ERROR: Margin markup tidak boleh negatif.');
+            throw new BadRequestException('Margin markup tidak boleh negatif.');
         }
 
         // Get Merchant's Tier
@@ -159,8 +159,14 @@ export class ProductsService {
 
         const skus = products.flatMap(p => p.skus);
 
+        // Calculate only truly new additions to avoid instantly tripping limits
+        const existingPrices = await this.prisma.merchantProductPrice.count({
+            where: { merchantId, productSkuId: { in: skus.map(s => s.id) }, isActive: true }
+        });
+        const newAdditionsCount = skus.length - existingPrices;
+
         // Enforce SaaS Limit for Bulk
-        await this.subscriptionsService.checkFeatureLimit(merchantId, 'maxProducts', skus.length);
+        await this.subscriptionsService.checkFeatureLimit(merchantId, 'maxProducts', newAdditionsCount > 0 ? newAdditionsCount : 0);
         
         const operations = skus.map(sku => {
             let defaultPrice = Number(sku.priceNormal);

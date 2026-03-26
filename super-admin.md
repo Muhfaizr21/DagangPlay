@@ -211,5 +211,31 @@ Pengelola penuh seluruh ekosistem platform DagangPlay
 •	Manajemen tim admin (tambah, edit, hapus staff admin)
 •	Set role & permission per staff admin
 •	System health log: uptime, error rate, response time
-•	Job queue monitoring: lihat antrian background task
-•	Retry failed job secara manual
+•	Monitor kapasitas Worker & Redis/RabbitMQ resource usage
+
+1.15 Manajemen Domain & Whitelabel (SaaS)
+•	List seluruh custom domain merchant terjadwal (pending, active, error)
+•	Generate & Renew SSL Certificates (Let's Encrypt) otomatis per domain
+•	CNAME Record Checker: validasi log DNS apakah domain merchant sudah diarahkan ke IP / Load Balancer DagangPlay
+•	Suspensi routing domain otomatis jika masa aktif subscription merchant habis
+
+1.16 Financial Ledger & Rekonsiliasi Gateway (Two-Ledger System)
+•	Dashboard Escrow: Total dana mengendap (pengguna bayar, tapi belum di-settle oleh Payment Gateway) vs Dana Tersedia (Available/Cleared)
+•	Rekonsiliasi Otomatis (Settlement Matching): Form upload file CSV mutasi Bank/Tripay/Midtrans untuk mencocokkan ID Transaksi otomatis dengan Ledger Platform dan mendeteksi selisih
+•	Manajemen Dispute Ledger: Laporan selisih pencatatan antara transaksi sukses sistem dengan data settlement asli dari Payment Gateway
+•	Persetujuan Bulk Payout: Daftar tarik dana (withdrawal) massal untuk seluruh Merchant yang available ditransfer/direlease hari ini
+
+1.17 Message Queue & Middleware Dashboard (Anti-Timeout)
+•	Visual Message Queue Dashboard: Pantau antrian job realtime (Order Fulfillment Processing, Kirim Email, Pemrosesan Webhook)
+•	Dead Letter Queue (DLQ) Manager: List pesanan/job membandel yang gagal diproses berulang kali (biasanya karena provider sedang gangguan panjang / error 500)
+•	1-Click Requeue: Tombol untuk memasukkan kembali sebuah job/pesanan dari DLQ ke dalam antrian proses (retry massal otomatis ke supplier)
+•	Log Latency Request: Pantau grafik seberapa lambat respons API dari masing-masing supplier (Digiflazz, VIP Reseller) secara realtime dalam satuan ms.
+
+1.18 Advanced Supplier Routing (Multi-vendor Fallback)
+•	Rule Builder / Prioritas Drag-and-Drop: Buat logika routing supplier visual (Misal: 1. Utama: Digiflazz, 2. Jika Digiflazz Timeout/Error, otomatis geser ke VIP Reseller, 3. Jika Stok Kosong, refund ke saldo merchant)
+•	Auto-Kill Switch (Circuit Breaker): Matikan koneksi / routing sementara secara otomatis ke sebuah supplier spesifik jika terdeteksi Error Rate lebih dari 10% dalam 5 menit terakhir
+
+1.19 Webhook & API Gateway Server
+•	Inbound Webhook Logs: Semua callback notifikasi yang masuk dari pihak ketiga/supplier (Midtrans, Digiflazz) beserta payload JSON mentah + status validasi keamanan HMAC Signature
+•	Outbound Webhook Logs: Semua notifikasi sistem yang dikirim ke server Merchant beserta HTTP Status Code (200 OK, 500 Error, dll)
+•	Alert Webhook Delivery Fail: Peringatan merah / notifikasi Telegram admin jika ada koneksi Webhook ke server Merchant tertentu yang putus atau gagal dikirim (Failed) lebih dari 3 kali berturut-turut.
