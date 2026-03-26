@@ -16,48 +16,48 @@ export declare class SecurityService {
     } & {
         id: string;
         createdAt: Date;
-        metadata: import("@prisma/client/runtime/client").JsonValue | null;
         userId: string;
-        orderId: string | null;
         reason: string;
-        riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
-        isResolved: boolean;
+        metadata: import("@prisma/client/runtime/client").JsonValue | null;
+        orderId: string | null;
         resolvedBy: string | null;
         resolvedAt: Date | null;
+        riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
+        isResolved: boolean;
     })[]>;
     resolveFraud(id: string, resolvedBy: string): Promise<{
         id: string;
         createdAt: Date;
-        metadata: import("@prisma/client/runtime/client").JsonValue | null;
         userId: string;
-        orderId: string | null;
         reason: string;
-        riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
-        isResolved: boolean;
+        metadata: import("@prisma/client/runtime/client").JsonValue | null;
+        orderId: string | null;
         resolvedBy: string | null;
         resolvedAt: Date | null;
+        riskLevel: import("@prisma/client").$Enums.FraudRiskLevel;
+        isResolved: boolean;
     }>;
     getBlacklistedIps(): Promise<{
         id: string;
         createdAt: Date;
-        ipAddress: string;
         reason: string;
+        ipAddress: string;
         expiresAt: Date | null;
         blockedBy: string;
     }[]>;
     blacklistIp(ipAddress: string, reason: string, blockedBy: string): Promise<{
         id: string;
         createdAt: Date;
-        ipAddress: string;
         reason: string;
+        ipAddress: string;
         expiresAt: Date | null;
         blockedBy: string;
     }>;
     removeBlacklist(id: string): Promise<{
         id: string;
         createdAt: Date;
-        ipAddress: string;
         reason: string;
+        ipAddress: string;
         expiresAt: Date | null;
         blockedBy: string;
     }>;
@@ -69,9 +69,9 @@ export declare class SecurityService {
     } & {
         id: string;
         createdAt: Date;
+        userId: string | null;
         email: string | null;
         failReason: string | null;
-        userId: string | null;
         ipAddress: string;
         userAgent: string | null;
         isSuccess: boolean;

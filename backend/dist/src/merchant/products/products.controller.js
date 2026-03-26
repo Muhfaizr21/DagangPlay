@@ -27,6 +27,13 @@ let ProductsController = class ProductsController {
         this.productsService = productsService;
         this.prisma = prisma;
     }
+    async getCategories() {
+        return this.prisma.category.findMany({
+            where: { isActive: true, products: { some: { status: 'ACTIVE' } } },
+            select: { id: true, name: true, slug: true, image: true },
+            orderBy: { name: 'asc' }
+        });
+    }
     async getProducts(req, search, categoryId) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id }, select: { id: true } });
         if (!merchant)
@@ -53,6 +60,12 @@ let ProductsController = class ProductsController {
     }
 };
 exports.ProductsController = ProductsController;
+__decorate([
+    (0, common_1.Get)('categories'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "getCategories", null);
 __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Request)()),

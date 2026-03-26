@@ -1,26 +1,31 @@
-FROM node:20-alpine
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies and required libs for Prisma
 RUN apk add --no-cache openssl libc6-compat
+
+COPY package*.json ./
 RUN npm install
 
-# Copy Prisma schema and generate client
 COPY prisma ./prisma/
 RUN npx prisma generate
 
-# Copy the rest of the application
 COPY . .
-
-# Build the backend application
 RUN npm run build
 
-# Expose the API port
+# ── Production Stage ──
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+RUN apk add --no-cache openssl libc6-compat
+
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/package*.json ./
+
 EXPOSE 3001
 
-# Start the built application
-CMD ["node", "dist/src/main"]
+# Run migrations then start app
+CMD sh -c "npx prisma migrate deploy && node dist/src/main"

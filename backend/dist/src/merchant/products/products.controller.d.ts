@@ -4,6 +4,12 @@ export declare class ProductsController {
     private readonly productsService;
     private prisma;
     constructor(productsService: ProductsService, prisma: PrismaService);
+    getCategories(): Promise<{
+        id: string;
+        name: string;
+        slug: string;
+        image: string | null;
+    }[]>;
     getProducts(req: any, search?: string, categoryId?: string): Promise<{
         id: string;
         name: string;
@@ -29,12 +35,12 @@ export declare class ProductsController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
-        isActive: boolean;
-        expiredAt: Date | null;
-        userId: string;
         productSkuId: string;
+        userId: string;
         customPrice: number;
+        isActive: boolean;
         reason: string | null;
+        expiredAt: Date | null;
         customModalPrice: number | null;
     }>;
     bulkUpdatePricing(req: any, body: {

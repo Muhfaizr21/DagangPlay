@@ -66,7 +66,7 @@ let ProductsService = class ProductsService {
                 if (activeTier === 'SUPREME')
                     defaultTierPrice = Number(sku.priceSupreme);
                 const finalPrice = merchantPriceDetails ? Number(merchantPriceDetails.customPrice) : defaultTierPrice;
-                const isActive = merchantPriceDetails ? merchantPriceDetails.isActive : (merchant?.isOfficial ? true : false);
+                const isActive = merchantPriceDetails ? merchantPriceDetails.isActive : true;
                 const margin = finalPrice - Number(sku.basePrice);
                 return {
                     id: sku.id,
@@ -105,7 +105,7 @@ let ProductsService = class ProductsService {
         if (activeTier === 'SUPREME')
             merchantModalPrice = Number(sku.priceSupreme);
         if (customPrice < merchantModalPrice) {
-            throw new Error(`CRITICAL_ERROR: Harga jual (Rp ${customPrice}) tidak boleh lebih rendah dari harga modal (Rp ${merchantModalPrice}) atas plan ${merchant?.plan}.`);
+            throw new common_1.BadRequestException(`Harga jual (Rp ${customPrice.toLocaleString('id-ID')}) tidak boleh lebih rendah dari harga modal (Rp ${merchantModalPrice.toLocaleString('id-ID')}) untuk Plan ${merchant?.plan}.`);
         }
         if (isActive) {
             await this.subscriptionsService.checkFeatureLimit(merchantId, 'maxProducts');
@@ -133,7 +133,7 @@ let ProductsService = class ProductsService {
     }
     async bulkUpdateMargin(merchantId, userId, markupPercentage, markupAmount = 0, categoryId) {
         if (markupPercentage < 0 || markupAmount < 0) {
-            throw new Error('CRITICAL_ERROR: Margin markup tidak boleh negatif.');
+            throw new common_1.BadRequestException('Margin markup tidak boleh negatif.');
         }
         const merchant = await this.prisma.merchant.findUnique({ where: { id: merchantId } });
         const mapping = await this.prisma.planTierMapping.findUnique({ where: { plan: merchant?.plan || 'FREE' } });
@@ -147,7 +147,11 @@ let ProductsService = class ProductsService {
             include: { skus: { where: { status: 'ACTIVE' } } }
         });
         const skus = products.flatMap(p => p.skus);
-        await this.subscriptionsService.checkFeatureLimit(merchantId, 'maxProducts', skus.length);
+        const existingPrices = await this.prisma.merchantProductPrice.count({
+            where: { merchantId, productSkuId: { in: skus.map(s => s.id) }, isActive: true }
+        });
+        const newAdditionsCount = skus.length - existingPrices;
+        await this.subscriptionsService.checkFeatureLimit(merchantId, 'maxProducts', newAdditionsCount > 0 ? newAdditionsCount : 0);
         const operations = skus.map(sku => {
             let defaultPrice = Number(sku.priceNormal);
             if (activeTier === 'PRO')

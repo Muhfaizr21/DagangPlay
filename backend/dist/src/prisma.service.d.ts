@@ -70,6 +70,11 @@ export declare class PrismaService implements OnModuleInit, OnModuleDestroy {
     get deviceTrusted(): import("@prisma/client").Prisma.DeviceTrustedDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get userProfile(): import("@prisma/client").Prisma.UserProfileDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get apiKey(): import("@prisma/client").Prisma.ApiKeyDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get webhookDeliveryLog(): import("@prisma/client").Prisma.WebhookDeliveryLogDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get deadLetterQueue(): import("@prisma/client").Prisma.DeadLetterQueueDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get merchantLedgerMovement(): import("@prisma/client").Prisma.MerchantLedgerMovementDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get flashSaleEvent(): import("@prisma/client").Prisma.FlashSaleEventDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get flashSaleItem(): import("@prisma/client").Prisma.FlashSaleItemDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     onModuleInit(): Promise<void>;
     onModuleDestroy(): Promise<void>;
 }

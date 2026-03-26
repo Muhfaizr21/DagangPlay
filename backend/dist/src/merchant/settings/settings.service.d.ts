@@ -26,6 +26,12 @@ export declare class SettingsService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
+        autoPayoutEnabled: boolean;
+        autoPayoutThreshold: number;
+        autoPayoutSchedule: string | null;
+        forceHttps: boolean;
+        escrowBalance: number;
+        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
@@ -52,6 +58,12 @@ export declare class SettingsService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
+        autoPayoutEnabled: boolean;
+        autoPayoutThreshold: number;
+        autoPayoutSchedule: string | null;
+        forceHttps: boolean;
+        escrowBalance: number;
+        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
@@ -78,6 +90,12 @@ export declare class SettingsService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
+        autoPayoutEnabled: boolean;
+        autoPayoutThreshold: number;
+        autoPayoutSchedule: string | null;
+        forceHttps: boolean;
+        escrowBalance: number;
+        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
@@ -88,8 +106,8 @@ export declare class SettingsService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
-        sortOrder: number;
         isActive: boolean;
+        sortOrder: number;
         icon: string | null;
         method: import("@prisma/client").$Enums.PaymentMethod;
         fee: number;
@@ -104,8 +122,8 @@ export declare class SettingsService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
-        sortOrder: number;
         isActive: boolean;
+        sortOrder: number;
         icon: string | null;
         method: import("@prisma/client").$Enums.PaymentMethod;
         fee: number;

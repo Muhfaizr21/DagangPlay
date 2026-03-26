@@ -34,6 +34,16 @@ let RolesGuard = class RolesGuard {
         if (!hasRole) {
             throw new common_1.ForbiddenException(`Akses ditolak: Membutuhkan role ${requiredRoles.join(' atau ')}`);
         }
+        const req = context.switchToHttp().getRequest();
+        if (user.email === 'demo@dagangplay.com') {
+            const method = req.method.toUpperCase();
+            if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+                if (req.url.includes('/auth/login') || req.url.includes('/auth/logout')) {
+                    return true;
+                }
+                throw new common_1.ForbiddenException('Aksi dinonaktifkan di mode Demo');
+            }
+        }
         return true;
     }
 };

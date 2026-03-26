@@ -4,11 +4,16 @@ export declare class ContentController {
     private readonly contentService;
     private prisma;
     constructor(contentService: ContentService, prisma: PrismaService);
+    uploadImage(req: any, file: Express.Multer.File): Promise<{
+        message: string;
+        url: string;
+    }>;
     getBanners(req: any): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string;
         linkUrl: string | null;
@@ -16,7 +21,6 @@ export declare class ContentController {
         sortOrder: number;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         clickCount: number;
     }[]>;
     createBanner(req: any, body: any): Promise<{
@@ -24,6 +28,7 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string;
         linkUrl: string | null;
@@ -31,7 +36,6 @@ export declare class ContentController {
         sortOrder: number;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         clickCount: number;
     }>;
     toggleBanner(req: any, id: string, isActive: boolean): Promise<{
@@ -39,6 +43,7 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string;
         linkUrl: string | null;
@@ -46,7 +51,21 @@ export declare class ContentController {
         sortOrder: number;
         startDate: Date | null;
         endDate: Date | null;
+        clickCount: number;
+    }>;
+    updateBanner(req: any, id: string, body: any): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         isActive: boolean;
+        title: string;
+        image: string;
+        linkUrl: string | null;
+        position: import("@prisma/client").$Enums.BannerPosition;
+        sortOrder: number;
+        startDate: Date | null;
+        endDate: Date | null;
         clickCount: number;
     }>;
     deleteBanner(req: any, id: string): Promise<{
@@ -54,6 +73,7 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string;
         linkUrl: string | null;
@@ -61,7 +81,6 @@ export declare class ContentController {
         sortOrder: number;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         clickCount: number;
     }>;
     getAnnouncements(req: any): Promise<{
@@ -69,10 +88,10 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string;
         imageUrl: string | null;
     }[]>;
@@ -81,10 +100,10 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string;
         imageUrl: string | null;
     }>;
@@ -93,10 +112,22 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
+        content: string;
+        imageUrl: string | null;
+    }>;
+    updateAnnouncement(req: any, id: string, body: any): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         isActive: boolean;
+        title: string;
+        startDate: Date | null;
+        endDate: Date | null;
         content: string;
         imageUrl: string | null;
     }>;
@@ -105,10 +136,10 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string;
         imageUrl: string | null;
     }>;
@@ -134,6 +165,12 @@ export declare class ContentController {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
+        autoPayoutEnabled: boolean;
+        autoPayoutThreshold: number;
+        autoPayoutSchedule: string | null;
+        forceHttps: boolean;
+        escrowBalance: number;
+        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
@@ -160,6 +197,12 @@ export declare class ContentController {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
+        autoPayoutEnabled: boolean;
+        autoPayoutThreshold: number;
+        autoPayoutSchedule: string | null;
+        forceHttps: boolean;
+        escrowBalance: number;
+        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
@@ -169,12 +212,12 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string | null;
         linkUrl: string | null;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string | null;
     }[]>;
     createPopupPromo(req: any, body: any): Promise<{
@@ -182,12 +225,12 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string | null;
         linkUrl: string | null;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string | null;
     }>;
     togglePopupPromo(req: any, id: string, isActive: boolean): Promise<{
@@ -195,12 +238,25 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string | null;
         linkUrl: string | null;
         startDate: Date | null;
         endDate: Date | null;
+        content: string | null;
+    }>;
+    updatePopupPromo(req: any, id: string, body: any): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string | null;
         isActive: boolean;
+        title: string;
+        image: string | null;
+        linkUrl: string | null;
+        startDate: Date | null;
+        endDate: Date | null;
         content: string | null;
     }>;
     deletePopupPromo(req: any, id: string): Promise<{
@@ -208,12 +264,12 @@ export declare class ContentController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string | null;
         linkUrl: string | null;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string | null;
     }>;
 }

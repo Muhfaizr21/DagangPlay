@@ -31,12 +31,17 @@ let PublicOrdersController = class PublicOrdersController {
     async getMerchants() {
         return this.publicOrdersService.getActiveMerchants();
     }
+    async resolveDomain(domain) {
+        if (!domain)
+            throw new common_1.BadRequestException('Domain required');
+        return this.publicOrdersService.resolveCustomDomain(domain);
+    }
     async getConfig(req, merchantSlug, domainMask) {
         const host = domainMask || req.headers.host || req.headers.origin;
         return this.publicOrdersService.getStoreConfig(host, merchantSlug);
     }
     async checkout(body, req) {
-        const host = req.headers.host;
+        const host = body.domain || req.headers.host;
         const origin = req.headers.origin;
         const merchantSlug = body.merchant;
         return this.publicOrdersService.createCheckout(body, host, origin, merchantSlug);
@@ -45,6 +50,11 @@ let PublicOrdersController = class PublicOrdersController {
         if (!phone)
             throw new common_1.BadRequestException('Nomor WhatsApp diperlukan');
         return this.publicOrdersService.findOrdersByWhatsApp(phone);
+    }
+    async validateNickname(productId, gameId, serverId) {
+        if (!productId || !gameId)
+            throw new common_1.BadRequestException('Produk ID dan Game ID wajib diisi');
+        return this.publicOrdersService.validateNickname(productId, gameId, serverId);
     }
     async getOrder(orderNumber) {
         return this.publicOrdersService.getOrderDetails(orderNumber);
@@ -67,6 +77,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], PublicOrdersController.prototype, "getMerchants", null);
+__decorate([
+    (0, common_1.Get)('resolve-domain'),
+    __param(0, (0, common_1.Query)('domain')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], PublicOrdersController.prototype, "resolveDomain", null);
 __decorate([
     (0, common_1.Get)('config'),
     (0, common_1.UseInterceptors)(cache_manager_1.CacheInterceptor),
@@ -94,6 +111,15 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], PublicOrdersController.prototype, "searchOrders", null);
+__decorate([
+    (0, common_1.Get)('validate-nickname'),
+    __param(0, (0, common_1.Query)('productId')),
+    __param(1, (0, common_1.Query)('gameId')),
+    __param(2, (0, common_1.Query)('serverId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", Promise)
+], PublicOrdersController.prototype, "validateNickname", null);
 __decorate([
     (0, common_1.Get)(':orderNumber'),
     __param(0, (0, common_1.Param)('orderNumber')),

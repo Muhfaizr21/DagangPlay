@@ -28,8 +28,14 @@ let SubscriptionService = class SubscriptionService {
             where: { merchantId },
             orderBy: { createdAt: 'desc' }
         });
+        const latestHistory = await this.prisma.subscriptionHistory.findFirst({
+            where: { merchantId },
+            orderBy: { createdAt: 'desc' }
+        });
+        const startedAt = latestHistory ? latestHistory.startDate : merchant.createdAt;
         return {
             plan: merchant.plan,
+            planStartedAt: startedAt,
             planExpiredAt: merchant.planExpiredAt,
             isActive: !merchant.planExpiredAt || new Date() < new Date(merchant.planExpiredAt),
             latestInvoice: invoice

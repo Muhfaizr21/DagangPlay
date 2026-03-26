@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PublicProductsController = void 0;
 const common_1 = require("@nestjs/common");
 const products_service_1 = require("./products.service");
-const cache_manager_1 = require("@nestjs/cache-manager");
 let PublicProductsController = class PublicProductsController {
     productsService;
     constructor(productsService) {
@@ -81,7 +80,6 @@ __decorate([
 ], PublicProductsController.prototype, "getFullCatalog", null);
 exports.PublicProductsController = PublicProductsController = __decorate([
     (0, common_1.Controller)('public/products'),
-    (0, common_1.UseInterceptors)(cache_manager_1.CacheInterceptor),
     __metadata("design:paramtypes", [products_service_1.ProductsService])
 ], PublicProductsController);
 //# sourceMappingURL=public-products.controller.js.map

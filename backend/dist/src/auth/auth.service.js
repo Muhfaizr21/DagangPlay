@@ -64,6 +64,10 @@ let AuthService = class AuthService {
             console.log('Result: FAILED - User not found');
             throw new common_1.UnauthorizedException('Email administrator tidak terdaftar.');
         }
+        if (user.isGuest) {
+            console.log('Result: FAILED - isGuest is true');
+            throw new common_1.UnauthorizedException('Akun Guest tidak dapat login ke Admin Panel.');
+        }
         if (!['SUPER_ADMIN', 'ADMIN_STAFF', 'MERCHANT'].includes(user.role)) {
             console.log('Result: FAILED - Invalid Role:', user.role);
             throw new common_1.UnauthorizedException('Anda tidak memiliki akses ke area dashboard ini.');

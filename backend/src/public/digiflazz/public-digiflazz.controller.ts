@@ -20,12 +20,15 @@ export class PublicDigiflazzController {
         @Res() res: any
     ) {
         try {
-            console.log(`[DigiflazzWebhook] Event: ${event}, Delivery: ${delivery}, IP: ${req.ip}`);
+            const clientIp = (req.headers['x-forwarded-for'] as string) || req.socket?.remoteAddress || req.ip || '';
+            console.log(`[DigiflazzWebhook] Event: ${event}, Delivery: ${delivery}, IP: ${clientIp}`);
 
             // 1. SECURITY: IP Whitelist (Digiflazz documented IPs)
-            const allowedIPs = ['103.253.212.43', '128.199.231.57', '103.111.94.131', '::ffff:103.253.212.43', '::ffff:128.199.231.57', '::ffff:103.111.94.131'];
-            if (!allowedIPs.includes(req.ip) && process.env.NODE_ENV === 'production') {
-                console.warn(`[DigiflazzWebhook] Unauthorized IP Attempt: ${req.ip}`);
+            const allowedIPs = ['103.253.212.43', '128.199.231.57', '103.111.94.131'];
+            const isAllowed = allowedIPs.some(ip => clientIp.includes(ip));
+
+            if (!isAllowed && process.env.NODE_ENV === 'production') {
+                console.warn(`[DigiflazzWebhook] Unauthorized IP Attempt: ${clientIp}`);
                 return res.status(HttpStatus.FORBIDDEN).json({ success: false, message: 'Forbidden IP' });
             }
 

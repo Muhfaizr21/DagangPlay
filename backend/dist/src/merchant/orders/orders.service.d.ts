@@ -14,12 +14,6 @@ export declare class OrdersService {
     }): Promise<any>;
     getOrders(merchantId: string, filters: any): Promise<{
         orders: ({
-            user: {
-                id: string;
-                name: string;
-                email: string | null;
-                phone: string | null;
-            };
             productSku: {
                 name: string;
                 product: {
@@ -27,11 +21,20 @@ export declare class OrdersService {
                     thumbnail: string | null;
                 };
             };
+            user: {
+                id: string;
+                name: string;
+                email: string | null;
+                phone: string | null;
+            };
         } & {
             id: string;
             createdAt: Date;
             updatedAt: Date;
             merchantId: string;
+            productSkuId: string;
+            userId: string;
+            expiredAt: Date | null;
             productId: string;
             supplierId: string | null;
             basePrice: number;
@@ -58,10 +61,7 @@ export declare class OrdersService {
             processedAt: Date | null;
             completedAt: Date | null;
             failedAt: Date | null;
-            expiredAt: Date | null;
             merchantModalPrice: number | null;
-            userId: string;
-            productSkuId: string;
             promoCodeId: string | null;
         })[];
         stats: {
@@ -70,11 +70,6 @@ export declare class OrdersService {
         };
     }>;
     getOrderDetails(merchantId: string, orderId: string): Promise<{
-        user: {
-            id: string;
-            name: string;
-            email: string | null;
-        };
         productSku: {
             name: string;
             product: {
@@ -82,6 +77,11 @@ export declare class OrdersService {
                 categoryId: string;
                 thumbnail: string | null;
             };
+        };
+        user: {
+            id: string;
+            name: string;
+            email: string | null;
         };
         statusHistories: {
             id: string;
@@ -96,6 +96,9 @@ export declare class OrdersService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
+        productSkuId: string;
+        userId: string;
+        expiredAt: Date | null;
         productId: string;
         supplierId: string | null;
         basePrice: number;
@@ -122,10 +125,7 @@ export declare class OrdersService {
         processedAt: Date | null;
         completedAt: Date | null;
         failedAt: Date | null;
-        expiredAt: Date | null;
         merchantModalPrice: number | null;
-        userId: string;
-        productSkuId: string;
         promoCodeId: string | null;
     }>;
     retryOrder(merchantId: string, orderId: string): Promise<{
@@ -135,6 +135,9 @@ export declare class OrdersService {
             createdAt: Date;
             updatedAt: Date;
             merchantId: string;
+            productSkuId: string;
+            userId: string;
+            expiredAt: Date | null;
             productId: string;
             supplierId: string | null;
             basePrice: number;
@@ -161,10 +164,7 @@ export declare class OrdersService {
             processedAt: Date | null;
             completedAt: Date | null;
             failedAt: Date | null;
-            expiredAt: Date | null;
             merchantModalPrice: number | null;
-            userId: string;
-            productSkuId: string;
             promoCodeId: string | null;
         } | null;
     }>;

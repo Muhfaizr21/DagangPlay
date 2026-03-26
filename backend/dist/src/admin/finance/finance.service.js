@@ -122,13 +122,8 @@ let FinanceService = class FinanceService {
     }
     async processWithdrawal(id, operatorId, note, receiptImage) {
         return this.prisma.$transaction(async (tx) => {
-            const wd = await tx.withdrawal.findUnique({ where: { id } });
-            if (!wd)
-                throw new common_1.NotFoundException('Data tidak ditemukan');
-            if (wd.status !== 'PENDING')
-                throw new common_1.BadRequestException('Status tidak PENDING');
-            const updated = await tx.withdrawal.update({
-                where: { id },
+            const updateResult = await tx.withdrawal.updateMany({
+                where: { id, status: 'PENDING' },
                 data: {
                     status: 'COMPLETED',
                     processedById: operatorId,
@@ -137,6 +132,9 @@ let FinanceService = class FinanceService {
                     receiptImage: receiptImage || null
                 }
             });
+            if (updateResult.count === 0)
+                throw new common_1.BadRequestException('Status tidak PENDING atau sudah diproses');
+            const updated = await tx.withdrawal.findUnique({ where: { id } });
             await tx.auditLog.create({
                 data: { action: 'PROCESS_WITHDRAWAL', entity: 'Withdrawal', entityId: id, newData: { status: 'COMPLETED' }, oldData: { status: 'PENDING' } }
             });
@@ -145,13 +143,8 @@ let FinanceService = class FinanceService {
     }
     async rejectWithdrawal(id, reason, operatorId) {
         return this.prisma.$transaction(async (tx) => {
-            const wd = await tx.withdrawal.findUnique({ where: { id } });
-            if (!wd)
-                throw new common_1.NotFoundException('Data tidak ditemukan');
-            if (wd.status !== 'PENDING')
-                throw new common_1.BadRequestException('Status tidak PENDING');
-            const updated = await tx.withdrawal.update({
-                where: { id },
+            const updateResult = await tx.withdrawal.updateMany({
+                where: { id, status: 'PENDING' },
                 data: {
                     status: 'REJECTED',
                     rejectedAt: new Date(),
@@ -159,9 +152,12 @@ let FinanceService = class FinanceService {
                     note: reason
                 }
             });
-            const amount = Number(wd.amount);
+            if (updateResult.count === 0)
+                throw new common_1.BadRequestException('Status tidak PENDING atau sudah diproses');
+            const updated = await tx.withdrawal.findUnique({ where: { id } });
+            const amount = Number(updated.amount);
             const user = await tx.user.update({
-                where: { id: wd.userId },
+                where: { id: updated.userId },
                 data: { balance: { increment: amount } }
             });
             await tx.balanceTransaction.create({
@@ -181,7 +177,11 @@ let FinanceService = class FinanceService {
             return updated;
         });
     }
+    summaryCache = { data: null, expiresAt: 0 };
     async getFinanceSummary() {
+        if (this.summaryCache.expiresAt > Date.now()) {
+            return this.summaryCache.data;
+        }
         const totalDepositConfirmedAgg = await this.prisma.deposit.aggregate({
             where: { status: 'CONFIRMED' },
             _sum: { amount: true }
@@ -206,7 +206,7 @@ let FinanceService = class FinanceService {
             where: { paymentStatus: 'PAID', createdAt: { gte: today } },
             _sum: { totalPrice: true }
         });
-        return {
+        const result = {
             totalDepositIn: Number(totalDepositConfirmedAgg._sum.amount || 0),
             totalWithdrawalOut: Number(totalWDAgg._sum.amount || 0),
             wdFeesCollected: Number(totalWDAgg._sum.fee || 0),
@@ -215,6 +215,8 @@ let FinanceService = class FinanceService {
             todaySales: Number(todaySalesAgg._sum.totalPrice || 0),
             saasRevenue
         };
+        this.summaryCache = { data: result, expiresAt: Date.now() + 5 * 60 * 1000 };
+        return result;
     }
 };
 exports.FinanceService = FinanceService;

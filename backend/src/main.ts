@@ -21,14 +21,15 @@ async function bootstrap() {
   // 1. Security Headers (Helmet)
   app.use(helmet({
     crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
-        imgSrc: ["'self'", "data:", "https://*", "blob:"],
-        connectSrc: ["'self'", "https://*", "wss://*"],
+        imgSrc: ["'self'", "data:", "https://*", "http://*", "blob:"],
+        connectSrc: ["'self'", "https://*", "http://*", "wss://*"],
       },
     },
   }));
@@ -57,7 +58,9 @@ async function bootstrap() {
   });
 
   // Expose local file uploads path
-  app.useStaticAssets(join(__dirname, '..', 'public'));
+  const publicPath = join(process.cwd(), 'public');
+  console.log('Serving static files from:', publicPath);
+  app.useStaticAssets(publicPath);
 
   // 4. Global Pipes & Filters
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));

@@ -51,6 +51,30 @@ let PromosController = class PromosController {
             throw new Error('Merchant not found');
         return this.promosService.deletePromo(merchant.id, id);
     }
+    async getFlashSales(req) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant)
+            throw new Error('Merchant not found');
+        return this.promosService.getFlashSales(merchant.id);
+    }
+    async createFlashSale(req, body) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant)
+            throw new Error('Merchant not found');
+        return this.promosService.createFlashSale(merchant.id, body);
+    }
+    async toggleFlashSale(req, id, isActive) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant)
+            throw new Error('Merchant not found');
+        return this.promosService.toggleFlashSale(merchant.id, id, isActive);
+    }
+    async deleteFlashSale(req, id) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant)
+            throw new Error('Merchant not found');
+        return this.promosService.deleteFlashSale(merchant.id, id);
+    }
 };
 exports.PromosController = PromosController;
 __decorate([
@@ -85,6 +109,38 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], PromosController.prototype, "deletePromo", null);
+__decorate([
+    (0, common_1.Get)('flash-sales'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], PromosController.prototype, "getFlashSales", null);
+__decorate([
+    (0, common_1.Post)('flash-sales'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], PromosController.prototype, "createFlashSale", null);
+__decorate([
+    (0, common_1.Put)('flash-sales/:id/toggle'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)('isActive')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Boolean]),
+    __metadata("design:returntype", Promise)
+], PromosController.prototype, "toggleFlashSale", null);
+__decorate([
+    (0, common_1.Delete)('flash-sales/:id'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], PromosController.prototype, "deleteFlashSale", null);
 exports.PromosController = PromosController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.MERCHANT, client_1.Role.SUPER_ADMIN),

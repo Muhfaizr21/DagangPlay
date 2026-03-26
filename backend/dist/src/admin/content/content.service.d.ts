@@ -8,6 +8,7 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string;
         linkUrl: string | null;
@@ -15,7 +16,6 @@ export declare class ContentService {
         sortOrder: number;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         clickCount: number;
     }[]>;
     createBanner(data: any): Promise<{
@@ -23,6 +23,7 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string;
         linkUrl: string | null;
@@ -30,7 +31,6 @@ export declare class ContentService {
         sortOrder: number;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         clickCount: number;
     }>;
     updateBanner(id: string, data: any): Promise<{
@@ -38,6 +38,7 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string;
         linkUrl: string | null;
@@ -45,7 +46,6 @@ export declare class ContentService {
         sortOrder: number;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         clickCount: number;
     }>;
     turnOffBanner(id: string): Promise<{
@@ -53,6 +53,7 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string;
         linkUrl: string | null;
@@ -60,7 +61,6 @@ export declare class ContentService {
         sortOrder: number;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         clickCount: number;
     }>;
     deleteBanner(id: string): Promise<{
@@ -68,6 +68,7 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         image: string;
         linkUrl: string | null;
@@ -75,18 +76,17 @@ export declare class ContentService {
         sortOrder: number;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         clickCount: number;
     }>;
-    getAnnouncements(): Promise<{
+    getAnnouncements(merchantId?: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string;
         imageUrl: string | null;
     }[]>;
@@ -95,10 +95,10 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string;
         imageUrl: string | null;
     }>;
@@ -107,10 +107,10 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string;
         imageUrl: string | null;
     }>;
@@ -119,10 +119,10 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string;
         imageUrl: string | null;
     }>;
@@ -131,14 +131,14 @@ export declare class ContentService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string | null;
+        isActive: boolean;
         title: string;
         startDate: Date | null;
         endDate: Date | null;
-        isActive: boolean;
         content: string;
         imageUrl: string | null;
     }>;
-    getCampaigns(): Promise<{
+    getCampaigns(merchantId?: string): Promise<{
         id: string;
         name: string;
         createdAt: Date;
@@ -166,7 +166,7 @@ export declare class ContentService {
         scheduledAt: Date | null;
         sentAt: Date | null;
     }>;
-    getTemplates(): Promise<{
+    getTemplates(merchantId?: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;

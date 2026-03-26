@@ -12,6 +12,15 @@ import { PrismaService } from '../../prisma.service';
 export class ProductsController {
     constructor(private readonly productsService: ProductsService, private prisma: PrismaService) { }
 
+    @Get('categories')
+    async getCategories() {
+        return this.prisma.category.findMany({
+            where: { isActive: true, products: { some: { status: 'ACTIVE' } } },
+            select: { id: true, name: true, slug: true, image: true },
+            orderBy: { name: 'asc' }
+        });
+    }
+
     @Get()
     async getProducts(@Request() req, @Query('search') search?: string, @Query('categoryId') categoryId?: string) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id }, select: { id: true } });

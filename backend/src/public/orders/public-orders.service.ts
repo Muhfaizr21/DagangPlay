@@ -174,9 +174,29 @@ export class PublicOrdersService {
                     phone: whatsapp,
                     merchantId: merchantId, // Tag the user to the store where they first bought
                     password: hashedPassword,
+                    isGuest: true, // Restrict Guest Login
                     referralCode: `GUEST-${Date.now()}-${Math.floor(Math.random() * 1000)}`
                 }
             });
+        }
+
+        // 2.6 Optimistic Nickname Validation (Fast cache fetch)
+        let resolvedNickname = 'Checking...';
+        try {
+            const cache = await this.prisma.gameNickname.findUnique({
+                where: {
+                    productId_gameUserId_serverId: {
+                        productId: sku.product.id,
+                        gameUserId: gameId,
+                        serverId: serverId || ''
+                    }
+                }
+            });
+            if (cache && cache.expiresAt > new Date()) {
+                resolvedNickname = cache.nickname;
+            }
+        } catch (e) {
+            // Ignore error so checkout doesn't freeze
         }
 
         // 3. Create Order in DB (Pending Tripay Transaction)
@@ -197,7 +217,7 @@ export class PublicOrdersService {
                 paymentStatus: 'PENDING',
                 fulfillmentStatus: 'PENDING',
                 paymentMethod: this.mapPaymentMethod(paymentMethod),
-                gameUserName: 'Checking...',
+                gameUserName: resolvedNickname,
                 gameUserId: gameId,
                 gameUserServerId: serverId,
             }
@@ -420,6 +440,15 @@ export class PublicOrdersService {
         };
     }
 
+    async resolveCustomDomain(domain: string) {
+        const domainWithoutPort = domain.split(':')[0];
+        const merchant = await this.prisma.merchant.findFirst({
+            where: { domain: domainWithoutPort }
+        });
+        if (!merchant) return { slug: null };
+        return { slug: merchant.slug };
+    }
+
     async getPaymentChannels() {
         return this.tripay.getPaymentChannels();
     }
@@ -439,5 +468,92 @@ export class PublicOrdersService {
             take: 12,
             orderBy: { createdAt: 'desc' }
         });
+    }
+
+    /**
+     * Layanan terpisah (Separated Layer) untuk validasi Nickname ke API Eksternal.
+     * Tidak membekukan proses Checkout saat timeout.
+     */
+    async validateNickname(productId: string, gameId: string, serverId?: string) {
+        // 1. Pengecekan Cepat di Database (Cache First)
+        try {
+            const cache = await this.prisma.gameNickname.findUnique({
+                where: {
+                    productId_gameUserId_serverId: {
+                        productId,
+                        gameUserId: gameId,
+                        serverId: serverId || ''
+                    }
+                }
+            });
+
+            if (cache && cache.expiresAt > new Date()) {
+                return { success: true, nickname: cache.nickname, fromCache: true };
+            }
+        } catch (e) {
+            this.logger.error(`[GameValidation] Cache read error: ${e}`);
+        }
+
+        // 2. Fetch ke API Eksternal (Lapis Terpisah)
+        try {
+            // TODO: Integrasikan dengan axios ke API penyedia nickname (contoh: Vipayment, dll)
+            // Menggunakan timeout() agar tidak menggantung (Hanging Request)
+            const isMockExternalSuccess = true;
+            
+            if (!isMockExternalSuccess) {
+                throw new Error("Layanan Eksternal Sedang Gangguan");
+            }
+
+            const externalNickname = `Pemain ${gameId}`; // Dummy name for mock response
+
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + 3);
+
+            // 3. Revalidasi Database / Sinkronisasi Cache
+            await this.prisma.gameNickname.upsert({
+                where: {
+                    productId_gameUserId_serverId: {
+                        productId,
+                        gameUserId: gameId,
+                        serverId: serverId || ''
+                    }
+                },
+                update: { nickname: externalNickname, expiresAt, cachedAt: new Date() },
+                create: { productId, gameUserId: gameId, serverId: serverId || '', nickname: externalNickname, expiresAt }
+            });
+
+            // Simpan Analitik Pengecekan 
+            await this.prisma.gameValidation.create({
+                data: {
+                    productId,
+                    gameUserId: gameId,
+                    serverId: serverId || '',
+                    nickname: externalNickname,
+                    isValid: true
+                }
+            });
+
+            return { success: true, nickname: externalNickname, fromCache: false };
+
+        } catch (err) {
+            this.logger.warn(`[GameValidation] API Timeout / Gangguan. Returning fallback.`);
+            
+            await this.prisma.gameValidation.create({
+                data: {
+                    productId,
+                    gameUserId: gameId,
+                    serverId: serverId || '',
+                    nickname: 'N/A',
+                    isValid: false
+                }
+            });
+
+            // JANGAN kembalikan Error 500! Kembalikan status info agar Frontend bisa tetap lanjut.
+            return { 
+                success: false, 
+                nickname: 'Checking...', 
+                message: 'Pengecekan akun game sedang gangguan, tapi Anda tetap dapat melanjutkan pesanan.' 
+            };
+        }
     }
 }

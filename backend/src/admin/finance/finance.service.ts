@@ -132,12 +132,8 @@ export class FinanceService {
 
     async processWithdrawal(id: string, operatorId: string, note?: string, receiptImage?: string) {
         return this.prisma.$transaction(async (tx) => {
-            const wd = await tx.withdrawal.findUnique({ where: { id } });
-            if (!wd) throw new NotFoundException('Data tidak ditemukan');
-            if (wd.status !== 'PENDING') throw new BadRequestException('Status tidak PENDING');
-
-            const updated = await tx.withdrawal.update({
-                where: { id },
+            const updateResult = await tx.withdrawal.updateMany({
+                where: { id, status: 'PENDING' },
                 data: {
                     status: 'COMPLETED',
                     processedById: operatorId,
@@ -146,6 +142,10 @@ export class FinanceService {
                     receiptImage: receiptImage || null
                 }
             });
+
+            if (updateResult.count === 0) throw new BadRequestException('Status tidak PENDING atau sudah diproses');
+
+            const updated = await tx.withdrawal.findUnique({ where: { id } });
 
             await tx.auditLog.create({
                 data: { action: 'PROCESS_WITHDRAWAL', entity: 'Withdrawal', entityId: id, newData: { status: 'COMPLETED' }, oldData: { status: 'PENDING' } }
@@ -157,12 +157,8 @@ export class FinanceService {
 
     async rejectWithdrawal(id: string, reason: string, operatorId: string) {
         return this.prisma.$transaction(async (tx) => {
-            const wd = await tx.withdrawal.findUnique({ where: { id } });
-            if (!wd) throw new NotFoundException('Data tidak ditemukan');
-            if (wd.status !== 'PENDING') throw new BadRequestException('Status tidak PENDING');
-
-            const updated = await tx.withdrawal.update({
-                where: { id },
+            const updateResult = await tx.withdrawal.updateMany({
+                where: { id, status: 'PENDING' },
                 data: {
                     status: 'REJECTED',
                     rejectedAt: new Date(),
@@ -171,10 +167,14 @@ export class FinanceService {
                 }
             });
 
+            if (updateResult.count === 0) throw new BadRequestException('Status tidak PENDING atau sudah diproses');
+
+            const updated = await tx.withdrawal.findUnique({ where: { id } });
+
             // Kembalikan uang (ATOMIC)
-            const amount = Number(wd.amount);
+            const amount = Number(updated.amount);
             const user = await tx.user.update({
-                where: { id: wd.userId },
+                where: { id: updated.userId },
                 data: { balance: { increment: amount } }
             });
 
@@ -201,7 +201,13 @@ export class FinanceService {
     // ==========================
     // REPORTER KEUANGAN PUSAT
     // ==========================
+    private summaryCache: { data: any, expiresAt: number } = { data: null, expiresAt: 0 };
+
     async getFinanceSummary() {
+        if (this.summaryCache.expiresAt > Date.now()) {
+            return this.summaryCache.data;
+        }
+
         // Very naive aggregations for Dashboard UI
         const totalDepositConfirmedAgg = await this.prisma.deposit.aggregate({
             where: { status: 'CONFIRMED' },
@@ -235,7 +241,7 @@ export class FinanceService {
             _sum: { totalPrice: true }
         });
 
-        return {
+        const result = {
             totalDepositIn: Number(totalDepositConfirmedAgg._sum.amount || 0),
             totalWithdrawalOut: Number(totalWDAgg._sum.amount || 0),
             wdFeesCollected: Number(totalWDAgg._sum.fee || 0),
@@ -244,5 +250,8 @@ export class FinanceService {
             todaySales: Number(todaySalesAgg._sum.totalPrice || 0),
             saasRevenue
         };
+        
+        this.summaryCache = { data: result, expiresAt: Date.now() + 5 * 60 * 1000 };
+        return result;
     }
 }

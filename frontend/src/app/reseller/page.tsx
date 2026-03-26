@@ -820,17 +820,35 @@ export default function ResellerLandingPage() {
     SUPREME: { price: 0, maxProducts: 0, customDomain: false, multiUser: false, whiteLabel: false, customFeatures: [], description: "Memuat data..." },
   });
 
-  const gpd = (p: number) => {
-    if (!p) p = 0;
-    // Base logic: Annual = 12 * Monthly with discount, Quarterly = 3 * Monthly
-    // Here we use the price from DB as the Annual base if billingCycle is yearly.
-    const o = p * 1.5; // Estimated original price for visual strike-through
+  // Fix #4 & #6: Pricing dinamis dari backend
+  // - yearlyPrice: dari DB (misal 998000)
+  // - quarterlyPrice: dari DB jika ada, fallback hitung dari yearly
+  // - originalPrice: dari DB jika admin set, fallback yearly * 1.25 ("hemat 12 bulan hanya bayar 10")
+  const gpd = (planKey: string) => {
+    const plan = plans[planKey];
+    if (!plan) return { original: 0, discounted: 0, perMonth: 0, savings: 0 };
+
+    const yearlyPrice = plan.yearlyPrice || plan.price || 0;
+    const quarterlyPrice = plan.quarterlyPrice || Math.round((yearlyPrice / 12) * 3 * 1.15);
+    const originalPrice = plan.originalPrice || Math.round(yearlyPrice * 1.25); // fallback: 12 bulan vs 10 bulan harga
+
     if (billingCycle === 'yearly') {
-      return { original: o, discounted: p, label: '/ tahun', mo: p / 12 };
+      const savings = originalPrice > 0 ? Math.round(((originalPrice - yearlyPrice) / originalPrice) * 100) : 0;
+      return { original: originalPrice, discounted: yearlyPrice, perMonth: Math.round(yearlyPrice / 12), savings };
     }
-    const q = Math.round((p / 12) * 3 * 1.1); // Quarterly is slightly more expensive than 3x monthly
-    return { original: (o / 12) * 3, discounted: q, label: '/ 3 bulan', mo: q / 3 };
+    // Quarterly
+    const origQ = Math.round(originalPrice / 12 * 3);
+    const savings = origQ > 0 ? Math.round(((origQ - quarterlyPrice) / origQ) * 100) : 0;
+    return { original: origQ, discounted: quarterlyPrice, perMonth: Math.round(quarterlyPrice / 3), savings };
   };
+
+  // Fix #5: Hitung max savings real dari semua plan
+  const maxSavingsPct = Math.max(
+    gpd('PRO').savings,
+    gpd('LEGEND').savings,
+    gpd('SUPREME').savings,
+    0
+  );
 
   useEffect(() => {
     if (sampleProducts.length > 0) {
@@ -1060,7 +1078,7 @@ export default function ResellerLandingPage() {
                 <div className="demo-tag">Panel Admin</div>
                 <div className="demo-title">Demo Panel Reseller</div>
                 <div className="demo-desc">Jelajahi semua fitur dashboard reseller secara langsung</div>
-                <Link href="/demo/admin" className="demo-link">Login Sebagai Admin <ArrowUpRight size={13} /></Link>
+                <Link href="/demo/merchant" className="demo-link">Buka Demo Reseller <ArrowUpRight size={13} /></Link>
               </div>
             </div>
             <div className="demo-card">
@@ -1157,25 +1175,35 @@ export default function ResellerLandingPage() {
               <button className={`b-tab${billingCycle === 'quarterly' ? ' on' : ''}`} onClick={() => setBillingCycle('quarterly')}>3 Bulan</button>
               <button className={`b-tab${billingCycle === 'yearly' ? ' on' : ''}`} onClick={() => setBillingCycle('yearly')}>Tahunan</button>
             </div>
-            {billingCycle === 'yearly' && <span className="b-save">Hemat hingga 60%</span>}
+            {/* Fix #5: Badge hemat dari kalkulasi real, bukan hardcode */}
+            {billingCycle === 'yearly' && maxSavingsPct > 0 && (
+              <span className="b-save">Hemat hingga {maxSavingsPct}%</span>
+            )}
           </div>
           <div className="plans-grid">
             {/* PRO */}
             <div className="plan-card">
               <div className="plan-body">
                 <div className="plan-name light">Pro</div>
+                {plans.PRO.maxProfitLabel && <div style={{fontSize:'.72rem',color:'#4ade80',fontWeight:700,marginBottom:'.25rem'}}>💰 Potensi s/d {plans.PRO.maxProfitLabel}</div>}
                 <div className="plan-desc light">{plans.PRO.description}</div>
-                <div className="plan-orig light">Rp {gpd(plans.PRO.price).original.toLocaleString('id-ID')}</div>
-                <div className="plan-price light">Rp {Math.round(gpd(plans.PRO.price).discounted).toLocaleString('id-ID')}</div>
-                <div className="plan-period light">{gpd(plans.PRO.price).label} · Rp {Math.round(gpd(plans.PRO.price).mo).toLocaleString('id-ID')}/bln</div>
+                <div className="plan-orig light">Rp {gpd('PRO').original.toLocaleString('id-ID')}</div>
+                <div className="plan-price light">Rp {gpd('PRO').discounted.toLocaleString('id-ID')}</div>
+                <div className="plan-period light">{billingCycle === 'yearly' ? '/ tahun' : '/ 3 bulan'} · Rp {gpd('PRO').perMonth.toLocaleString('id-ID')}/bln</div>
                 <Link href="/reseller/register" className="plan-cta ghost-w">Daftar Sekarang <ArrowRight size={13} /></Link>
                 <div className="plan-feats">
-                  <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Maks. <b>{plans.PRO.maxProducts.toLocaleString('id-ID')}</b> Produk</span></div>
-                  <Feat on={plans.PRO.customDomain} text="Custom Domain" light={true} />
-                  <Feat on={plans.PRO.multiUser} text="Multi User / Akun Staff" light={true} />
-                  <Feat on={plans.PRO.whiteLabel} text="White Label" light={true} />
-                  <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Harga Modal Tier Pro</span></div>
-                  <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Auto-Transfer (Tanpa Deposit)</span></div>
+                  <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Akses Semua Produk</span></div>
+                  <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Maks. <b>{(plans.PRO.maxProducts||0).toLocaleString('id-ID')}</b> Produk Aktif</span></div>
+                  <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Tanpa Deposit</span></div>
+                  <Feat on={!!plans.PRO.customDomain} text={`BONUS Domain (${plans.PRO.domainChoices||2} Pilihan)`} light={true} />
+                  <Feat on={!!plans.PRO.seoPixel} text="Optimasi SEO & Pixel" light={true} />
+                  <Feat on={!!plans.PRO.couponManagement} text="Manajemen Kupon Diskon" light={true} />
+                  <Feat on={!!plans.PRO.multiUser} text="Multi User / Akun Staff" light={true} />
+                  <Feat on={!!plans.PRO.templateVariants} text="Variasi Template Website" light={true} />
+                  <Feat on={!!plans.PRO.whiteLabel} text="White Label" light={true} />
+                  <Feat on={!!plans.PRO.flashSale} text="⚡ Flash Sale" light={true} />
+                  <Feat on={!!plans.PRO.instantWithdrawal} text="💸 Tarik Saldo Instan" light={true} />
+                  <Feat on={!!plans.PRO.resellerAcademy} text="🎓 Reseller Academy" light={true} />
                   {plans.PRO.customFeatures?.map((f: string, i: number) => f && <div key={i} className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">{f}</span></div>)}
                 </div>
               </div>
@@ -1186,18 +1214,29 @@ export default function ResellerLandingPage() {
               <div className="plan-chip"><Star size={12} fill="currentColor" /> Paling Banjir Cuan</div>
               <div className="plan-body">
                 <div className="plan-name dark">Supreme</div>
+                {plans.SUPREME.maxProfitLabel && <div style={{fontSize:'.75rem',color:'#16a34a',fontWeight:800,marginBottom:'.25rem'}}>💰 Potensi Profit s/d {plans.SUPREME.maxProfitLabel}</div>}
                 <div className="plan-desc dark">{plans.SUPREME.description}</div>
-                <div className="plan-orig dark">Rp {gpd(plans.SUPREME.price).original.toLocaleString('id-ID')}</div>
-                <div className="plan-price dark" style={{ color: 'var(--navy)' }}>Rp {Math.round(gpd(plans.SUPREME.price).discounted).toLocaleString('id-ID')}</div>
-                <div className="plan-period dark">{gpd(plans.SUPREME.price).label} · Rp {Math.round(gpd(plans.SUPREME.price).mo).toLocaleString('id-ID')}/bln</div>
+                <div className="plan-orig dark">Rp {gpd('SUPREME').original.toLocaleString('id-ID')}</div>
+                <div className="plan-price dark" style={{ color: 'var(--navy)' }}>Rp {gpd('SUPREME').discounted.toLocaleString('id-ID')}</div>
+                <div className="plan-period dark">{billingCycle === 'yearly' ? '/ tahun' : '/ 3 bulan'} · Rp {gpd('SUPREME').perMonth.toLocaleString('id-ID')}/bln</div>
                 <Link href="/reseller/register" className="plan-cta navy-fill">Daftar Sekarang <Zap size={13} /></Link>
                 <div className="plan-feats">
-                  <div className="pf"><Check size={14} className="pf-i pf-on-navy" /><span className="pf-text-dark">Maks. <b>{plans.SUPREME.maxProducts.toLocaleString('id-ID')}</b> Produk</span></div>
-                  <Feat on={plans.SUPREME.customDomain} text="Custom Domain Bebas" light={false} />
-                  <Feat on={plans.SUPREME.multiUser} text="Multi User + Akun Staff" light={false} />
-                  <div className={`pf${plans.SUPREME.whiteLabel ? '' : ' off'}`}>{plans.SUPREME.whiteLabel ? <Check size={14} className="pf-i pf-on-navy" /> : <Minus size={14} className="pf-i pf-off-c" />}<span className="pf-text-dark" style={plans.SUPREME.whiteLabel ? { fontWeight: 700 } : {}}>{plans.SUPREME.whiteLabel ? 'Full White Label Brand Kamu' : 'White Label'}</span></div>
-                  <div className="pf"><Check size={14} className="pf-i pf-on-navy" /><span className="pf-text-dark" style={{ fontWeight: 700 }}>Harga Modal VIP — Termurah</span></div>
-                  <div className="pf"><Check size={14} className="pf-i pf-on-navy" /><span className="pf-text-dark">Auto-Transfer (Tanpa Deposit)</span></div>
+                  <div className="pf"><Check size={14} className="pf-i pf-on-navy" /><span className="pf-text-dark">Akses Semua Produk</span></div>
+                  <div className="pf"><Check size={14} className="pf-i pf-on-navy" /><span className="pf-text-dark">Maks. <b>{(plans.SUPREME.maxProducts||0).toLocaleString('id-ID')}</b> Produk Aktif</span></div>
+                  <div className="pf"><Check size={14} className="pf-i pf-on-navy" /><span className="pf-text-dark">Tanpa Deposit</span></div>
+                  <Feat on={!!plans.SUPREME.customDomain} text={`BONUS Domain (${plans.SUPREME.domainChoices||12} Pilihan)`} light={false} accent={true} />
+                  <Feat on={!!plans.SUPREME.seoPixel} text="Optimasi SEO & Pixel" light={false} />
+                  <Feat on={!!plans.SUPREME.couponManagement} text="Manajemen Kupon Diskon" light={false} />
+                  <Feat on={!!plans.SUPREME.multiUser} text="Multi User / Akun Staff" light={false} />
+                  <Feat on={!!plans.SUPREME.templateVariants} text="Variasi Template Website" light={false} />
+                  <Feat on={!!plans.SUPREME.tldDomain} text="Dapat Domain TLD" light={false} accent={true} />
+                  <Feat on={!!plans.SUPREME.whiteLabel} text="Full White Label Brand Kamu" light={false} accent={true} />
+                  <Feat on={!!plans.SUPREME.flashSale} text="⚡ Flash Sale / Countdown Timer" light={false} accent={true} />
+                  <Feat on={!!plans.SUPREME.instantWithdrawal} text="💸 Penarikan Saldo Instan" light={false} accent={true} />
+                  <Feat on={!!plans.SUPREME.customProductDetail} text="🎮 Kustomisasi Detail Produk" light={false} />
+                  <Feat on={!!plans.SUPREME.resellerAcademy} text="🎓 Reseller Academy" light={false} />
+                  <Feat on={!!plans.SUPREME.buildApk} text="📱 Build Your APK" light={false} accent={true} />
+                  <Feat on={!!plans.SUPREME.prioritySupport} text="🟢 Prioritized Support (WhatsApp)" light={false} />
                   {plans.SUPREME.customFeatures?.map((f: string, i: number) => f && <div key={i} className="pf"><Check size={14} className="pf-i pf-on-navy" /><span className="pf-text-dark">{f}</span></div>)}
                 </div>
               </div>
@@ -1207,18 +1246,25 @@ export default function ResellerLandingPage() {
             <div className="plan-card">
               <div className="plan-body">
                 <div className="plan-name light">Legend</div>
+                {plans.LEGEND.maxProfitLabel && <div style={{fontSize:'.72rem',color:'#4ade80',fontWeight:700,marginBottom:'.25rem'}}>💰 Potensi s/d {plans.LEGEND.maxProfitLabel}</div>}
                 <div className="plan-desc light">{plans.LEGEND.description}</div>
-                <div className="plan-orig light">Rp {gpd(plans.LEGEND.price).original.toLocaleString('id-ID')}</div>
-                <div className="plan-price light">Rp {Math.round(gpd(plans.LEGEND.price).discounted).toLocaleString('id-ID')}</div>
-                <div className="plan-period light">{gpd(plans.LEGEND.price).label} · Rp {Math.round(gpd(plans.LEGEND.price).mo).toLocaleString('id-ID')}/bln</div>
+                <div className="plan-orig light">Rp {gpd('LEGEND').original.toLocaleString('id-ID')}</div>
+                <div className="plan-price light">Rp {gpd('LEGEND').discounted.toLocaleString('id-ID')}</div>
+                <div className="plan-period light">{billingCycle === 'yearly' ? '/ tahun' : '/ 3 bulan'} · Rp {gpd('LEGEND').perMonth.toLocaleString('id-ID')}/bln</div>
                 <Link href="/reseller/register" className="plan-cta ghost-w">Daftar Sekarang <ArrowRight size={13} /></Link>
                 <div className="plan-feats">
-                  <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Maks. <b>{plans.LEGEND.maxProducts.toLocaleString('id-ID')}</b> Produk</span></div>
-                  <Feat on={plans.LEGEND.customDomain} text="Custom Domain" light={true} />
-                  <Feat on={plans.LEGEND.multiUser} text="Multi User / Akun Staff" light={true} />
-                  <Feat on={plans.LEGEND.whiteLabel} text="White Label" light={true} />
-                  <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Harga Modal Tier Legend</span></div>
-                  <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Auto-Transfer (Tanpa Deposit)</span></div>
+                  <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Akses Semua Produk</span></div>
+                  <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Maks. <b>{(plans.LEGEND.maxProducts||0).toLocaleString('id-ID')}</b> Produk Aktif</span></div>
+                  <div className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">Tanpa Deposit</span></div>
+                  <Feat on={!!plans.LEGEND.customDomain} text={`BONUS Domain (${plans.LEGEND.domainChoices||2} Pilihan)`} light={true} />
+                  <Feat on={!!plans.LEGEND.seoPixel} text="Optimasi SEO & Pixel" light={true} />
+                  <Feat on={!!plans.LEGEND.couponManagement} text="Manajemen Kupon Diskon" light={true} />
+                  <Feat on={!!plans.LEGEND.multiUser} text="Multi User / Akun Staff" light={true} />
+                  <Feat on={!!plans.LEGEND.templateVariants} text="Variasi Template Website" light={true} />
+                  <Feat on={!!plans.LEGEND.whiteLabel} text="White Label" light={true} />
+                  <Feat on={!!plans.LEGEND.flashSale} text="⚡ Flash Sale" light={true} />
+                  <Feat on={!!plans.LEGEND.instantWithdrawal} text="💸 Tarik Saldo Instan" light={true} />
+                  <Feat on={!!plans.LEGEND.resellerAcademy} text="🎓 Reseller Academy" light={true} />
                   {plans.LEGEND.customFeatures?.map((f: string, i: number) => f && <div key={i} className="pf"><Check size={14} className="pf-i pf-on-gold" /><span className="pf-text-light">{f}</span></div>)}
                 </div>
               </div>

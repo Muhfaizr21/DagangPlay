@@ -8,12 +8,15 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var CommissionsService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CommissionsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma.service");
-let CommissionsService = class CommissionsService {
+const schedule_1 = require("@nestjs/schedule");
+let CommissionsService = CommissionsService_1 = class CommissionsService {
     prisma;
+    logger = new common_1.Logger(CommissionsService_1.name);
     constructor(prisma) {
         this.prisma = prisma;
     }
@@ -91,6 +94,35 @@ let CommissionsService = class CommissionsService {
         }
         return { message: `Berhasil mencairkan ${settledCount} komisi.` };
     }
+    async autoSettleCommissions() {
+        this.logger.log('[Cashflow Protect] Menjalankan settlement otomatis untuk komisi PENDING >24 jam...');
+        const oneDayAgo = new Date();
+        oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+        const pendingComms = await this.prisma.commission.findMany({
+            where: {
+                status: 'PENDING',
+                createdAt: { lte: oneDayAgo }
+            },
+            take: 200
+        });
+        if (pendingComms.length === 0)
+            return;
+        let settledCount = 0;
+        for (const comm of pendingComms) {
+            try {
+                const order = await this.prisma.order.findUnique({ where: { id: comm.orderId } });
+                if (order && order.fulfillmentStatus !== 'FAILED') {
+                    await this.settleCommission(comm.id, 'SystemCron');
+                    settledCount++;
+                }
+            }
+            catch (err) {
+            }
+        }
+        if (settledCount > 0) {
+            this.logger.log(`[Cashflow Protect] Berhasil mencairkan ${settledCount} komisi secara otomatis.`);
+        }
+    }
     async getDownlineTree(userId) {
         const where = {};
         if (userId) {
@@ -107,7 +139,13 @@ let CommissionsService = class CommissionsService {
     }
 };
 exports.CommissionsService = CommissionsService;
-exports.CommissionsService = CommissionsService = __decorate([
+__decorate([
+    (0, schedule_1.Cron)(schedule_1.CronExpression.EVERY_HOUR),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], CommissionsService.prototype, "autoSettleCommissions", null);
+exports.CommissionsService = CommissionsService = CommissionsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], CommissionsService);

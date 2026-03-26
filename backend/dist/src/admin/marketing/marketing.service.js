@@ -68,6 +68,19 @@ let MarketingService = class MarketingService {
             return [];
         const planWeights = { 'FREE': 0, 'PRO': 1, 'LEGEND': 2, 'SUPREME': 3 };
         const currentWeight = planWeights[merchant.plan] || 0;
+        const setting = await this.prisma.systemSetting.findUnique({ where: { key: 'saas_plan_features' } });
+        if (setting) {
+            const planFeatures = JSON.parse(setting.value);
+            const merchantPlanFeatures = planFeatures[merchant.plan] || planFeatures['FREE'] || {};
+            if (!merchantPlanFeatures.resellerAcademy) {
+                throw new common_1.ForbiddenException(`Fitur Reseller Academy tidak tersedia di paket ${merchant.plan}. Silakan upgrade ke SUPREME.`);
+            }
+        }
+        else {
+            if (currentWeight < 3) {
+                throw new common_1.ForbiddenException(`Fitur Reseller Academy hanya tersedia untuk paket SUPREME. Silakan upgrade.`);
+            }
+        }
         return this.prisma.marketingGuide.findMany({
             where: {
                 isActive: true,

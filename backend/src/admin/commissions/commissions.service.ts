@@ -1,8 +1,11 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class CommissionsService {
+    private readonly logger = new Logger(CommissionsService.name);
+
     constructor(private prisma: PrismaService) { }
 
     // =====================
@@ -98,6 +101,46 @@ export class CommissionsService {
         }
 
         return { message: `Berhasil mencairkan ${settledCount} komisi.` };
+    }
+
+    /**
+     * FIXED 1: TWO-LEDGER SETTLEMENT (AUTO-CAIR H+1)
+     * Berjalan setiap jam untuk mencairkan saldo komisi yang umurnya melebihi 24 jam.
+     */
+    @Cron(CronExpression.EVERY_HOUR)
+    async autoSettleCommissions() {
+        this.logger.log('[Cashflow Protect] Menjalankan settlement otomatis untuk komisi PENDING >24 jam...');
+        
+        const oneDayAgo = new Date();
+        oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+
+        const pendingComms = await this.prisma.commission.findMany({
+            where: { 
+                status: 'PENDING',
+                createdAt: { lte: oneDayAgo }
+            },
+            take: 200 // Batching
+        });
+
+        if (pendingComms.length === 0) return;
+
+        let settledCount = 0;
+        for (const comm of pendingComms) {
+            try {
+                // Jangan cairkan komisi dari Order yang FAILED
+                const order = await this.prisma.order.findUnique({ where: { id: comm.orderId } });
+                if (order && order.fulfillmentStatus !== 'FAILED') {
+                    await this.settleCommission(comm.id, 'SystemCron');
+                    settledCount++;
+                }
+            } catch (err) {
+                // Ignore per error
+            }
+        }
+
+        if (settledCount > 0) {
+            this.logger.log(`[Cashflow Protect] Berhasil mencairkan ${settledCount} komisi secara otomatis.`);
+        }
     }
 
     // =====================

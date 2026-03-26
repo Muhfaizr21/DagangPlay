@@ -1,16 +1,48 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, UploadedFile, UseInterceptors, HttpException, HttpStatus } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ContentService } from './content.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
-
+import sharp from 'sharp';
+import { extname, join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+import { v4 as uuidv4 } from 'uuid';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.MERCHANT, Role.SUPER_ADMIN)
 @Controller('merchant/content')
 export class ContentController {
     constructor(private readonly contentService: ContentService, private prisma: PrismaService) { }
+
+    @Post('upload')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadImage(@Request() req, @UploadedFile() file: Express.Multer.File) {
+        if (!file) throw new HttpException('File not found', HttpStatus.BAD_REQUEST);
+
+        const uploadDir = join(process.cwd(), 'public', 'uploads');
+        if (!existsSync(uploadDir)) {
+            mkdirSync(uploadDir, { recursive: true });
+        }
+
+        const filename = `${uuidv4()}.webp`;
+        const filePath = join(uploadDir, filename);
+
+        try {
+            await sharp(file.buffer)
+                .webp({ quality: 80 })
+                .toFile(filePath);
+
+            return {
+                message: 'Image uploaded successfully',
+                url: `/uploads/${filename}`
+            };
+        } catch (error) {
+            console.error(error);
+            throw new HttpException('Error processing image', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
     @Get('banners')
     async getBanners(@Request() req) {
@@ -31,6 +63,13 @@ export class ContentController {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
         if (!merchant) throw new Error('Merchant not found');
         return this.contentService.toggleBanner(merchant.id, id, isActive);
+    }
+
+    @Put('banners/:id')
+    async updateBanner(@Request() req, @Param('id') id: string, @Body() body: any) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant) throw new Error('Merchant not found');
+        return this.contentService.updateBanner(merchant.id, id, body);
     }
 
     @Delete('banners/:id')
@@ -60,6 +99,13 @@ export class ContentController {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
         if (!merchant) throw new Error('Merchant not found');
         return this.contentService.toggleAnnouncement(merchant.id, id, isActive);
+    }
+
+    @Put('announcements/:id')
+    async updateAnnouncement(@Request() req, @Param('id') id: string, @Body() body: any) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant) throw new Error('Merchant not found');
+        return this.contentService.updateAnnouncement(merchant.id, id, body);
     }
 
     @Delete('announcements/:id')
@@ -104,6 +150,13 @@ export class ContentController {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
         if (!merchant) throw new Error('Merchant not found');
         return this.contentService.togglePopupPromo(merchant.id, id, isActive);
+    }
+
+    @Put('popup-promos/:id')
+    async updatePopupPromo(@Request() req, @Param('id') id: string, @Body() body: any) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant) throw new Error('Merchant not found');
+        return this.contentService.updatePopupPromo(merchant.id, id, body);
     }
 
     @Delete('popup-promos/:id')

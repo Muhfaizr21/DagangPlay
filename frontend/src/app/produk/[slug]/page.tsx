@@ -19,19 +19,42 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
     const searchParams = useSearchParams();
     const merchantSlug = searchParams.get('merchant');
 
+    const [domainMask, setDomainMask] = useState('');
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const rawHostname = window.location.hostname;
+            const cleanHostname = rawHostname.split(':')[0];
+            const isMain = cleanHostname === 'dagangplay.com' || 
+                           cleanHostname === 'www.dagangplay.com' || 
+                           cleanHostname === 'localhost' || 
+                           cleanHostname === '127.0.0.1' || 
+                           cleanHostname.includes('trycloudflare.com') ||
+                           cleanHostname.includes('vercel.app');
+            if (!isMain) {
+                setDomainMask(cleanHostname);
+            }
+        }
+    }, []);
+
     const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
     const categoryUrl = merchantSlug
         ? `${baseUrl}/public/products/categories/${params.slug}?merchant=${merchantSlug}`
-        : `${baseUrl}/public/products/categories/${params.slug}`;
+        : domainMask 
+            ? `${baseUrl}/public/products/categories/${params.slug}?domain=${domainMask}` 
+            : `${baseUrl}/public/products/categories/${params.slug}`;
 
     const configUrl = merchantSlug
         ? `${baseUrl}/public/orders/config?slug=${merchantSlug}`
-        : `${baseUrl}/public/orders/config`;
+        : domainMask
+            ? `${baseUrl}/public/orders/config?domain=${domainMask}`
+            : `${baseUrl}/public/orders/config`;
 
     const swrConfig = {
-        revalidateOnFocus: false,
-        dedupingInterval: 10000
+        revalidateOnFocus: true,
+        refreshInterval: 3000,
+        dedupingInterval: 2000
     };
 
     const { data: category, error, isLoading } = useSWR(categoryUrl, fetcher, swrConfig);
@@ -107,7 +130,8 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
                 serverId,
                 whatsapp,
                 paymentMethod: selectedPayment,
-                merchant: merchantSlug
+                merchant: merchantSlug,
+                domain: domainMask
             });
             if (res.data.success && res.data.payment?.checkout_url) {
                 window.location.href = res.data.payment.checkout_url;
@@ -144,9 +168,9 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
         </div>
     );
 
-    const allSkus = category.products.flatMap((p: any) => p.skus || []);
+    const allSkus = category.products.flatMap((p: any) => p.skus || []).filter((s: any) => s.isActive !== false && s.isAvailable !== false);
     const bestProductInfo = category.products.reduce((prev: any, current: any) =>
-        (prev.skus?.length > current.skus?.length) ? prev : current,
+        (prev.skus?.filter((s:any)=>s.isActive!==false)?.length || 0) > (current.skus?.filter((s:any)=>s.isActive!==false)?.length || 0) ? prev : current,
         category.products[0]);
 
     return (

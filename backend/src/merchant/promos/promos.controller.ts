@@ -39,4 +39,33 @@ export class PromosController {
         if (!merchant) throw new Error('Merchant not found');
         return this.promosService.deletePromo(merchant.id, id);
     }
+
+    // --- FLASH SALE ENDPOINTS ---
+    @Get('flash-sales')
+    async getFlashSales(@Request() req) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant) throw new Error('Merchant not found');
+        return this.promosService.getFlashSales(merchant.id);
+    }
+
+    @Post('flash-sales')
+    async createFlashSale(@Request() req, @Body() body: any) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant) throw new Error('Merchant not found');
+        return this.promosService.createFlashSale(merchant.id, body);
+    }
+
+    @Put('flash-sales/:id/toggle')
+    async toggleFlashSale(@Request() req, @Param('id') id: string, @Body('isActive') isActive: boolean) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant) throw new Error('Merchant not found');
+        return this.promosService.toggleFlashSale(merchant.id, id, isActive);
+    }
+
+    @Delete('flash-sales/:id')
+    async deleteFlashSale(@Request() req, @Param('id') id: string) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant) throw new Error('Merchant not found');
+        return this.promosService.deleteFlashSale(merchant.id, id);
+    }
 }

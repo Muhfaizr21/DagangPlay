@@ -18,9 +18,9 @@ export declare class ProductsController {
         description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        isActive: boolean;
         image: string | null;
         sortOrder: number;
-        isActive: boolean;
         icon: string | null;
         parentId: string | null;
         digiflazzCategory: string | null;
@@ -36,9 +36,9 @@ export declare class ProductsController {
             description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            isActive: boolean;
             image: string | null;
             sortOrder: number;
-            isActive: boolean;
             icon: string | null;
             parentId: string | null;
             digiflazzCategory: string | null;

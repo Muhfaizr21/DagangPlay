@@ -7,6 +7,7 @@ export declare class SubscriptionsController {
             id: string;
             name: string;
             domain: string | null;
+            plan: import("@prisma/client").$Enums.MerchantPlan;
         };
     } & {
         id: string;
@@ -54,8 +55,8 @@ export declare class SubscriptionsController {
         description: string | null;
         updatedAt: Date;
         key: string;
-        type: import("@prisma/client").$Enums.SettingType;
         value: string;
+        type: import("@prisma/client").$Enums.SettingType;
         group: string | null;
         updatedBy: string | null;
     }>;

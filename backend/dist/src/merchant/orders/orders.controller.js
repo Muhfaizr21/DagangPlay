@@ -20,6 +20,7 @@ const roles_guard_1 = require("../../auth/guards/roles.guard");
 const roles_decorator_1 = require("../../auth/decorators/roles.decorator");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../../prisma.service");
+const create_order_dto_1 = require("./dto/create-order.dto");
 let OrdersController = class OrdersController {
     ordersService;
     prisma;
@@ -64,7 +65,7 @@ __decorate([
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object, create_order_dto_1.CreateDirectOrderDto]),
     __metadata("design:returntype", Promise)
 ], OrdersController.prototype, "createDirectOrder", null);
 __decorate([

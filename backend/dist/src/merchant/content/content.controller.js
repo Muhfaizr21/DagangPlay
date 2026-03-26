@@ -11,21 +11,52 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ContentController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
 const content_service_1 = require("./content.service");
 const jwt_auth_guard_1 = require("../../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../../auth/guards/roles.guard");
 const roles_decorator_1 = require("../../auth/decorators/roles.decorator");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../../prisma.service");
+const sharp_1 = __importDefault(require("sharp"));
+const path_1 = require("path");
+const fs_1 = require("fs");
+const uuid_1 = require("uuid");
 let ContentController = class ContentController {
     contentService;
     prisma;
     constructor(contentService, prisma) {
         this.contentService = contentService;
         this.prisma = prisma;
+    }
+    async uploadImage(req, file) {
+        if (!file)
+            throw new common_1.HttpException('File not found', common_1.HttpStatus.BAD_REQUEST);
+        const uploadDir = (0, path_1.join)(process.cwd(), 'public', 'uploads');
+        if (!(0, fs_1.existsSync)(uploadDir)) {
+            (0, fs_1.mkdirSync)(uploadDir, { recursive: true });
+        }
+        const filename = `${(0, uuid_1.v4)()}.webp`;
+        const filePath = (0, path_1.join)(uploadDir, filename);
+        try {
+            await (0, sharp_1.default)(file.buffer)
+                .webp({ quality: 80 })
+                .toFile(filePath);
+            return {
+                message: 'Image uploaded successfully',
+                url: `/uploads/${filename}`
+            };
+        }
+        catch (error) {
+            console.error(error);
+            throw new common_1.HttpException('Error processing image', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
     async getBanners(req) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
@@ -44,6 +75,12 @@ let ContentController = class ContentController {
         if (!merchant)
             throw new Error('Merchant not found');
         return this.contentService.toggleBanner(merchant.id, id, isActive);
+    }
+    async updateBanner(req, id, body) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant)
+            throw new Error('Merchant not found');
+        return this.contentService.updateBanner(merchant.id, id, body);
     }
     async deleteBanner(req, id) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
@@ -68,6 +105,12 @@ let ContentController = class ContentController {
         if (!merchant)
             throw new Error('Merchant not found');
         return this.contentService.toggleAnnouncement(merchant.id, id, isActive);
+    }
+    async updateAnnouncement(req, id, body) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant)
+            throw new Error('Merchant not found');
+        return this.contentService.updateAnnouncement(merchant.id, id, body);
     }
     async deleteAnnouncement(req, id) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
@@ -105,6 +148,12 @@ let ContentController = class ContentController {
             throw new Error('Merchant not found');
         return this.contentService.togglePopupPromo(merchant.id, id, isActive);
     }
+    async updatePopupPromo(req, id, body) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant)
+            throw new Error('Merchant not found');
+        return this.contentService.updatePopupPromo(merchant.id, id, body);
+    }
     async deletePopupPromo(req, id) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
         if (!merchant)
@@ -113,6 +162,15 @@ let ContentController = class ContentController {
     }
 };
 exports.ContentController = ContentController;
+__decorate([
+    (0, common_1.Post)('upload'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file')),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.UploadedFile)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], ContentController.prototype, "uploadImage", null);
 __decorate([
     (0, common_1.Get)('banners'),
     __param(0, (0, common_1.Request)()),
@@ -137,6 +195,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, Boolean]),
     __metadata("design:returntype", Promise)
 ], ContentController.prototype, "toggleBanner", null);
+__decorate([
+    (0, common_1.Put)('banners/:id'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", Promise)
+], ContentController.prototype, "updateBanner", null);
 __decorate([
     (0, common_1.Delete)('banners/:id'),
     __param(0, (0, common_1.Request)()),
@@ -169,6 +236,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, Boolean]),
     __metadata("design:returntype", Promise)
 ], ContentController.prototype, "toggleAnnouncement", null);
+__decorate([
+    (0, common_1.Put)('announcements/:id'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", Promise)
+], ContentController.prototype, "updateAnnouncement", null);
 __decorate([
     (0, common_1.Delete)('announcements/:id'),
     __param(0, (0, common_1.Request)()),
@@ -217,6 +293,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, Boolean]),
     __metadata("design:returntype", Promise)
 ], ContentController.prototype, "togglePopupPromo", null);
+__decorate([
+    (0, common_1.Put)('popup-promos/:id'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", Promise)
+], ContentController.prototype, "updatePopupPromo", null);
 __decorate([
     (0, common_1.Delete)('popup-promos/:id'),
     __param(0, (0, common_1.Request)()),

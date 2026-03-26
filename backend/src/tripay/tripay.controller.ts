@@ -131,32 +131,17 @@ export class TripayController {
                                     const merchantNetProfit = netProfit - platformFeeAmount;
 
                                     if (merchantNetProfit > 0) {
-                                        const user = await tx.user.update({
-                                            where: { id: merchant.ownerId },
-                                            data: { balance: { increment: merchantNetProfit } }
-                                        });
-
-                                        // Create official Commission record
+                                        // FIXED 1 (Lapis 1): TWO-LEDGER SYSTEM (PENDING BALANCE)
+                                        // Saldo DITAHAN (PENDING). Tidak langsung disuntikkan ke saldo utama agar Admin tidak nombok.
                                         await tx.commission.create({
                                             data: {
                                                 orderId: order.id,
                                                 userId: merchant.ownerId,
                                                 type: 'MERCHANT_RETAIL_PROFIT',
                                                 amount: merchantNetProfit,
-                                                status: 'SETTLED',
-                                                settledAt: new Date()
-                                            }
-                                        });
-
-                                        await tx.balanceTransaction.create({
-                                            data: {
-                                                userId: merchant.ownerId,
-                                                type: 'COMMISSION',
-                                                amount: merchantNetProfit,
-                                                balanceBefore: Number(user.balance) - merchantNetProfit,
-                                                balanceAfter: Number(user.balance),
-                                                orderId: order.id,
-                                                description: `Profit penjualan bersih ${order.orderNumber} (Tripay M-Fee: ${tripayFeeMerchant}, Platform: ${platformFeeAmount})`
+                                                status: 'PENDING'
+                                                // Catatan: settledAt dan record balanceTransaction diabaikan 
+                                                // sampai komisi resmi Cair (SETTLED) oleh Cronjob 24-jam / Admin.
                                             }
                                         });
                                     }
@@ -172,32 +157,14 @@ export class TripayController {
                                             orderBy: { createdAt: 'asc' } // Ensure deterministic original Super Admin
                                         });
                                         if (superAdmin) {
-                                            const su = await tx.user.update({
-                                                where: { id: superAdmin.id },
-                                                data: { balance: { increment: totalPlatformProfit } }
-                                            });
-
-                                            // Register commission to super admin
+                                            // FIXED 1 (Lapis 2): Tahan saldo SuperAdmin (PENDING BALANCE)
                                             await tx.commission.create({
                                                 data: {
                                                     orderId: order.id,
                                                     userId: superAdmin.id,
                                                     type: 'PLATFORM_FEE',
                                                     amount: totalPlatformProfit,
-                                                    status: 'SETTLED',
-                                                    settledAt: new Date()
-                                                }
-                                            });
-
-                                            await tx.balanceTransaction.create({
-                                                data: {
-                                                    userId: superAdmin.id,
-                                                    type: 'COMMISSION',
-                                                    amount: totalPlatformProfit,
-                                                    balanceBefore: Number(su.balance) - totalPlatformProfit,
-                                                    balanceAfter: Number(su.balance),
-                                                    orderId: order.id,
-                                                    description: `Platform Profit ${order.orderNumber} (Fee: ${platformFeeAmount}, Markup: ${saasMarkup})`
+                                                    status: 'PENDING'
                                                 }
                                             });
                                         }
@@ -228,13 +195,18 @@ export class TripayController {
                             `Markup SA: Rp ${adminMarkup.toLocaleString('id-ID')}`
                         ).catch(() => {});
 
-                        // TRIGGER FULFILLMENT AUTOMATICALLY
-                        try {
-                            console.log(`[TripayCallback] Triggering fulfillment for order: ${order.orderNumber}`);
-                            await this.digiflazz.placeOrder(order.id);
-                        } catch (fulfillErr: any) {
-                            console.error(`[TripayCallback] Fulfillment failed for ${order.orderNumber}:`, fulfillErr.message);
-                        }
+                        // FIXED 2: BOTTLENECK WEBHOOK TRIPAY (MEMISAHKAN JALUR API DIGIFLAZZ)
+                        // Membuang request API Digiflazz ke Task/Message Queue tiruan (Event Loop Background).
+                        // Dengan setTimeout 0ms, Webhook Tripay langsung dijawab "OK 200" di detik yang sama,
+                        // Mencegah freeze database dan Timeout RTO saat transaksi sedang menumpuk ekstrim (Flash Sale).
+                        setTimeout(async () => {
+                            try {
+                                console.log(`[TripayQueue / Background Worker] Triggering fulfillment for order: ${order.orderNumber}`);
+                                await this.digiflazz.placeOrder(order.id);
+                            } catch (fulfillErr: any) {
+                                console.error(`[TripayQueue / Background Worker] Fulfillment failed for ${order.orderNumber}:`, fulfillErr.message);
+                            }
+                        }, 0);
                     } catch (err: any) {
                         if (err.code === 'P2025') {
                             console.log(`[TripayCallback] Race condition prevented for order ${ref}. Already processed.`);
@@ -305,14 +277,22 @@ export class TripayController {
                         if (invoice && (invoice.status === 'UNPAID' || invoice.status === 'PENDING')) {
                             await this.prisma.$transaction(async (tx) => {
                                 // IDEMPOTENCY: Atomic update (check both UNPAID and PENDING)
-                                await tx.invoice.update({
-                                    where: { id: invoice.id },
+                                const updatedInvoice = await tx.invoice.updateMany({
+                                    where: { 
+                                        id: invoice.id,
+                                        status: { in: ['UNPAID', 'PENDING'] }
+                                    },
                                     data: { status: 'PAID', paidAt: new Date(), tripayResponse: data as any }
                                 });
 
-                                // Calculate Expiry (usually +30 days)
+                                if (updatedInvoice.count === 0) {
+                                    console.log(`[TripayCallback] Race condition detected for invoice ${ref}. Already processed.`);
+                                    return;
+                                }
+
+                                // Calculate Expiry (usually +365 days / 1 year)
                                 const expireAt = new Date();
-                                expireAt.setDate(expireAt.getDate() + 30);
+                                expireAt.setDate(expireAt.getDate() + 365);
 
                                 // Update Merchant Plan
                                 await tx.merchant.update({

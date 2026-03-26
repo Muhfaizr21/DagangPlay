@@ -34,26 +34,48 @@ export default function MerchantSubscriptionPage() {
     const { data: planFeatures, isLoading: plansLoading } = useSWR(`${baseUrl}/public/subscriptions/plans/features`, (url) => axios.get(url).then(res => res.data));
 
     // Dynamic mapping from backend data
-    const getPlanConfigs = (): Record<string, { price: number; description: string; features: string[] }> => {
+    const getPlanConfigs = (): Record<string, { price: number; yearlyPrice: number; description: string; features: string[] }> => {
         if (!planFeatures) return {};
         
         const validPlans = ['PRO', 'LEGEND', 'SUPREME'];
         const configs: any = {};
         
+        const featureLabels: Record<string, (d: any) => string | null> = {
+            maxProducts: (d) => `Max ${d.maxProducts?.toLocaleString('id-ID')} Produk Aktif`,
+            customDomain: (d) => d.customDomain ? `BONUS Domain (${d.domainChoices || 2} Pilihan)` : null,
+            multiUser: (d) => d.multiUser ? 'Multi User / Staff' : null,
+            seoPixel: (d) => d.seoPixel ? 'Optimasi SEO & Pixel' : null,
+            couponManagement: (d) => d.couponManagement ? 'Manajemen Kupon Diskon' : null,
+            templateVariants: (d) => d.templateVariants ? 'Variasi Template Website' : null,
+            tldDomain: (d) => d.tldDomain ? 'Dapat Domain TLD' : null,
+            flashSale: (d) => d.flashSale ? 'Fitur Flash Sale (FOMO)' : null,
+            instantWithdrawal: (d) => d.instantWithdrawal ? 'Penarikan Saldo Instan' : null,
+            customProductDetail: (d) => d.customProductDetail ? 'Kustomisasi Detail Produk' : null,
+            resellerAcademy: (d) => d.resellerAcademy ? 'Reseller Academy' : null,
+            buildApk: (d) => d.buildApk ? 'Build Your APK' : null,
+            whiteLabel: (d) => d.whiteLabel ? 'White Label (Tanpa Branding DagangPlay)' : null,
+            prioritySupport: (d) => d.prioritySupport ? 'Prioritized Support (WhatsApp)' : null,
+        };
+
         validPlans.forEach(plan => {
             const data = planFeatures[plan];
             if (data) {
+                const features: string[] = [
+                    'Akses Semua Produk',
+                    'Harga Modal ' + (plan === 'PRO' ? 'Murah' : plan === 'LEGEND' ? 'Lebih Murah' : 'Paling Murah'),
+                    'Tanpa Deposit',
+                    `Website ${plan === 'PRO' ? 'Fast' : plan === 'LEGEND' ? 'Faster' : 'Super Fast'}`,
+                    'Kustomisasi Website',
+                ];
+                Object.values(featureLabels).forEach(fn => {
+                    const label = fn(data);
+                    if (label) features.push(label);
+                });
                 configs[plan] = {
                     price: data.price || 0,
-                    description: plan === 'PRO' ? 'Untuk toko berkembang' : plan === 'LEGEND' ? 'Untuk merchant profesional' : 'Tak terbatas & VIP',
-                    features: [
-                        `Max ${data.maxProducts} Produk Aktif`,
-                        data.customDomain ? 'Custom Domain' : null,
-                        data.multiUser ? 'Multi User/Staff' : null,
-                        data.whiteLabel ? 'White Label' : null,
-                        plan === 'SUPREME' ? 'Tarik Dana Instan' : 'Laporan Penjualan',
-                        'Support Prioritas'
-                    ].filter(Boolean) as string[]
+                    yearlyPrice: data.yearlyPrice || 0,
+                    description: data.description || '',
+                    features,
                 };
             }
         });
@@ -199,11 +221,14 @@ export default function MerchantSubscriptionPage() {
                             <p className="text-indigo-200 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Paket Saat Ini</p>
                             <h2 className="text-4xl font-black tracking-tighter uppercase">{status.plan} PACKAGE</h2>
 
-                            <div className="mt-8 pt-8 border-t border-white/10">
-                                <p className="text-xs text-indigo-100/60 font-medium">
-                                    {status.planExpiredAt
-                                        ? <>Berakhir pada <span className="text-white font-bold">{new Date(status.planExpiredAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span></>
-                                        : "Masa aktif belum tercatat."}
+                            <div className="mt-8 pt-8 border-t border-white/10 space-y-3">
+                                <p className="text-xs text-indigo-100/60 font-medium flex justify-between items-center">
+                                    <span>Dimulai Pada:</span>
+                                    <span className="text-white font-bold">{status.planStartedAt ? new Date(status.planStartedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</span>
+                                </p>
+                                <p className="text-xs text-indigo-100/60 font-medium flex justify-between items-center">
+                                    <span>Berakhir Pada:</span>
+                                    <span className="text-white font-bold">{status.planExpiredAt ? new Date(status.planExpiredAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</span>
                                 </p>
                             </div>
 
@@ -214,19 +239,32 @@ export default function MerchantSubscriptionPage() {
                     </div>
 
                     <div className="bg-white rounded-[35px] border border-slate-100 p-8 shadow-sm">
-                        <h3 className="font-black text-slate-800 text-sm uppercase tracking-widest mb-6 flex items-center gap-2">
+                        <h3 className="font-black text-slate-800 text-sm uppercase tracking-widest mb-1 flex items-center gap-2">
                             <span className="w-1.5 h-4 bg-indigo-500 rounded-full"></span>
                             Fitur {status.plan}
                         </h3>
-                        <ul className="space-y-4">
-                            {['Akses API Digiflazz Tanpa Batas', 'Profit Margin Kustom', 'White Label Penuh', 'Bantuan Prioritas 24/7'].map((f, i) => (
-                                <li key={i} className="flex items-start gap-4 text-[13px] text-slate-600 font-medium">
+                        {planFeatures?.[status.plan]?.maxProfitLabel && (
+                            <p className="text-[11px] text-emerald-600 font-bold mb-4 pl-4">
+                                Potensi Profit Hingga {planFeatures[status.plan].maxProfitLabel}
+                            </p>
+                        )}
+                        <ul className="space-y-3">
+                            {(PLAN_PRICES[status.plan]?.features || []).map((f: string, i: number) => (
+                                <li key={i} className="flex items-start gap-3 text-[12px] text-slate-600 font-medium">
                                     <div className="w-5 h-5 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"><Check className="w-3 h-3 stroke-[3]" /></div>
                                     {f}
                                 </li>
                             ))}
                         </ul>
+                        {planFeatures?.[status.plan]?.yearlyPrice > 0 && (
+                            <div className="mt-6 pt-5 border-t border-slate-100 text-center">
+                                <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Harga Tahunan</p>
+                                <p className="text-xl font-black text-indigo-700">Rp {planFeatures[status.plan].yearlyPrice.toLocaleString('id-ID')}</p>
+                                <p className="text-[10px] text-slate-400 font-medium">/ tahun</p>
+                            </div>
+                        )}
                     </div>
+
                 </div>
 
                 {/* History Table */}
@@ -457,7 +495,7 @@ export default function MerchantSubscriptionPage() {
                                 <div className="bg-indigo-50 rounded-2xl p-5 border border-indigo-100">
                                     <div className="flex justify-between items-center">
                                         <div>
-                                            <p className="text-sm text-indigo-600 font-bold">Paket {invoiceForm.plan} — 30 Hari</p>
+                                            <p className="text-sm text-indigo-600 font-bold">Paket {invoiceForm.plan} — 1 Tahun</p>
                                             <p className="text-[11px] text-indigo-400 font-medium mt-0.5">
                                                 {paymentChannels.find((c: any) => c.code === invoiceForm.method)?.name || invoiceForm.method}
                                             </p>

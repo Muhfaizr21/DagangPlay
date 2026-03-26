@@ -42,6 +42,8 @@ const tasks_service_1 = require("./common/tasks/tasks.service");
 const logger_middleware_1 = require("./common/middleware/logger.middleware");
 const cache_manager_1 = require("@nestjs/cache-manager");
 const cache_manager_redis_yet_1 = require("cache-manager-redis-yet");
+const queue_module_1 = require("./common/queue/queue.module");
+const saas_module_1 = require("./saas/saas.module");
 let AppModule = class AppModule {
     configure(consumer) {
         consumer
@@ -104,7 +106,9 @@ exports.AppModule = AppModule = __decorate([
             marketing_module_1.MarketingModule,
             chat_module_1.ChatModule,
             public_digiflazz_module_1.PublicDigiflazzModule,
-            notifications_module_1.NotificationsModule
+            notifications_module_1.NotificationsModule,
+            queue_module_1.QueueConfigModule,
+            saas_module_1.SaasModule
         ],
         controllers: [],
         providers: [

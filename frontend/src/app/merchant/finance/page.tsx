@@ -211,7 +211,7 @@ export default function MerchantFinancePage() {
                                 ) : (
                                     financeData?.deposits?.map((d: any) => (
                                         <React.Fragment key={d.id}>
-                                            <tr className="hover:bg-slate-50 transition-colors cursor-pointer group">
+                                            <tr className="hover:bg-slate-50 transition-colors cursor-pointer group text-slate-800">
                                                 <td className="p-5">
                                                     <div className="flex items-center gap-4">
                                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${d.status === 'CONFIRMED' ? 'bg-emerald-50 text-emerald-500 group-hover:scale-110' :
@@ -243,7 +243,7 @@ export default function MerchantFinancePage() {
                                             {d.status === 'PENDING' && d.tripayResponse?.instructions && (
                                                 <tr>
                                                     <td colSpan={2} className="p-0 border-none">
-                                                        <details className="group bg-slate-50/50">
+                                                        <details className="group bg-slate-50/50 text-slate-800">
                                                             <summary className="p-3 text-[11px] font-bold text-slate-500 cursor-pointer list-none flex items-center gap-2 hover:bg-slate-100 transition-colors">
                                                                 <HelpCircle className="w-3 h-3 text-indigo-400" /> Lihat Cara Bayar
                                                                 <span className="bg-white border border-slate-200 px-2 py-0.5 rounded ml-2 font-mono text-indigo-600">{d.tripayVaNumber || 'Kode Bayar'}</span>
@@ -297,7 +297,7 @@ export default function MerchantFinancePage() {
                                     <tr><td className="p-10 text-center text-slate-300 text-sm italic">Belum ada request penarikan</td></tr>
                                 ) : (
                                     financeData?.withdrawals?.map((w: any) => (
-                                        <tr key={w.id} className="hover:bg-slate-50 transition-all">
+                                        <tr key={w.id} className="hover:bg-slate-50 transition-all text-slate-800">
                                             <td className="p-6">
                                                 <div className="flex items-center gap-4">
                                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${w.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-500' :
@@ -334,7 +334,7 @@ export default function MerchantFinancePage() {
             {isWithdrawModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden relative max-h-[90vh] overflow-y-auto">
-                        <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center sticky top-0 z-10">
+                        <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center sticky top-0 z-10 text-slate-800">
                             <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                 <ArrowUpToLine className="w-5 h-5 text-indigo-600" /> Tarik Dana Penjualan
                             </h3>
@@ -383,7 +383,7 @@ export default function MerchantFinancePage() {
                                 </div>
                             </div>
 
-                            <div className="space-y-4 mb-8 p-5 bg-slate-50 border border-slate-100 rounded-2xl">
+                            <div className="space-y-4 mb-8 p-5 bg-slate-50 border border-slate-100 rounded-2xl text-slate-800">
                                 <div>
                                     <label className="block text-xs font-bold text-slate-500 mb-1">Nominal Penarikan (Rp)</label>
                                     <input type="number" required min="10000" placeholder="50000" value={withdrawForm.amount} onChange={e => setWithdrawForm({ ...withdrawForm, amount: e.target.value })} className="w-full px-4 py-3 bg-white rounded-xl border border-slate-200 outline-none focus:border-indigo-500 font-bold text-lg" />
@@ -437,7 +437,7 @@ export default function MerchantFinancePage() {
                                             placeholder="100.000"
                                             value={depositAmount}
                                             onChange={e => setDepositAmount(e.target.value)}
-                                            className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-slate-200 outline-none focus:border-emerald-500 font-bold text-xl transition-colors bg-slate-50 focus:bg-white"
+                                            className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-slate-200 outline-none focus:border-emerald-500 font-bold text-xl transition-colors bg-slate-50 focus:bg-white text-slate-800"
                                         />
                                     </div>
                                     {/* Quick amount pills */}
@@ -525,7 +525,7 @@ export default function MerchantFinancePage() {
 
                                 {/* Summary */}
                                 {selectedChannel && depositAmount && Number(depositAmount) >= 10000 && (
-                                    <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 text-sm">
+                                    <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 text-sm text-slate-800">
                                         <div className="flex justify-between mb-1">
                                             <span className="text-slate-500">Nominal Top Up</span>
                                             <span className="font-bold text-slate-800">Rp {Number(depositAmount).toLocaleString('id-ID')}</span>

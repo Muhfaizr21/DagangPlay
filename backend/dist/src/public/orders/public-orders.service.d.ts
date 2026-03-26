@@ -26,9 +26,9 @@ export declare class PublicOrdersService {
             createdAt: Date;
             updatedAt: Date;
             merchantId: string;
-            paidAt: Date | null;
-            expiredAt: Date | null;
             userId: string;
+            expiredAt: Date | null;
+            paidAt: Date | null;
             method: import("@prisma/client").$Enums.PaymentMethod;
             amount: number;
             fee: number;
@@ -47,6 +47,9 @@ export declare class PublicOrdersService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
+        productSkuId: string;
+        userId: string;
+        expiredAt: Date | null;
         productId: string;
         supplierId: string | null;
         basePrice: number;
@@ -73,10 +76,7 @@ export declare class PublicOrdersService {
         processedAt: Date | null;
         completedAt: Date | null;
         failedAt: Date | null;
-        expiredAt: Date | null;
         merchantModalPrice: number | null;
-        userId: string;
-        productSkuId: string;
         promoCodeId: string | null;
     }>;
     findOrdersByWhatsApp(phone: string): Promise<({
@@ -86,9 +86,9 @@ export declare class PublicOrdersService {
             createdAt: Date;
             updatedAt: Date;
             merchantId: string;
-            paidAt: Date | null;
-            expiredAt: Date | null;
             userId: string;
+            expiredAt: Date | null;
+            paidAt: Date | null;
             method: import("@prisma/client").$Enums.PaymentMethod;
             amount: number;
             fee: number;
@@ -107,6 +107,9 @@ export declare class PublicOrdersService {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
+        productSkuId: string;
+        userId: string;
+        expiredAt: Date | null;
         productId: string;
         supplierId: string | null;
         basePrice: number;
@@ -133,10 +136,7 @@ export declare class PublicOrdersService {
         processedAt: Date | null;
         completedAt: Date | null;
         failedAt: Date | null;
-        expiredAt: Date | null;
         merchantModalPrice: number | null;
-        userId: string;
-        productSkuId: string;
         promoCodeId: string | null;
     })[]>;
     getStoreConfig(host?: string, merchantSlug?: string): Promise<{
@@ -200,6 +200,11 @@ export declare class PublicOrdersService {
         message?: undefined;
         isExpired?: undefined;
     }>;
+    resolveCustomDomain(domain: string): Promise<{
+        slug: null;
+    } | {
+        slug: string;
+    }>;
     getPaymentChannels(): Promise<any>;
     getActiveMerchants(): Promise<{
         id: string;
@@ -210,4 +215,15 @@ export declare class PublicOrdersService {
         domain: string | null;
         tagline: string | null;
     }[]>;
+    validateNickname(productId: string, gameId: string, serverId?: string): Promise<{
+        success: boolean;
+        nickname: string;
+        fromCache: boolean;
+        message?: undefined;
+    } | {
+        success: boolean;
+        nickname: string;
+        message: string;
+        fromCache?: undefined;
+    }>;
 }

@@ -71,44 +71,30 @@ export class WithdrawalsService {
 
     // Admin part: Approve Withdrawal
     async approveWithdrawal(withdrawalId: string, adminId: string, receiptImage?: string) {
-        const withdrawal = await this.prisma.withdrawal.findUnique({
-            where: { id: withdrawalId }
-        });
+        return this.prisma.$transaction(async (tx) => {
+            const updateResult = await tx.withdrawal.updateMany({
+                where: { id: withdrawalId, status: 'PENDING' },
+                data: {
+                    status: 'COMPLETED',
+                    processedById: adminId,
+                    processedAt: new Date(),
+                    receiptImage
+                }
+            });
 
-        if (!withdrawal || withdrawal.status !== 'PENDING') {
-            throw new BadRequestException('Permintaan penarikan tidak ditemukan atau sudah diproses.');
-        }
-
-        return this.prisma.withdrawal.update({
-            where: { id: withdrawalId },
-            data: {
-                status: 'COMPLETED',
-                processedById: adminId,
-                processedAt: new Date(),
-                receiptImage
+            if (updateResult.count === 0) {
+                throw new BadRequestException('Permintaan penarikan tidak ditemukan, diproses ganda, atau bukan PENDING.');
             }
+
+            return tx.withdrawal.findUnique({ where: { id: withdrawalId } });
         });
     }
 
     async rejectWithdrawal(withdrawalId: string, adminId: string, reason: string) {
         return this.prisma.$transaction(async (tx) => {
-            // ATOMIC CHECK: Move inside transaction to prevent race conditions
-            const withdrawal = await tx.withdrawal.findUnique({
-                where: { id: withdrawalId }
-            });
-
-            if (!withdrawal || withdrawal.status !== 'PENDING') {
-                throw new BadRequestException('Permintaan penarikan tidak ditemukan atau sudah diproses.');
-            }
-            // Refund balance to user
-            const user = await tx.user.update({
-                where: { id: withdrawal.userId },
-                data: { balance: { increment: withdrawal.amount } }
-            });
-
-            // Update Withdrawal Status
-            const updatedWd = await tx.withdrawal.update({
-                where: { id: withdrawalId },
+            // ATOMIC CHECK: Move inside transaction with updateMany to prevent double execution
+            const updateResult = await tx.withdrawal.updateMany({
+                where: { id: withdrawalId, status: 'PENDING' },
                 data: {
                     status: 'REJECTED',
                     processedById: adminId,
@@ -117,14 +103,27 @@ export class WithdrawalsService {
                 }
             });
 
+            if (updateResult.count === 0) {
+                throw new BadRequestException('Permintaan penarikan tidak ditemukan, diproses ganda, atau status bukan PENDING.');
+            }
+
+            const updatedWd = await tx.withdrawal.findUnique({ where: { id: withdrawalId } });
+            if (!updatedWd) throw new Error('Withdrawal not found after atomic update');
+
+            // Refund balance to user
+            const user = await tx.user.update({
+                where: { id: updatedWd.userId },
+                data: { balance: { increment: updatedWd.amount } }
+            });
+
             // Log Refund Transaction
             await tx.balanceTransaction.create({
                 data: {
-                    userId: withdrawal.userId,
+                    userId: updatedWd.userId,
                     type: 'REFUND',
-                    amount: withdrawal.amount,
-                    balanceBefore: user.balance - withdrawal.amount,
-                    balanceAfter: user.balance,
+                    amount: updatedWd.amount,
+                    balanceBefore: Number(user.balance) - Number(updatedWd.amount),
+                    balanceAfter: Number(user.balance),
                     withdrawalId: updatedWd.id,
                     description: `Refund penarikan saldo ditolak: ${reason}`
                 }

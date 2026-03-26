@@ -57,6 +57,25 @@ export default function StoreDemoPage() {
                     setSearch={setSearch}
                 />
             </main>
+
+            {/* Floating Action Buttons for Store Demo */}
+            <div className="fixed bottom-8 right-8 z-[200] flex flex-col items-end gap-3 pointer-events-auto">
+                <a
+                    href="/reseller"
+                    className="flex items-center gap-3 px-6 py-3.5 bg-slate-900 text-white text-[13px] font-bold tracking-wide rounded-2xl shadow-xl hover:bg-slate-800 hover:-translate-y-1 transition-all outline-none ring-4 ring-slate-900/10"
+                    title="Akhiri Sesi Demo"
+                    onClick={() => {
+                        localStorage.removeItem('admin_token');
+                        localStorage.removeItem('admin_user');
+                    }}
+                >
+                    <span className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                    AKHIRI DEMO
+                </a>
+            </div>
         </div>
     );
 }

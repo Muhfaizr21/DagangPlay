@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import { MerchantPlan } from '@prisma/client';
 
@@ -56,22 +56,38 @@ export class MarketingService {
     }
 
     // Merchant side: Get guides based on their plan
+    // 🔒 SECURITY: Cek plan feature 'resellerAcademy' dari SystemSetting di DB
     async getGuidesForMerchant(merchantId: string) {
         const merchant = await this.prisma.merchant.findUnique({ where: { id: merchantId } });
         if (!merchant) return [];
 
-        // Rules: Supreme can see everything. Legend can see Legend/Pro/Free. Pro can see Pro/Free. Free can see Free.
-        // Actually simpler: For now, if the user requested 'Supreme dapat panduan marketing', let's say only Supreme sees it, or we filter by plan.
+        const planWeights: Record<string, number> = { 'FREE': 0, 'PRO': 1, 'LEGEND': 2, 'SUPREME': 3 };
+        const currentWeight = planWeights[merchant.plan as string] || 0;
 
-        // Map hierarchy
-        const planWeights = { 'FREE': 0, 'PRO': 1, 'LEGEND': 2, 'SUPREME': 3 };
-        const currentWeight = planWeights[merchant.plan] || 0;
+        // Cek plan feature 'resellerAcademy' dari SystemSetting (DB — bisa diubah admin)
+        const setting = await this.prisma.systemSetting.findUnique({ where: { key: 'saas_plan_features' } });
+        if (setting) {
+            const planFeatures = JSON.parse(setting.value);
+            const merchantPlanFeatures = planFeatures[merchant.plan as string] || planFeatures['FREE'] || {};
 
+            if (!merchantPlanFeatures.resellerAcademy) {
+                throw new ForbiddenException(
+                    `Fitur Reseller Academy tidak tersedia di paket ${merchant.plan}. Silakan upgrade ke SUPREME.`
+                );
+            }
+        } else {
+            // Fallback jika DB setting tidak ada: hanya SUPREME
+            if (currentWeight < 3) {
+                throw new ForbiddenException(
+                    `Fitur Reseller Academy hanya tersedia untuk paket SUPREME. Silakan upgrade.`
+                );
+            }
+        }
+
+        // Merchant eligible — return guides sesuai plan hierarchy
         return this.prisma.marketingGuide.findMany({
             where: {
                 isActive: true,
-                // Only show if guide targetPlan weight <= merchant current weight
-                // Since targetPlan is Enum, we filter by plans that are 'at or below' the merchant's level
                 OR: [
                     { targetPlan: 'FREE' },
                     ...(currentWeight >= 1 ? [{ targetPlan: 'PRO' as MerchantPlan }] : []),

@@ -14,6 +14,11 @@ export declare class PublicOrdersController {
         domain: string | null;
         tagline: string | null;
     }[]>;
+    resolveDomain(domain: string): Promise<{
+        slug: null;
+    } | {
+        slug: string;
+    }>;
     getConfig(req: any, merchantSlug?: string, domainMask?: string): Promise<{
         name: string;
         logo: null;
@@ -87,9 +92,9 @@ export declare class PublicOrdersController {
             createdAt: Date;
             updatedAt: Date;
             merchantId: string;
-            paidAt: Date | null;
-            expiredAt: Date | null;
             userId: string;
+            expiredAt: Date | null;
+            paidAt: Date | null;
             method: import("@prisma/client").$Enums.PaymentMethod;
             amount: number;
             fee: number;
@@ -108,6 +113,9 @@ export declare class PublicOrdersController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
+        productSkuId: string;
+        userId: string;
+        expiredAt: Date | null;
         productId: string;
         supplierId: string | null;
         basePrice: number;
@@ -134,12 +142,20 @@ export declare class PublicOrdersController {
         processedAt: Date | null;
         completedAt: Date | null;
         failedAt: Date | null;
-        expiredAt: Date | null;
         merchantModalPrice: number | null;
-        userId: string;
-        productSkuId: string;
         promoCodeId: string | null;
     })[]>;
+    validateNickname(productId: string, gameId: string, serverId?: string): Promise<{
+        success: boolean;
+        nickname: string;
+        fromCache: boolean;
+        message?: undefined;
+    } | {
+        success: boolean;
+        nickname: string;
+        message: string;
+        fromCache?: undefined;
+    }>;
     getOrder(orderNumber: string): Promise<{
         payment: {
             id: string;
@@ -147,9 +163,9 @@ export declare class PublicOrdersController {
             createdAt: Date;
             updatedAt: Date;
             merchantId: string;
-            paidAt: Date | null;
-            expiredAt: Date | null;
             userId: string;
+            expiredAt: Date | null;
+            paidAt: Date | null;
             method: import("@prisma/client").$Enums.PaymentMethod;
             amount: number;
             fee: number;
@@ -168,6 +184,9 @@ export declare class PublicOrdersController {
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
+        productSkuId: string;
+        userId: string;
+        expiredAt: Date | null;
         productId: string;
         supplierId: string | null;
         basePrice: number;
@@ -194,10 +213,7 @@ export declare class PublicOrdersController {
         processedAt: Date | null;
         completedAt: Date | null;
         failedAt: Date | null;
-        expiredAt: Date | null;
         merchantModalPrice: number | null;
-        userId: string;
-        productSkuId: string;
         promoCodeId: string | null;
     }>;
 }
