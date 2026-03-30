@@ -345,15 +345,23 @@ export class TripayController {
                                     return;
                                 }
 
-                                // Calculate Expiry (usually +365 days / 1 year)
-                                const expireAt = new Date();
-                                expireAt.setDate(expireAt.getDate() + 365);
+                                // Calculate Expiry (usually +365 days / 1 year) - Stacking logic
+                                const merchant = await tx.merchant.findUnique({ where: { id: invoice.merchantId } });
+                                const now = new Date();
+                                const currentExpiry = (merchant?.planExpiredAt && merchant.planExpiredAt > now) ? merchant.planExpiredAt : now;
+                                const expireAt = new Date(currentExpiry.getTime() + (365 * 24 * 60 * 60 * 1000));
+
+                                // Plan Ranking: Safeguard against downgrades if current plan is higher
+                                const planWeights: Record<string, number> = { 'SUPREME': 4, 'LEGEND': 3, 'PRO': 2, 'FREE': 1 };
+                                const currentPlanWeight = planWeights[merchant?.plan || 'FREE'] || 1;
+                                const newPlanWeight = planWeights[invoice.plan] || 1;
+                                const targetPlan = newPlanWeight > currentPlanWeight ? invoice.plan : (merchant?.plan || invoice.plan);
 
                                 // Update Merchant Plan
                                 await tx.merchant.update({
                                     where: { id: invoice.merchantId },
                                     data: {
-                                        plan: invoice.plan,
+                                        plan: targetPlan as any,
                                         planExpiredAt: expireAt,
                                         status: 'ACTIVE'
                                     }

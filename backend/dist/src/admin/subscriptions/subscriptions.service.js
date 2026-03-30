@@ -61,10 +61,14 @@ let SubscriptionsService = SubscriptionsService_1 = class SubscriptionsService {
             const currentExpiry = invoice.merchant.planExpiredAt || now;
             const baseDate = currentExpiry > now ? currentExpiry : now;
             const newExpiry = new Date(baseDate.getTime() + (durationDays * 24 * 60 * 60 * 1000));
+            const planWeights = { 'SUPREME': 4, 'LEGEND': 3, 'PRO': 2, 'FREE': 1 };
+            const currentPlanWeight = planWeights[invoice.merchant.plan] || 0;
+            const newPlanWeight = planWeights[invoice.plan] || 0;
+            const targetPlan = newPlanWeight > currentPlanWeight ? invoice.plan : invoice.merchant.plan;
             await tx.merchant.update({
                 where: { id: invoice.merchantId },
                 data: {
-                    plan: invoice.plan,
+                    plan: targetPlan,
                     planExpiredAt: newExpiry,
                     status: 'ACTIVE'
                 }
@@ -146,6 +150,7 @@ let SubscriptionsService = SubscriptionsService_1 = class SubscriptionsService {
                 prioritySupport: false,
                 resellerAcademy: false,
                 tldDomain: false,
+                maxMembers: 10,
                 description: 'Coba platform gratis, cocok untuk pemula.'
             },
             PRO: {
@@ -167,27 +172,16 @@ let SubscriptionsService = SubscriptionsService_1 = class SubscriptionsService {
                 prioritySupport: false,
                 resellerAcademy: false,
                 tldDomain: false,
+                maxMembers: 100,
                 description: 'Mulai bisnis reseller game dengan domain sendiri dan harga modal murah.'
             },
             LEGEND: {
                 price: 91500,
                 yearlyPrice: 1098000,
                 maxProfitLabel: 'Rp15jt/bln',
-                maxProducts: 5000,
-                customDomain: true,
-                domainChoices: 2,
-                multiUser: true,
-                whiteLabel: false,
-                flashSale: false,
-                templateVariants: true,
-                seoPixel: true,
-                couponManagement: true,
-                instantWithdrawal: false,
-                customProductDetail: false,
-                buildApk: false,
-                prioritySupport: false,
                 resellerAcademy: false,
                 tldDomain: false,
+                maxMembers: 1000,
                 description: 'Skalakan bisnis dengan member staf, variasi tampilan, dan harga lebih kompetitif.'
             },
             SUPREME: {
@@ -209,6 +203,7 @@ let SubscriptionsService = SubscriptionsService_1 = class SubscriptionsService {
                 prioritySupport: true,
                 resellerAcademy: true,
                 tldDomain: true,
+                maxMembers: 999999,
                 description: 'Platform bisnis game paling lengkap. Maksimalkan profit tanpa batas.'
             }
         };
@@ -226,6 +221,9 @@ let SubscriptionsService = SubscriptionsService_1 = class SubscriptionsService {
                 }
                 if ((dbFeatures[tier].maxProducts ?? 0) < defaultFeatures[tier].maxProducts) {
                     dbFeatures[tier].maxProducts = defaultFeatures[tier].maxProducts;
+                }
+                if ((dbFeatures[tier].maxMembers ?? 0) < defaultFeatures[tier].maxMembers) {
+                    dbFeatures[tier].maxMembers = defaultFeatures[tier].maxMembers;
                 }
             }
             else {
@@ -276,12 +274,24 @@ let SubscriptionsService = SubscriptionsService_1 = class SubscriptionsService {
             const count = await this.prisma.merchantProductPrice.count({
                 where: { merchantId, isActive: true }
             });
-            const totalAfterAdd = count + addingCount;
+            const totalAfterAdd = (count || 0) + addingCount;
             if (features.maxProducts !== undefined && totalAfterAdd > features.maxProducts && addingCount > 0) {
                 throw new common_1.BadRequestException(`Limit produk aktif terlampaui. Paket Anda hanya mengizinkan ${features.maxProducts} produk. (Saat ini ${count}, akan ditambah ${addingCount})`);
             }
-            else if (features.maxProducts !== undefined && count >= features.maxProducts && addingCount === 0) {
+            else if (features.maxProducts !== undefined && (count || 0) >= features.maxProducts && addingCount === 0) {
                 throw new common_1.BadRequestException(`Limit produk aktif terlampaui (${count}/${features.maxProducts}). Silakan upgrade paket Anda.`);
+            }
+        }
+        if (feature === 'maxMembers') {
+            const count = await this.prisma.user.count({
+                where: {
+                    merchantId,
+                    role: { in: ['CUSTOMER', 'RESELLER'] }
+                }
+            });
+            const totalAfterAdd = (count || 0) + addingCount;
+            if (features.maxMembers !== undefined && totalAfterAdd > features.maxMembers) {
+                throw new common_1.BadRequestException(`Limit member terlampaui. Paket Anda hanya mengizinkan ${features.maxMembers} member. (Saat ini ${count}/${features.maxMembers})`);
             }
         }
         return true;
@@ -355,6 +365,20 @@ let SubscriptionsService = SubscriptionsService_1 = class SubscriptionsService {
                 status: 'UNPAID',
                 dueDate: new Date(dueDate),
                 notes: `Dibuat secara manual oleh ${operator}`
+            }
+        });
+    }
+    async getTierMappings() {
+        return this.prisma.planTierMapping.findMany({
+            orderBy: { plan: 'asc' }
+        });
+    }
+    async updateTierMapping(id, tier, operator) {
+        return this.prisma.planTierMapping.update({
+            where: { id },
+            data: {
+                tier,
+                updatedBy: operator
             }
         });
     }

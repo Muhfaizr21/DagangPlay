@@ -26,9 +26,9 @@ let ProductsService = class ProductsService {
             select: { plan: true, isOfficial: true }
         });
         const mapping = await this.prisma.planTierMapping.findUnique({
-            where: { plan: merchant?.plan || 'FREE' }
+            where: { plan: merchant?.plan || 'PRO' }
         });
-        const activeTier = mapping?.tier || 'NORMAL';
+        const activeTier = mapping?.tier || 'PRO';
         const whereClause = {
             status: 'ACTIVE',
         };
@@ -58,7 +58,7 @@ let ProductsService = class ProductsService {
         return products.map(product => {
             const mappedSkus = product.skus.map(sku => {
                 const merchantPriceDetails = sku.merchantProductPrices.length > 0 ? sku.merchantProductPrices[0] : null;
-                let defaultTierPrice = Number(sku.priceNormal);
+                let defaultTierPrice = Number(sku.pricePro);
                 if (activeTier === 'PRO')
                     defaultTierPrice = Number(sku.pricePro);
                 if (activeTier === 'LEGEND')
@@ -95,9 +95,9 @@ let ProductsService = class ProductsService {
             throw new common_1.NotFoundException('SKU tidak ditemukan');
         }
         const merchant = await this.prisma.merchant.findUnique({ where: { id: merchantId } });
-        const mapping = await this.prisma.planTierMapping.findUnique({ where: { plan: merchant?.plan || 'FREE' } });
-        const activeTier = mapping?.tier || 'NORMAL';
-        let merchantModalPrice = Number(sku.priceNormal);
+        const mapping = await this.prisma.planTierMapping.findUnique({ where: { plan: merchant?.plan || 'PRO' } });
+        const activeTier = mapping?.tier || 'PRO';
+        let merchantModalPrice = Number(sku.pricePro);
         if (activeTier === 'PRO')
             merchantModalPrice = Number(sku.pricePro);
         if (activeTier === 'LEGEND')
@@ -136,8 +136,8 @@ let ProductsService = class ProductsService {
             throw new common_1.BadRequestException('Margin markup tidak boleh negatif.');
         }
         const merchant = await this.prisma.merchant.findUnique({ where: { id: merchantId } });
-        const mapping = await this.prisma.planTierMapping.findUnique({ where: { plan: merchant?.plan || 'FREE' } });
-        const activeTier = mapping?.tier || 'NORMAL';
+        const mapping = await this.prisma.planTierMapping.findUnique({ where: { plan: merchant?.plan || 'PRO' } });
+        const activeTier = mapping?.tier || 'PRO';
         const productWhere = { status: 'ACTIVE' };
         if (categoryId) {
             productWhere.categoryId = categoryId;
@@ -153,7 +153,7 @@ let ProductsService = class ProductsService {
         const newAdditionsCount = skus.length - existingPrices;
         await this.subscriptionsService.checkFeatureLimit(merchantId, 'maxProducts', newAdditionsCount > 0 ? newAdditionsCount : 0);
         const operations = skus.map(sku => {
-            let defaultPrice = Number(sku.priceNormal);
+            let defaultPrice = Number(sku.pricePro);
             if (activeTier === 'PRO')
                 defaultPrice = Number(sku.pricePro);
             if (activeTier === 'LEGEND')

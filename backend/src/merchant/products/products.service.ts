@@ -17,10 +17,10 @@ export class ProductsService {
         });
 
         const mapping = await this.prisma.planTierMapping.findUnique({
-            where: { plan: merchant?.plan || 'FREE' }
+            where: { plan: merchant?.plan || 'PRO' }
         });
 
-        const activeTier = mapping?.tier || 'NORMAL';
+        const activeTier = mapping?.tier || 'PRO';
 
         const whereClause: any = {
             status: 'ACTIVE',
@@ -58,7 +58,7 @@ export class ProductsService {
                 const merchantPriceDetails = sku.merchantProductPrices.length > 0 ? sku.merchantProductPrices[0] : null;
 
                 // Determine base tiered price if no override
-                let defaultTierPrice = Number(sku.priceNormal);
+                let defaultTierPrice = Number(sku.pricePro); // Baseline is now PRO
                 if (activeTier === 'PRO') defaultTierPrice = Number(sku.pricePro);
                 if (activeTier === 'LEGEND') defaultTierPrice = Number(sku.priceLegend);
                 if (activeTier === 'SUPREME') defaultTierPrice = Number(sku.priceSupreme);
@@ -97,10 +97,10 @@ export class ProductsService {
 
         // Get Merchant's Tier Modal Price
         const merchant = await this.prisma.merchant.findUnique({ where: { id: merchantId } });
-        const mapping = await this.prisma.planTierMapping.findUnique({ where: { plan: merchant?.plan || 'FREE' } });
-        const activeTier = mapping?.tier || 'NORMAL';
+        const mapping = await this.prisma.planTierMapping.findUnique({ where: { plan: merchant?.plan || 'PRO' } });
+        const activeTier = mapping?.tier || 'PRO';
 
-        let merchantModalPrice = Number(sku.priceNormal);
+        let merchantModalPrice = Number(sku.pricePro);
         if (activeTier === 'PRO') merchantModalPrice = Number(sku.pricePro);
         if (activeTier === 'LEGEND') merchantModalPrice = Number(sku.priceLegend);
         if (activeTier === 'SUPREME') merchantModalPrice = Number(sku.priceSupreme);
@@ -143,8 +143,8 @@ export class ProductsService {
 
         // Get Merchant's Tier
         const merchant = await this.prisma.merchant.findUnique({ where: { id: merchantId } });
-        const mapping = await this.prisma.planTierMapping.findUnique({ where: { plan: merchant?.plan || 'FREE' } });
-        const activeTier = mapping?.tier || 'NORMAL';
+        const mapping = await this.prisma.planTierMapping.findUnique({ where: { plan: merchant?.plan || 'PRO' } });
+        const activeTier = mapping?.tier || 'PRO';
 
         // 1. Find all active SKUs for the merchant (optionally filtered by category)
         const productWhere: any = { status: 'ACTIVE' };
@@ -169,7 +169,7 @@ export class ProductsService {
         await this.subscriptionsService.checkFeatureLimit(merchantId, 'maxProducts', newAdditionsCount > 0 ? newAdditionsCount : 0);
         
         const operations = skus.map(sku => {
-            let defaultPrice = Number(sku.priceNormal);
+            let defaultPrice = Number(sku.pricePro); // PRO is baseline
             if (activeTier === 'PRO') defaultPrice = Number(sku.pricePro);
             if (activeTier === 'LEGEND') defaultPrice = Number(sku.priceLegend);
             if (activeTier === 'SUPREME') defaultPrice = Number(sku.priceSupreme);

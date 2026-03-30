@@ -1,8 +1,11 @@
 import { PrismaService } from '../../prisma.service';
 import { MerchantPlan } from '@prisma/client';
+import { WhatsappService } from '../../common/notifications/whatsapp.service';
 export declare class MarketingService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private whatsapp;
+    private readonly logger;
+    constructor(prisma: PrismaService, whatsapp: WhatsappService);
     getAllGuides(search?: string, plan?: MerchantPlan): Promise<{
         id: string;
         slug: string;
@@ -93,4 +96,9 @@ export declare class MarketingService {
         videoUrl: string | null;
         targetPlan: import("@prisma/client").$Enums.MerchantPlan;
     }[]>;
+    broadcastAnnouncement(message: string, operator: string): Promise<{
+        success: boolean;
+        total: number;
+        sent: number;
+    }>;
 }

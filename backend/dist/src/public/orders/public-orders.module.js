@@ -14,6 +14,7 @@ const prisma_service_1 = require("../../prisma.service");
 const tripay_module_1 = require("../../tripay/tripay.module");
 const digiflazz_module_1 = require("../../admin/digiflazz/digiflazz.module");
 const subscriptions_module_1 = require("../../admin/subscriptions/subscriptions.module");
+const otp_service_1 = require("./otp.service");
 let PublicOrdersModule = class PublicOrdersModule {
 };
 exports.PublicOrdersModule = PublicOrdersModule;
@@ -21,7 +22,7 @@ exports.PublicOrdersModule = PublicOrdersModule = __decorate([
     (0, common_1.Module)({
         imports: [tripay_module_1.TripayModule, digiflazz_module_1.DigiflazzModule, subscriptions_module_1.SubscriptionsModule],
         controllers: [public_orders_controller_1.PublicOrdersController],
-        providers: [public_orders_service_1.PublicOrdersService, prisma_service_1.PrismaService],
+        providers: [public_orders_service_1.PublicOrdersService, prisma_service_1.PrismaService, otp_service_1.PublicOtpService],
         exports: [public_orders_service_1.PublicOrdersService]
     })
 ], PublicOrdersModule);

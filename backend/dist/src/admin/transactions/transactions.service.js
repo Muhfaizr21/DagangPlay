@@ -197,6 +197,9 @@ let TransactionsService = class TransactionsService {
                 where: { id },
                 data: { fulfillmentStatus, paymentStatus, note: reason }
             });
+            if (order.fulfillmentStatus === 'SUCCESS' && (fulfillmentStatus === 'FAILED' || fulfillmentStatus === 'REFUNDED')) {
+                await this.publicOrders.reverseCommission(id, tx);
+            }
             await tx.orderStatusHistory.create({
                 data: {
                     orderId: id,

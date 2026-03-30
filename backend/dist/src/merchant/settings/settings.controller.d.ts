@@ -26,15 +26,15 @@ export declare class SettingsController {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
-        autoPayoutEnabled: boolean;
-        autoPayoutThreshold: number;
-        autoPayoutSchedule: string | null;
-        forceHttps: boolean;
-        escrowBalance: number;
-        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        autoPayoutEnabled: boolean;
+        autoPayoutSchedule: string | null;
+        autoPayoutThreshold: number;
+        availableBalance: number;
+        escrowBalance: number;
+        forceHttps: boolean;
     } | null>;
     updateProfile(req: any, body: any): Promise<{
         id: string;
@@ -58,15 +58,15 @@ export declare class SettingsController {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
-        autoPayoutEnabled: boolean;
-        autoPayoutThreshold: number;
-        autoPayoutSchedule: string | null;
-        forceHttps: boolean;
-        escrowBalance: number;
-        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        autoPayoutEnabled: boolean;
+        autoPayoutSchedule: string | null;
+        autoPayoutThreshold: number;
+        availableBalance: number;
+        escrowBalance: number;
+        forceHttps: boolean;
     }>;
     updateDomain(req: any, domain: string): Promise<{
         id: string;
@@ -90,15 +90,15 @@ export declare class SettingsController {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
-        autoPayoutEnabled: boolean;
-        autoPayoutThreshold: number;
-        autoPayoutSchedule: string | null;
-        forceHttps: boolean;
-        escrowBalance: number;
-        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        autoPayoutEnabled: boolean;
+        autoPayoutSchedule: string | null;
+        autoPayoutThreshold: number;
+        availableBalance: number;
+        escrowBalance: number;
+        forceHttps: boolean;
     }>;
     getPaymentChannels(req: any): Promise<{
         id: string;
@@ -147,22 +147,22 @@ export declare class SettingsController {
         success: boolean;
     }>;
     getWebhooks(req: any): Promise<{
+        url: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
         isActive: boolean;
-        url: string;
         secret: string;
         events: import("@prisma/client/runtime/client").JsonValue;
     }[]>;
     updateWebhook(req: any, body: any): Promise<{
+        url: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
         isActive: boolean;
-        url: string;
         secret: string;
         events: import("@prisma/client/runtime/client").JsonValue;
     }>;

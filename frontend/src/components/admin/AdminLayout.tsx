@@ -21,13 +21,15 @@ import {
     LifeBuoy,
     Box,
     GraduationCap,
-    MessageSquare
+    MessageSquare,
+    Shield
 } from 'lucide-react';
 
 const MENU_ITEMS = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/content', label: 'Web Konten & Broadcast', icon: Megaphone },
     { href: '/admin/merchants', label: 'Manajemen Merchant', icon: Store },
+    { href: '/admin/control-center', label: 'Control Room (System)', icon: Shield },
+    { href: '/admin/content', label: 'Web Konten & Broadcast', icon: MessageSquare },
     { href: '/admin/marketing', label: 'Marketing Academy', icon: GraduationCap },
     { href: '/admin/chat', label: 'Live Chat Merchant', icon: MessageSquare },
     { href: '/admin/subscriptions', label: 'SaaS Subscriptions', icon: CreditCard },

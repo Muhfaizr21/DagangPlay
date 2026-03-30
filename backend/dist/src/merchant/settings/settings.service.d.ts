@@ -26,15 +26,15 @@ export declare class SettingsService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
-        autoPayoutEnabled: boolean;
-        autoPayoutThreshold: number;
-        autoPayoutSchedule: string | null;
-        forceHttps: boolean;
-        escrowBalance: number;
-        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        autoPayoutEnabled: boolean;
+        autoPayoutSchedule: string | null;
+        autoPayoutThreshold: number;
+        availableBalance: number;
+        escrowBalance: number;
+        forceHttps: boolean;
     } | null>;
     updateProfile(merchantId: string, data: any): Promise<{
         id: string;
@@ -58,15 +58,15 @@ export declare class SettingsService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
-        autoPayoutEnabled: boolean;
-        autoPayoutThreshold: number;
-        autoPayoutSchedule: string | null;
-        forceHttps: boolean;
-        escrowBalance: number;
-        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        autoPayoutEnabled: boolean;
+        autoPayoutSchedule: string | null;
+        autoPayoutThreshold: number;
+        availableBalance: number;
+        escrowBalance: number;
+        forceHttps: boolean;
     }>;
     updateDomain(merchantId: string, domain: string): Promise<{
         id: string;
@@ -90,15 +90,15 @@ export declare class SettingsService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
-        autoPayoutEnabled: boolean;
-        autoPayoutThreshold: number;
-        autoPayoutSchedule: string | null;
-        forceHttps: boolean;
-        escrowBalance: number;
-        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        autoPayoutEnabled: boolean;
+        autoPayoutSchedule: string | null;
+        autoPayoutThreshold: number;
+        availableBalance: number;
+        escrowBalance: number;
+        forceHttps: boolean;
     }>;
     getPaymentChannels(merchantId: string): Promise<{
         id: string;
@@ -133,22 +133,22 @@ export declare class SettingsService {
         tripayConfig: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     getWebhooks(merchantId: string): Promise<{
+        url: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
         isActive: boolean;
-        url: string;
         secret: string;
         events: import("@prisma/client/runtime/client").JsonValue;
     }[]>;
     updateWebhook(merchantId: string, data: any): Promise<{
+        url: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
         isActive: boolean;
-        url: string;
         secret: string;
         events: import("@prisma/client/runtime/client").JsonValue;
     }>;

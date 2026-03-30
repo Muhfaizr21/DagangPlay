@@ -8,8 +8,8 @@ export declare class SaasController {
         merchants: {
             id: string;
             name: string;
-            escrowBalance: number;
             availableBalance: number;
+            escrowBalance: number;
         }[];
     }>;
     getDeadLetterQueue(): Promise<{
@@ -34,7 +34,7 @@ export declare class SaasController {
         domain: string | null;
         forceHttps: boolean;
     }[]>;
-    getMerchantLedger(merchantId: string): Promise<{
+    getMerchantLedger(req: any, merchantId: string): Promise<{
         movements: {
             id: string;
             description: string;
@@ -49,12 +49,12 @@ export declare class SaasController {
             availableAfter: number;
         }[];
         autoPayoutEnabled?: boolean | undefined;
-        autoPayoutThreshold?: number | undefined;
         autoPayoutSchedule?: string | null | undefined;
-        escrowBalance?: number | undefined;
+        autoPayoutThreshold?: number | undefined;
         availableBalance?: number | undefined;
+        escrowBalance?: number | undefined;
     }>;
-    updateAutoPayoutConfig(body: any): Promise<{
+    updateAutoPayoutConfig(req: any, body: any): Promise<{
         id: string;
         name: string;
         slug: string;
@@ -76,17 +76,17 @@ export declare class SaasController {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
-        autoPayoutEnabled: boolean;
-        autoPayoutThreshold: number;
-        autoPayoutSchedule: string | null;
-        forceHttps: boolean;
-        escrowBalance: number;
-        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        autoPayoutEnabled: boolean;
+        autoPayoutSchedule: string | null;
+        autoPayoutThreshold: number;
+        availableBalance: number;
+        escrowBalance: number;
+        forceHttps: boolean;
     }>;
-    getMerchantWebhookLogs(merchantId: string): Promise<{
+    getMerchantWebhookLogs(req: any, merchantId: string): Promise<{
         id: string;
         createdAt: Date;
         merchantId: string;

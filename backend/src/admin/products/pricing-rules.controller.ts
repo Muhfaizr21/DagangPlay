@@ -2,12 +2,16 @@ import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@n
 import { ProductsService } from './products.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
+import { PermissionsGuard } from "../../auth/guards/permissions.guard";
+import { Permissions } from "../../auth/decorators/permissions.decorator";
+
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles(Role.SUPER_ADMIN, Role.ADMIN_STAFF)
+@Permissions('manage_products')
 @Controller('admin/pricing-rules')
 export class PricingRulesController {
     constructor(private readonly prisma: PrismaService, private readonly productsService: ProductsService) { }

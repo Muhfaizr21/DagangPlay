@@ -17,6 +17,8 @@ const common_1 = require("@nestjs/common");
 const transactions_service_1 = require("./transactions.service");
 const jwt_auth_guard_1 = require("../../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../../auth/guards/roles.guard");
+const permissions_guard_1 = require("../../auth/guards/permissions.guard");
+const permissions_decorator_1 = require("../../auth/decorators/permissions.decorator");
 const roles_decorator_1 = require("../../auth/decorators/roles.decorator");
 const client_1 = require("@prisma/client");
 let TransactionsController = class TransactionsController {
@@ -102,8 +104,9 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], TransactionsController.prototype, "overrideStatus", null);
 exports.TransactionsController = TransactionsController = __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN_STAFF),
+    (0, permissions_decorator_1.Permissions)('manage_transactions'),
     (0, common_1.Controller)('admin/transactions'),
     __metadata("design:paramtypes", [transactions_service_1.TransactionsService])
 ], TransactionsController);

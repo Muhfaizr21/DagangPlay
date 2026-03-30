@@ -17,6 +17,8 @@ const common_1 = require("@nestjs/common");
 const suppliers_service_1 = require("./suppliers.service");
 const jwt_auth_guard_1 = require("../../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../../auth/guards/roles.guard");
+const permissions_guard_1 = require("../../auth/guards/permissions.guard");
+const permissions_decorator_1 = require("../../auth/decorators/permissions.decorator");
 const roles_decorator_1 = require("../../auth/decorators/roles.decorator");
 const client_1 = require("@prisma/client");
 let SuppliersController = class SuppliersController {
@@ -101,8 +103,9 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], SuppliersController.prototype, "getBalanceHistory", null);
 exports.SuppliersController = SuppliersController = __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN_STAFF),
+    (0, permissions_decorator_1.Permissions)('manage_suppliers'),
     (0, common_1.Controller)('admin/suppliers'),
     __metadata("design:paramtypes", [suppliers_service_1.SuppliersService])
 ], SuppliersController);

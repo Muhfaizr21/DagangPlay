@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
-
 import { DigiflazzService } from '../digiflazz/digiflazz.service';
 
 @Injectable()
@@ -15,22 +14,76 @@ export class DashboardService {
         } catch (e) {
             console.error('Failed to fetch supplier balance for dashboard');
         }
-        // Total Revenue (all successful orders)
+
+        // --- 1. FINANCIAL COMMAND CENTER ---
+        // 1.1 Platform Revenue
         const revenueAgg = await this.prisma.order.aggregate({
             where: { paymentStatus: 'PAID' },
             _sum: { totalPrice: true },
         });
         const totalRevenue = revenueAgg._sum.totalPrice || 0;
 
-        // Total Merchants
+        // 1.2 Total Escrow (Merchant Profit Pending)
+        const escrowAgg = await this.prisma.merchant.aggregate({
+            _sum: { escrowBalance: true }
+        });
+        const totalEscrow = escrowAgg._sum.escrowBalance || 0;
+
+        // 1.3 SaaS Revenue (Subscription Invoices)
+        const saasAgg = await this.prisma.invoice.aggregate({
+            where: { status: 'PAID' },
+            _sum: { totalAmount: true }
+        });
+        const totalSaasRevenue = saasAgg._sum.totalAmount || 0;
+
+        // --- 2. MERCHANT HEALTH MONITOR ---
         const merchantCount = await this.prisma.merchant.count({
             where: { status: 'ACTIVE' },
         });
 
-        // Total Transactions
-        const totalTransactions = await this.prisma.order.count();
+        // 2.1 Top 5 Merchants by Volume
+        const topMerchantsRaw = await this.prisma.merchant.findMany({
+            take: 5,
+            select: {
+                id: true,
+                name: true,
+                _count: {
+                    select: { orders: { where: { paymentStatus: 'PAID' } } }
+                }
+            },
+            orderBy: { orders: { _count: 'desc' } }
+        });
 
-        // Success Rate
+        const topMerchants = topMerchantsRaw.map(m => ({
+            id: m.id,
+            name: m.name,
+            orders: m._count.orders
+        }));
+
+        // 2.2 Expiring in 7 Days
+        const sevenDaysFromNow = new Date();
+        sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+        const expiringMerchants = await this.prisma.merchant.findMany({
+            where: {
+                status: 'ACTIVE',
+                planExpiredAt: {
+                    gt: new Date(),
+                    lt: sevenDaysFromNow
+                }
+            },
+            select: { id: true, name: true, planExpiredAt: true, contactWhatsapp: true }
+        });
+
+        // --- 3. UNIFIED DISPUTE CENTER ---
+        const pendingDisputes = await this.prisma.disputeCase.findMany({
+            where: { status: 'OPEN' },
+            include: { order: true },
+            take: 5,
+            orderBy: { createdAt: 'desc' }
+        });
+
+        // --- GENERAL STATS ---
+        const totalTransactions = await this.prisma.order.count();
         const successTransactions = await this.prisma.order.count({
             where: { fulfillmentStatus: 'SUCCESS' },
         });
@@ -40,20 +93,40 @@ export class DashboardService {
             successRate = (successTransactions / totalTransactions) * 100;
         }
 
-        // Weekly Revenue Chart Data
-        // For simplicity, returning mock structure tailored from DB.
-        // Real implementation would group by day from DB.
-        const weeklyChart = [
-            { day: 'Sen', value: Math.floor(Math.random() * 100) },
-            { day: 'Sel', value: Math.floor(Math.random() * 100) },
-            { day: 'Rab', value: Math.floor(Math.random() * 100) },
-            { day: 'Kam', value: Math.floor(Math.random() * 100) },
-            { day: 'Jum', value: Math.floor(Math.random() * 100) },
-            { day: 'Sab', value: Math.floor(Math.random() * 100) },
-            { day: 'Min', value: Math.floor(Math.random() * 100) },
-        ];
+        // --- 4. OPTIMIZED REVENUE CHART (Single Query) ---
+        const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 6);
+        weekAgo.setHours(0, 0, 0, 0);
 
-        // Recent Transactions
+        // Fetch counts for the last 7 days using raw or complex aggregate if strictly needed, 
+        // but for now let's use a more efficient approach with native prisma or a single findMany
+        const dailyOrders = await this.prisma.order.findMany({
+            where: {
+                paymentStatus: 'PAID',
+                createdAt: { gte: weekAgo }
+            },
+            select: {
+                totalPrice: true,
+                createdAt: true
+            }
+        });
+
+        const weeklyChart = [...Array(7)].map((_, i) => {
+            const date = new Date(weekAgo);
+            date.setDate(date.getDate() + i);
+            const dayKey = date.toDateString();
+            
+            const dayTotal = dailyOrders
+                .filter(o => o.createdAt.toDateString() === dayKey)
+                .reduce((acc, curr) => acc + Number(curr.totalPrice), 0);
+            
+            return {
+                day: dayNames[date.getDay()],
+                value: Math.round(dayTotal / 1000)
+            };
+        });
+
         const recentTransactionsRaw = await this.prisma.order.findMany({
             take: 5,
             orderBy: { createdAt: 'desc' },
@@ -73,7 +146,6 @@ export class DashboardService {
             status: trx.fulfillmentStatus,
         }));
 
-        // Wrap metrics with visual properties to match Frontend expected props
         return {
             stats: [
                 {
@@ -85,8 +157,8 @@ export class DashboardService {
                 {
                     label: 'Merchant Aktif',
                     value: merchantCount.toString(),
-                    change: '+42',
-                    isUp: true,
+                    change: `+${expiringMerchants.length} expiring`,
+                    isUp: false,
                 },
                 {
                     label: 'Total Transaksi',
@@ -104,6 +176,15 @@ export class DashboardService {
             systemHealth: {
                 supplierBalance: supplierBalance,
                 isLow: supplierBalance < 500000,
+                totalEscrow,
+                totalSaasRevenue
+            },
+            merchants: {
+                top: topMerchants,
+                expiring: expiringMerchants
+            },
+            disputes: {
+                pending: pendingDisputes
             },
             weeklyChart,
             recentTransactions,

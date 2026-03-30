@@ -72,7 +72,7 @@ let MerchantsService = class MerchantsService {
         const [resellerCounts, omsetAggs] = await Promise.all([
             this.prisma.user.groupBy({
                 by: ['merchantId'],
-                where: { merchantId: { in: merchantIds }, role: 'CUSTOMER', status: 'ACTIVE' },
+                where: { merchantId: { in: merchantIds }, role: client_1.Role.RESELLER, status: 'ACTIVE' },
                 _count: { _all: true }
             }),
             this.prisma.order.groupBy({
@@ -82,7 +82,8 @@ let MerchantsService = class MerchantsService {
             })
         ]);
         const mappedData = paginated.data.map((m) => {
-            const resellers = resellerCounts.find(rc => rc.merchantId === m.id)?._count._all || 0;
+            const resellerData = resellerCounts.find(rc => rc.merchantId === m.id);
+            const resellers = resellerData ? resellerData._count._all : 0;
             const omset = Number(omsetAggs.find(oa => oa.merchantId === m.id)?._sum.totalPrice || 0);
             return {
                 id: m.id,
@@ -135,7 +136,7 @@ let MerchantsService = class MerchantsService {
         if (!merchant)
             throw new common_1.NotFoundException('Merchant tidak ditemukan');
         const resellersCount = await this.prisma.user.count({
-            where: { merchantId: merchant.id, role: 'CUSTOMER' }
+            where: { merchantId: merchant.id, role: client_1.Role.RESELLER }
         });
         const omsetAgg = await this.prisma.order.aggregate({
             where: { merchantId: merchant.id, paymentStatus: 'PAID' },
@@ -200,6 +201,23 @@ let MerchantsService = class MerchantsService {
             data: { action: 'RESET_OWNER_PASSWORD', entity: 'Merchant', entityId: merchantId, newData: {}, oldData: {} }
         });
         return { success: true, message: `Password Owner direset menjadi ${newPass}` };
+    }
+    async getMerchantResellers(merchantId) {
+        return this.prisma.user.findMany({
+            where: { merchantId, role: client_1.Role.RESELLER },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                status: true,
+                createdAt: true,
+                _count: {
+                    select: { ordersAsCustomer: { where: { paymentStatus: 'PAID' } } }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
     }
 };
 exports.MerchantsService = MerchantsService;

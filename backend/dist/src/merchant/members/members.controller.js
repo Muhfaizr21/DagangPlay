@@ -12,73 +12,62 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ResellersController = void 0;
+exports.MembersController = void 0;
 const common_1 = require("@nestjs/common");
-const resellers_service_1 = require("./resellers.service");
+const members_service_1 = require("./members.service");
 const jwt_auth_guard_1 = require("../../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../../auth/guards/roles.guard");
 const roles_decorator_1 = require("../../auth/decorators/roles.decorator");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../../prisma.service");
-let ResellersController = class ResellersController {
-    resellersService;
+let MembersController = class MembersController {
+    membersService;
     prisma;
-    constructor(resellersService, prisma) {
-        this.resellersService = resellersService;
+    constructor(membersService, prisma) {
+        this.membersService = membersService;
         this.prisma = prisma;
     }
-    async getResellers(req, search) {
+    async getMembers(req, search, role) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id }, select: { id: true } });
         if (!merchant)
             throw new Error('Merchant not found');
-        return this.resellersService.getResellers(merchant.id, search);
+        return this.membersService.getAllUsers(merchant.id, search, role);
     }
-    async updateStatus(req, resellerId, status) {
+    async createMember(req, data) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id }, select: { id: true } });
         if (!merchant)
             throw new Error('Merchant not found');
-        return this.resellersService.updateStatus(merchant.id, resellerId, status);
+        return this.membersService.createManualUser(merchant.id, data);
     }
-    async adjustBalance(req, resellerId, body) {
+    async updateMember(req, userId, data) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id }, select: { id: true } });
         if (!merchant)
             throw new Error('Merchant not found');
-        return this.resellersService.adjustBalance(merchant.id, req.user.id, resellerId, body.type, body.amount, body.notes);
+        return this.membersService.updateUser(merchant.id, userId, data);
     }
-    async createReseller(req, body) {
+    async toggleRole(req, userId, targetRole) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id }, select: { id: true } });
         if (!merchant)
             throw new Error('Merchant not found');
-        return this.resellersService.createReseller(merchant.id, body);
+        return this.membersService.toggleResellerStatus(merchant.id, userId, targetRole);
+    }
+    async getRanking(req) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id }, select: { id: true } });
+        if (!merchant)
+            throw new Error('Merchant not found');
+        return this.membersService.getTopResellers(merchant.id);
     }
 };
-exports.ResellersController = ResellersController;
+exports.MembersController = MembersController;
 __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Query)('search')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", Promise)
-], ResellersController.prototype, "getResellers", null);
-__decorate([
-    (0, common_1.Put)(':id/status'),
-    __param(0, (0, common_1.Request)()),
-    __param(1, (0, common_1.Param)('id')),
-    __param(2, (0, common_1.Body)('status')),
+    __param(2, (0, common_1.Query)('role')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String, String]),
     __metadata("design:returntype", Promise)
-], ResellersController.prototype, "updateStatus", null);
-__decorate([
-    (0, common_1.Post)(':id/balance'),
-    __param(0, (0, common_1.Request)()),
-    __param(1, (0, common_1.Param)('id')),
-    __param(2, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, Object]),
-    __metadata("design:returntype", Promise)
-], ResellersController.prototype, "adjustBalance", null);
+], MembersController.prototype, "getMembers", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Request)()),
@@ -86,11 +75,36 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], ResellersController.prototype, "createReseller", null);
-exports.ResellersController = ResellersController = __decorate([
+], MembersController.prototype, "createMember", null);
+__decorate([
+    (0, common_1.Put)(':id'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", Promise)
+], MembersController.prototype, "updateMember", null);
+__decorate([
+    (0, common_1.Patch)(':id/role'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)('role')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", Promise)
+], MembersController.prototype, "toggleRole", null);
+__decorate([
+    (0, common_1.Get)('ranking'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], MembersController.prototype, "getRanking", null);
+exports.MembersController = MembersController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.MERCHANT, client_1.Role.SUPER_ADMIN),
-    (0, common_1.Controller)('merchant/resellers'),
-    __metadata("design:paramtypes", [resellers_service_1.ResellersService, prisma_service_1.PrismaService])
-], ResellersController);
-//# sourceMappingURL=resellers.controller.js.map
+    (0, common_1.Controller)('merchant/members'),
+    __metadata("design:paramtypes", [members_service_1.MembersService, prisma_service_1.PrismaService])
+], MembersController);
+//# sourceMappingURL=members.controller.js.map

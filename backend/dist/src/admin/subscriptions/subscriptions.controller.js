@@ -17,6 +17,8 @@ const common_1 = require("@nestjs/common");
 const subscriptions_service_1 = require("./subscriptions.service");
 const jwt_auth_guard_1 = require("../../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../../auth/guards/roles.guard");
+const permissions_guard_1 = require("../../auth/guards/permissions.guard");
+const permissions_decorator_1 = require("../../auth/decorators/permissions.decorator");
 const roles_decorator_1 = require("../../auth/decorators/roles.decorator");
 const client_1 = require("@prisma/client");
 let SubscriptionsController = class SubscriptionsController {
@@ -47,6 +49,12 @@ let SubscriptionsController = class SubscriptionsController {
     }
     async createManualInvoice(merchantId, plan, amount, dueDate) {
         return this.subscriptionsService.createManualInvoice(merchantId, plan, amount, dueDate, 'SuperAdmin');
+    }
+    async getMappings() {
+        return this.subscriptionsService.getTierMappings();
+    }
+    async updateMapping(id, tier) {
+        return this.subscriptionsService.updateTierMapping(id, tier, 'SuperAdmin');
     }
 };
 exports.SubscriptionsController = SubscriptionsController;
@@ -116,9 +124,24 @@ __decorate([
     __metadata("design:paramtypes", [String, Object, Number, Date]),
     __metadata("design:returntype", Promise)
 ], SubscriptionsController.prototype, "createManualInvoice", null);
+__decorate([
+    (0, common_1.Get)('plans/mappings'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], SubscriptionsController.prototype, "getMappings", null);
+__decorate([
+    (0, common_1.Patch)('plans/mappings/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)('tier')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], SubscriptionsController.prototype, "updateMapping", null);
 exports.SubscriptionsController = SubscriptionsController = __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN_STAFF),
+    (0, permissions_decorator_1.Permissions)('manage_subscriptions'),
     (0, common_1.Controller)('admin/subscriptions'),
     __metadata("design:paramtypes", [subscriptions_service_1.SubscriptionsService])
 ], SubscriptionsController);

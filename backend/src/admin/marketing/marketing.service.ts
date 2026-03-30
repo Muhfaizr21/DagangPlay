@@ -1,10 +1,12 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import { MerchantPlan } from '@prisma/client';
+import { WhatsappService } from '../../common/notifications/whatsapp.service';
 
 @Injectable()
 export class MarketingService {
-    constructor(private prisma: PrismaService) { }
+    private readonly logger = new Logger(MarketingService.name);
+    constructor(private prisma: PrismaService, private whatsapp: WhatsappService) { }
 
     async getAllGuides(search?: string, plan?: MerchantPlan) {
         return this.prisma.marketingGuide.findMany({
@@ -97,5 +99,30 @@ export class MarketingService {
             },
             orderBy: { sortOrder: 'asc' }
         });
+    }
+
+    async broadcastAnnouncement(message: string, operator: string) {
+        this.logger.log(`[Broadcast] Starting global announcement by ${operator}`);
+        
+        const activeMerchants = await this.prisma.merchant.findMany({
+            where: { status: 'ACTIVE' },
+            select: { contactWhatsapp: true, name: true }
+        });
+
+        let successCount = 0;
+        for (const merchant of activeMerchants) {
+            if (merchant.contactWhatsapp) {
+                try {
+                    // Prepend Merchant Name for personalization
+                    const personalMsg = `*PENGUMUMAN DAGANGPLAY*\nHalo ${merchant.name},\n\n${message}`;
+                    await this.whatsapp.sendMessage(merchant.contactWhatsapp, personalMsg);
+                    successCount++;
+                } catch (e) {
+                    this.logger.error(`Failed to send broadcast to ${merchant.name}`);
+                }
+            }
+        }
+
+        return { success: true, total: activeMerchants.length, sent: successCount };
     }
 }

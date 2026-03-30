@@ -21,16 +21,32 @@ let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
     }
-    async adminLogin(body, req) {
-        console.log('--- Incoming Login Request ---');
-        console.log('Body:', JSON.stringify(body));
+    async superAdminLogin(body, req) {
         const loginData = {
             email: body.email,
             password: body.password,
             ip: req.ip || req.connection?.remoteAddress,
             userAgent: req.headers['user-agent']
         };
-        return this.authService.adminLogin(loginData);
+        return this.authService.superAdminLogin(loginData);
+    }
+    async merchantLogin(body, req) {
+        const loginData = {
+            email: body.email,
+            password: body.password,
+            ip: req.ip || req.connection?.remoteAddress,
+            userAgent: req.headers['user-agent']
+        };
+        return this.authService.merchantLogin(loginData);
+    }
+    async publicLogin(body, req) {
+        const loginData = {
+            email: body.email,
+            password: body.password,
+            ip: req.ip || req.connection?.remoteAddress,
+            userAgent: req.headers['user-agent']
+        };
+        return this.authService.publicLogin(loginData);
     }
     async logout(req) {
         const token = req.headers.authorization?.split(' ')[1];
@@ -52,7 +68,25 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], AuthController.prototype, "adminLogin", null);
+], AuthController.prototype, "superAdminLogin", null);
+__decorate([
+    (0, common_1.Post)('merchant/login'),
+    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 900000 } }),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "merchantLogin", null);
+__decorate([
+    (0, common_1.Post)('login'),
+    (0, throttler_1.Throttle)({ default: { limit: 10, ttl: 60000 } }),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "publicLogin", null);
 __decorate([
     (0, common_1.Post)('logout'),
     __param(0, (0, common_1.Req)()),

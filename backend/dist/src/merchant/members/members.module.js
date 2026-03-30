@@ -6,18 +6,21 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ResellersModule = void 0;
+exports.MembersModule = void 0;
 const common_1 = require("@nestjs/common");
-const resellers_controller_1 = require("./resellers.controller");
-const resellers_service_1 = require("./resellers.service");
+const members_controller_1 = require("./members.controller");
+const members_service_1 = require("./members.service");
 const prisma_service_1 = require("../../prisma.service");
-let ResellersModule = class ResellersModule {
+const subscriptions_module_1 = require("../../admin/subscriptions/subscriptions.module");
+let MembersModule = class MembersModule {
 };
-exports.ResellersModule = ResellersModule;
-exports.ResellersModule = ResellersModule = __decorate([
+exports.MembersModule = MembersModule;
+exports.MembersModule = MembersModule = __decorate([
     (0, common_1.Module)({
-        controllers: [resellers_controller_1.ResellersController],
-        providers: [resellers_service_1.ResellersService, prisma_service_1.PrismaService]
+        imports: [subscriptions_module_1.SubscriptionsModule],
+        controllers: [members_controller_1.MembersController],
+        providers: [members_service_1.MembersService, prisma_service_1.PrismaService],
+        exports: [members_service_1.MembersService]
     })
-], ResellersModule);
-//# sourceMappingURL=resellers.module.js.map
+], MembersModule);
+//# sourceMappingURL=members.module.js.map

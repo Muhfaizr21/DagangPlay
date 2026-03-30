@@ -7,17 +7,39 @@ export class AuthController {
     constructor(private readonly authService: AuthService) { }
 
     @Post('admin/login')
-    @Throttle({ default: { limit: 5, ttl: 900000 } }) // 15 Menit lockout
-    async adminLogin(@Body() body: any, @Req() req: any) {
-        console.log('--- Incoming Login Request ---');
-        console.log('Body:', JSON.stringify(body));
+    @Throttle({ default: { limit: 5, ttl: 900000 } })
+    async superAdminLogin(@Body() body: any, @Req() req: any) {
         const loginData = {
             email: body.email,
             password: body.password,
             ip: req.ip || req.connection?.remoteAddress,
             userAgent: req.headers['user-agent']
         };
-        return this.authService.adminLogin(loginData);
+        return this.authService.superAdminLogin(loginData);
+    }
+
+    @Post('merchant/login')
+    @Throttle({ default: { limit: 5, ttl: 900000 } })
+    async merchantLogin(@Body() body: any, @Req() req: any) {
+        const loginData = {
+            email: body.email,
+            password: body.password,
+            ip: req.ip || req.connection?.remoteAddress,
+            userAgent: req.headers['user-agent']
+        };
+        return this.authService.merchantLogin(loginData);
+    }
+
+    @Post('login')
+    @Throttle({ default: { limit: 10, ttl: 60000 } })
+    async publicLogin(@Body() body: any, @Req() req: any) {
+        const loginData = {
+            email: body.email,
+            password: body.password,
+            ip: req.ip || req.connection?.remoteAddress,
+            userAgent: req.headers['user-agent']
+        };
+        return this.authService.publicLogin(loginData);
     }
 
     @Post('logout')

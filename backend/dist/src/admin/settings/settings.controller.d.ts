@@ -31,11 +31,11 @@ export declare class SettingsController {
         role: import("@prisma/client").$Enums.Role;
         adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
         isVerified: boolean;
-        isGuest: boolean;
         verifiedAt: Date | null;
         referredById: string | null;
         balance: number;
         bonusBalance: number;
+        isGuest: boolean;
     }>;
     updateAdminStaff(id: string, data: UpdateStaffDto): Promise<{
         id: string;
@@ -54,11 +54,11 @@ export declare class SettingsController {
         role: import("@prisma/client").$Enums.Role;
         adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
         isVerified: boolean;
-        isGuest: boolean;
         verifiedAt: Date | null;
         referredById: string | null;
         balance: number;
         bonusBalance: number;
+        isGuest: boolean;
     }>;
     deleteAdminStaff(id: string): Promise<{
         id: string;
@@ -77,11 +77,11 @@ export declare class SettingsController {
         role: import("@prisma/client").$Enums.Role;
         adminPermissions: import("@prisma/client/runtime/client").JsonValue | null;
         isVerified: boolean;
-        isGuest: boolean;
         verifiedAt: Date | null;
         referredById: string | null;
         balance: number;
         bonusBalance: number;
+        isGuest: boolean;
     }>;
     getJobQueues(status?: string): Promise<{
         error: string | null;

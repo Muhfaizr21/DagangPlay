@@ -4,11 +4,15 @@ import { MerchantStatus } from '@prisma/client';
 
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../auth/guards/roles.guard";
+import { PermissionsGuard } from "../../auth/guards/permissions.guard";
+import { Permissions } from "../../auth/decorators/permissions.decorator";
+
 import { Roles } from "../../auth/decorators/roles.decorator";
 import { Role } from "@prisma/client";
 
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles(Role.SUPER_ADMIN, Role.ADMIN_STAFF)
+@Permissions('manage_merchants')
 @Controller('admin/merchants')
 export class MerchantsController {
     constructor(private readonly merchantsService: MerchantsService) { }
@@ -27,6 +31,11 @@ export class MerchantsController {
     @Get(':id')
     async getMerchantDetail(@Param('id') id: string) {
         return this.merchantsService.getMerchantDetail(id);
+    }
+
+    @Get(':id/resellers')
+    async getMerchantResellers(@Param('id') id: string) {
+        return this.merchantsService.getMerchantResellers(id);
     }
 
     @Patch(':id/settings')

@@ -61,7 +61,20 @@ export default function SettingsManagementPage() {
     const [staffForm, setStaffForm] = useState({ name: '', email: '', password: '', status: 'ACTIVE', permissions: [] as string[] });
 
     const availablePermissions = [
-        'MANAGE_USERS', 'MANAGE_FINANCE', 'MANAGE_PRODUCTS', 'MANAGE_CONTENT', 'MANAGE_MERCHANTS', 'ALL_ACCESS'
+        'manage_dashboard',
+        'manage_finance',
+        'manage_merchants',
+        'manage_products',
+        'manage_subscriptions',
+        'manage_settings',
+        'manage_transactions',
+        'manage_users',
+        'manage_marketing',
+        'manage_content',
+        'manage_tickets',
+        'manage_suppliers',
+        'manage_security',
+        'manage_saas'
     ];
 
     const togglePermission = (perm: string) => {
@@ -91,8 +104,9 @@ export default function SettingsManagementPage() {
 
     const handleSaveGlobalSettings = async () => {
         setIsSavingSettings(true);
+        const token = localStorage.getItem('admin_token');
         try {
-            await axios.put((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/settings/global', settings);
+            await axios.put((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/settings/global', settings, { headers: { Authorization: `Bearer ${token}` } });
             mutateSettings();
             showToast('Tersimpan', 'Pengaturan global berhasil diperbarui.');
         } catch (err: any) {
@@ -104,12 +118,19 @@ export default function SettingsManagementPage() {
 
     const handleSaveStaff = async (e: React.FormEvent) => {
         e.preventDefault();
+        const token = localStorage.getItem('admin_token');
         try {
             if (editingStaffId) {
-                await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/settings/staff/${editingStaffId}`, staffForm);
+                // Format clean payload for UPDATE (No email, no password)
+                const updatePayload = {
+                    name: staffForm.name,
+                    status: staffForm.status,
+                    permissions: staffForm.permissions
+                };
+                await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/settings/staff/${editingStaffId}`, updatePayload, { headers: { Authorization: `Bearer ${token}` } });
                 showToast('Sukses', 'Data admin staff diperbarui');
             } else {
-                await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/settings/staff', staffForm);
+                await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/settings/staff', staffForm, { headers: { Authorization: `Bearer ${token}` } });
                 showToast('Sukses', 'Admin staff baru ditambahkan');
             }
             mutateStaff();
@@ -123,8 +144,9 @@ export default function SettingsManagementPage() {
 
     const handleDeleteStaff = async (id: string, name: string) => {
         if (!confirm(`Hapus permanen akses staff ${name}?`)) return;
+         const token = localStorage.getItem('admin_token');
         try {
-            await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/settings/staff/${id}`);
+            await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/settings/staff/${id}`, { headers: { Authorization: `Bearer ${token}` } });
             mutateStaff();
             showToast('Terhapus', 'Akses staff telah dicabut.');
         } catch (err) {
@@ -412,8 +434,8 @@ export default function SettingsManagementPage() {
                                             <td className="px-5 py-4">
                                                 <div className="flex flex-wrap gap-1 max-w-[200px]">
                                                     {admin.adminPermissions?.map((p: string) => (
-                                                        <span key={p} className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${p === 'ALL_ACCESS' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
-                                                            {p.replace('MANAGE_', '')}
+                                                        <span key={p} className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${p === 'all_access' || p === 'ALL_ACCESS' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
+                                                            {p.toLowerCase().replace('manage_', '').replace('_', ' ')}
                                                         </span>
                                                     ))}
                                                     {(!admin.adminPermissions || admin.adminPermissions.length === 0) && <span className="text-xs text-slate-400 italic">No specific permissions</span>}

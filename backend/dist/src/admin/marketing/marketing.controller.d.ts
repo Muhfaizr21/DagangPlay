@@ -1,9 +1,8 @@
 import { MarketingService } from './marketing.service';
-import { MerchantPlan } from '@prisma/client';
 export declare class MarketingController {
     private readonly marketingService;
     constructor(marketingService: MarketingService);
-    getGuides(search?: string, plan?: MerchantPlan): Promise<{
+    getGuides(search?: string, plan?: any): Promise<{
         id: string;
         slug: string;
         createdAt: Date;
@@ -18,21 +17,6 @@ export declare class MarketingController {
         videoUrl: string | null;
         targetPlan: import("@prisma/client").$Enums.MerchantPlan;
     }[]>;
-    getGuide(id: string): Promise<{
-        id: string;
-        slug: string;
-        createdAt: Date;
-        updatedAt: Date;
-        isActive: boolean;
-        title: string;
-        sortOrder: number;
-        content: string | null;
-        imageUrl: string | null;
-        category: string | null;
-        thumbnail: string | null;
-        videoUrl: string | null;
-        targetPlan: import("@prisma/client").$Enums.MerchantPlan;
-    }>;
     createGuide(data: any): Promise<{
         id: string;
         slug: string;
@@ -78,19 +62,9 @@ export declare class MarketingController {
         videoUrl: string | null;
         targetPlan: import("@prisma/client").$Enums.MerchantPlan;
     }>;
-    getMerchantGuides(req: any): Promise<{
-        id: string;
-        slug: string;
-        createdAt: Date;
-        updatedAt: Date;
-        isActive: boolean;
-        title: string;
-        sortOrder: number;
-        content: string | null;
-        imageUrl: string | null;
-        category: string | null;
-        thumbnail: string | null;
-        videoUrl: string | null;
-        targetPlan: import("@prisma/client").$Enums.MerchantPlan;
-    }[]>;
+    broadcastAnnouncement(message: string): Promise<{
+        success: boolean;
+        total: number;
+        sent: number;
+    }>;
 }

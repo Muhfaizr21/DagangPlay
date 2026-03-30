@@ -39,6 +39,21 @@ export class PublicOrdersController {
         return this.publicOrdersService.getStoreConfig(host, merchantSlug);
     }
 
+    @Get('status/:phone')
+    async checkResellerStatus(@Param('phone') phone: string, @Query('merchantId') merchantId: string) {
+        return this.publicOrdersService.checkResellerStatus(phone, merchantId);
+    }
+
+    @Post('otp/send')
+    async sendOtp(@Body() body: any) {
+        return this.publicOrdersService.sendResellerOtp(body.phone, body.merchantId);
+    }
+
+    @Post('otp/verify')
+    async verifyOtp(@Body() body: any) {
+        return this.publicOrdersService.verifyResellerOtp(body.phone, body.merchantId, body.code);
+    }
+
     @Post('checkout')
     @Throttle({ default: { limit: 3, ttl: 60000 } })
     async checkout(@Body() body: any, @Req() req: any) {

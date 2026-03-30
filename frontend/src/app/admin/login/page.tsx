@@ -30,12 +30,10 @@ export default function AdminLoginPage() {
             const role = res.data.user.role;
             if (role === 'SUPER_ADMIN' || role === 'ADMIN_STAFF') {
                 router.push('/admin');
-            } else if (role === 'MERCHANT') {
-                router.push('/merchant');
-            } else if (role === 'RESELLER') {
-                router.push('/reseller');
             } else {
-                router.push('/dashboard');
+                setError('Anda tidak memiliki izin untuk masuk ke area Super Admin.');
+                localStorage.removeItem('admin_token');
+                localStorage.removeItem('admin_user');
             }
         } catch (err: any) {
             console.error('Login error:', err);
@@ -57,8 +55,8 @@ export default function AdminLoginPage() {
                     <div className="mx-auto inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white border border-slate-200 shadow-sm mb-4 p-3 overflow-hidden">
                         <img src="/dagang.png" alt="Logo" className="w-full h-full object-contain" />
                     </div>
-                    <h1 className="font-heading text-3xl text-slate-800 tracking-widest whitespace-nowrap">DAGANG<span className="text-[#C9A84C]">PLAY</span></h1>
-                    <p className="font-body text-cyan-600 text-[10px] uppercase tracking-widest mt-2 font-bold select-none">Multi-Role Authentication Area</p>
+                    <h1 className="font-heading text-3xl text-slate-800 tracking-widest whitespace-nowrap">CENTRAL<span className="text-[#C9A84C]">ADMIN</span></h1>
+                    <p className="font-body text-red-600 text-[10px] uppercase tracking-widest mt-2 font-black select-none">Restricted: Super Admin & Staff Only</p>
                 </div>
 
                 {error && (

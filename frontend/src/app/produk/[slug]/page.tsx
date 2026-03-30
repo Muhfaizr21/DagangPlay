@@ -67,11 +67,20 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
     const [whatsapp, setWhatsapp] = useState('');
     const [selectedPayment, setSelectedPayment] = useState('');
     const [isCheckoutting, setIsCheckoutting] = useState(false);
+    const [isReseller, setIsReseller] = useState(false);
+    const [resellerDiscount, setResellerDiscount] = useState(0);
 
     const [trackModal, setTrackModal] = useState(false);
     const [searchPhone, setSearchPhone] = useState('');
     const [trackingResults, setTrackingResults] = useState<any[]>([]);
     const [isTracking, setIsTracking] = useState(false);
+
+    // OTP Reseller States
+    const [isResellerVerified, setIsResellerVerified] = useState(false);
+    const [otpToken, setOtpToken] = useState('');
+    const [showOtpInput, setShowOtpInput] = useState(false);
+    const [otpCode, setOtpCode] = useState('');
+    const [isSendingOtp, setIsSendingOtp] = useState(false);
 
     const paymentChannels = tripayChannelsResp?.data?.filter((ch: any) => ch.active !== false) || [];
 
@@ -81,7 +90,13 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
 
     const checkoutCalculations = useMemo(() => {
         if (!selectedSku) return null;
-        const price = Number(selectedSku.priceNormal);
+        let price = Number(selectedSku.priceNormal);
+        
+        // APPLY RESELLER DISCOUNT LIVE
+        if (isReseller && resellerDiscount > 0) {
+            price = Math.max(Number(selectedSku.basePrice), price - resellerDiscount);
+        }
+
         let fee = 0;
         if (selectedPaymentChannel) {
             const flatFee = Number(selectedPaymentChannel.fee_flat || 0);
@@ -90,7 +105,32 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
         }
         const total = price + fee;
         return { basePrice: price, serviceFee: fee, total: Math.ceil(total) };
-    }, [selectedSku, selectedPaymentChannel]);
+    }, [selectedSku, selectedPaymentChannel, isReseller, resellerDiscount]);
+
+    // Reseller Status Checker
+    useEffect(() => {
+        const checkReseller = async () => {
+            if (whatsapp.length >= 10 && config?.id) {
+                try {
+                    const res = await axios.get(`${baseUrl}/public/orders/status/${whatsapp}?merchantId=${config.id}`);
+                    if (res.data.isReseller) {
+                        setIsReseller(true);
+                        setResellerDiscount(res.data.discount || 0);
+                    } else {
+                        setIsReseller(false);
+                        setResellerDiscount(0);
+                    }
+                } catch (e) {
+                    setIsReseller(false);
+                }
+            } else {
+                setIsReseller(false);
+            }
+        };
+
+        const timer = setTimeout(checkReseller, 1000);
+        return () => clearTimeout(timer);
+    }, [whatsapp, config?.id]);
 
     const handleTrack = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -115,12 +155,40 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
         }
     }, [category, storeName]);
 
+    const handleSendOtp = async () => {
+        if (!whatsapp) return alert('Masukkan nomor WhatsApp terlebih dahulu');
+        setIsSendingOtp(true);
+        try {
+            await axios.post(`${baseUrl}/public/orders/otp/send`, { phone: whatsapp, merchantId: config.id });
+            setShowOtpInput(true);
+            alert('OTP terkirim ke WhatsApp Anda!');
+        } catch (e: any) {
+            alert(e.response?.data?.message || 'Gagal mengirim OTP');
+        } finally {
+            setIsSendingOtp(false);
+        }
+    };
+
+    const handleVerifyOtp = async () => {
+        if (!otpCode) return;
+        try {
+            const res = await axios.post(`${baseUrl}/public/orders/otp/verify`, { phone: whatsapp, merchantId: config.id, code: otpCode });
+            setOtpToken(res.data.token);
+            setIsResellerVerified(true);
+            setShowOtpInput(false);
+            alert('Verifikasi Berhasil! Kamu bisa lanjut beli dengan harga khusus.');
+        } catch (e: any) {
+            alert(e.response?.data?.message || 'Kode OTP salah');
+        }
+    };
+
     const handleBuy = async () => {
         if (!gameId) return alert('Silakan masukkan ID game Anda');
         if (bestProductInfo?.gameServerId && !serverId) return alert('Silakan masukkan Server ID game Anda');
         if (!selectedSku) return alert('Pilih nominal top up terlebih dahulu');
         if (!whatsapp) return alert('Masukkan nomor WhatsApp Anda');
         if (!selectedPayment) return alert('Pilih metode pembayaran');
+        if (isReseller && !isResellerVerified) return alert('Silakan verifikasi WhatsApp Anda sebagai reseller terlebih dahulu');
 
         setIsCheckoutting(true);
         try {
@@ -131,7 +199,8 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
                 whatsapp,
                 paymentMethod: selectedPayment,
                 merchant: merchantSlug,
-                domain: domainMask
+                domain: domainMask,
+                otpToken: otpToken // Send the verified token
             });
             if (res.data.success && res.data.payment?.checkout_url) {
                 window.location.href = res.data.payment.checkout_url;
@@ -633,6 +702,12 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
                                     </div>
                                 </div>
                                 <div className="space-y-3">
+                                    {isReseller && resellerDiscount > 0 && (
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-lg border border-emerald-400/20">RESELLER PRICING APPLIED</span>
+                                            <span className="text-[12px] font-bold text-emerald-400">-Rp {resellerDiscount.toLocaleString('id-ID')}</span>
+                                        </div>
+                                    )}
                                     {[
                                         { label: 'Item', val: selectedSku.name },
                                         { label: 'Harga', val: `Rp ${new Intl.NumberFormat('id-ID').format(checkoutCalculations?.basePrice || 0)}` },
@@ -666,30 +741,98 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
 
                         {/* Step – Checkout */}
                         <div className="card rounded-2xl p-5">
-                            <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
-                                <div className="flex-1 space-y-1.5">
-                                    <label className="text-[10px] font-medium uppercase tracking-[0.15em] ml-1" style={{ color: 'var(--text-dim)' }}>
-                                        Nomor WhatsApp
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={whatsapp}
-                                        onChange={e => setWhatsapp(e.target.value)}
-                                        className="field"
-                                        placeholder="08XXXXXXXXXX"
-                                    />
+                            <div className="flex flex-col gap-4">
+                                <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+                                    <div className="flex-1 space-y-1.5">
+                                        <label className="text-[10px] font-medium uppercase tracking-[0.15em] ml-1" style={{ color: 'var(--text-dim)' }}>
+                                            Nomor WhatsApp
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={whatsapp}
+                                            onChange={e => {
+                                                setWhatsapp(e.target.value);
+                                                setIsResellerVerified(false);
+                                                setOtpToken('');
+                                                setShowOtpInput(false);
+                                            }}
+                                            className="field"
+                                            placeholder="08XXXXXXXXXX"
+                                        />
+                                    </div>
+                                    
+                                    {isReseller && !isResellerVerified && !showOtpInput && (
+                                        <button
+                                            onClick={handleSendOtp}
+                                            disabled={isSendingOtp}
+                                            className="w-full md:w-auto h-[48px] px-6 rounded-xl text-[11px] font-bold uppercase tracking-wider border border-amber-400/20 text-amber-400 flex items-center justify-center gap-2 hover:bg-amber-400/5 transition-colors"
+                                            style={{ marginTop: 'auto' }}
+                                        >
+                                            {isSendingOtp ? '...' : <><Zap size={13} /> Verifikasi WA Reseller</>}
+                                        </button>
+                                    )}
+
+                                    <button
+                                        onClick={handleBuy}
+                                        disabled={isCheckoutting || (isReseller && !isResellerVerified)}
+                                        className="buy-btn w-full md:w-auto md:min-w-[180px] h-[48px] rounded-xl"
+                                        style={{ marginTop: 'auto' }}
+                                    >
+                                        {isCheckoutting
+                                            ? <div className="w-4 h-4 rounded-full border-2 border-[#09090F] border-t-transparent animate-spin" />
+                                            : <><Lock size={13} /> {isReseller && !isResellerVerified ? 'Verifikasi Dulu' : 'Bayar Sekarang'}</>
+                                        }
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={handleBuy}
-                                    disabled={isCheckoutting}
-                                    className="buy-btn w-full md:w-auto md:min-w-[180px] h-[48px] rounded-xl"
-                                    style={{ marginTop: 'auto' }}
-                                >
-                                    {isCheckoutting
-                                        ? <div className="w-4 h-4 rounded-full border-2 border-[#09090F] border-t-transparent animate-spin" />
-                                        : <><Lock size={13} /> Bayar Sekarang</>
-                                    }
-                                </button>
+
+                                {showOtpInput && (
+                                    <div className="bg-amber-400/5 border border-amber-400/10 rounded-xl p-4 flex flex-col md:flex-row items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <div className="flex-1">
+                                            <p className="text-[11px] font-bold text-amber-400 uppercase tracking-widest mb-2">Masukkan Kode OTP WA</p>
+                                            <div className="flex gap-2">
+                                                {['', '', '', ''].map((_, i) => (
+                                                    <input
+                                                        key={i}
+                                                        type="text"
+                                                        maxLength={1}
+                                                        className="w-10 h-10 bg-black/40 border border-white/10 rounded-lg text-center font-bold text-amber-400 focus:border-amber-400/50 outline-none"
+                                                        value={otpCode[i] || ''}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            if (/^\d?$/.test(val)) {
+                                                                const newOtp = otpCode.split('');
+                                                                newOtp[i] = val;
+                                                                setOtpCode(newOtp.join(''));
+                                                                // Auto focus next or verify
+                                                                if (val && i < 3) {
+                                                                    (e.target.nextSibling as HTMLInputElement)?.focus();
+                                                                }
+                                                            }
+                                                        }}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={handleVerifyOtp}
+                                            className="h-[40px] px-6 rounded-lg bg-amber-400 text-black text-[11px] font-bold uppercase tracking-wider hover:opacity-90 active:scale-95 transition-all"
+                                        >
+                                            Konfirmasi
+                                        </button>
+                                    </div>
+                                )}
+
+                                {isResellerVerified && (
+                                    <div className="bg-emerald-400/5 border border-emerald-400/10 rounded-xl p-3 flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-emerald-400/20 flex items-center justify-center text-emerald-400">
+                                            <ShieldCheck size={16} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest">Reseller Terverifikasi</p>
+                                            <p className="text-[10px] text-emerald-400/60 uppercase">Selamat belanja dengan harga khusus!</p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

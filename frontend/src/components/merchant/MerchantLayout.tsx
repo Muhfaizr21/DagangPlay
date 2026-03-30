@@ -7,7 +7,7 @@ import {
     LayoutDashboard, Package, ShoppingCart, Settings, Bell,
     LogOut, Zap, CreditCard, Ticket, Activity, Tag, Palette,
     GraduationCap, MessageSquare, ExternalLink, ChevronDown,
-    TrendingUp, Search, Lock
+    TrendingUp, Search, Lock, Users
 } from 'lucide-react';
 
 const NAV_GROUPS = [
@@ -22,6 +22,7 @@ const NAV_GROUPS = [
         items: [
             { label: 'Katalog Produk', icon: Package, href: '/merchant/products' },
             { label: 'Pesanan & Transaksi', icon: ShoppingCart, href: '/merchant/orders' },
+            { label: 'Member & Reseller', icon: Users, href: '/merchant/resellers' },
             { label: 'Promo & Voucher', icon: Tag, href: '/merchant/promos' },
         ]
     },
@@ -85,10 +86,10 @@ export default function MerchantLayout({ children, demoUser }: { children: React
 
         const token = localStorage.getItem('admin_token');
         const userData = localStorage.getItem('admin_user');
-        if (!token || !userData) { router.push('/admin/login'); return; }
+        if (!token || !userData) { router.push('/merchant/login'); return; }
         const parsed = JSON.parse(userData);
         if (parsed.role === 'SUPER_ADMIN' || parsed.role === 'ADMIN_STAFF') { router.replace('/admin'); return; }
-        if (parsed.role !== 'MERCHANT') { router.replace('/admin/login'); return; }
+        if (parsed.role !== 'MERCHANT') { router.replace('/merchant/login'); return; }
         setUser(parsed);
         setIsLoading(false);
     }, [router, demoUser]);
@@ -118,7 +119,7 @@ export default function MerchantLayout({ children, demoUser }: { children: React
         } catch { }
         localStorage.removeItem('admin_token');
         localStorage.removeItem('admin_user');
-        router.replace('/admin/login');
+        router.replace('/merchant/login');
     };
 
     const planColor = PLAN_COLORS[user?.plan || 'FREE'];

@@ -217,6 +217,11 @@ export class TransactionsService {
                 data: { fulfillmentStatus, paymentStatus, note: reason }
             });
 
+            // 1. Commission Reversal logic if status moves AWAY from Success (Anti-Leakage)
+            if (order.fulfillmentStatus === 'SUCCESS' && (fulfillmentStatus === 'FAILED' || fulfillmentStatus === 'REFUNDED')) {
+                 await this.publicOrders.reverseCommission(id, tx as any);
+            }
+
             await tx.orderStatusHistory.create({
                 data: {
                     orderId: id,

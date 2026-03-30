@@ -1,12 +1,15 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Query, Req, ForbiddenException } from '@nestjs/common';
 import { SaasService } from './saas.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { PermissionsGuard } from "src/auth/guards/permissions.guard";
+import { Permissions } from "src/auth/decorators/permissions.decorator";
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 
+@Permissions('manage_saas')
 @Controller('saas')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 export class SaasController {
   constructor(private readonly saasService: SaasService) {}
 
@@ -42,19 +45,29 @@ export class SaasController {
   // -------------------------------------------------------------
   @Get('merchant/ledger')
   @Roles(Role.MERCHANT)
-  async getMerchantLedger(@Query('merchantId') merchantId: string) {
+  async getMerchantLedger(@Req() req: any, @Query('merchantId') merchantId: string) {
+    // ENFORCE MULTI-TENANT ISOLATION
+    if (req.user.merchantId !== merchantId) {
+        throw new ForbiddenException('Unauthorized access to this ledger');
+    }
     return this.saasService.getMerchantLedger(merchantId);
   }
 
   @Post('merchant/payout/auto')
   @Roles(Role.MERCHANT)
-  async updateAutoPayoutConfig(@Body() body: any) {
-    return this.saasService.updateAutoPayoutConfig(body);
+  async updateAutoPayoutConfig(@Req() req: any, @Body() body: any) {
+    // ENFORCE MULTI-TENANT ISOLATION
+    const merchantId = req.user.merchantId;
+    return this.saasService.updateAutoPayoutConfig({ ...body, merchantId });
   }
 
   @Get('merchant/webhooks/logs')
   @Roles(Role.MERCHANT)
-  async getMerchantWebhookLogs(@Query('merchantId') merchantId: string) {
+  async getMerchantWebhookLogs(@Req() req: any, @Query('merchantId') merchantId: string) {
+    // ENFORCE MULTI-TENANT ISOLATION
+    if (req.user.merchantId !== merchantId) {
+        throw new ForbiddenException('Unauthorized access to these logs');
+    }
     return this.saasService.getMerchantWebhookLogs(merchantId);
   }
 

@@ -53,7 +53,7 @@ export declare class SubscriptionsService {
     updateMerchantPlanManual(merchantId: string, plan: string, durationDays: number, operator: string): Promise<any>;
     getPlanFeatures(): Promise<any>;
     getMerchantPlanFeatures(merchantId: string): Promise<any>;
-    checkFeatureLimit(merchantId: string, feature: 'maxProducts' | 'multiUser' | 'whiteLabel' | 'customDomain' | 'flashSale' | 'templateVariants' | 'instantWithdrawal' | 'customProductDetail' | 'buildApk' | 'prioritySupport' | 'resellerAcademy' | 'tldDomain', addingCount?: number): Promise<boolean>;
+    checkFeatureLimit(merchantId: string, feature: 'maxProducts' | 'maxMembers' | 'multiUser' | 'whiteLabel' | 'customDomain' | 'flashSale' | 'templateVariants' | 'instantWithdrawal' | 'customProductDetail' | 'buildApk' | 'prioritySupport' | 'resellerAcademy' | 'tldDomain', addingCount?: number): Promise<boolean>;
     updatePlanFeatures(features: any, operator: string): Promise<{
         id: string;
         description: string | null;
@@ -89,5 +89,21 @@ export declare class SubscriptionsService {
         dueDate: Date;
         notes: string | null;
         proofUrl: string | null;
+    }>;
+    getTierMappings(): Promise<{
+        id: string;
+        plan: import("@prisma/client").$Enums.MerchantPlan;
+        updatedAt: Date;
+        isActive: boolean;
+        updatedBy: string;
+        tier: import("@prisma/client").$Enums.PriceTier;
+    }[]>;
+    updateTierMapping(id: string, tier: any, operator: string): Promise<{
+        id: string;
+        plan: import("@prisma/client").$Enums.MerchantPlan;
+        updatedAt: Date;
+        isActive: boolean;
+        updatedBy: string;
+        tier: import("@prisma/client").$Enums.PriceTier;
     }>;
 }

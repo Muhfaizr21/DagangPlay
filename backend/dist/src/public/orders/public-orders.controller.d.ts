@@ -80,6 +80,21 @@ export declare class PublicOrdersController {
         message?: undefined;
         isExpired?: undefined;
     }>;
+    checkResellerStatus(phone: string, merchantId: string): Promise<{
+        isReseller: boolean;
+        discount?: undefined;
+    } | {
+        isReseller: boolean;
+        discount: number;
+    }>;
+    sendOtp(body: any): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    verifyOtp(body: any): Promise<{
+        success: boolean;
+        token: string;
+    }>;
     checkout(body: any, req: any): Promise<{
         success: boolean;
         orderNumber: string;
@@ -91,34 +106,34 @@ export declare class PublicOrdersController {
             status: import("@prisma/client").$Enums.PaymentStatus;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
             merchantId: string;
+            userId: string;
             expiredAt: Date | null;
             paidAt: Date | null;
-            orderId: string;
             method: import("@prisma/client").$Enums.PaymentMethod;
             amount: number;
+            fee: number;
+            totalAmount: number;
             tripayReference: string | null;
             tripayMerchantRef: string | null;
             tripayPaymentUrl: string | null;
-            tripayVaNumber: string | null;
             tripayQrUrl: string | null;
-            tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
-            totalAmount: number;
-            fee: number;
+            tripayVaNumber: string | null;
             tripayExpiredTime: Date | null;
+            tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
+            orderId: string;
         } | null;
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string;
+        productSkuId: string;
+        userId: string;
+        expiredAt: Date | null;
         productId: string;
         supplierId: string | null;
         basePrice: number;
-        createdAt: Date;
-        updatedAt: Date;
-        userId: string;
-        merchantId: string;
-        productSkuId: string;
-        expiredAt: Date | null;
         orderNumber: string;
         productName: string;
         productSkuName: string;
@@ -128,9 +143,7 @@ export declare class PublicOrdersController {
         gameUserId: string;
         gameUserServerId: string | null;
         gameUserName: string | null;
-        whatsapp: string | null;
         quantity: number;
-        promoCodeId: string | null;
         discountAmount: number;
         paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
         paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
@@ -145,6 +158,8 @@ export declare class PublicOrdersController {
         completedAt: Date | null;
         failedAt: Date | null;
         merchantModalPrice: number | null;
+        whatsapp: string | null;
+        promoCodeId: string | null;
     })[]>;
     validateNickname(productId: string, gameId: string, serverId?: string): Promise<{
         success: boolean;
@@ -163,34 +178,34 @@ export declare class PublicOrdersController {
             status: import("@prisma/client").$Enums.PaymentStatus;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
             merchantId: string;
+            userId: string;
             expiredAt: Date | null;
             paidAt: Date | null;
-            orderId: string;
             method: import("@prisma/client").$Enums.PaymentMethod;
             amount: number;
+            fee: number;
+            totalAmount: number;
             tripayReference: string | null;
             tripayMerchantRef: string | null;
             tripayPaymentUrl: string | null;
-            tripayVaNumber: string | null;
             tripayQrUrl: string | null;
-            tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
-            totalAmount: number;
-            fee: number;
+            tripayVaNumber: string | null;
             tripayExpiredTime: Date | null;
+            tripayResponse: import("@prisma/client/runtime/client").JsonValue | null;
+            orderId: string;
         } | null;
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string;
+        productSkuId: string;
+        userId: string;
+        expiredAt: Date | null;
         productId: string;
         supplierId: string | null;
         basePrice: number;
-        createdAt: Date;
-        updatedAt: Date;
-        userId: string;
-        merchantId: string;
-        productSkuId: string;
-        expiredAt: Date | null;
         orderNumber: string;
         productName: string;
         productSkuName: string;
@@ -200,9 +215,7 @@ export declare class PublicOrdersController {
         gameUserId: string;
         gameUserServerId: string | null;
         gameUserName: string | null;
-        whatsapp: string | null;
         quantity: number;
-        promoCodeId: string | null;
         discountAmount: number;
         paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
         paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
@@ -217,5 +230,7 @@ export declare class PublicOrdersController {
         completedAt: Date | null;
         failedAt: Date | null;
         merchantModalPrice: number | null;
+        whatsapp: string | null;
+        promoCodeId: string | null;
     }>;
 }

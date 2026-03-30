@@ -26,7 +26,7 @@ export class SaasService {
       
       try {
         await this.prisma.$transaction(async (tx) => {
-          await tx.merchant.update({
+          const updatedMerchant = await tx.merchant.update({
             where: { id: m.id },
             data: {
               escrowBalance: { decrement: amountToSettle },
@@ -39,11 +39,11 @@ export class SaasService {
               merchantId: m.id,
               type: 'SETTLEMENT',
               amount: amountToSettle,
-              description: 'Pencairan Otomatis Saldo Escrow Harian H-1',
+              description: 'Pencairan Otomatis Saldo Escrow Harian',
               escrowBefore: m.escrowBalance,
-              escrowAfter: 0,
+              escrowAfter: updatedMerchant.escrowBalance,
               availableBefore: m.availableBalance,
-              availableAfter: m.availableBalance + amountToSettle
+              availableAfter: updatedMerchant.availableBalance
             }
           });
         });

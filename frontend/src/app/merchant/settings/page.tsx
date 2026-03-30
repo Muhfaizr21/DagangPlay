@@ -14,12 +14,15 @@ const fetcher = (url: string) => {
 function MarkupSettings({ baseUrl }: { baseUrl: string }) {
     const { data: general, mutate: mutateGeneral } = useSWR(`${baseUrl}/merchant/settings/general`, fetcher);
     const [markup, setMarkup] = useState('0');
+    const [resellerDiscount, setResellerDiscount] = useState('0');
     const [saving, setSaving] = useState(false);
 
     React.useEffect(() => {
         if (general) {
             const m = general.find((s: any) => s.key === 'MARKUP_PERCENTAGE');
             if (m) setMarkup(m.value);
+            const r = general.find((s: any) => s.key === 'RESELLER_DISCOUNT');
+            if (r) setResellerDiscount(r.value);
         }
     }, [general]);
 
@@ -28,7 +31,8 @@ function MarkupSettings({ baseUrl }: { baseUrl: string }) {
         try {
             const token = localStorage.getItem('admin_token');
             await axios.put(`${baseUrl}/merchant/settings/general`, [
-                { key: 'MARKUP_PERCENTAGE', value: markup }
+                { key: 'MARKUP_PERCENTAGE', value: markup },
+                { key: 'RESELLER_DISCOUNT', value: resellerDiscount }
             ], { headers: { Authorization: `Bearer ${token}` } });
             alert('Markup otomatis berhasil diperbarui!');
             mutateGeneral();
@@ -62,7 +66,20 @@ function MarkupSettings({ baseUrl }: { baseUrl: string }) {
                         />
                         <span className="text-slate-500 font-bold">% dari Modal Supplier</span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-2 italic">*Contoh: Jika modal Rp 10.000 dan markup 5%, harga jual otomatis menjadi Rp 10.500.</p>
+                </div>
+
+                <div className="pt-6 border-t border-slate-50">
+                    <label className="block text-[12px] font-black text-indigo-600 mb-2 uppercase tracking-wider">Potongan Harga Reseller (IDR)</label>
+                    <div className="flex items-center gap-3">
+                        <input 
+                            type="number" 
+                            value={resellerDiscount} 
+                            onChange={e => setResellerDiscount(e.target.value)} 
+                            className="w-32 px-4 py-3 bg-indigo-50/30 rounded-xl border border-indigo-100 focus:border-indigo-500 focus:bg-white outline-none transition-all font-black text-lg text-indigo-700" 
+                        />
+                        <span className="text-slate-500 font-bold">Rupiah (Flat per Item)</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-2 italic">*Contoh: Jika diatur 500, maka setiap item yang dibeli User "RESELLER" akan otomatis lebih murah Rp 500 dari harga umum.</p>
                 </div>
                 <div className="pt-4 border-t border-slate-50 flex justify-end">
                     <button 

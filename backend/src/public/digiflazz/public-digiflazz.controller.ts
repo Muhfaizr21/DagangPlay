@@ -1,7 +1,6 @@
 import { Controller, Post, Body, Headers, HttpStatus, Res, Req } from '@nestjs/common';
 import { DigiflazzService } from '../../admin/digiflazz/digiflazz.service';
 import { Request, Response } from 'express';
-import * as crypto from 'crypto';
 
 @Controller('public/digiflazz')
 export class PublicDigiflazzController {
@@ -20,12 +19,15 @@ export class PublicDigiflazzController {
         @Res() res: any
     ) {
         try {
-            const clientIp = (req.headers['x-forwarded-for'] as string) || req.socket?.remoteAddress || req.ip || '';
+            const allowedIPs = ['103.253.212.43', '128.199.231.57', '103.111.94.131'];
+            
+            // Get original client IP from headers if behind proxy
+            const forwarded = req.headers['x-forwarded-for'];
+            const clientIp = typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : req.socket?.remoteAddress || req.ip || '';
+            
             console.log(`[DigiflazzWebhook] Event: ${event}, Delivery: ${delivery}, IP: ${clientIp}`);
 
-            // 1. SECURITY: IP Whitelist (Digiflazz documented IPs)
-            const allowedIPs = ['103.253.212.43', '128.199.231.57', '103.111.94.131'];
-            const isAllowed = allowedIPs.some(ip => clientIp.includes(ip));
+            const isAllowed = allowedIPs.includes(clientIp);
 
             if (!isAllowed && process.env.NODE_ENV === 'production') {
                 console.warn(`[DigiflazzWebhook] Unauthorized IP Attempt: ${clientIp}`);

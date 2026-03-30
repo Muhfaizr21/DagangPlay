@@ -93,4 +93,8 @@ export declare class DigiflazzService {
     processTransactionWebhook(data: any): Promise<void>;
     private maskSensitiveData;
     retryStuckOrders(): Promise<void>;
+    bulkAdjustMargins(amount: number, type: 'PRO' | 'LEGEND' | 'SUPREME' | 'ALL'): Promise<{
+        success: boolean;
+        updatedCount: number;
+    }>;
 }

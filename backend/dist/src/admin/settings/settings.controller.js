@@ -17,6 +17,8 @@ const common_1 = require("@nestjs/common");
 const settings_service_1 = require("./settings.service");
 const jwt_auth_guard_1 = require("../../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../../auth/guards/roles.guard");
+const permissions_guard_1 = require("../../auth/guards/permissions.guard");
+const permissions_decorator_1 = require("../../auth/decorators/permissions.decorator");
 const roles_decorator_1 = require("../../auth/decorators/roles.decorator");
 const client_1 = require("@prisma/client");
 const staff_dto_1 = require("./dto/staff.dto");
@@ -58,6 +60,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], SettingsController.prototype, "getAllSettings", null);
 __decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN),
     (0, common_1.Put)('global'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -71,6 +74,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], SettingsController.prototype, "getAdminStaff", null);
 __decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN),
     (0, common_1.Post)('staff'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -78,6 +82,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], SettingsController.prototype, "createAdminStaff", null);
 __decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN),
     (0, common_1.Put)('staff/:id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
@@ -86,6 +91,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], SettingsController.prototype, "updateAdminStaff", null);
 __decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN),
     (0, common_1.Delete)('staff/:id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -107,8 +113,9 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], SettingsController.prototype, "retryFailedJob", null);
 exports.SettingsController = SettingsController = __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN_STAFF),
+    (0, permissions_decorator_1.Permissions)('manage_settings'),
     (0, common_1.Controller)('admin/settings'),
     __metadata("design:paramtypes", [settings_service_1.SettingsService])
 ], SettingsController);

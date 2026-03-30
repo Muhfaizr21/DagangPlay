@@ -807,7 +807,7 @@ const RESELLER_PLANS = [{ id: 'PRO', name: 'Pro' }, { id: 'LEGEND', name: 'Legen
 
 export default function ResellerLandingPage() {
   const [isMounted, setIsMounted] = useState(false);
-  const [loginUrl, setLoginUrl] = useState("/admin/login");
+  const [loginUrl, setLoginUrl] = useState("/merchant/login");
   const [selectedPlan, setSelectedPlan] = useState('PRO');
   const [hargaModal, setHargaModal] = useState(37500);
   const [hargaJual, setHargaJual] = useState(40000);
@@ -925,7 +925,7 @@ export default function ResellerLandingPage() {
           <a href="#pricing" className="nav-lk">Harga Modal</a>
           <a href="#demo" className="nav-lk">Demo</a>
         </div>
-        <Link href={loginUrl} className="nav-login">{loginUrl === '/admin/login' ? 'Masuk' : 'Dashboard'}</Link>
+        <Link href={loginUrl} className="nav-login">{loginUrl === '/merchant/login' ? 'Masuk' : 'Dashboard'}</Link>
         <Link href="/reseller/register" className="nav-cta">Daftar Reseller <ArrowUpRight size={13} /></Link>
       </nav>
 

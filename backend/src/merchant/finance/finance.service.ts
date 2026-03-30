@@ -67,9 +67,12 @@ export class FinanceService {
                 throw new BadRequestException('Saldo tersedia tidak mencukupi untuk penarikan ini');
             }
 
-            // Deduct from Merchant Ledger immediately
+            // Deduct from Merchant Ledger immediately WITH ATOMIC GUARD
             const updatedMerchant = await tx.merchant.update({
-                where: { id: merchantId },
+                where: { 
+                    id: merchantId,
+                    availableBalance: { gte: amount } // CRITICAL: Stop negative balance race
+                },
                 data: { availableBalance: { decrement: amount } }
             });
 

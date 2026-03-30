@@ -40,6 +40,15 @@ let PublicOrdersController = class PublicOrdersController {
         const host = domainMask || req.headers.host || req.headers.origin;
         return this.publicOrdersService.getStoreConfig(host, merchantSlug);
     }
+    async checkResellerStatus(phone, merchantId) {
+        return this.publicOrdersService.checkResellerStatus(phone, merchantId);
+    }
+    async sendOtp(body) {
+        return this.publicOrdersService.sendResellerOtp(body.phone, body.merchantId);
+    }
+    async verifyOtp(body) {
+        return this.publicOrdersService.verifyResellerOtp(body.phone, body.merchantId, body.code);
+    }
     async checkout(body, req) {
         const host = body.domain || req.headers.host;
         const origin = req.headers.origin;
@@ -95,6 +104,28 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, String]),
     __metadata("design:returntype", Promise)
 ], PublicOrdersController.prototype, "getConfig", null);
+__decorate([
+    (0, common_1.Get)('status/:phone'),
+    __param(0, (0, common_1.Param)('phone')),
+    __param(1, (0, common_1.Query)('merchantId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], PublicOrdersController.prototype, "checkResellerStatus", null);
+__decorate([
+    (0, common_1.Post)('otp/send'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], PublicOrdersController.prototype, "sendOtp", null);
+__decorate([
+    (0, common_1.Post)('otp/verify'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], PublicOrdersController.prototype, "verifyOtp", null);
 __decorate([
     (0, common_1.Post)('checkout'),
     (0, throttler_1.Throttle)({ default: { limit: 3, ttl: 60000 } }),

@@ -10,7 +10,7 @@ exports.MerchantModule = void 0;
 const common_1 = require("@nestjs/common");
 const dashboard_module_1 = require("./dashboard/dashboard.module");
 const products_module_1 = require("./products/products.module");
-const resellers_module_1 = require("./resellers/resellers.module");
+const members_module_1 = require("./members/members.module");
 const orders_module_1 = require("./orders/orders.module");
 const finance_module_1 = require("./finance/finance.module");
 const commissions_module_1 = require("./commissions/commissions.module");
@@ -25,7 +25,7 @@ let MerchantModule = class MerchantModule {
 exports.MerchantModule = MerchantModule;
 exports.MerchantModule = MerchantModule = __decorate([
     (0, common_1.Module)({
-        imports: [dashboard_module_1.DashboardModule, products_module_1.ProductsModule, resellers_module_1.ResellersModule, orders_module_1.OrdersModule, finance_module_1.FinanceModule, commissions_module_1.CommissionsModule, promos_module_1.PromosModule, content_module_1.ContentModule, settings_module_1.SettingsModule, support_module_1.SupportModule, reports_module_1.ReportsModule, subscription_module_1.SubscriptionModule]
+        imports: [dashboard_module_1.DashboardModule, products_module_1.ProductsModule, members_module_1.MembersModule, orders_module_1.OrdersModule, finance_module_1.FinanceModule, commissions_module_1.CommissionsModule, promos_module_1.PromosModule, content_module_1.ContentModule, settings_module_1.SettingsModule, support_module_1.SupportModule, reports_module_1.ReportsModule, subscription_module_1.SubscriptionModule]
     })
 ], MerchantModule);
 //# sourceMappingURL=merchant.module.js.map

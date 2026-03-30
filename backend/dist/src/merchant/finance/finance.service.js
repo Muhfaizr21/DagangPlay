@@ -70,7 +70,10 @@ let FinanceService = class FinanceService {
                 throw new common_1.BadRequestException('Saldo tersedia tidak mencukupi untuk penarikan ini');
             }
             const updatedMerchant = await tx.merchant.update({
-                where: { id: merchantId },
+                where: {
+                    id: merchantId,
+                    availableBalance: { gte: amount }
+                },
                 data: { availableBalance: { decrement: amount } }
             });
             await tx.merchantLedgerMovement.create({

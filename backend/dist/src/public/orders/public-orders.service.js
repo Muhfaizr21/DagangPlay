@@ -50,20 +50,30 @@ const prisma_service_1 = require("../../prisma.service");
 const tripay_service_1 = require("../../tripay/tripay.service");
 const digiflazz_service_1 = require("../../admin/digiflazz/digiflazz.service");
 const subscriptions_service_1 = require("../../admin/subscriptions/subscriptions.service");
+const client_1 = require("@prisma/client");
 const whatsapp_service_1 = require("../../common/notifications/whatsapp.service");
+const otp_service_1 = require("./otp.service");
 let PublicOrdersService = PublicOrdersService_1 = class PublicOrdersService {
     prisma;
     tripay;
     digiflazz;
     subscriptionsService;
     whatsappService;
+    otpService;
     logger = new common_1.Logger(PublicOrdersService_1.name);
-    constructor(prisma, tripay, digiflazz, subscriptionsService, whatsappService) {
+    constructor(prisma, tripay, digiflazz, subscriptionsService, whatsappService, otpService) {
         this.prisma = prisma;
         this.tripay = tripay;
         this.digiflazz = digiflazz;
         this.subscriptionsService = subscriptionsService;
         this.whatsappService = whatsappService;
+        this.otpService = otpService;
+    }
+    async sendResellerOtp(phone, merchantId) {
+        return this.otpService.sendOtp(phone, merchantId);
+    }
+    async verifyResellerOtp(phone, merchantId, code) {
+        return this.otpService.verifyOtp(phone, merchantId, code);
     }
     mapPaymentMethod(code) {
         const mapping = {
@@ -84,6 +94,28 @@ let PublicOrdersService = PublicOrdersService_1 = class PublicOrdersService {
     }
     async createCheckout(body, host, origin, merchantSlug) {
         const { skuId, gameId, serverId, whatsapp, paymentMethod, promoCode } = body;
+        const targetMerchant = await this.prisma.merchant.findFirst({
+            where: {
+                OR: [
+                    merchantSlug ? { slug: merchantSlug } : {},
+                    { domain: host },
+                    { slug: host?.split('.')[0] }
+                ].filter(condition => Object.keys(condition).length > 0)
+            }
+        });
+        let merchant = targetMerchant;
+        if (!merchant) {
+            merchant = await this.prisma.merchant.findFirst({ where: { isOfficial: true, status: 'ACTIVE' } });
+        }
+        if (!merchant || merchant.status !== 'ACTIVE') {
+            throw new common_1.BadRequestException('Toko tidak ditemukan atau sedang ditangguhkan');
+        }
+        const userCheck = await this.prisma.user.findFirst({
+            where: { phone: whatsapp, merchantId: merchant.id, role: client_1.Role.RESELLER, status: 'ACTIVE' }
+        });
+        if (userCheck && !this.otpService.isVerified(whatsapp, merchant.id, body.otpToken)) {
+            throw new common_1.BadRequestException('Verifikasi reseller diperlukan (OTP tidak valid atau kadaluarsa).');
+        }
         const sku = await this.prisma.productSku.findUnique({
             where: { id: skuId },
             include: { product: { include: { category: true } } }
@@ -107,25 +139,6 @@ let PublicOrdersService = PublicOrdersService_1 = class PublicOrdersService {
         catch (err) {
             console.warn('[Checkout] Failed to check supplier balance, skipping check to allow potential order.');
         }
-        const targetMerchant = await this.prisma.merchant.findFirst({
-            where: {
-                OR: [
-                    merchantSlug ? { slug: merchantSlug } : {},
-                    { domain: host },
-                    { slug: host?.split('.')[0] }
-                ].filter(condition => Object.keys(condition).length > 0)
-            }
-        });
-        let merchant = targetMerchant;
-        if (!merchant) {
-            merchant = await this.prisma.merchant.findFirst({ where: { isOfficial: true, status: 'ACTIVE' } });
-        }
-        if (!merchant) {
-            throw new common_1.BadRequestException('Toko tidak ditemukan atau sedang tidak aktif');
-        }
-        if (merchant.status !== 'ACTIVE') {
-            throw new common_1.BadRequestException('Toko ini sedang ditangguhkan atau dinonaktifkan oleh administrator.');
-        }
         if (merchant.planExpiredAt) {
             const now = new Date();
             if (now > merchant.planExpiredAt) {
@@ -148,6 +161,18 @@ let PublicOrdersService = PublicOrdersService_1 = class PublicOrdersService {
         }
         const basePrice = Number(sku.basePrice);
         let sellPrice = merchantOverride ? Number(merchantOverride.customPrice) : Number(sku.priceNormal);
+        const user = await this.prisma.user.findFirst({
+            where: { phone: whatsapp, merchantId: merchant.id, status: 'ACTIVE' }
+        });
+        if (user && user.role === client_1.Role.RESELLER) {
+            const resellerDiscountSetting = await this.prisma.merchantSetting.findUnique({
+                where: { merchantId_key: { merchantId: merchant.id, key: 'RESELLER_DISCOUNT' } }
+            });
+            const resellerDiscount = Number(resellerDiscountSetting?.value || 0);
+            if (resellerDiscount > 0) {
+                sellPrice = sellPrice - resellerDiscount;
+            }
+        }
         sellPrice = Math.ceil(sellPrice);
         let promoCodeId = undefined;
         let discountAmount = 0;
@@ -189,30 +214,37 @@ let PublicOrdersService = PublicOrdersService_1 = class PublicOrdersService {
             sellPrice -= discountAmount;
             promoCodeId = promo.id;
         }
-        sellPrice = Math.max(0, Math.ceil(sellPrice));
-        let modalPrice = Number(sku.pricePro);
-        let tier = 'PRO';
-        if (merchantOverride && merchantOverride.customModalPrice) {
-            modalPrice = Number(merchantOverride.customModalPrice);
-            tier = 'SPECIAL_OVERRIDE';
+        const channels = await this.tripay.getPaymentChannels(merchant.id);
+        const selectedChannel = (channels?.data || []).find((c) => c.code === paymentMethod);
+        let paymentFee = 0;
+        if (selectedChannel) {
+            paymentFee = Math.ceil((sellPrice * (selectedChannel.fee_percent / 100)) + selectedChannel.fee_flat);
         }
         else {
-            if (merchantPlan === 'PRO') {
+            paymentFee = 5000;
+        }
+        const minimumNetProfit = 200;
+        const absoluteFloor = Number(sku.basePrice) + paymentFee + minimumNetProfit;
+        sellPrice = Math.max(absoluteFloor, Math.ceil(sellPrice));
+        const mapping = await this.prisma.planTierMapping.findUnique({
+            where: { plan: merchantPlan || 'PRO' }
+        });
+        const activeTier = mapping?.tier || 'PRO';
+        let modalPrice = Number(sku.pricePro);
+        let tierUsed = activeTier;
+        if (merchantOverride && merchantOverride.customModalPrice) {
+            modalPrice = Number(merchantOverride.customModalPrice);
+            tierUsed = 'SPECIAL_OVERRIDE';
+        }
+        else {
+            if (activeTier === 'PRO')
                 modalPrice = Number(sku.pricePro);
-                tier = 'PRO';
-            }
-            else if (merchantPlan === 'LEGEND') {
+            else if (activeTier === 'LEGEND')
                 modalPrice = Number(sku.priceLegend);
-                tier = 'LEGEND';
-            }
-            else if (merchantPlan === 'SUPREME') {
+            else if (activeTier === 'SUPREME')
                 modalPrice = Number(sku.priceSupreme);
-                tier = 'SUPREME';
-            }
-            else {
+            else
                 modalPrice = Number(sku.pricePro);
-                tier = 'PRO';
-            }
         }
         if (!paymentMethod)
             throw new common_1.BadRequestException('Metode pembayaran harus dipilih');
@@ -220,7 +252,7 @@ let PublicOrdersService = PublicOrdersService_1 = class PublicOrdersService {
             throw new common_1.BadRequestException('Nomor WhatsApp diperlukan');
         const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         let guestUser = await this.prisma.user.findFirst({
-            where: { phone: whatsapp }
+            where: { phone: whatsapp, merchantId }
         });
         if (!guestUser) {
             const hashedPassword = await bcrypt.hash('GUEST_NO_LOGIN', 10);
@@ -261,7 +293,7 @@ let PublicOrdersService = PublicOrdersService_1 = class PublicOrdersService {
                 productSkuId: sku.id,
                 productName: sku.product.name,
                 productSkuName: sku.name,
-                priceTierUsed: tier,
+                priceTierUsed: tierUsed,
                 basePrice: basePrice,
                 merchantModalPrice: modalPrice,
                 sellingPrice: sellPrice,
@@ -428,6 +460,21 @@ let PublicOrdersService = PublicOrdersService_1 = class PublicOrdersService {
             take: 10
         });
     }
+    async checkResellerStatus(phone, merchantId) {
+        const user = await this.prisma.user.findFirst({
+            where: { phone, merchantId }
+        });
+        if (!user || user.role !== client_1.Role.RESELLER) {
+            return { isReseller: false };
+        }
+        const discountSetting = await this.prisma.merchantSetting.findUnique({
+            where: { merchantId_key: { merchantId: merchantId, key: 'RESELLER_DISCOUNT' } }
+        });
+        return {
+            isReseller: true,
+            discount: Number(discountSetting?.value || 0)
+        };
+    }
     async getStoreConfig(host, merchantSlug) {
         const hostWithoutPort = host?.split(':')[0] || '';
         const isMainDomain = !host ||
@@ -591,6 +638,7 @@ exports.PublicOrdersService = PublicOrdersService = PublicOrdersService_1 = __de
         tripay_service_1.TripayService,
         digiflazz_service_1.DigiflazzService,
         subscriptions_service_1.SubscriptionsService,
-        whatsapp_service_1.WhatsappService])
+        whatsapp_service_1.WhatsappService,
+        otp_service_1.PublicOtpService])
 ], PublicOrdersService);
 //# sourceMappingURL=public-orders.service.js.map

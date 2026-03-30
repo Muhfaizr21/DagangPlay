@@ -10,7 +10,7 @@ export declare class MerchantsService {
             domain: any;
             plan: any;
             status: any;
-            resellers: number;
+            resellers: any;
             omset: number;
             date: any;
             isOfficial: any;
@@ -46,15 +46,15 @@ export declare class MerchantsService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
-        autoPayoutEnabled: boolean;
-        autoPayoutThreshold: number;
-        autoPayoutSchedule: string | null;
-        forceHttps: boolean;
-        escrowBalance: number;
-        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        autoPayoutEnabled: boolean;
+        autoPayoutSchedule: string | null;
+        autoPayoutThreshold: number;
+        availableBalance: number;
+        escrowBalance: number;
+        forceHttps: boolean;
     }>;
     getMerchantDetail(id: string): Promise<{
         resellersCount: number;
@@ -108,15 +108,15 @@ export declare class MerchantsService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
-        autoPayoutEnabled: boolean;
-        autoPayoutThreshold: number;
-        autoPayoutSchedule: string | null;
-        forceHttps: boolean;
-        escrowBalance: number;
-        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        autoPayoutEnabled: boolean;
+        autoPayoutSchedule: string | null;
+        autoPayoutThreshold: number;
+        availableBalance: number;
+        escrowBalance: number;
+        forceHttps: boolean;
     }>;
     updateMerchantSettings(id: string, updateData: any): Promise<{
         id: string;
@@ -140,18 +140,29 @@ export declare class MerchantsService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
-        autoPayoutEnabled: boolean;
-        autoPayoutThreshold: number;
-        autoPayoutSchedule: string | null;
-        forceHttps: boolean;
-        escrowBalance: number;
-        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        autoPayoutEnabled: boolean;
+        autoPayoutSchedule: string | null;
+        autoPayoutThreshold: number;
+        availableBalance: number;
+        escrowBalance: number;
+        forceHttps: boolean;
     }>;
     resetOwnerPassword(merchantId: string): Promise<{
         success: boolean;
         message: string;
     }>;
+    getMerchantResellers(merchantId: string): Promise<{
+        id: string;
+        name: string;
+        status: import("@prisma/client").$Enums.UserStatus;
+        createdAt: Date;
+        _count: {
+            ordersAsCustomer: number;
+        };
+        email: string | null;
+        phone: string | null;
+    }[]>;
 }

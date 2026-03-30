@@ -113,6 +113,63 @@ export class TasksService {
             });
             if (expiredPlans.count > 0) this.logger.log(`Downgraded ${expiredPlans.count} merchants to FREE plan (after 3-day grace period).`);
 
+            // 3. BACKGROUND AUTO-SETTLEMENT (Safety Net)
+            // Look for SUCCESS orders which still have PENDING commissions. 
+            // Case where primary fulfillment callback failed to settle.
+            const pendingCommissions = await this.prisma.commission.findMany({
+                where: { 
+                    status: 'PENDING',
+                    order: { fulfillmentStatus: 'SUCCESS', paymentStatus: 'PAID' }
+                },
+                include: { user: { include: { ownedMerchant: true } } },
+                take: 50
+            });
+
+            for (const comm of pendingCommissions) {
+                await this.prisma.$transaction(async (tx) => {
+                    // Re-verify condition within tx block for safety
+                    const check = await tx.commission.findUnique({ where: { id: comm.id, status: 'PENDING' } });
+                    if (!check) return;
+
+                    // Move PENDING to SETTLED
+                    await tx.commission.update({ where: { id: comm.id }, data: { status: 'SETTLED', settledAt: new Date() } });
+
+                    if (comm.user.role === 'MERCHANT' && comm.user.ownedMerchant) {
+                        const mId = comm.user.ownedMerchant.id;
+                        const merchant = await tx.merchant.findUnique({ where: { id: mId } });
+                        if (merchant) {
+                            const updatedMerchant = await tx.merchant.update({
+                                where: { id: mId },
+                                data: {
+                                    escrowBalance: { decrement: comm.amount },
+                                    availableBalance: { increment: comm.amount }
+                                }
+                            });
+                            // LOG MOVEMENT
+                            await tx.merchantLedgerMovement.create({
+                                data: {
+                                    merchantId: mId,
+                                    orderId: comm.orderId,
+                                    type: 'SETTLEMENT',
+                                    amount: comm.amount,
+                                    description: `Audit Settlement (Auto-Recovered): ${comm.orderId}`,
+                                    availableBefore: merchant.availableBalance,
+                                    availableAfter: updatedMerchant.availableBalance,
+                                    escrowBefore: merchant.escrowBalance,
+                                    escrowAfter: updatedMerchant.escrowBalance
+                                }
+                            });
+                        }
+                    } else if (comm.user.role === 'SUPER_ADMIN') {
+                        await tx.user.update({
+                            where: { id: comm.userId },
+                            data: { balance: { increment: comm.amount } }
+                        });
+                    }
+                });
+            }
+            if (pendingCommissions.length > 0) this.logger.log(`Auto-settled ${pendingCommissions.length} orphaned commissions.`);
+
         } catch (error) {
             this.logger.error('Error during frequent checks:', error);
         }

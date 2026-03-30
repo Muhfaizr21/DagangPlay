@@ -33,8 +33,51 @@ let DashboardService = class DashboardService {
             _sum: { totalPrice: true },
         });
         const totalRevenue = revenueAgg._sum.totalPrice || 0;
+        const escrowAgg = await this.prisma.merchant.aggregate({
+            _sum: { escrowBalance: true }
+        });
+        const totalEscrow = escrowAgg._sum.escrowBalance || 0;
+        const saasAgg = await this.prisma.invoice.aggregate({
+            where: { status: 'PAID' },
+            _sum: { totalAmount: true }
+        });
+        const totalSaasRevenue = saasAgg._sum.totalAmount || 0;
         const merchantCount = await this.prisma.merchant.count({
             where: { status: 'ACTIVE' },
+        });
+        const topMerchantsRaw = await this.prisma.merchant.findMany({
+            take: 5,
+            select: {
+                id: true,
+                name: true,
+                _count: {
+                    select: { orders: { where: { paymentStatus: 'PAID' } } }
+                }
+            },
+            orderBy: { orders: { _count: 'desc' } }
+        });
+        const topMerchants = topMerchantsRaw.map(m => ({
+            id: m.id,
+            name: m.name,
+            orders: m._count.orders
+        }));
+        const sevenDaysFromNow = new Date();
+        sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+        const expiringMerchants = await this.prisma.merchant.findMany({
+            where: {
+                status: 'ACTIVE',
+                planExpiredAt: {
+                    gt: new Date(),
+                    lt: sevenDaysFromNow
+                }
+            },
+            select: { id: true, name: true, planExpiredAt: true, contactWhatsapp: true }
+        });
+        const pendingDisputes = await this.prisma.disputeCase.findMany({
+            where: { status: 'OPEN' },
+            include: { order: true },
+            take: 5,
+            orderBy: { createdAt: 'desc' }
         });
         const totalTransactions = await this.prisma.order.count();
         const successTransactions = await this.prisma.order.count({
@@ -44,15 +87,25 @@ let DashboardService = class DashboardService {
         if (totalTransactions > 0) {
             successRate = (successTransactions / totalTransactions) * 100;
         }
-        const weeklyChart = [
-            { day: 'Sen', value: Math.floor(Math.random() * 100) },
-            { day: 'Sel', value: Math.floor(Math.random() * 100) },
-            { day: 'Rab', value: Math.floor(Math.random() * 100) },
-            { day: 'Kam', value: Math.floor(Math.random() * 100) },
-            { day: 'Jum', value: Math.floor(Math.random() * 100) },
-            { day: 'Sab', value: Math.floor(Math.random() * 100) },
-            { day: 'Min', value: Math.floor(Math.random() * 100) },
-        ];
+        const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        const weeklyChart = await Promise.all([...Array(7)].map(async (_, i) => {
+            const date = new Date();
+            date.setDate(date.getDate() - (6 - i));
+            date.setHours(0, 0, 0, 0);
+            const nextDay = new Date(date);
+            nextDay.setDate(nextDay.getDate() + 1);
+            const dayAgg = await this.prisma.order.aggregate({
+                where: {
+                    paymentStatus: 'PAID',
+                    createdAt: { gte: date, lt: nextDay }
+                },
+                _sum: { totalPrice: true }
+            });
+            return {
+                day: dayNames[date.getDay()],
+                value: Math.round(Number(dayAgg._sum.totalPrice || 0) / 1000)
+            };
+        }));
         const recentTransactionsRaw = await this.prisma.order.findMany({
             take: 5,
             orderBy: { createdAt: 'desc' },
@@ -81,8 +134,8 @@ let DashboardService = class DashboardService {
                 {
                     label: 'Merchant Aktif',
                     value: merchantCount.toString(),
-                    change: '+42',
-                    isUp: true,
+                    change: `+${expiringMerchants.length} expiring`,
+                    isUp: false,
                 },
                 {
                     label: 'Total Transaksi',
@@ -100,6 +153,15 @@ let DashboardService = class DashboardService {
             systemHealth: {
                 supplierBalance: supplierBalance,
                 isLow: supplierBalance < 500000,
+                totalEscrow,
+                totalSaasRevenue
+            },
+            merchants: {
+                top: topMerchants,
+                expiring: expiringMerchants
+            },
+            disputes: {
+                pending: pendingDisputes
             },
             weeklyChart,
             recentTransactions,

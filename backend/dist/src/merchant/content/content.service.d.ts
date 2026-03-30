@@ -159,15 +159,15 @@ export declare class ContentService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
-        autoPayoutEnabled: boolean;
-        autoPayoutThreshold: number;
-        autoPayoutSchedule: string | null;
-        forceHttps: boolean;
-        escrowBalance: number;
-        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        autoPayoutEnabled: boolean;
+        autoPayoutSchedule: string | null;
+        autoPayoutThreshold: number;
+        availableBalance: number;
+        escrowBalance: number;
+        forceHttps: boolean;
     }>;
     updateThemeSettings(merchantId: string, data: any): Promise<{
         id: string;
@@ -191,15 +191,15 @@ export declare class ContentService {
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
         ownerId: string;
-        autoPayoutEnabled: boolean;
-        autoPayoutThreshold: number;
-        autoPayoutSchedule: string | null;
-        forceHttps: boolean;
-        escrowBalance: number;
-        availableBalance: number;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        autoPayoutEnabled: boolean;
+        autoPayoutSchedule: string | null;
+        autoPayoutThreshold: number;
+        availableBalance: number;
+        escrowBalance: number;
+        forceHttps: boolean;
     }>;
     getPopupPromos(merchantId: string): Promise<{
         id: string;

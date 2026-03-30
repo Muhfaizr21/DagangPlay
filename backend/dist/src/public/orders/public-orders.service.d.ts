@@ -4,14 +4,24 @@ import { DigiflazzService } from '../../admin/digiflazz/digiflazz.service';
 import { SubscriptionsService } from '../../admin/subscriptions/subscriptions.service';
 import { Prisma } from '@prisma/client';
 import { WhatsappService } from '../../common/notifications/whatsapp.service';
+import { PublicOtpService } from './otp.service';
 export declare class PublicOrdersService {
     private prisma;
     private tripay;
     private digiflazz;
     private subscriptionsService;
     private whatsappService;
+    private otpService;
     private readonly logger;
-    constructor(prisma: PrismaService, tripay: TripayService, digiflazz: DigiflazzService, subscriptionsService: SubscriptionsService, whatsappService: WhatsappService);
+    constructor(prisma: PrismaService, tripay: TripayService, digiflazz: DigiflazzService, subscriptionsService: SubscriptionsService, whatsappService: WhatsappService, otpService: PublicOtpService);
+    sendResellerOtp(phone: string, merchantId: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    verifyResellerOtp(phone: string, merchantId: string, code: string): Promise<{
+        success: boolean;
+        token: string;
+    }>;
     private mapPaymentMethod;
     createCheckout(body: any, host?: string, origin?: string, merchantSlug?: string): Promise<{
         success: boolean;
@@ -25,34 +35,34 @@ export declare class PublicOrdersService {
             status: import("@prisma/client").$Enums.PaymentStatus;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
             merchantId: string;
+            userId: string;
             expiredAt: Date | null;
             paidAt: Date | null;
-            orderId: string;
             method: import("@prisma/client").$Enums.PaymentMethod;
             amount: number;
+            fee: number;
+            totalAmount: number;
             tripayReference: string | null;
             tripayMerchantRef: string | null;
             tripayPaymentUrl: string | null;
-            tripayVaNumber: string | null;
             tripayQrUrl: string | null;
-            tripayResponse: Prisma.JsonValue | null;
-            totalAmount: number;
-            fee: number;
+            tripayVaNumber: string | null;
             tripayExpiredTime: Date | null;
+            tripayResponse: Prisma.JsonValue | null;
+            orderId: string;
         } | null;
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string;
+        productSkuId: string;
+        userId: string;
+        expiredAt: Date | null;
         productId: string;
         supplierId: string | null;
         basePrice: number;
-        createdAt: Date;
-        updatedAt: Date;
-        userId: string;
-        merchantId: string;
-        productSkuId: string;
-        expiredAt: Date | null;
         orderNumber: string;
         productName: string;
         productSkuName: string;
@@ -62,9 +72,7 @@ export declare class PublicOrdersService {
         gameUserId: string;
         gameUserServerId: string | null;
         gameUserName: string | null;
-        whatsapp: string | null;
         quantity: number;
-        promoCodeId: string | null;
         discountAmount: number;
         paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
         paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
@@ -79,6 +87,8 @@ export declare class PublicOrdersService {
         completedAt: Date | null;
         failedAt: Date | null;
         merchantModalPrice: number | null;
+        whatsapp: string | null;
+        promoCodeId: string | null;
     }>;
     findOrdersByWhatsApp(phone: string): Promise<({
         payment: {
@@ -86,34 +96,34 @@ export declare class PublicOrdersService {
             status: import("@prisma/client").$Enums.PaymentStatus;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
             merchantId: string;
+            userId: string;
             expiredAt: Date | null;
             paidAt: Date | null;
-            orderId: string;
             method: import("@prisma/client").$Enums.PaymentMethod;
             amount: number;
+            fee: number;
+            totalAmount: number;
             tripayReference: string | null;
             tripayMerchantRef: string | null;
             tripayPaymentUrl: string | null;
-            tripayVaNumber: string | null;
             tripayQrUrl: string | null;
-            tripayResponse: Prisma.JsonValue | null;
-            totalAmount: number;
-            fee: number;
+            tripayVaNumber: string | null;
             tripayExpiredTime: Date | null;
+            tripayResponse: Prisma.JsonValue | null;
+            orderId: string;
         } | null;
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string;
+        productSkuId: string;
+        userId: string;
+        expiredAt: Date | null;
         productId: string;
         supplierId: string | null;
         basePrice: number;
-        createdAt: Date;
-        updatedAt: Date;
-        userId: string;
-        merchantId: string;
-        productSkuId: string;
-        expiredAt: Date | null;
         orderNumber: string;
         productName: string;
         productSkuName: string;
@@ -123,9 +133,7 @@ export declare class PublicOrdersService {
         gameUserId: string;
         gameUserServerId: string | null;
         gameUserName: string | null;
-        whatsapp: string | null;
         quantity: number;
-        promoCodeId: string | null;
         discountAmount: number;
         paymentMethod: import("@prisma/client").$Enums.PaymentMethod | null;
         paymentStatus: import("@prisma/client").$Enums.OrderPaymentStatus;
@@ -140,7 +148,16 @@ export declare class PublicOrdersService {
         completedAt: Date | null;
         failedAt: Date | null;
         merchantModalPrice: number | null;
+        whatsapp: string | null;
+        promoCodeId: string | null;
     })[]>;
+    checkResellerStatus(phone: string, merchantId: string): Promise<{
+        isReseller: boolean;
+        discount?: undefined;
+    } | {
+        isReseller: boolean;
+        discount: number;
+    }>;
     getStoreConfig(host?: string, merchantSlug?: string): Promise<{
         name: string;
         logo: null;

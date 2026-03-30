@@ -4,6 +4,9 @@ import { diskStorage } from 'multer';
 import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
+import { PermissionsGuard } from "../../auth/guards/permissions.guard";
+import { Permissions } from "../../auth/decorators/permissions.decorator";
+
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { extname } from 'path';
@@ -11,8 +14,9 @@ import { extname } from 'path';
 // Validasi ukuran limit
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles(Role.SUPER_ADMIN, Role.ADMIN_STAFF)
+@Permissions('manage_content')
 @Controller('admin/upload')
 export class UploadController {
 

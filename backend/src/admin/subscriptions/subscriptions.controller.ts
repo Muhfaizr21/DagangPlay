@@ -1,13 +1,17 @@
-import { UseGuards,  Controller, Get, Post, Patch, Body, Param, Query, HttpCode  } from "@nestjs/common";
+import { UseGuards, Controller, Get, Post, Patch, Body, Param, Query, HttpCode } from "@nestjs/common";
 import { SubscriptionsService } from './subscriptions.service';
 
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../auth/guards/roles.guard";
+import { PermissionsGuard } from "../../auth/guards/permissions.guard";
+import { Permissions } from "../../auth/decorators/permissions.decorator";
+
 import { Roles } from "../../auth/decorators/roles.decorator";
 import { Role } from "@prisma/client";
 
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles(Role.SUPER_ADMIN, Role.ADMIN_STAFF)
+@Permissions('manage_subscriptions')
 @Controller('admin/subscriptions')
 export class SubscriptionsController {
     constructor(private readonly subscriptionsService: SubscriptionsService) { }
@@ -67,5 +71,15 @@ export class SubscriptionsController {
         @Body('dueDate') dueDate: Date
     ) {
         return this.subscriptionsService.createManualInvoice(merchantId, plan, amount, dueDate, 'SuperAdmin');
+    }
+
+    @Get('plans/mappings')
+    async getMappings() {
+        return this.subscriptionsService.getTierMappings();
+    }
+
+    @Patch('plans/mappings/:id')
+    async updateMapping(@Param('id') id: string, @Body('tier') tier: any) {
+        return this.subscriptionsService.updateTierMapping(id, tier, 'SuperAdmin');
     }
 }

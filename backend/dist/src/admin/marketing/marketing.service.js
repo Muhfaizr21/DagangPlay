@@ -8,14 +8,19 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var MarketingService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MarketingService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma.service");
-let MarketingService = class MarketingService {
+const whatsapp_service_1 = require("../../common/notifications/whatsapp.service");
+let MarketingService = MarketingService_1 = class MarketingService {
     prisma;
-    constructor(prisma) {
+    whatsapp;
+    logger = new common_1.Logger(MarketingService_1.name);
+    constructor(prisma, whatsapp) {
         this.prisma = prisma;
+        this.whatsapp = whatsapp;
     }
     async getAllGuides(search, plan) {
         return this.prisma.marketingGuide.findMany({
@@ -94,10 +99,31 @@ let MarketingService = class MarketingService {
             orderBy: { sortOrder: 'asc' }
         });
     }
+    async broadcastAnnouncement(message, operator) {
+        this.logger.log(`[Broadcast] Starting global announcement by ${operator}`);
+        const activeMerchants = await this.prisma.merchant.findMany({
+            where: { status: 'ACTIVE' },
+            select: { contactWhatsapp: true, name: true }
+        });
+        let successCount = 0;
+        for (const merchant of activeMerchants) {
+            if (merchant.contactWhatsapp) {
+                try {
+                    const personalMsg = `*PENGUMUMAN DAGANGPLAY*\nHalo ${merchant.name},\n\n${message}`;
+                    await this.whatsapp.sendMessage(merchant.contactWhatsapp, personalMsg);
+                    successCount++;
+                }
+                catch (e) {
+                    this.logger.error(`Failed to send broadcast to ${merchant.name}`);
+                }
+            }
+        }
+        return { success: true, total: activeMerchants.length, sent: successCount };
+    }
 };
 exports.MarketingService = MarketingService;
-exports.MarketingService = MarketingService = __decorate([
+exports.MarketingService = MarketingService = MarketingService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, whatsapp_service_1.WhatsappService])
 ], MarketingService);
 //# sourceMappingURL=marketing.service.js.map

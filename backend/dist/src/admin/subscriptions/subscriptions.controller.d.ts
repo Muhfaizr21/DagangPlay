@@ -85,4 +85,20 @@ export declare class SubscriptionsController {
         notes: string | null;
         proofUrl: string | null;
     }>;
+    getMappings(): Promise<{
+        id: string;
+        plan: import("@prisma/client").$Enums.MerchantPlan;
+        updatedAt: Date;
+        isActive: boolean;
+        updatedBy: string;
+        tier: import("@prisma/client").$Enums.PriceTier;
+    }[]>;
+    updateMapping(id: string, tier: any): Promise<{
+        id: string;
+        plan: import("@prisma/client").$Enums.MerchantPlan;
+        updatedAt: Date;
+        isActive: boolean;
+        updatedBy: string;
+        tier: import("@prisma/client").$Enums.PriceTier;
+    }>;
 }

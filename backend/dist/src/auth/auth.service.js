@@ -54,8 +54,8 @@ let AuthService = class AuthService {
         this.prisma = prisma;
         this.jwtService = jwtService;
     }
-    async adminLogin(data) {
-        console.log('--- Auth Audit: Admin Login Attempt ---');
+    async login(data, allowedRoles, targetName) {
+        console.log(`--- Auth Audit: ${targetName} Login Attempt ---`);
         const user = await this.prisma.user.findUnique({
             where: { email: data.email },
             include: { ownedMerchant: true }
@@ -68,9 +68,9 @@ let AuthService = class AuthService {
             console.log('Result: FAILED - isGuest is true');
             throw new common_1.UnauthorizedException('Akun Guest tidak dapat login ke Admin Panel.');
         }
-        if (!['SUPER_ADMIN', 'ADMIN_STAFF', 'MERCHANT'].includes(user.role)) {
-            console.log('Result: FAILED - Invalid Role:', user.role);
-            throw new common_1.UnauthorizedException('Anda tidak memiliki akses ke area dashboard ini.');
+        if (!allowedRoles.includes(user.role)) {
+            console.log('Result: FAILED - Invalid Role for this path:', user.role);
+            throw new common_1.UnauthorizedException(`Akses ditolak. Gunakan akun ${targetName} untuk masuk ke sini.`);
         }
         if (user.status !== 'ACTIVE') {
             console.log('Result: FAILED - Status:', user.status);
@@ -113,7 +113,7 @@ let AuthService = class AuthService {
         });
         return {
             statusCode: 200,
-            message: 'Berhasil login ke Admin Panel',
+            message: `Berhasil login ke ${targetName}`,
             access_token: token,
             user: {
                 id: user.id,
@@ -125,6 +125,15 @@ let AuthService = class AuthService {
                 merchantSlug: user.ownedMerchant?.slug
             }
         };
+    }
+    async superAdminLogin(data) {
+        return this.login(data, ['SUPER_ADMIN', 'ADMIN_STAFF'], 'Pusat (Super Admin)');
+    }
+    async merchantLogin(data) {
+        return this.login(data, ['MERCHANT'], 'Dashboard Merchant');
+    }
+    async publicLogin(data) {
+        return this.login(data, ['CUSTOMER', 'RESELLER'], 'Web Storefront');
     }
     async logout(token) {
         try {

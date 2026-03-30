@@ -17,6 +17,8 @@ const common_1 = require("@nestjs/common");
 const saas_service_1 = require("./saas.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
+const permissions_guard_1 = require("../auth/guards/permissions.guard");
+const permissions_decorator_1 = require("../auth/decorators/permissions.decorator");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
 const client_1 = require("@prisma/client");
 let SaasController = class SaasController {
@@ -36,13 +38,20 @@ let SaasController = class SaasController {
     async getDomainsStatus() {
         return this.saasService.getMerchantDomainsStatus();
     }
-    async getMerchantLedger(merchantId) {
+    async getMerchantLedger(req, merchantId) {
+        if (req.user.merchantId !== merchantId) {
+            throw new common_1.ForbiddenException('Unauthorized access to this ledger');
+        }
         return this.saasService.getMerchantLedger(merchantId);
     }
-    async updateAutoPayoutConfig(body) {
-        return this.saasService.updateAutoPayoutConfig(body);
+    async updateAutoPayoutConfig(req, body) {
+        const merchantId = req.user.merchantId;
+        return this.saasService.updateAutoPayoutConfig({ ...body, merchantId });
     }
-    async getMerchantWebhookLogs(merchantId) {
+    async getMerchantWebhookLogs(req, merchantId) {
+        if (req.user.merchantId !== merchantId) {
+            throw new common_1.ForbiddenException('Unauthorized access to these logs');
+        }
         return this.saasService.getMerchantWebhookLogs(merchantId);
     }
     async retryMerchantWebhook(payload) {
@@ -82,25 +91,28 @@ __decorate([
 __decorate([
     (0, common_1.Get)('merchant/ledger'),
     (0, roles_decorator_1.Roles)(client_1.Role.MERCHANT),
-    __param(0, (0, common_1.Query)('merchantId')),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('merchantId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], SaasController.prototype, "getMerchantLedger", null);
 __decorate([
     (0, common_1.Post)('merchant/payout/auto'),
     (0, roles_decorator_1.Roles)(client_1.Role.MERCHANT),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], SaasController.prototype, "updateAutoPayoutConfig", null);
 __decorate([
     (0, common_1.Get)('merchant/webhooks/logs'),
     (0, roles_decorator_1.Roles)(client_1.Role.MERCHANT),
-    __param(0, (0, common_1.Query)('merchantId')),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('merchantId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], SaasController.prototype, "getMerchantWebhookLogs", null);
 __decorate([
@@ -112,8 +124,9 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], SaasController.prototype, "retryMerchantWebhook", null);
 exports.SaasController = SaasController = __decorate([
+    (0, permissions_decorator_1.Permissions)('manage_saas'),
     (0, common_1.Controller)('saas'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard),
     __metadata("design:paramtypes", [saas_service_1.SaasService])
 ], SaasController);
 //# sourceMappingURL=saas.controller.js.map

@@ -1,7 +1,7 @@
 import * as bcrypt from 'bcrypt';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
-import { MerchantStatus } from '@prisma/client';
+import { MerchantStatus, Role } from '@prisma/client';
 import { paginate } from '../../common/utils/pagination';
 
 @Injectable()
@@ -31,7 +31,7 @@ export class MerchantsService {
         const [resellerCounts, omsetAggs] = await Promise.all([
             this.prisma.user.groupBy({
                 by: ['merchantId'],
-                where: { merchantId: { in: merchantIds }, role: 'CUSTOMER', status: 'ACTIVE' },
+                where: { merchantId: { in: merchantIds }, role: Role.RESELLER, status: 'ACTIVE' },
                 _count: { _all: true }
             }),
             this.prisma.order.groupBy({
@@ -42,7 +42,8 @@ export class MerchantsService {
         ]);
 
         const mappedData = paginated.data.map((m: any) => {
-            const resellers = resellerCounts.find(rc => rc.merchantId === m.id)?._count._all || 0;
+            const resellerData = resellerCounts.find(rc => rc.merchantId === m.id);
+            const resellers = resellerData ? (resellerData._count as any)._all : 0;
             const omset = Number(omsetAggs.find(oa => oa.merchantId === m.id)?._sum.totalPrice || 0);
 
             return {
@@ -103,7 +104,7 @@ export class MerchantsService {
         if (!merchant) throw new NotFoundException('Merchant tidak ditemukan');
 
         const resellersCount = await this.prisma.user.count({
-            where: { merchantId: merchant.id, role: 'CUSTOMER' }
+            where: { merchantId: merchant.id, role: Role.RESELLER }
         });
 
         const omsetAgg = await this.prisma.order.aggregate({
@@ -182,5 +183,23 @@ export class MerchantsService {
         });
 
         return { success: true, message: `Password Owner direset menjadi ${newPass}` };
+    }
+
+    async getMerchantResellers(merchantId: string) {
+        return this.prisma.user.findMany({
+            where: { merchantId, role: Role.RESELLER },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                status: true,
+                createdAt: true,
+                _count: {
+                    select: { ordersAsCustomer: { where: { paymentStatus: 'PAID' } } }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
     }
 }

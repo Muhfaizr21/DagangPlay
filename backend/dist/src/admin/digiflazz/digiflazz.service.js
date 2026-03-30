@@ -901,6 +901,33 @@ let DigiflazzService = DigiflazzService_1 = class DigiflazzService {
             }
         }
     }
+    async bulkAdjustMargins(amount, type) {
+        this.logger.log(`[BulkAdjust] Starting margin adjustment of Rp ${amount} for tier: ${type}`);
+        const skus = await this.prisma.productSku.findMany({
+            where: { status: 'ACTIVE' }
+        });
+        const updates = skus.map(sku => {
+            const data = {};
+            if (type === 'PRO' || type === 'ALL') {
+                data.marginPro = { increment: amount };
+                data.pricePro = { increment: amount };
+            }
+            if (type === 'LEGEND' || type === 'ALL') {
+                data.marginLegend = { increment: amount };
+                data.priceLegend = { increment: amount };
+            }
+            if (type === 'SUPREME' || type === 'ALL') {
+                data.marginSupreme = { increment: amount };
+                data.priceSupreme = { increment: amount };
+            }
+            return this.prisma.productSku.update({
+                where: { id: sku.id },
+                data
+            });
+        });
+        await this.prisma.$transaction(updates);
+        return { success: true, updatedCount: updates.length };
+    }
 };
 exports.DigiflazzService = DigiflazzService;
 __decorate([

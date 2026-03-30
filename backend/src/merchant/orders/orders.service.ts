@@ -325,56 +325,78 @@ export class OrdersService {
                     });
                 }
 
-                // 2. CLAW BACK PROFIT from Merchant
-                // Must check BOTH PENDING (in escrow) AND SETTLED (already available) commissions
+                // 2. CLAW BACK COMMISSIONS (Merchant & Platform)
                 const commissions = await tx.commission.findMany({
-                    where: { orderId: order.id, type: 'MERCHANT_RETAIL_PROFIT', status: { in: ['PENDING', 'SETTLED'] } }
+                    where: { orderId: order.id, status: { in: ['PENDING', 'SETTLED'] } },
+                    include: { user: true }
                 });
 
                 for (const commission of commissions) {
-                    const merchant = await tx.merchant.findUnique({ where: { id: merchantId } });
-                    if (!merchant) continue;
+                    const beneficiary = commission.user;
+                    if (!beneficiary) continue;
 
                     if (commission.status === 'PENDING') {
-                        // Funds are still in escrow — deduct from escrowBalance
-                        const updatedMerchant = await tx.merchant.update({
-                            where: { id: merchantId },
-                            data: { escrowBalance: { decrement: commission.amount } }
-                        });
+                        // Merchant Escrow Clawback
+                        const merchant = await tx.merchant.findUnique({ where: { ownerId: beneficiary.id } });
+                        if (merchant) {
+                            const updatedMerchant = await tx.merchant.update({
+                                where: { id: merchant.id },
+                                data: { escrowBalance: { decrement: commission.amount } }
+                            });
 
-                        await tx.merchantLedgerMovement.create({
-                            data: {
-                                merchantId: merchantId,
-                                orderId: order.id,
-                                type: 'ESCROW_OUT',
-                                amount: -commission.amount,
-                                description: `Clawback Laba (Refund Pembeli): ${order.orderNumber}`,
-                                availableBefore: merchant.availableBalance,
-                                availableAfter: merchant.availableBalance,
-                                escrowBefore: merchant.escrowBalance,
-                                escrowAfter: updatedMerchant.escrowBalance
-                            }
-                        });
+                            await tx.merchantLedgerMovement.create({
+                                data: {
+                                    merchantId: merchant.id,
+                                    orderId: order.id,
+                                    type: 'ESCROW_OUT',
+                                    amount: -commission.amount,
+                                    description: `Clawback Laba (Refund Pembeli): ${order.orderNumber}`,
+                                    availableBefore: merchant.availableBalance,
+                                    availableAfter: merchant.availableBalance,
+                                    escrowBefore: merchant.escrowBalance,
+                                    escrowAfter: updatedMerchant.escrowBalance
+                                }
+                            });
+                        }
                     } else if (commission.status === 'SETTLED') {
-                        // FIX #18: Funds already settled into availableBalance — must deduct from there
-                        const updatedMerchant = await tx.merchant.update({
-                            where: { id: merchantId },
-                            data: { availableBalance: { decrement: commission.amount } }
-                        });
+                        // Settled Funds Clawback (Merchant Available or Admin Balance)
+                        if (beneficiary.role === 'MERCHANT') {
+                             const merchant = await tx.merchant.findUnique({ where: { ownerId: beneficiary.id } });
+                             if (merchant) {
+                                const updatedMerchant = await tx.merchant.update({
+                                    where: { id: merchant.id },
+                                    data: { availableBalance: { decrement: commission.amount } }
+                                });
 
-                        await tx.merchantLedgerMovement.create({
-                            data: {
-                                merchantId: merchantId,
-                                orderId: order.id,
-                                type: 'AVAILABLE_OUT',
-                                amount: -commission.amount,
-                                description: `Clawback Laba yang sudah Cair (Refund Pembeli): ${order.orderNumber}`,
-                                availableBefore: merchant.availableBalance,
-                                availableAfter: updatedMerchant.availableBalance,
-                                escrowBefore: updatedMerchant.escrowBalance,
-                                escrowAfter: updatedMerchant.escrowBalance
-                            }
-                        });
+                                await tx.merchantLedgerMovement.create({
+                                    data: {
+                                        merchantId: merchant.id,
+                                        orderId: order.id,
+                                        type: 'AVAILABLE_OUT',
+                                        amount: -commission.amount,
+                                        description: `Clawback Laba Cair (Refund Pembeli): ${order.orderNumber}`,
+                                        availableBefore: merchant.availableBalance,
+                                        availableAfter: updatedMerchant.availableBalance,
+                                        escrowBefore: updatedMerchant.escrowBalance,
+                                        escrowAfter: updatedMerchant.escrowBalance
+                                    }
+                                });
+                             }
+                        } else if (beneficiary.role === 'SUPER_ADMIN' || beneficiary.role === 'ADMIN_STAFF') {
+                            await tx.user.update({
+                                where: { id: beneficiary.id },
+                                data: { balance: { decrement: commission.amount } }
+                            });
+
+                            await tx.balanceTransaction.create({
+                                data: {
+                                    userId: beneficiary.id,
+                                    type: 'REFUND',
+                                    amount: -commission.amount,
+                                    description: `Clawback Profit Platform (Refund): ${order.orderNumber}`
+                                }
+                            });
+                        }
                     }
 
                     await tx.commission.update({

@@ -5,29 +5,37 @@ import axios from 'axios';
 export class WhatsappService {
     private readonly apiKey = process.env.WHATSAPP_API_KEY;
     private readonly apiUrl = process.env.WHATSAPP_URL || 'https://api.fonnte.com/send';
-    private readonly adminPhone = '083866623090'; // Default Admin WA
+    private readonly adminPhone = process.env.ADMIN_PHONE || '083866623090'; // Configurable Admin WA
+
+    async normalizePhone(phone: string): Promise<string> {
+        let cleaned = phone.replace(/\D/g, ''); // Remove non-digits
+        if (cleaned.startsWith('0')) cleaned = '62' + cleaned.slice(1);
+        if (cleaned.startsWith('8')) cleaned = '62' + cleaned;
+        if (!cleaned.startsWith('62')) cleaned = '62' + cleaned;
+        return cleaned;
+    }
 
     async sendMessage(target: string, message: string) {
-        if (!this.apiKey || this.apiKey === 'Y5F6Cp5VMBeJjF1KJNUr') {
-            // Check if it's the placeholder key from the prompt (if it's not the user's real one)
-            // But since the user provided it in their .env snippet, I should try to use it.
-            // However, I'll log securely.
-            console.log('[Whatsapp] Attempting to send message via Fonnte API...');
+        if (!this.apiKey) {
+            console.error('[Whatsapp] Missing API key in environment');
+            return null;
         }
+
+        const normalizedTarget = await this.normalizePhone(target);
 
         try {
             const response = await axios.post(this.apiUrl, {
-                target,
+                target: normalizedTarget,
                 message,
             }, {
                 headers: {
                     Authorization: this.apiKey,
                 }
             });
-            console.log(`[Whatsapp] API Success for ${target}:`, response.data);
+            console.log(`[Whatsapp] API Success for ${normalizedTarget}:`, response.data);
             return response.data;
         } catch (error: any) {
-            console.error(`[Whatsapp] API Error for ${target}:`, error.response?.data || error.message);
+            console.error(`[Whatsapp] API Error for ${normalizedTarget}:`, error.response?.data || error.message);
             return null;
         }
     }

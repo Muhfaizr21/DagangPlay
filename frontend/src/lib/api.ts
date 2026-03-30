@@ -27,9 +27,18 @@ export const authFetcher = (url: string) => {
             if (res.status === 401) {
                 // Token expired or invalid — redirect to login
                 if (typeof window !== 'undefined') {
+                    const userStr = localStorage.getItem('admin_user');
+                    const user = userStr ? JSON.parse(userStr) : null;
+                    const isMerchant = user?.role === 'MERCHANT';
+
                     localStorage.removeItem('admin_token');
                     localStorage.removeItem('admin_user');
-                    window.location.href = '/admin/login';
+
+                    if (isMerchant) {
+                        window.location.href = '/merchant/login';
+                    } else {
+                        window.location.href = '/admin/login';
+                    }
                 }
                 return;
             }

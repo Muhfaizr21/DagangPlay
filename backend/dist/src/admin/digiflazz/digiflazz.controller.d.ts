@@ -32,4 +32,12 @@ export declare class DigiflazzController {
         success: boolean;
         message: string;
     }>;
+    bulkMarginAdjust(body: {
+        amount: number;
+        type: any;
+    }): Promise<{
+        success: boolean;
+        updatedCount: number;
+    }>;
+    checkBalance(): Promise<number>;
 }

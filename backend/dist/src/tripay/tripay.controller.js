@@ -274,12 +274,18 @@ let TripayController = class TripayController {
                                     console.log(`[TripayCallback] Race condition detected for invoice ${ref}. Already processed.`);
                                     return;
                                 }
-                                const expireAt = new Date();
-                                expireAt.setDate(expireAt.getDate() + 365);
+                                const merchant = await tx.merchant.findUnique({ where: { id: invoice.merchantId } });
+                                const now = new Date();
+                                const currentExpiry = (merchant?.planExpiredAt && merchant.planExpiredAt > now) ? merchant.planExpiredAt : now;
+                                const expireAt = new Date(currentExpiry.getTime() + (365 * 24 * 60 * 60 * 1000));
+                                const planWeights = { 'SUPREME': 4, 'LEGEND': 3, 'PRO': 2, 'FREE': 1 };
+                                const currentPlanWeight = planWeights[merchant?.plan || 'FREE'] || 1;
+                                const newPlanWeight = planWeights[invoice.plan] || 1;
+                                const targetPlan = newPlanWeight > currentPlanWeight ? invoice.plan : (merchant?.plan || invoice.plan);
                                 await tx.merchant.update({
                                     where: { id: invoice.merchantId },
                                     data: {
-                                        plan: invoice.plan,
+                                        plan: targetPlan,
                                         planExpiredAt: expireAt,
                                         status: 'ACTIVE'
                                     }

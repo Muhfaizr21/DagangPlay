@@ -4,9 +4,10 @@ import { PrismaService } from '../../prisma.service';
 import { TripayService } from '../../tripay/tripay.service';
 import { DigiflazzService } from '../../admin/digiflazz/digiflazz.service';
 import { SubscriptionsService } from '../../admin/subscriptions/subscriptions.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 
 import { WhatsappService } from '../../common/notifications/whatsapp.service';
+import { PublicOtpService } from './otp.service';
 
 @Injectable()
 export class PublicOrdersService {
@@ -17,8 +18,17 @@ export class PublicOrdersService {
         private tripay: TripayService,
         private digiflazz: DigiflazzService,
         private subscriptionsService: SubscriptionsService,
-        private whatsappService: WhatsappService
+        private whatsappService: WhatsappService,
+        private otpService: PublicOtpService
     ) { }
+
+    async sendResellerOtp(phone: string, merchantId: string) {
+        return this.otpService.sendOtp(phone, merchantId);
+    }
+
+    async verifyResellerOtp(phone: string, merchantId: string, code: string) {
+        return this.otpService.verifyOtp(phone, merchantId, code);
+    }
 
     private mapPaymentMethod(code: string): any {
         const mapping: Record<string, string> = {
@@ -41,11 +51,39 @@ export class PublicOrdersService {
     async createCheckout(body: any, host?: string, origin?: string, merchantSlug?: string) {
         const { skuId, gameId, serverId, whatsapp, paymentMethod, promoCode } = body;
 
+        // 0. MERCHANT IDENTIFICATION (Move up for tenant-bound logic)
+        const targetMerchant = await this.prisma.merchant.findFirst({
+            where: {
+                OR: [
+                    merchantSlug ? { slug: merchantSlug } : {},
+                    { domain: host },
+                    { slug: host?.split('.')[0] }
+                ].filter(condition => Object.keys(condition).length > 0)
+            }
+        });
+
+        let merchant = targetMerchant;
+        if (!merchant) {
+            merchant = await this.prisma.merchant.findFirst({ where: { isOfficial: true, status: 'ACTIVE' } });
+        }
+
+        if (!merchant || merchant.status !== 'ACTIVE') {
+            throw new BadRequestException('Toko tidak ditemukan atau sedang ditangguhkan');
+        }
+
+        // 0.5. Reseller Security Check (Move up for early failure)
+        const userCheck = await this.prisma.user.findFirst({
+            where: { phone: whatsapp, merchantId: merchant.id, role: Role.RESELLER, status: 'ACTIVE' }
+        });
+        if (userCheck && !this.otpService.isVerified(whatsapp, merchant.id, body.otpToken)) {
+            throw new BadRequestException('Verifikasi reseller diperlukan (OTP tidak valid atau kadaluarsa).');
+        }
         // 1. Get the SKU details
         const sku = await this.prisma.productSku.findUnique({
             where: { id: skuId },
             include: { product: { include: { category: true } } }
         });
+
 
         if (!sku || sku.status !== 'ACTIVE' || sku.product.status !== 'ACTIVE') {
             const reason = sku?.product.status === 'MAINTENANCE'
@@ -69,35 +107,6 @@ export class PublicOrdersService {
         } catch (err) {
             console.warn('[Checkout] Failed to check supplier balance, skipping check to allow potential order.');
         }
-
-        // 2. TENANT IDENTIFICATION (Isolation Fix)
-        // Identify merchant by domain/slug
-        const targetMerchant = await this.prisma.merchant.findFirst({
-            where: {
-                OR: [
-                    merchantSlug ? { slug: merchantSlug } : {},
-                    { domain: host },
-                    { slug: host?.split('.')[0] }
-                ].filter(condition => Object.keys(condition).length > 0)
-            }
-        });
-
-        let merchant = targetMerchant;
-
-        if (!merchant) {
-            // Fallback to official if no host-specific merchant found
-            merchant = await this.prisma.merchant.findFirst({ where: { isOfficial: true, status: 'ACTIVE' } });
-        }
-
-        if (!merchant) {
-            throw new BadRequestException('Toko tidak ditemukan atau sedang tidak aktif');
-        }
-
-        // 2.1 Explicit Block for Suspended/Inactive Merchants
-        if (merchant.status !== 'ACTIVE') {
-            throw new BadRequestException('Toko ini sedang ditangguhkan atau dinonaktifkan oleh administrator.');
-        }
-
         // 2.3 Subscription Enforcement (SaaS Protection)
         if (merchant.planExpiredAt) {
             const now = new Date();
@@ -129,6 +138,24 @@ export class PublicOrdersService {
 
         // Retail Price (Selling Price to Customer)
         let sellPrice = merchantOverride ? Number(merchantOverride.customPrice) : Number(sku.priceNormal);
+
+        // 2.2 RESELLER PRICING (SaaS Feature 1.1)
+        // If user is a verified reseller, apply merchant-wide reseller discount
+        const user = await this.prisma.user.findFirst({
+            where: { phone: whatsapp, merchantId: merchant.id, status: 'ACTIVE' }
+        });
+
+        if (user && user.role === Role.RESELLER) {
+
+            const resellerDiscountSetting = await this.prisma.merchantSetting.findUnique({
+                where: { merchantId_key: { merchantId: merchant.id, key: 'RESELLER_DISCOUNT' } }
+            });
+            const resellerDiscount = Number(resellerDiscountSetting?.value || 0);
+            if (resellerDiscount > 0) {
+                sellPrice = sellPrice - resellerDiscount;
+            }
+        }
+
         // FORCE INTEGER: Consistent with Tripay amount
         sellPrice = Math.ceil(sellPrice);
 
@@ -183,35 +210,45 @@ export class PublicOrdersService {
             promoCodeId = promo.id;
         }
 
-        // RE-VALIDATE: Final integrity round
-        sellPrice = Math.max(0, Math.ceil(sellPrice));
+        // Final Profit Protection (Fix Logical Fallacy: Promo + Reseller loss + Gateway Fees)
+        // We dynamically calculate the fee buffer based on Tripay channel rates
+        const channels = await this.tripay.getPaymentChannels(merchant.id);
+        const selectedChannel = (channels?.data || []).find((c: any) => c.code === paymentMethod);
+        
+        let paymentFee = 0;
+        if (selectedChannel) {
+            // Formula: (Price * %Fee) + FlatFee
+            paymentFee = Math.ceil((sellPrice * (selectedChannel.fee_percent / 100)) + selectedChannel.fee_flat);
+        } else {
+            // Safety fallback if channel not found: use a safe average VA fee
+            paymentFee = 5000;
+        }
 
-        // 2.2 MODAL PRICE RESOLUTION (Ambiguity Fix)
-        // Use customModalPrice set by Admin if exists, otherwise use tiered plan pricing
-        // Default to PRO pricing if not specified, since FREE is discontinued
-        let modalPrice = Number(sku.pricePro); 
-        let tier: any = 'PRO';
+        const minimumNetProfit = 200; // The actual target profit AFTER all fees
+        const absoluteFloor = Number(sku.basePrice) + paymentFee + minimumNetProfit;
+
+        sellPrice = Math.max(absoluteFloor, Math.ceil(sellPrice));
+
+        // 2.2 MODAL PRICE RESOLUTION (Plan Tiering Logic)
+        // Resolve dynamic tier based on merchant's active plan
+        const mapping = await this.prisma.planTierMapping.findUnique({
+            where: { plan: merchantPlan || 'PRO' } // Fallback to PRO as baseline
+        });
+        const activeTier = mapping?.tier || 'PRO';
+
+        let modalPrice = Number(sku.pricePro); // PRO is the new Minimum
+        let tierUsed = activeTier;
 
         if (merchantOverride && merchantOverride.customModalPrice) {
             // ADMIN OVERRIDE (Wholesale Discount)
             modalPrice = Number(merchantOverride.customModalPrice);
-            tier = 'SPECIAL_OVERRIDE';
+            tierUsed = 'SPECIAL_OVERRIDE' as any;
         } else {
-            // STANDARD PLAN TIERING
-            if (merchantPlan === 'PRO') {
-                modalPrice = Number(sku.pricePro);
-                tier = 'PRO';
-            } else if (merchantPlan === 'LEGEND') {
-                modalPrice = Number(sku.priceLegend);
-                tier = 'LEGEND';
-            } else if (merchantPlan === 'SUPREME') {
-                modalPrice = Number(sku.priceSupreme);
-                tier = 'SUPREME';
-            } else {
-                // Default fallback for any legacy or undefined plans to PRO (Safest minimum profit)
-                modalPrice = Number(sku.pricePro);
-                tier = 'PRO';
-            }
+            // DYNAMIC PLAN TIERING (NORMAL is removed)
+            if (activeTier === 'PRO') modalPrice = Number(sku.pricePro);
+            else if (activeTier === 'LEGEND') modalPrice = Number(sku.priceLegend);
+            else if (activeTier === 'SUPREME') modalPrice = Number(sku.priceSupreme);
+            else modalPrice = Number(sku.pricePro); // Safety fallback to PRO
         }
 
         // FIX G: Validate required fields BEFORE creating any DB record (prevent zombie orders)
@@ -221,9 +258,9 @@ export class PublicOrdersService {
         const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
 
-        // 2.5 Ensure Guest User Exists
+        // 2.5 Ensure User (Member) Exists for this Merchant
         let guestUser = await this.prisma.user.findFirst({
-            where: { phone: whatsapp }
+            where: { phone: whatsapp, merchantId }
         });
 
         if (!guestUser) {
@@ -270,7 +307,7 @@ export class PublicOrdersService {
                 productSkuId: sku.id,
                 productName: sku.product.name,
                 productSkuName: sku.name,
-                priceTierUsed: tier,
+                priceTierUsed: tierUsed as any,
                 basePrice: basePrice,
                 merchantModalPrice: modalPrice,
                 sellingPrice: sellPrice,
@@ -473,6 +510,25 @@ export class PublicOrdersService {
             orderBy: { createdAt: 'desc' },
             take: 10
         });
+    }
+
+    async checkResellerStatus(phone: string, merchantId: string) {
+        const user = await this.prisma.user.findFirst({
+            where: { phone, merchantId }
+        });
+
+        if (!user || user.role !== Role.RESELLER) {
+            return { isReseller: false };
+        }
+
+        const discountSetting = await this.prisma.merchantSetting.findUnique({
+            where: { merchantId_key: { merchantId: merchantId, key: 'RESELLER_DISCOUNT' } }
+        });
+
+        return {
+            isReseller: true,
+            discount: Number(discountSetting?.value || 0)
+        };
     }
 
     async getStoreConfig(host?: string, merchantSlug?: string) {
