@@ -9,6 +9,7 @@ import { Permissions } from "../../auth/decorators/permissions.decorator";
 
 import { Roles } from "../../auth/decorators/roles.decorator";
 import { Role } from "@prisma/client";
+import { GetUser } from "../../auth/decorators/get-user.decorator";
 
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles(Role.SUPER_ADMIN, Role.ADMIN_STAFF)
@@ -49,10 +50,9 @@ export class TicketsController {
     @HttpCode(201)
     async replyTicket(
         @Param('id') id: string,
+        @GetUser() user: any,
         @Body() body: { message: string, attachmentUrl?: string }
     ) {
-        // Mock admin user ID since auth context isn't perfectly mapped
-        const dummyAdminUserId = 'clq1234dummyadmin'; // Ideally from req.user
-        return this.ticketsService.replyTicket(id, dummyAdminUserId, body.message, body.attachmentUrl);
+        return this.ticketsService.replyTicket(id, user.id, body.message, body.attachmentUrl, true);
     }
 }

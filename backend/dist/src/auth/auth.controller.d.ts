@@ -55,4 +55,8 @@ export declare class AuthController {
         statusCode: number;
         message: string;
     }>;
+    changePassword(req: any, body: any): Promise<{
+        statusCode: number;
+        message: string;
+    }>;
 }

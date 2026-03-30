@@ -16,6 +16,7 @@ exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
 const throttler_1 = require("@nestjs/throttler");
+const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
@@ -58,11 +59,14 @@ let AuthController = class AuthController {
     async verifyEmail(body) {
         return this.authService.verifyEmail(body.token, body.code);
     }
+    async changePassword(req, body) {
+        return this.authService.changePassword(req.user.id, body);
+    }
 };
 exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('admin/login'),
-    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 900000 } }),
+    (0, throttler_1.Throttle)({ default: { limit: 20, ttl: 900000 } }),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
@@ -71,7 +75,7 @@ __decorate([
 ], AuthController.prototype, "superAdminLogin", null);
 __decorate([
     (0, common_1.Post)('merchant/login'),
-    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 900000 } }),
+    (0, throttler_1.Throttle)({ default: { limit: 20, ttl: 900000 } }),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
@@ -101,6 +105,16 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "verifyEmail", null);
+__decorate([
+    (0, common_1.Post)('change-password'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 300000 } }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "changePassword", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('api/auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])

@@ -26,6 +26,22 @@ export declare class SupportController {
         assignedToId: string | null;
         closedAt: Date | null;
     })[]>;
+    createTicket(req: any, body: any): Promise<{
+        id: string;
+        description: string;
+        status: import("@prisma/client").$Enums.TicketStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string;
+        userId: string;
+        category: import("@prisma/client").$Enums.TicketCategory;
+        orderId: string | null;
+        resolvedAt: Date | null;
+        subject: string;
+        priority: import("@prisma/client").$Enums.TicketPriority;
+        assignedToId: string | null;
+        closedAt: Date | null;
+    }>;
     getTicketDetails(req: any, id: string): Promise<{
         user: {
             id: string;

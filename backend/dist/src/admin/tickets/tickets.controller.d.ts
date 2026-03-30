@@ -100,7 +100,7 @@ export declare class TicketsController {
         assignedToId: string | null;
         closedAt: Date | null;
     }>;
-    replyTicket(id: string, body: {
+    replyTicket(id: string, user: any, body: {
         message: string;
         attachmentUrl?: string;
     }): Promise<{

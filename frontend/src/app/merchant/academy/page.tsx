@@ -23,9 +23,8 @@ const fetcher = (url: string) => {
     const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
     return axios.get(url, { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(err => {
         if (err.response?.status === 401) {
-            localStorage.removeItem('admin_token');
-            localStorage.removeItem('admin_user');
-            window.location.href = '/admin/login';
+            localStorage.clear();
+            window.location.href = '/merchant/login';
         }
         throw err;
     });

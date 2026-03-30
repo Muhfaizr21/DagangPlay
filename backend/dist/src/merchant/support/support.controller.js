@@ -33,6 +33,12 @@ let SupportController = class SupportController {
             throw new Error('Merchant not found');
         return this.supportService.getTickets(merchant.id, filters);
     }
+    async createTicket(req, body) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant)
+            throw new Error('Merchant not found');
+        return this.supportService.createTicket(merchant.id, req.user.id, body);
+    }
     async getTicketDetails(req, id) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
         if (!merchant)
@@ -61,6 +67,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], SupportController.prototype, "getTickets", null);
+__decorate([
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], SupportController.prototype, "createTicket", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Request)()),

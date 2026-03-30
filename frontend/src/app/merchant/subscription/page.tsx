@@ -187,7 +187,7 @@ export default function MerchantSubscriptionPage() {
                         <button onClick={() => mutateStatus()} className="px-8 py-3 bg-red-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition-all">
                             Coba Hubungkan Kembali
                         </button>
-                        <button onClick={() => window.location.href = '/admin/login'} className="text-[10px] font-bold text-red-400 hover:text-red-500 uppercase tracking-widest">
+                        <button onClick={() => window.location.href = '/merchant/login'} className="text-[10px] font-bold text-red-400 hover:text-red-500 uppercase tracking-widest">
                             Kembali ke Login
                         </button>
                     </div>

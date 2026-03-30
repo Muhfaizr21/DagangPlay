@@ -65,4 +65,8 @@ export declare class AuthService {
         statusCode: number;
         message: string;
     }>;
+    changePassword(userId: string, body: any): Promise<{
+        statusCode: number;
+        message: string;
+    }>;
 }

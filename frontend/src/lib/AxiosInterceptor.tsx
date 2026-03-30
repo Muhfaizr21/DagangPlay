@@ -31,10 +31,11 @@ export function AxiosInterceptorSetup() {
             (error) => {
                 if (error.response?.status === 401) {
                     // ... (rest same) ...
-                    localStorage.removeItem('admin_token');
-                    localStorage.removeItem('admin_user');
+                    localStorage.clear();
                     const currentPath = window.location.pathname;
-                    if (currentPath.startsWith('/admin') || currentPath.startsWith('/merchant')) {
+                    if (currentPath.startsWith('/merchant')) {
+                        router.push('/merchant/login?reason=expired');
+                    } else if (currentPath.startsWith('/admin')) {
                         router.push('/admin/login?reason=expired');
                     }
                 }

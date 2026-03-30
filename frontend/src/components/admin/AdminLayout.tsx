@@ -74,10 +74,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 // Merchant login ke area salah → redirect ke merchant dashboard
                 router.replace('/merchant');
             } else if (!['SUPER_ADMIN', 'ADMIN_STAFF'].includes(user.role)) {
-                // Role tidak diizinkan
+                // Role tidak diizinkan -> Force logout
+                localStorage.clear();
                 router.replace('/admin/login');
             }
         } catch {
+            localStorage.clear();
             router.replace('/admin/login');
         }
     }, [router]);

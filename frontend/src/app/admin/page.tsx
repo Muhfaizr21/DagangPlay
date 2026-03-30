@@ -2,6 +2,7 @@
 import React from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
+import Link from 'next/link';
 import AdminLayout from '@/components/admin/AdminLayout';
 import {
     Download,
@@ -47,8 +48,8 @@ export default function AdminDashboardPage() {
         <AdminLayout>
             <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Selamat Datang, <span className="text-indigo-600">Super Admin</span></h1>
-                    <p className="text-[14px] text-slate-500 mt-1">Ringkasan performa platform DagangPlay real-time.</p>
+                    <h1 className="text-2xl font-bold text-slate-800 tracking-tight">DagangPlay - <span className="text-emerald-600">SINKRONISASI AKTIF</span></h1>
+                    <p className="text-[14px] text-slate-500 mt-1">Performa platform DagangPlay (Real-Data Mode).</p>
                 </div>
                 <div className="hidden md:flex gap-3">
                     <button className="h-[38px] px-4 inline-flex items-center justify-center gap-2 text-[13px] font-semibold rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm cursor-pointer">
@@ -161,7 +162,7 @@ export default function AdminDashboardPage() {
                                         {data.disputes?.pending?.length || 0} Open Cases
                                     </span>
                                 </div>
-                                <button className="text-xs font-semibold text-indigo-600 hover:text-indigo-700">View All</button>
+                                <Link href="/admin/support" className="text-xs font-semibold text-indigo-600 hover:text-indigo-700">View All</Link>
                             </div>
                             <div className="flex-1 overflow-auto max-h-[400px]">
                                 {data.disputes?.pending?.length === 0 ? (
@@ -182,9 +183,9 @@ export default function AdminDashboardPage() {
                                         <tbody className="divide-y divide-slate-50">
                                             {data.disputes.pending.map((dispute: any) => (
                                                 <tr key={dispute.id} className="hover:bg-slate-50/50 transition-colors">
-                                                    <td className="px-6 py-4 font-mono text-xs text-slate-600">{dispute.order.orderNumber}</td>
+                                                    <td className="px-6 py-4 font-mono text-xs text-slate-600">#{dispute.id.substring(dispute.id.length - 6).toUpperCase()}</td>
                                                     <td className="px-6 py-4">
-                                                        <p className="text-[13px] text-slate-800 font-medium line-clamp-1">{dispute.reason}</p>
+                                                        <p className="text-[13px] text-slate-800 font-medium line-clamp-1">{dispute.subject}</p>
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-200/50 uppercase">
@@ -192,7 +193,7 @@ export default function AdminDashboardPage() {
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
-                                                        <button className="text-indigo-600 font-bold hover:underline text-xs">Handle</button>
+                                                        <Link href="/admin/support" className="text-indigo-600 font-bold hover:underline text-xs">Handle</Link>
                                                     </td>
                                                 </tr>
                                             ))}

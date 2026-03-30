@@ -27,11 +27,16 @@ export declare class MerchantsService {
     setMerchantStatus(id: string, status: MerchantStatus, reason?: string): Promise<{
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.MerchantStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
         slug: string;
+        domain: string | null;
+        ownerId: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
-        domain: string | null;
         description: string | null;
         tagline: string | null;
         contactEmail: string | null;
@@ -40,15 +45,10 @@ export declare class MerchantsService {
         address: string | null;
         city: string | null;
         province: string | null;
-        status: import("@prisma/client").$Enums.MerchantStatus;
         plan: import("@prisma/client").$Enums.MerchantPlan;
         planExpiredAt: Date | null;
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
-        ownerId: string;
-        createdAt: Date;
-        updatedAt: Date;
-        deletedAt: Date | null;
         autoPayoutEnabled: boolean;
         autoPayoutSchedule: string | null;
         autoPayoutThreshold: number;
@@ -59,41 +59,46 @@ export declare class MerchantsService {
     getMerchantDetail(id: string): Promise<{
         resellersCount: number;
         omset: number;
-        owner: {
-            id: string;
-            name: string;
-            status: import("@prisma/client").$Enums.UserStatus;
-            email: string | null;
-            isVerified: boolean;
-        };
-        members: ({
-            user: {
-                id: string;
-                name: string;
-                email: string | null;
-                role: import("@prisma/client").$Enums.Role;
-            };
-        } & {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            merchantId: string;
-            userId: string;
-            role: import("@prisma/client").$Enums.MerchantMemberRole;
-            permissions: import("@prisma/client/runtime/client").JsonValue | null;
-        })[];
         _count: {
             deposits: number;
             orders: number;
             supportTickets: number;
         };
+        owner: {
+            id: string;
+            email: string | null;
+            name: string;
+            status: import("@prisma/client").$Enums.UserStatus;
+            isVerified: boolean;
+        };
+        members: ({
+            user: {
+                id: string;
+                email: string | null;
+                name: string;
+                role: import("@prisma/client").$Enums.Role;
+            };
+        } & {
+            id: string;
+            role: import("@prisma/client").$Enums.MerchantMemberRole;
+            merchantId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            permissions: import("@prisma/client/runtime/client").JsonValue | null;
+        })[];
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.MerchantStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
         slug: string;
+        domain: string | null;
+        ownerId: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
-        domain: string | null;
         description: string | null;
         tagline: string | null;
         contactEmail: string | null;
@@ -102,15 +107,10 @@ export declare class MerchantsService {
         address: string | null;
         city: string | null;
         province: string | null;
-        status: import("@prisma/client").$Enums.MerchantStatus;
         plan: import("@prisma/client").$Enums.MerchantPlan;
         planExpiredAt: Date | null;
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
-        ownerId: string;
-        createdAt: Date;
-        updatedAt: Date;
-        deletedAt: Date | null;
         autoPayoutEnabled: boolean;
         autoPayoutSchedule: string | null;
         autoPayoutThreshold: number;
@@ -121,11 +121,16 @@ export declare class MerchantsService {
     updateMerchantSettings(id: string, updateData: any): Promise<{
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.MerchantStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
         slug: string;
+        domain: string | null;
+        ownerId: string;
         logo: string | null;
         favicon: string | null;
         bannerImage: string | null;
-        domain: string | null;
         description: string | null;
         tagline: string | null;
         contactEmail: string | null;
@@ -134,15 +139,10 @@ export declare class MerchantsService {
         address: string | null;
         city: string | null;
         province: string | null;
-        status: import("@prisma/client").$Enums.MerchantStatus;
         plan: import("@prisma/client").$Enums.MerchantPlan;
         planExpiredAt: Date | null;
         isOfficial: boolean;
         settings: import("@prisma/client/runtime/client").JsonValue | null;
-        ownerId: string;
-        createdAt: Date;
-        updatedAt: Date;
-        deletedAt: Date | null;
         autoPayoutEnabled: boolean;
         autoPayoutSchedule: string | null;
         autoPayoutThreshold: number;
@@ -155,14 +155,14 @@ export declare class MerchantsService {
         message: string;
     }>;
     getMerchantResellers(merchantId: string): Promise<{
-        id: string;
-        name: string;
-        status: import("@prisma/client").$Enums.UserStatus;
-        createdAt: Date;
         _count: {
             ordersAsCustomer: number;
         };
+        id: string;
         email: string | null;
         phone: string | null;
+        name: string;
+        status: import("@prisma/client").$Enums.UserStatus;
+        createdAt: Date;
     }[]>;
 }

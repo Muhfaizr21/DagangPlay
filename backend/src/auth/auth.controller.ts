@@ -1,13 +1,14 @@
-import { Controller, Post, Body, Req } from '@nestjs/common';
+import { Controller, Post, Body, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Throttle } from '@nestjs/throttler';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('api/auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) { }
 
     @Post('admin/login')
-    @Throttle({ default: { limit: 5, ttl: 900000 } })
+    @Throttle({ default: { limit: 20, ttl: 900000 } })
     async superAdminLogin(@Body() body: any, @Req() req: any) {
         const loginData = {
             email: body.email,
@@ -19,7 +20,7 @@ export class AuthController {
     }
 
     @Post('merchant/login')
-    @Throttle({ default: { limit: 5, ttl: 900000 } })
+    @Throttle({ default: { limit: 20, ttl: 900000 } })
     async merchantLogin(@Body() body: any, @Req() req: any) {
         const loginData = {
             email: body.email,
@@ -54,5 +55,12 @@ export class AuthController {
     @Post('verify-email')
     async verifyEmail(@Body() body: { token: string; code: string }) {
         return this.authService.verifyEmail(body.token, body.code);
+    }
+
+    @Post('change-password')
+    @UseGuards(JwtAuthGuard)
+    @Throttle({ default: { limit: 5, ttl: 300000 } })
+    async changePassword(@Req() req: any, @Body() body: any) {
+        return this.authService.changePassword(req.user.id, body);
     }
 }

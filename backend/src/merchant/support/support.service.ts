@@ -35,18 +35,34 @@ export class SupportService {
         return ticket;
     }
 
+    async createTicket(merchantId: string, userId: string, data: { subject: string, description: string, category: TicketCategory, priority: TicketPriority }) {
+        return this.prisma.supportTicket.create({
+            data: {
+                merchantId,
+                userId,
+                subject: data.subject,
+                description: data.description,
+                category: data.category || 'OTHER',
+                priority: data.priority || 'MEDIUM',
+                status: 'OPEN'
+            }
+        });
+    }
+
     async replyTicket(merchantId: string, ticketId: string, userId: string, message: string, attachments: any[] = []) {
         const ticket = await this.prisma.supportTicket.findFirst({ where: { id: ticketId, merchantId } });
         if (!ticket) throw new NotFoundException('Ticket not found');
 
-        // Staff replying
+        // If it's the merchant owner/staff replying, we might want to track that.
+        // But here, the merchant is the one SEEKING support from super admin.
+        // So merchant replies are NOT 'staff' (super admin staff).
         return this.prisma.supportTicketReply.create({
             data: {
                 ticketId,
                 userId,
                 message,
                 attachments,
-                isFromStaff: true
+                isFromStaff: false // Merchart is the user in this context
             }
         });
     }

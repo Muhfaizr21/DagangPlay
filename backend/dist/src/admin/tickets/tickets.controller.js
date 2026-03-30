@@ -21,6 +21,7 @@ const permissions_guard_1 = require("../../auth/guards/permissions.guard");
 const permissions_decorator_1 = require("../../auth/decorators/permissions.decorator");
 const roles_decorator_1 = require("../../auth/decorators/roles.decorator");
 const client_1 = require("@prisma/client");
+const get_user_decorator_1 = require("../../auth/decorators/get-user.decorator");
 let TicketsController = class TicketsController {
     ticketsService;
     constructor(ticketsService) {
@@ -38,9 +39,8 @@ let TicketsController = class TicketsController {
     async updateTicket(id, body) {
         return this.ticketsService.updateTicket(id, body);
     }
-    async replyTicket(id, body) {
-        const dummyAdminUserId = 'clq1234dummyadmin';
-        return this.ticketsService.replyTicket(id, dummyAdminUserId, body.message, body.attachmentUrl);
+    async replyTicket(id, user, body) {
+        return this.ticketsService.replyTicket(id, user.id, body.message, body.attachmentUrl, true);
     }
 };
 exports.TicketsController = TicketsController;
@@ -79,9 +79,10 @@ __decorate([
     (0, common_1.Post)(':id/reply'),
     (0, common_1.HttpCode)(201),
     __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)()),
+    __param(1, (0, get_user_decorator_1.GetUser)()),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", Promise)
 ], TicketsController.prototype, "replyTicket", null);
 exports.TicketsController = TicketsController = __decorate([

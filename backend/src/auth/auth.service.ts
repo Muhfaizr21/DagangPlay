@@ -81,7 +81,13 @@ export class AuthService {
             }
         });
 
-        const payload = { sub: user.id, email: user.email, role: user.role, sessionId: session.id };
+        const payload = { 
+            sub: user.id, 
+            email: user.email, 
+            role: user.role, 
+            sessionId: session.id,
+            ...(user.ownedMerchant && { merchantId: user.ownedMerchant.id, merchantSlug: user.ownedMerchant.slug })
+        };
         const token = this.jwtService.sign(payload);
 
         await this.prisma.userSession.update({
@@ -143,5 +149,28 @@ export class AuthService {
         });
         await this.prisma.otpVerification.delete({ where: { id: otp.id } });
         return { statusCode: 200, message: 'Email berhasil diverifikasi' };
+    }
+
+    async changePassword(userId: string, body: any) {
+        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+        if (!user) throw new UnauthorizedException('User tidak ditemukan.');
+
+        const isMatch = await bcrypt.compare(body.oldPassword, user.password);
+        if (!isMatch) throw new UnauthorizedException('Password lama Anda salah.');
+
+        if (body.newPassword !== body.confirmPassword) {
+            throw new UnauthorizedException('Konfirmasi password baru tidak cocok.');
+        }
+
+        const hashedPassword = await bcrypt.hash(body.newPassword, 10);
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: { password: hashedPassword }
+        });
+
+        // Revoke all sessions on password change for security
+        await this.prisma.userSession.deleteMany({ where: { userId } });
+
+        return { statusCode: 200, message: 'Password berhasil diubah. Silakan login kembali.' };
     }
 }

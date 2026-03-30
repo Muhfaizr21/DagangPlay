@@ -48,7 +48,7 @@ export class TicketsService {
         });
     }
 
-    async replyTicket(ticketId: string, userId: string, message: string, attachmentUrl?: string) {
+    async replyTicket(ticketId: string, userId: string, message: string, attachmentUrl?: string, isFromStaff: boolean = false) {
         // Auto mark as IN_PROGRESS if OPEN
         const ticket = await this.prisma.supportTicket.findUnique({ where: { id: ticketId } });
         if (ticket && ticket.status === 'OPEN') {
@@ -60,7 +60,8 @@ export class TicketsService {
                 ticketId,
                 userId, // Who replied (could be admin)
                 message,
-                attachments: attachmentUrl ? [attachmentUrl] : []
+                attachments: attachmentUrl ? [attachmentUrl] : [],
+                isFromStaff
             }
         });
     }

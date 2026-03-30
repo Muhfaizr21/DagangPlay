@@ -19,6 +19,13 @@ export class SupportController {
         return this.supportService.getTickets(merchant.id, filters);
     }
 
+    @Post()
+    async createTicket(@Request() req, @Body() body: any) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant) throw new Error('Merchant not found');
+        return this.supportService.createTicket(merchant.id, req.user.id, body);
+    }
+
     @Get(':id')
     async getTicketDetails(@Request() req, @Param('id') id: string) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });

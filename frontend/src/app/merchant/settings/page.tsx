@@ -202,6 +202,9 @@ export default function MerchantSettingsPage() {
                         <button onClick={() => setActiveTab('markup')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'markup' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
                             <Activity className="w-4 h-4" /> Markup Otomatis
                         </button>
+                        <button onClick={() => setActiveTab('security')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'security' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
+                            <Lock className="w-4 h-4" /> Keamanan Akun
+                        </button>
                     </div>
                 </div>
 
@@ -342,12 +345,65 @@ export default function MerchantSettingsPage() {
                         </div>
                     )}
 
-                    {/* Webhook (Mockup) */}
-                    {activeTab === 'webhook' && (
-                        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 text-center py-16">
-                            <Webhook className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                            <h3 className="text-lg font-bold text-slate-800 mb-2">Integrasi Webhook</h3>
-                            <p className="text-slate-500 px-8 text-sm max-w-md mx-auto">Kami akan mengirim data transaksi secara realtime ke endpoint aplikasi Anda. Modul sedang dalam pengembangan.</p>
+                    {/* Keamanan Akun */}
+                    {activeTab === 'security' && (
+                        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+                            <h3 className="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2">
+                                <Lock className="w-5 h-5 text-red-500" /> Keamanan & Ganti Password
+                            </h3>
+                            <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
+                                <ShieldAlert className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                                <p className="text-xs text-red-800 leading-relaxed">
+                                    <b>Peringatan Keamanan:</b> Setelah Anda mengganti password, Anda akan otomatis ter-logout dari semua perangkat (termasuk perangkat ini) dan harus login kembali menggunakan password baru.
+                                </p>
+                            </div>
+                            <form 
+                                onSubmit={async (e) => {
+                                    e.preventDefault();
+                                    const form = e.target as any;
+                                    const oldPassword = form.oldPassword.value;
+                                    const newPassword = form.newPassword.value;
+                                    const confirmPassword = form.confirmPassword.value;
+
+                                    if (newPassword !== confirmPassword) {
+                                        alert('Konfirmasi password tidak cocok');
+                                        return;
+                                    }
+
+                                    try {
+                                        const token = localStorage.getItem('admin_token');
+                                        await axios.post(`${baseUrl}/api/auth/change-password`, 
+                                            { oldPassword, newPassword, confirmPassword },
+                                            { headers: { Authorization: `Bearer ${token}` } }
+                                        );
+                                        alert('Password berhasil diubah! Anda akan dialihkan ke halaman login.');
+                                        localStorage.removeItem('admin_token');
+                                        localStorage.removeItem('admin_user');
+                                        window.location.href = '/merchant/login';
+                                    } catch (err: any) {
+                                        alert(err.response?.data?.message || 'Gagal mengubah password. Pastikan password lama benar.');
+                                    }
+                                }} 
+                                className="space-y-4 max-w-md"
+                            >
+                                <div>
+                                    <label className="block text-[12px] font-bold text-slate-500 mb-2 uppercase tracking-wide">Password Saat Ini</label>
+                                    <input name="oldPassword" type="password" required className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all text-slate-800" placeholder="••••••••" />
+                                </div>
+                                <div className="pt-2">
+                                    <label className="block text-[12px] font-bold text-slate-500 mb-2 uppercase tracking-wide">Password Baru</label>
+                                    <input name="newPassword" type="password" required className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all text-slate-800" placeholder="Minimal 8 karakter" />
+                                </div>
+                                <div>
+                                    <label className="block text-[12px] font-bold text-slate-500 mb-2 uppercase tracking-wide">Konfirmasi Password Baru</label>
+                                    <input name="confirmPassword" type="password" required className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition-all text-slate-800" placeholder="Ulangi password baru" />
+                                </div>
+                                <div className="pt-6 border-t border-slate-50">
+                                    <button type="submit" className="w-full py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors shadow-lg flex items-center justify-center gap-2">
+                                        <Save className="w-4 h-4" /> Perbarui Password & Logout
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     )}
                 </div>

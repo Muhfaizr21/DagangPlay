@@ -1,5 +1,5 @@
 import { PrismaService } from '../../prisma.service';
-import { TicketStatus, TicketPriority } from '@prisma/client';
+import { TicketStatus, TicketPriority, TicketCategory } from '@prisma/client';
 export declare class SupportService {
     private prisma;
     constructor(prisma: PrismaService);
@@ -47,6 +47,27 @@ export declare class SupportService {
             ticketId: string;
         })[];
     } & {
+        id: string;
+        description: string;
+        status: import("@prisma/client").$Enums.TicketStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string;
+        userId: string;
+        category: import("@prisma/client").$Enums.TicketCategory;
+        orderId: string | null;
+        resolvedAt: Date | null;
+        subject: string;
+        priority: import("@prisma/client").$Enums.TicketPriority;
+        assignedToId: string | null;
+        closedAt: Date | null;
+    }>;
+    createTicket(merchantId: string, userId: string, data: {
+        subject: string;
+        description: string;
+        category: TicketCategory;
+        priority: TicketPriority;
+    }): Promise<{
         id: string;
         description: string;
         status: import("@prisma/client").$Enums.TicketStatus;

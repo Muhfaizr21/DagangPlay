@@ -24,11 +24,19 @@ export default function AdminLoginPage() {
             });
 
             // Save token and user info
-            localStorage.setItem('admin_token', res.data.access_token);
-            localStorage.setItem('admin_user', JSON.stringify(res.data.user));
-
             const role = res.data.user.role;
+            if (role === 'MERCHANT') {
+                // If merchant accidentally tries to login at admin page
+                localStorage.clear();
+                localStorage.setItem('admin_token', res.data.access_token);
+                localStorage.setItem('admin_user', JSON.stringify(res.data.user));
+                router.push('/merchant');
+                return;
+            }
+
             if (role === 'SUPER_ADMIN' || role === 'ADMIN_STAFF') {
+                localStorage.setItem('admin_token', res.data.access_token);
+                localStorage.setItem('admin_user', JSON.stringify(res.data.user));
                 router.push('/admin');
             } else {
                 setError('Anda tidak memiliki izin untuk masuk ke area Super Admin.');

@@ -46,6 +46,19 @@ let SupportService = class SupportService {
             throw new common_1.NotFoundException('Ticket not found');
         return ticket;
     }
+    async createTicket(merchantId, userId, data) {
+        return this.prisma.supportTicket.create({
+            data: {
+                merchantId,
+                userId,
+                subject: data.subject,
+                description: data.description,
+                category: data.category || 'OTHER',
+                priority: data.priority || 'MEDIUM',
+                status: 'OPEN'
+            }
+        });
+    }
     async replyTicket(merchantId, ticketId, userId, message, attachments = []) {
         const ticket = await this.prisma.supportTicket.findFirst({ where: { id: ticketId, merchantId } });
         if (!ticket)
@@ -56,7 +69,7 @@ let SupportService = class SupportService {
                 userId,
                 message,
                 attachments,
-                isFromStaff: true
+                isFromStaff: false
             }
         });
     }

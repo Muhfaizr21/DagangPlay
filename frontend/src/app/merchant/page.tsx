@@ -9,8 +9,16 @@ import {
 } from 'lucide-react';
 
 const fetcher = (url: string) => {
-    const token = localStorage.getItem('admin_token');
-    return axios.get(url, { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
+    return axios.get(url, { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => res.data)
+        .catch(err => {
+            if (err.response?.status === 401 && typeof window !== 'undefined') {
+                localStorage.clear();
+                window.location.href = '/merchant/login';
+            }
+            throw err;
+        });
 };
 
 function StatCard({ title, value, trend, isPositive, icon: Icon, accent }: any) {
@@ -62,10 +70,10 @@ export default function MerchantDashboard() {
     const maxChartValue = Math.max(...(chartData || []).map((d: any) => d.revenue), 100000);
 
     const stats = [
-        { title: 'Omset Bulan Ini', value: `Rp ${(revenue?.month || 0).toLocaleString('id-ID')}`, trend: `${(revenue?.trendPercentage || 0) > 0 ? '+' : ''}${(revenue?.trendPercentage || 0).toFixed(1)}%`, isPositive: (revenue?.trendPercentage || 0) >= 0, icon: Wallet, accent: 'bg-gray-100 text-gray-600' },
+        { title: 'Saldo Mengendap', value: `Rp ${(merchant?.balance || 0).toLocaleString('id-ID')}`, trend: 'Saldo siap tarik', isPositive: true, icon: Wallet, accent: 'bg-indigo-600 text-white shadow-[0_0_15px_rgba(79,70,229,0.3)]' },
+        { title: 'Omset Bulan Ini', value: `Rp ${(revenue?.month || 0).toLocaleString('id-ID')}`, trend: `${(revenue?.trendPercentage || 0) > 0 ? '+' : ''}${(revenue?.trendPercentage || 0).toFixed(1)}%`, isPositive: (revenue?.trendPercentage || 0) >= 0, icon: ShoppingCart, accent: 'bg-gray-100 text-gray-600' },
         { title: 'Laba Bersih Bulan Ini', value: `Rp ${(profit?.month || 0).toLocaleString('id-ID')}`, trend: `${(profit?.trendPercentage || 0) > 0 ? '+' : ''}${(profit?.trendPercentage || 0).toFixed(1)}%`, isPositive: (profit?.trendPercentage || 0) >= 0, icon: TrendingUp, accent: 'bg-green-100 text-green-600' },
         { title: 'Transaksi Hari Ini', value: (transactionsToday?.success || 0).toString(), trend: `${transactionsToday?.failed || 0} gagal`, isPositive: (transactionsToday?.failed || 0) === 0, icon: Receipt, accent: 'bg-blue-50 text-blue-600' },
-        { title: 'Laba Bersih Hari Ini', value: `Rp ${(profit?.today || 0).toLocaleString('id-ID')}`, trend: '', isPositive: true, icon: Activity, accent: 'bg-violet-50 text-violet-600' },
     ];
 
     return (

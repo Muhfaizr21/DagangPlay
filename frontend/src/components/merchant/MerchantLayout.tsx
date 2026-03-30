@@ -88,8 +88,17 @@ export default function MerchantLayout({ children, demoUser }: { children: React
         const userData = localStorage.getItem('admin_user');
         if (!token || !userData) { router.push('/merchant/login'); return; }
         const parsed = JSON.parse(userData);
-        if (parsed.role === 'SUPER_ADMIN' || parsed.role === 'ADMIN_STAFF') { router.replace('/admin'); return; }
-        if (parsed.role !== 'MERCHANT') { router.replace('/merchant/login'); return; }
+        if (parsed.role === 'SUPER_ADMIN' || parsed.role === 'ADMIN_STAFF') {
+            // Super admin token doesn't belong here — clear and ask for merchant login
+            localStorage.clear();
+            router.replace('/merchant/login');
+            return;
+        }
+        if (parsed.role !== 'MERCHANT') {
+            localStorage.clear();
+            router.replace('/merchant/login'); 
+            return; 
+        }
         setUser(parsed);
         setIsLoading(false);
     }, [router, demoUser]);

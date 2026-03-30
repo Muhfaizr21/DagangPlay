@@ -60,7 +60,7 @@ let TicketsService = class TicketsService {
             data: updateData
         });
     }
-    async replyTicket(ticketId, userId, message, attachmentUrl) {
+    async replyTicket(ticketId, userId, message, attachmentUrl, isFromStaff = false) {
         const ticket = await this.prisma.supportTicket.findUnique({ where: { id: ticketId } });
         if (ticket && ticket.status === 'OPEN') {
             await this.prisma.supportTicket.update({ where: { id: ticketId }, data: { status: 'IN_PROGRESS' } });
@@ -70,7 +70,8 @@ let TicketsService = class TicketsService {
                 ticketId,
                 userId,
                 message,
-                attachments: attachmentUrl ? [attachmentUrl] : []
+                attachments: attachmentUrl ? [attachmentUrl] : [],
+                isFromStaff
             }
         });
     }

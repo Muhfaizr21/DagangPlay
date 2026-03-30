@@ -50,9 +50,12 @@ export default function SupportManagementPage() {
 
     const handleSelectTicket = async (id: string) => {
         try {
-            const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/tickets/${id}`);
+            const token = localStorage.getItem('admin_token');
+            const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/tickets/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             setSelectedTicket(res.data);
-            mutate(); // Refresh the list naturally, maybe state changed
+            mutate();
         } catch (err) {
             showToast('Gagal', 'Gagal memuat detail tiket.', 'error');
         }
@@ -60,21 +63,30 @@ export default function SupportManagementPage() {
 
     const handleSendReply = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!replyText.trim()) return;
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/tickets/${selectedTicket.id}/reply`, {
-                message: replyText
-            });
+            const token = localStorage.getItem('admin_token');
+            await axios.post(
+                `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/tickets/${selectedTicket.id}/reply`,
+                { message: replyText },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
             setReplyText('');
-            handleSelectTicket(selectedTicket.id); // Reload replies
+            handleSelectTicket(selectedTicket.id);
             showToast('Terkirim', 'Pesan balasan sudah ditambahkan.');
         } catch (err: any) {
-            showToast('Gagal', 'Terjadi masalah jaringan', 'error');
+            showToast('Gagal', err.response?.data?.message || 'Terjadi masalah jaringan', 'error');
         }
     };
 
     const handleUpdateStatus = async (newStatus: string) => {
         try {
-            await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/tickets/${selectedTicket.id}`, { status: newStatus });
+            const token = localStorage.getItem('admin_token');
+            await axios.put(
+                `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/tickets/${selectedTicket.id}`,
+                { status: newStatus },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
             handleSelectTicket(selectedTicket.id);
             mutate();
             showToast('Sukses', `Status tiket diubah menjadi ${newStatus}`);
@@ -200,7 +212,7 @@ export default function SupportManagementPage() {
                         {/* LIST REPLIES */}
                         <div className="flex-1 overflow-y-auto p-6 space-y-4">
                             {selectedTicket.replies?.map((rp: any) => {
-                                const isAdmin = rp.user?.role === 'SUPER_ADMIN';
+                                const isAdmin = rp.isFromStaff === true;
                                 return (
                                     <div key={rp.id} className={`flex w-full ${isAdmin ? 'justify-end' : 'justify-start'}`}>
                                         <div className={`max-w-[75%] rounded-2xl p-4 shadow-sm relative ${isAdmin ? 'bg-indigo-600 text-white rounded-tr-sm' : 'bg-white border text-slate-700 border-slate-200 rounded-tl-sm'}`}>

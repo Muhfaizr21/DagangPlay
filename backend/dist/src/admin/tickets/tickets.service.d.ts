@@ -94,7 +94,7 @@ export declare class TicketsService {
         assignedToId: string | null;
         closedAt: Date | null;
     }>;
-    replyTicket(ticketId: string, userId: string, message: string, attachmentUrl?: string): Promise<{
+    replyTicket(ticketId: string, userId: string, message: string, attachmentUrl?: string, isFromStaff?: boolean): Promise<{
         id: string;
         createdAt: Date;
         userId: string;
