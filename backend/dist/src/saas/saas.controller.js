@@ -46,7 +46,10 @@ let SaasController = class SaasController {
     }
     async updateAutoPayoutConfig(req, body) {
         const merchantId = req.user.merchantId;
-        return this.saasService.updateAutoPayoutConfig({ ...body, merchantId });
+        return this.saasService.updateAutoPayoutConfig({
+            ...body,
+            merchantId
+        });
     }
     async getMerchantWebhookLogs(req, merchantId) {
         if (req.user.merchantId !== merchantId) {
@@ -54,8 +57,9 @@ let SaasController = class SaasController {
         }
         return this.saasService.getMerchantWebhookLogs(merchantId);
     }
-    async retryMerchantWebhook(payload) {
-        return this.saasService.retryMerchantWebhook(payload.logId);
+    async retryMerchantWebhook(req, payload) {
+        const merchantId = req.user.merchantId;
+        return this.saasService.retryMerchantWebhook(payload.logId, merchantId);
     }
 };
 exports.SaasController = SaasController;
@@ -118,9 +122,10 @@ __decorate([
 __decorate([
     (0, common_1.Post)('merchant/webhooks/retry'),
     (0, roles_decorator_1.Roles)(client_1.Role.MERCHANT),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], SaasController.prototype, "retryMerchantWebhook", null);
 exports.SaasController = SaasController = __decorate([

@@ -58,7 +58,10 @@ export class SaasController {
   async updateAutoPayoutConfig(@Req() req: any, @Body() body: any) {
     // ENFORCE MULTI-TENANT ISOLATION
     const merchantId = req.user.merchantId;
-    return this.saasService.updateAutoPayoutConfig({ ...body, merchantId });
+    return this.saasService.updateAutoPayoutConfig({ 
+      ...body, 
+      merchantId // Override any merchantId sent in body with the authenticated one
+    });
   }
 
   @Get('merchant/webhooks/logs')
@@ -73,7 +76,9 @@ export class SaasController {
 
   @Post('merchant/webhooks/retry')
   @Roles(Role.MERCHANT)
-  async retryMerchantWebhook(@Body() payload: { logId: string }) {
-    return this.saasService.retryMerchantWebhook(payload.logId);
+  async retryMerchantWebhook(@Req() req: any, @Body() payload: { logId: string }) {
+    // ENFORCE MULTI-TENANT ISOLATION
+    const merchantId = req.user.merchantId;
+    return this.saasService.retryMerchantWebhook(payload.logId, merchantId);
   }
 }

@@ -16,13 +16,13 @@ export declare class SaasController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        isResolved: boolean;
-        attemptCount: number;
         queueName: string;
         jobId: string;
         jobData: import("@prisma/client/runtime/client").JsonValue;
         failedReason: string;
+        attemptCount: number;
         lastAttemptAt: Date;
+        isResolved: boolean;
     }[]>;
     requeueDLQJob(jobId: string): Promise<{
         success: boolean;
@@ -40,9 +40,9 @@ export declare class SaasController {
             description: string;
             createdAt: Date;
             merchantId: string;
-            amount: number;
             orderId: string | null;
             type: string;
+            amount: number;
             escrowBefore: number;
             escrowAfter: number;
             availableBefore: number;
@@ -89,20 +89,20 @@ export declare class SaasController {
     getMerchantWebhookLogs(req: any, merchantId: string): Promise<{
         id: string;
         createdAt: Date;
+        attemptCount: number;
         merchantId: string;
-        responseBody: import("@prisma/client/runtime/client").JsonValue | null;
-        isSuccess: boolean;
-        event: string;
         endpointUrl: string;
+        event: string;
         requestHeaders: import("@prisma/client/runtime/client").JsonValue | null;
         requestPayload: import("@prisma/client/runtime/client").JsonValue;
         responseStatus: number | null;
         responseHeaders: import("@prisma/client/runtime/client").JsonValue | null;
+        responseBody: import("@prisma/client/runtime/client").JsonValue | null;
         latencyMs: number | null;
-        attemptCount: number;
+        isSuccess: boolean;
         errorReason: string | null;
     }[]>;
-    retryMerchantWebhook(payload: {
+    retryMerchantWebhook(req: any, payload: {
         logId: string;
     }): Promise<{
         success: boolean;

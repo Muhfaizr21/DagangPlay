@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -147,19 +147,34 @@ export class SaasService {
     });
   }
 
-  async retryMerchantWebhook(logId: string) {
+  async retryMerchantWebhook(logId: string, merchantId: string) {
     const log = await this.prisma.webhookDeliveryLog.findUnique({
       where: { id: logId }
     });
     if (!log) throw new NotFoundException('Log not found');
+    
+    // SECURITY: Ensure the log belongs to the requesting merchant
+    if (log.merchantId !== merchantId) {
+        throw new ForbiddenException('You do not have permission to retry this webhook');
+    }
+
+    const merchant = await this.prisma.merchant.findUnique({
+        where: { id: merchantId },
+        include: { apiKeys: { where: { isActive: true }, take: 1 } }
+    });
+
+    const activeApiKey = merchant?.apiKeys?.[0];
 
     await this.webhookQueue.add('ManualRetries', {
       merchantId: log.merchantId,
       endpointUrl: log.endpointUrl,
       event: log.event,
-      payload: log.requestPayload
+      payload: log.requestPayload,
+      secretKey: activeApiKey?.secret || 'dummy_secret'
+    }, {
+      priority: 1 // Higher priority for manual trigger
     });
 
-    return { success: true, message: 'Webhook sent to queue for retrying' };
+    return { success: true, message: 'Webhook sent to queue for retrying (Priority: High)' };
   }
 }

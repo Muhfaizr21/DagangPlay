@@ -88,24 +88,31 @@ let DashboardService = class DashboardService {
             successRate = (successTransactions / totalTransactions) * 100;
         }
         const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-        const weeklyChart = await Promise.all([...Array(7)].map(async (_, i) => {
-            const date = new Date();
-            date.setDate(date.getDate() - (6 - i));
-            date.setHours(0, 0, 0, 0);
-            const nextDay = new Date(date);
-            nextDay.setDate(nextDay.getDate() + 1);
-            const dayAgg = await this.prisma.order.aggregate({
-                where: {
-                    paymentStatus: 'PAID',
-                    createdAt: { gte: date, lt: nextDay }
-                },
-                _sum: { totalPrice: true }
-            });
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 6);
+        weekAgo.setHours(0, 0, 0, 0);
+        const dailyOrders = await this.prisma.order.findMany({
+            where: {
+                paymentStatus: 'PAID',
+                createdAt: { gte: weekAgo }
+            },
+            select: {
+                totalPrice: true,
+                createdAt: true
+            }
+        });
+        const weeklyChart = [...Array(7)].map((_, i) => {
+            const date = new Date(weekAgo);
+            date.setDate(date.getDate() + i);
+            const dayKey = date.toDateString();
+            const dayTotal = dailyOrders
+                .filter(o => o.createdAt.toDateString() === dayKey)
+                .reduce((acc, curr) => acc + Number(curr.totalPrice), 0);
             return {
                 day: dayNames[date.getDay()],
-                value: Math.round(Number(dayAgg._sum.totalPrice || 0) / 1000)
+                value: Math.round(dayTotal / 1000)
             };
-        }));
+        });
         const recentTransactionsRaw = await this.prisma.order.findMany({
             take: 5,
             orderBy: { createdAt: 'desc' },

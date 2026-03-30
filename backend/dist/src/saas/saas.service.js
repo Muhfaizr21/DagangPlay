@@ -140,19 +140,30 @@ let SaasService = class SaasService {
             take: 25
         });
     }
-    async retryMerchantWebhook(logId) {
+    async retryMerchantWebhook(logId, merchantId) {
         const log = await this.prisma.webhookDeliveryLog.findUnique({
             where: { id: logId }
         });
         if (!log)
             throw new common_1.NotFoundException('Log not found');
+        if (log.merchantId !== merchantId) {
+            throw new common_1.ForbiddenException('You do not have permission to retry this webhook');
+        }
+        const merchant = await this.prisma.merchant.findUnique({
+            where: { id: merchantId },
+            include: { apiKeys: { where: { isActive: true }, take: 1 } }
+        });
+        const activeApiKey = merchant?.apiKeys?.[0];
         await this.webhookQueue.add('ManualRetries', {
             merchantId: log.merchantId,
             endpointUrl: log.endpointUrl,
             event: log.event,
-            payload: log.requestPayload
+            payload: log.requestPayload,
+            secretKey: activeApiKey?.secret || 'dummy_secret'
+        }, {
+            priority: 1
         });
-        return { success: true, message: 'Webhook sent to queue for retrying' };
+        return { success: true, message: 'Webhook sent to queue for retrying (Priority: High)' };
     }
 };
 exports.SaasService = SaasService;

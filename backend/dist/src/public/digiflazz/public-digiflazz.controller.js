@@ -22,10 +22,11 @@ let PublicDigiflazzController = class PublicDigiflazzController {
     }
     async handleWebhook(delivery, event, body, req, res) {
         try {
-            const clientIp = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || req.ip || '';
-            console.log(`[DigiflazzWebhook] Event: ${event}, Delivery: ${delivery}, IP: ${clientIp}`);
             const allowedIPs = ['103.253.212.43', '128.199.231.57', '103.111.94.131'];
-            const isAllowed = allowedIPs.some(ip => clientIp.includes(ip));
+            const forwarded = req.headers['x-forwarded-for'];
+            const clientIp = typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : req.socket?.remoteAddress || req.ip || '';
+            console.log(`[DigiflazzWebhook] Event: ${event}, Delivery: ${delivery}, IP: ${clientIp}`);
+            const isAllowed = allowedIPs.includes(clientIp);
             if (!isAllowed && process.env.NODE_ENV === 'production') {
                 console.warn(`[DigiflazzWebhook] Unauthorized IP Attempt: ${clientIp}`);
                 return res.status(common_1.HttpStatus.FORBIDDEN).json({ success: false, message: 'Forbidden IP' });
