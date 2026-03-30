@@ -26,6 +26,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { AxiosInterceptorSetup } from "@/lib/AxiosInterceptor";
+
 export default function RootLayout({
   children,
 }: {
@@ -33,7 +35,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id" className={`${poppins.variable} ${inter.variable}`}>
-      <body suppressHydrationWarning className="font-inter">{children}</body>
+      <body suppressHydrationWarning className="font-inter">
+        <AxiosInterceptorSetup />
+        {children}
+      </body>
     </html>
   );
 }

@@ -41,22 +41,22 @@ export default function ContentManagementPage() {
     const [toastMsg, setToastMsg] = useState<{ title: string; desc: string; type: 'success' | 'error' } | null>(null);
 
     // Banners state
-    const { data: banners, isLoading: loadingBanners, mutate: mutateBanners } = useSWR('http://localhost:3001/admin/content/banners', fetcher);
+    const { data: banners, isLoading: loadingBanners, mutate: mutateBanners } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/content/banners', fetcher);
     const [showBannerModal, setShowBannerModal] = useState(false);
     const [bannerForm, setBannerForm] = useState<any>({ title: '', image: '', linkUrl: '', position: 'HERO', sortOrder: 0 });
 
     // Announcements state
-    const { data: announcements, isLoading: loadingAnnouncements, mutate: mutateAnnouncements } = useSWR('http://localhost:3001/admin/content/announcements', fetcher);
+    const { data: announcements, isLoading: loadingAnnouncements, mutate: mutateAnnouncements } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/content/announcements', fetcher);
     const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
     const [announcementForm, setAnnouncementForm] = useState<any>({ title: '', content: '' });
 
     // Templates state
-    const { data: templates, isLoading: loadingTemplates, mutate: mutateTemplates } = useSWR('http://localhost:3001/admin/content/templates', fetcher);
+    const { data: templates, isLoading: loadingTemplates, mutate: mutateTemplates } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/content/templates', fetcher);
     const [showTemplateModal, setShowTemplateModal] = useState(false);
     const [templateForm, setTemplateForm] = useState<any>({ type: 'ORDER', channel: 'EMAIL', subject: '', body: '' });
 
     // Broadcasts state
-    const { data: broadcasts, isLoading: loadingBroadcasts, mutate: mutateBroadcasts } = useSWR('http://localhost:3001/admin/content/broadcasts', fetcher);
+    const { data: broadcasts, isLoading: loadingBroadcasts, mutate: mutateBroadcasts } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/content/broadcasts', fetcher);
     const [showBroadcastModal, setShowBroadcastModal] = useState(false);
     const [broadcastForm, setBroadcastForm] = useState<any>({ name: '', subject: '', body: '', targetRole: 'ALL' });
 
@@ -69,7 +69,7 @@ export default function ContentManagementPage() {
     const handleSaveBanner = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:3001/admin/content/banners', bannerForm);
+            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/content/banners', bannerForm);
             mutateBanners();
             setShowBannerModal(false);
             setBannerForm({ title: '', image: '', linkUrl: '', position: 'HERO', sortOrder: 0 });
@@ -80,7 +80,7 @@ export default function ContentManagementPage() {
     };
     const handleToggleBanner = async (id: string) => {
         try {
-            await axios.post(`http://localhost:3001/admin/content/banners/${id}/toggle`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
+            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/content/banners/${id}/toggle`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             mutateBanners();
             showToast('Sukses', 'Status banner berhasil diubah');
         } catch (err: any) {
@@ -90,7 +90,7 @@ export default function ContentManagementPage() {
     const handleDeleteBanner = async (id: string) => {
         if (!confirm('Hapus banner ini permanen?')) return;
         try {
-            await axios.delete(`http://localhost:3001/admin/content/banners/${id}`);
+            await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/content/banners/${id}`);
             mutateBanners();
             showToast('Sukses', 'Banner berhasil dihapus');
         } catch (err: any) {
@@ -102,7 +102,7 @@ export default function ContentManagementPage() {
     const handleSaveAnnouncement = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:3001/admin/content/announcements', announcementForm);
+            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/content/announcements', announcementForm);
             mutateAnnouncements();
             setShowAnnouncementModal(false);
             setAnnouncementForm({ title: '', content: '' });
@@ -113,7 +113,7 @@ export default function ContentManagementPage() {
     };
     const handleToggleAnnouncement = async (id: string) => {
         try {
-            await axios.post(`http://localhost:3001/admin/content/announcements/${id}/toggle`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
+            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/content/announcements/${id}/toggle`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             mutateAnnouncements();
             showToast('Sukses', 'Status pengumuman berhasil diubah');
         } catch (err: any) {
@@ -123,7 +123,7 @@ export default function ContentManagementPage() {
     const handleDeleteAnnouncement = async (id: string) => {
         if (!confirm('Hapus pengumuman ini permanen?')) return;
         try {
-            await axios.delete(`http://localhost:3001/admin/content/announcements/${id}`);
+            await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/content/announcements/${id}`);
             mutateAnnouncements();
             showToast('Sukses', 'Pengumuman dihapus');
         } catch (err: any) {
@@ -135,7 +135,7 @@ export default function ContentManagementPage() {
     const handleSaveTemplate = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:3001/admin/content/templates', templateForm);
+            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/content/templates', templateForm);
             mutateTemplates();
             setShowTemplateModal(false);
             setTemplateForm({ type: 'ORDER', channel: 'EMAIL', subject: '', body: '' });
@@ -149,7 +149,7 @@ export default function ContentManagementPage() {
     const handleCreateBroadcast = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:3001/admin/content/broadcasts', broadcastForm);
+            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/content/broadcasts', broadcastForm);
             mutateBroadcasts();
             setShowBroadcastModal(false);
             setBroadcastForm({ name: '', subject: '', body: '', targetRole: 'ALL' });

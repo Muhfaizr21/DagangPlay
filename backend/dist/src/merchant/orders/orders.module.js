@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const orders_controller_1 = require("./orders.controller");
 const orders_service_1 = require("./orders.service");
 const prisma_service_1 = require("../../prisma.service");
+const bullmq_1 = require("@nestjs/bullmq");
 const digiflazz_module_1 = require("../../admin/digiflazz/digiflazz.module");
 const subscriptions_module_1 = require("../../admin/subscriptions/subscriptions.module");
 let OrdersModule = class OrdersModule {
@@ -18,7 +19,11 @@ let OrdersModule = class OrdersModule {
 exports.OrdersModule = OrdersModule;
 exports.OrdersModule = OrdersModule = __decorate([
     (0, common_1.Module)({
-        imports: [digiflazz_module_1.DigiflazzModule, subscriptions_module_1.SubscriptionsModule],
+        imports: [
+            digiflazz_module_1.DigiflazzModule,
+            subscriptions_module_1.SubscriptionsModule,
+            bullmq_1.BullModule.registerQueue({ name: 'digiflazz-fulfillment' }),
+        ],
         controllers: [orders_controller_1.OrdersController],
         providers: [orders_service_1.OrdersService, prisma_service_1.PrismaService]
     })

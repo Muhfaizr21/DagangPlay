@@ -18,7 +18,7 @@ export class FinanceService {
         const totalProfit = orders.reduce((sum, order) => sum + (Number(order.totalPrice) - Number(order.merchantModalPrice || order.totalPrice)), 0);
 
         const deposits = await this.prisma.deposit.findMany({
-            where: { userId: ownerId },
+            where: { merchantId },
             orderBy: { createdAt: 'desc' },
             take: 5
         });
@@ -29,13 +29,14 @@ export class FinanceService {
             take: 5
         });
 
-        const user = await this.prisma.user.findUnique({
-            where: { id: ownerId },
-            select: { balance: true }
+        const merchant = await this.prisma.merchant.findUnique({
+            where: { id: merchantId },
+            select: { availableBalance: true, escrowBalance: true }
         });
 
         return {
-            balance: user?.balance || 0,
+            balance: merchant?.availableBalance || 0,
+            escrow: merchant?.escrowBalance || 0,
             revenue: totalRevenue,
             profit: totalProfit,
             deposits,
@@ -43,7 +44,7 @@ export class FinanceService {
         };
     }
 
-    async requestWithdrawal(ownerId: string, amount: number, bankName: string, bankAccountName: string, bankAccountNumber: string, isInstant?: boolean) {
+    async requestWithdrawal(merchantId: string, ownerId: string, amount: number, bankName: string, bankAccountName: string, bankAccountNumber: string, isInstant?: boolean) {
         if (amount <= 0) throw new BadRequestException('Amount must be greater than 0');
 
         const fee = isInstant ? 5000 : 0;
@@ -51,27 +52,48 @@ export class FinanceService {
 
         if (netAmount <= 0) throw new BadRequestException('Amount tidak mencukupi setelah dikurangi fee');
 
-        // CRITICAL FIX: Freeze balance atomically saat request
-        // Cek saldo + buat WD dalam satu transaction untuk mencegah double-spend
+        // FIXED: Use Merchant Ledger (availableBalance) instead of User.balance
         return this.prisma.$transaction(async (tx) => {
-            const balanceUser = await tx.user.findUnique({ where: { id: ownerId } });
-            if (!balanceUser || balanceUser.balance < amount) {
-                throw new BadRequestException('Saldo tidak mencukupi untuk penarikan ini');
-            }
-
-            // Deduct (freeze) balance immediately
-            await tx.user.update({
-                where: { id: ownerId },
-                data: { balance: { decrement: amount } }
+            const merchant = await tx.merchant.findUnique({ 
+                where: { id: merchantId },
+                select: { id: true, availableBalance: true, ownerId: true }
             });
 
-            // Log the freeze
+            if (!merchant || merchant.ownerId !== ownerId) {
+                throw new BadRequestException('Anda tidak berwenang melakukan penarikan untuk toko ini');
+            }
+
+            if (merchant.availableBalance < amount) {
+                throw new BadRequestException('Saldo tersedia tidak mencukupi untuk penarikan ini');
+            }
+
+            // Deduct from Merchant Ledger immediately
+            const updatedMerchant = await tx.merchant.update({
+                where: { id: merchantId },
+                data: { availableBalance: { decrement: amount } }
+            });
+
+            // Log the movement in Merchant Ledger
+            await tx.merchantLedgerMovement.create({
+                data: {
+                    merchantId,
+                    type: 'AVAILABLE_OUT',
+                    amount: -amount,
+                    description: `Penarikan saldo ${isInstant ? 'instant' : 'manual'} ke ${bankName} - ${bankAccountNumber}`,
+                    availableBefore: merchant.availableBalance,
+                    availableAfter: updatedMerchant.availableBalance,
+                    escrowBefore: updatedMerchant.escrowBalance,
+                    escrowAfter: updatedMerchant.escrowBalance
+                }
+            });
+
+            // Keep user balance transaction for history/compatibility
             await tx.balanceTransaction.create({
                 data: {
                     userId: ownerId,
                     type: 'WITHDRAWAL',
                     amount: -amount,
-                    description: `Penarikan saldo ${isInstant ? 'instant' : 'manual'} ke ${bankName} - ${bankAccountNumber}`
+                    description: `Withdrawal dari toko ${merchantId}`
                 }
             });
 
@@ -84,8 +106,8 @@ export class FinanceService {
                     bankName,
                     bankAccountName,
                     bankAccountNumber,
-                    status: isInstant ? 'COMPLETED' : 'PENDING',
-                    note: isInstant ? 'Dicarikan instan otomatis oleh sistem' : undefined
+                    status: isInstant ? 'PROCESSING' : 'PENDING',
+                    note: isInstant ? 'Diterima sebagai penarikan INSTAN (Sedang diproses sistem payout/admin)' : undefined
                 }
             });
         });
@@ -142,7 +164,7 @@ export class FinanceService {
         };
 
         try {
-            const tripayRes = await this.tripay.requestTransaction(tripayPayload);
+            const tripayRes = await this.tripay.requestTransaction(tripayPayload, merchantId);
             await this.prisma.deposit.update({
                 where: { id: deposit.id },
                 data: {

@@ -39,7 +39,7 @@ export class PublicOrdersService {
     }
 
     async createCheckout(body: any, host?: string, origin?: string, merchantSlug?: string) {
-        const { skuId, gameId, serverId, whatsapp, paymentMethod } = body;
+        const { skuId, gameId, serverId, whatsapp, paymentMethod, promoCode } = body;
 
         // 1. Get the SKU details
         const sku = await this.prisma.productSku.findUnique({
@@ -128,7 +128,63 @@ export class PublicOrdersService {
         const basePrice = Number(sku.basePrice);
 
         // Retail Price (Selling Price to Customer)
-        const sellPrice = merchantOverride ? Number(merchantOverride.customPrice) : Number(sku.priceNormal);
+        let sellPrice = merchantOverride ? Number(merchantOverride.customPrice) : Number(sku.priceNormal);
+        // FORCE INTEGER: Consistent with Tripay amount
+        sellPrice = Math.ceil(sellPrice);
+
+        // 2.3 PROMO CODE VALIDATION & APPLICATION
+        let promoCodeId: string | undefined = undefined;
+        let discountAmount = 0;
+
+        if (promoCode) {
+            const now = new Date();
+            const promo = await this.prisma.promoCode.findFirst({
+                where: {
+                    code: promoCode.toUpperCase(),
+                    isActive: true,
+                    OR: [
+                        { merchantId: merchant.id },
+                        { merchantId: null } // Global
+                    ]
+                }
+            });
+
+            if (!promo) {
+                throw new BadRequestException('Kode promo tidak valid atau tidak dapat digunakan di toko ini');
+            }
+
+            // Expiry check
+            if (promo.startDate && now < promo.startDate) throw new BadRequestException('Kode promo belum dapat digunakan');
+            if (promo.endDate && now > promo.endDate) throw new BadRequestException('Kode promo telah kadaluarsa');
+
+            // Quota check
+            if (promo.quota !== null && promo.usedCount >= promo.quota) {
+                throw new BadRequestException('Kuota penggunaan kode promo telah habis');
+            }
+
+            // Min Purchase check
+            if (promo.minPurchase && sellPrice < promo.minPurchase) {
+                throw new BadRequestException(`Minimal pembelian untuk promo ini adalah Rp ${promo.minPurchase.toLocaleString('id-ID')}`);
+            }
+
+            // Apply discount
+            if (promo.type === 'DISCOUNT_FLAT') {
+                discountAmount = promo.value;
+            } else if (promo.type === 'DISCOUNT_PERCENTAGE') {
+                discountAmount = (sellPrice * promo.value) / 100;
+                if (promo.maxDiscount) {
+                    discountAmount = Math.min(discountAmount, promo.maxDiscount);
+                }
+            }
+
+            // Ensure discount doesn't exceed price
+            discountAmount = Math.ceil(Math.min(discountAmount, sellPrice));
+            sellPrice -= discountAmount;
+            promoCodeId = promo.id;
+        }
+
+        // RE-VALIDATE: Final integrity round
+        sellPrice = Math.max(0, Math.ceil(sellPrice));
 
         // 2.2 MODAL PRICE RESOLUTION (Ambiguity Fix)
         // Use customModalPrice set by Admin if exists, otherwise use tiered plan pricing
@@ -158,7 +214,12 @@ export class PublicOrdersService {
             }
         }
 
+        // FIX G: Validate required fields BEFORE creating any DB record (prevent zombie orders)
+        if (!paymentMethod) throw new BadRequestException('Metode pembayaran harus dipilih');
+        if (!whatsapp) throw new BadRequestException('Nomor WhatsApp diperlukan');
+
         const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
 
         // 2.5 Ensure Guest User Exists
         let guestUser = await this.prisma.user.findFirst({
@@ -220,15 +281,34 @@ export class PublicOrdersService {
                 gameUserName: resolvedNickname,
                 gameUserId: gameId,
                 gameUserServerId: serverId,
+                whatsapp, // Ensure whatsapp is included if your schema supports it
+                promoCodeId,
+                discountAmount
             }
         });
 
-        if (!paymentMethod) throw new BadRequestException('Metode pembayaran harus dipilih');
-        if (!whatsapp) throw new BadRequestException('Nomor WhatsApp diperlukan');
+        // 3.1 Increment Promo Usage Count ATOMICALLY
+        if (promoCodeId) {
+            await this.prisma.promoCode.update({
+                where: { id: promoCodeId },
+                data: { usedCount: { increment: 1 } }
+            });
+            
+            await this.prisma.promoUsage.create({
+                data: {
+                    promoCodeId,
+                    userId: guestUser.id,
+                    orderId: order.id,
+                    discountAmount
+                }
+            });
+        }
 
         // 4. Request Tripay Payment
+
         const tripayPayload = {
             method: paymentMethod,
+
             merchant_ref: order.orderNumber,
             amount: Math.ceil(sellPrice), // Ensure integer rounding matches frontend
             customer_name: gameId || 'User',
@@ -246,7 +326,7 @@ export class PublicOrdersService {
         };
 
         this.logger.log(`Initiating Tripay Request: ${order.orderNumber} via ${paymentMethod}`);
-        const tripayRes = await this.tripay.requestTransaction(tripayPayload);
+        const tripayRes = await this.tripay.requestTransaction(tripayPayload, merchantId);
 
         // 5. Update Order with Tripay details
         await this.prisma.payment.create({
@@ -294,37 +374,62 @@ export class PublicOrdersService {
      * Reversal Profit Merchant jika order Gagal/Batal tapi sudah terbayar
      */
     async reverseCommission(orderId: string, tx?: Prisma.TransactionClient) {
-        // Find all settled commissions for this order
+        // FIX C: Query BOTH pending (in escrow) and settled (in available) commissions
         const db = tx || this.prisma;
 
         const commissions = await db.commission.findMany({
-            where: { orderId, status: 'SETTLED' }
+            where: { orderId, status: { in: ['PENDING', 'SETTLED'] } }
         });
 
         if (commissions.length === 0) return;
 
         const work = async (innerTx: Prisma.TransactionClient) => {
             for (const comm of commissions) {
-                // 1. Deduct balance from the merchant/user who received the profit
-                const user = await innerTx.user.update({
-                    where: { id: comm.userId },
-                    data: { balance: { decrement: comm.amount } }
+                // FIX C: Deduct from correct merchant ledger field, not user.balance
+                const merchant = await innerTx.merchant.findFirst({
+                    where: { ownerId: comm.userId }
                 });
 
-                // 2. Create Reversal Transaction
-                await innerTx.balanceTransaction.create({
-                    data: {
-                        userId: comm.userId,
-                        type: 'REFUND',
-                        amount: -comm.amount,
-                        balanceBefore: Number(user.balance) + comm.amount,
-                        balanceAfter: Number(user.balance),
-                        orderId,
-                        description: `Reversal profit (Order Gagal/Cancel): ${orderId}`
+                if (merchant) {
+                    if (comm.status === 'PENDING') {
+                        const updated = await innerTx.merchant.update({
+                            where: { id: merchant.id },
+                            data: { escrowBalance: { decrement: comm.amount } }
+                        });
+                        await innerTx.merchantLedgerMovement.create({
+                            data: {
+                                merchantId: merchant.id,
+                                orderId,
+                                type: 'ESCROW_OUT',
+                                amount: -comm.amount,
+                                description: `Reversal komisi pending (Refund Admin): ${orderId}`,
+                                availableBefore: merchant.availableBalance,
+                                availableAfter: merchant.availableBalance,
+                                escrowBefore: merchant.escrowBalance,
+                                escrowAfter: updated.escrowBalance
+                            }
+                        });
+                    } else if (comm.status === 'SETTLED') {
+                        const updated = await innerTx.merchant.update({
+                            where: { id: merchant.id },
+                            data: { availableBalance: { decrement: comm.amount } }
+                        });
+                        await innerTx.merchantLedgerMovement.create({
+                            data: {
+                                merchantId: merchant.id,
+                                orderId,
+                                type: 'AVAILABLE_OUT',
+                                amount: -comm.amount,
+                                description: `Clawback profit yang sudah cair (Refund Admin): ${orderId}`,
+                                availableBefore: merchant.availableBalance,
+                                availableAfter: updated.availableBalance,
+                                escrowBefore: updated.escrowBalance,
+                                escrowAfter: updated.escrowBalance
+                            }
+                        });
                     }
-                });
+                }
 
-                // 3. Mark commission as Refunded
                 await innerTx.commission.update({
                     where: { id: comm.id },
                     data: { status: 'CANCELLED' }
@@ -340,6 +445,7 @@ export class PublicOrdersService {
             });
         }
     }
+
 
     async getOrderDetails(orderNumber: string) {
         const order = await this.prisma.order.findUnique({

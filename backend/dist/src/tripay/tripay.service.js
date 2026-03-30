@@ -38,6 +38,9 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -48,20 +51,46 @@ require("dotenv/config");
 const common_1 = require("@nestjs/common");
 const axios_1 = __importDefault(require("axios"));
 const crypto = __importStar(require("crypto"));
+const prisma_service_1 = require("../prisma.service");
 let TripayService = TripayService_1 = class TripayService {
+    prisma;
     logger = new common_1.Logger(TripayService_1.name);
     baseUrl = (process.env.TRIPAY_URL || 'https://tripay.co.id/api-sandbox').trim().replace(/\/$/, '');
     apiKey = (process.env.TRIPAY_API_KEY || '').trim().replace(/^"|"$/g, '');
     privateKey = (process.env.TRIPAY_PRIVATE_KEY || '').trim().replace(/^"|"$/g, '');
     merchantCode = (process.env.TRIPAY_MERCHANT_CODE || '').trim().replace(/^"|"$/g, '');
-    async getPaymentChannels() {
+    constructor(prisma) {
+        this.prisma = prisma;
+    }
+    async getConfigs(merchantId) {
+        if (!merchantId) {
+            return {
+                apiKey: this.apiKey,
+                privateKey: this.privateKey,
+                merchantCode: this.merchantCode,
+            };
+        }
+        const settings = await this.prisma.merchantSetting.findMany({
+            where: {
+                merchantId,
+                key: { in: ['TRIPAY_API_KEY', 'TRIPAY_PRIVATE_KEY', 'TRIPAY_MERCHANT_CODE'] }
+            }
+        });
+        const keyMap = settings.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {});
+        return {
+            apiKey: keyMap['TRIPAY_API_KEY'] || this.apiKey,
+            privateKey: keyMap['TRIPAY_PRIVATE_KEY'] || this.privateKey,
+            merchantCode: keyMap['TRIPAY_MERCHANT_CODE'] || this.merchantCode,
+        };
+    }
+    async getPaymentChannels(merchantId) {
+        const { apiKey } = await this.getConfigs(merchantId);
         try {
             const response = await axios_1.default.get(`${this.baseUrl}/merchant/payment-channel`, {
                 headers: {
-                    'Authorization': `Bearer ${this.apiKey}`
+                    'Authorization': `Bearer ${apiKey}`
                 },
-                timeout: 8000,
-                maxRedirects: 0,
+                timeout: 8000
             });
             if (response.data?.success && Array.isArray(response.data?.data)) {
                 return response.data;
@@ -69,34 +98,25 @@ let TripayService = TripayService_1 = class TripayService {
             throw new Error('Invalid response from Tripay');
         }
         catch (error) {
-            this.logger.warn('Tripay payment channels unavailable, using fallback list. Reason: ' + (error.message || 'Unknown'));
+            this.logger.warn(`Tripay channels unavailable for merchant ${merchantId || 'PLATFORM'}. Using fallback.`);
             const fallbackChannels = [
                 { code: 'QRISC', name: 'QRIS', group: 'QRIS', type: 'DIRECT', fee_flat: 0, fee_percent: 0.7, icon_url: null, active: true },
                 { code: 'BNIVA', name: 'BNI Virtual Account', group: 'Virtual Account', type: 'DIRECT', fee_flat: 4250, fee_percent: 0, icon_url: null, active: true },
                 { code: 'BRIVA', name: 'BRI Virtual Account', group: 'Virtual Account', type: 'DIRECT', fee_flat: 4250, fee_percent: 0, icon_url: null, active: true },
                 { code: 'BCAVA', name: 'BCA Virtual Account', group: 'Virtual Account', type: 'DIRECT', fee_flat: 5500, fee_percent: 0, icon_url: null, active: true },
                 { code: 'MANDIRIVA', name: 'Mandiri Virtual Account', group: 'Virtual Account', type: 'DIRECT', fee_flat: 4250, fee_percent: 0, icon_url: null, active: true },
-                { code: 'PERMATAVA', name: 'Permata Virtual Account', group: 'Virtual Account', type: 'DIRECT', fee_flat: 4250, fee_percent: 0, icon_url: null, active: true },
                 { code: 'DANA', name: 'DANA', group: 'E-Wallet', type: 'REDIRECT', fee_flat: 0, fee_percent: 0.7, icon_url: null, active: true },
-                { code: 'OVO', name: 'OVO', group: 'E-Wallet', type: 'REDIRECT', fee_flat: 0, fee_percent: 0.7, icon_url: null, active: true },
-                { code: 'SHOPEEPAY', name: 'ShopeePay', group: 'E-Wallet', type: 'REDIRECT', fee_flat: 0, fee_percent: 0.7, icon_url: null, active: true },
-                { code: 'GOPAY', name: 'GoPay', group: 'E-Wallet', type: 'REDIRECT', fee_flat: 0, fee_percent: 0.7, icon_url: null, active: true },
-                { code: 'ALFAMART', name: 'Alfamart', group: 'Convenience Store', type: 'DIRECT', fee_flat: 2500, fee_percent: 0, icon_url: null, active: true },
-                { code: 'INDOMARET', name: 'Indomaret', group: 'Convenience Store', type: 'DIRECT', fee_flat: 2500, fee_percent: 0, icon_url: null, active: true },
+                { code: 'OVO', name: 'OVO', group: 'E-Wallet', type: 'REDIRECT', fee_flat: 0, fee_percent: 0.7, icon_url: null, active: true }
             ];
             return { success: true, data: fallbackChannels };
         }
     }
-    async requestTransaction(payload) {
+    async requestTransaction(payload, merchantId) {
+        const { apiKey, privateKey, merchantCode } = await this.getConfigs(merchantId);
         try {
             const amount = Math.floor(Number(payload.amount));
-            this.logger.log(`Tripay Auth Debug:`);
-            this.logger.log(`- API Key: ${this.apiKey.substring(0, 8)}... (Length: ${this.apiKey.length})`);
-            this.logger.log(`- API Key Hex: ${Buffer.from(this.apiKey).toString('hex')}`);
-            this.logger.log(`- Merchant Code: [${this.merchantCode}]`);
-            this.logger.log(`- Base URL: ${this.baseUrl}`);
-            const signature = crypto.createHmac('sha256', this.privateKey)
-                .update(this.merchantCode + payload.merchant_ref + amount)
+            const signature = crypto.createHmac('sha256', privateKey)
+                .update(merchantCode + payload.merchant_ref + amount)
                 .digest('hex');
             const items = (payload.order_items || []).map((item) => {
                 const itemPrice = Math.floor(Number(item.price));
@@ -106,9 +126,7 @@ let TripayService = TripayService_1 = class TripayService {
                     name: (item.name || 'Product').toString(),
                     price: itemPrice,
                     quantity: itemQty,
-                    subtotal: itemPrice * itemQty,
-                    product_url: item.product_url || undefined,
-                    image_url: item.image_url || undefined
+                    subtotal: itemPrice * itemQty
                 };
             });
             const data = {
@@ -117,43 +135,35 @@ let TripayService = TripayService_1 = class TripayService {
                 amount: amount,
                 customer_name: (payload.customer_name || 'Pelanggan').toString().trim(),
                 customer_email: (payload.customer_email || 'guest@dagangplay.com').toString().trim(),
-                customer_phone: payload.customer_phone || undefined,
                 order_items: items,
                 callback_url: (process.env.TRIPAY_CALLBACK_URL || '').trim().replace(/^"|"$/g, ''),
                 return_url: (payload.return_url || process.env.FRONTEND_URL || 'http://localhost:3000').toString().trim(),
                 expired_time: payload.expired_time || (Math.floor(Date.now() / 1000) + (24 * 60 * 60)),
                 signature
             };
-            this.logger.log(`Requesting Tripay Transaction: ${payload.merchant_ref} - Amount: ${amount} - Method: ${payload.method}`);
             const response = await axios_1.default.post(`${this.baseUrl}/transaction/create`, data, {
                 headers: {
-                    'Authorization': `Bearer ${this.apiKey}`,
+                    'Authorization': `Bearer ${apiKey}`,
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'User-Agent': 'DagangPlay-Backend/1.0'
+                    'Accept': 'application/json'
                 }
             });
             if (response.data?.success) {
                 return response.data;
             }
             else {
-                this.logger.error('Tripay API Error Response:', JSON.stringify(response.data));
                 throw new Error(response.data?.message || 'Gagal membuat transaksi di Tripay');
             }
         }
         catch (error) {
-            const errorData = error.response?.data;
-            const errorMsg = errorData?.message || error.message || 'Unknown Error';
-            this.logger.error('Tripay Request Failed:', {
-                message: errorMsg,
-                status: error.response?.status,
-                data: errorData ? JSON.stringify(errorData) : 'No data'
-            });
+            const errorMsg = error.response?.data?.message || error.message || 'Unknown Error';
+            this.logger.error(`Tripay Request Failed for ${merchantId || 'PLATFORM'}: ${errorMsg}`);
             throw new Error(`Tripay Error: ${errorMsg}`);
         }
     }
-    verifySignature(callbackSignature, payload) {
-        const signature = crypto.createHmac('sha256', this.privateKey)
+    async verifySignature(callbackSignature, payload, merchantId) {
+        const { privateKey } = await this.getConfigs(merchantId);
+        const signature = crypto.createHmac('sha256', privateKey)
             .update(payload)
             .digest('hex');
         return signature === callbackSignature;
@@ -161,6 +171,7 @@ let TripayService = TripayService_1 = class TripayService {
 };
 exports.TripayService = TripayService;
 exports.TripayService = TripayService = TripayService_1 = __decorate([
-    (0, common_1.Injectable)()
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], TripayService);
 //# sourceMappingURL=tripay.service.js.map

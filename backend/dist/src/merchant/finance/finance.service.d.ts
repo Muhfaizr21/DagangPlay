@@ -6,6 +6,7 @@ export declare class FinanceService {
     constructor(prisma: PrismaService, tripay: TripayService);
     getFinanceOverview(merchantId: string, ownerId: string): Promise<{
         balance: number;
+        escrow: number;
         revenue: number;
         profit: number;
         deposits: {
@@ -42,14 +43,14 @@ export declare class FinanceService {
             fee: number;
             receiptImage: string | null;
             rejectedAt: Date | null;
+            netAmount: number;
             bankName: string;
             bankAccountNumber: string;
             bankAccountName: string;
-            netAmount: number;
             processedById: string | null;
         }[];
     }>;
-    requestWithdrawal(ownerId: string, amount: number, bankName: string, bankAccountName: string, bankAccountNumber: string, isInstant?: boolean): Promise<any>;
+    requestWithdrawal(merchantId: string, ownerId: string, amount: number, bankName: string, bankAccountName: string, bankAccountNumber: string, isInstant?: boolean): Promise<any>;
     requestDeposit(merchantId: string, ownerId: string, amount: number, method: string): Promise<{
         checkoutUrl: any;
         id: string;

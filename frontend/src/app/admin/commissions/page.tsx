@@ -39,17 +39,17 @@ export default function CommissionsManagementPage() {
 
     // SWR Calls
     const { data: pendingComms, isLoading: loadingPending, mutate: mutatePending } = useSWR(
-        activeTab === 'PENDING' ? `http://localhost:3001/admin/commissions/pending?search=${searchTerm}` : null,
+        activeTab === 'PENDING' ? `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/commissions/pending?search=${searchTerm}` : null,
         fetcher
     );
 
     const { data: levels, isLoading: loadingLevels, mutate: mutateLevels } = useSWR(
-        activeTab === 'LEVELS' ? 'http://localhost:3001/admin/commissions/levels' : null,
+        activeTab === 'LEVELS' ? (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/commissions/levels' : null,
         fetcher
     );
 
     const { data: tree, isLoading: loadingTree } = useSWR(
-        activeTab === 'TREE' ? 'http://localhost:3001/admin/commissions/tree' : null,
+        activeTab === 'TREE' ? (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/commissions/tree' : null,
         fetcher
     );
 
@@ -61,7 +61,7 @@ export default function CommissionsManagementPage() {
     const handleSettleSingle = async (id: string) => {
         if (!confirm('Pencairan komisi ini ke saldo dompet User?')) return;
         try {
-            await axios.post(`http://localhost:3001/admin/commissions/${id}/settle`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
+            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/commissions/${id}/settle`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             mutatePending();
             showToast('Selesai', 'Komisi telah dicairkan ke dompet User.');
         } catch (err: any) {
@@ -72,7 +72,7 @@ export default function CommissionsManagementPage() {
     const handleBulkSettle = async () => {
         if (!confirm('Proses SEMUA komisi berstatus PENDING sekaligus ke saldo masing-masing user? Pastikan cashflow tersedia.')) return;
         try {
-            const res = await axios.post(`http://localhost:3001/admin/commissions/bulk-settle`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
+            const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/commissions/bulk-settle`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             mutatePending();
             showToast('Bulk Settle', res.data.message);
         } catch (err: any) {
@@ -83,7 +83,7 @@ export default function CommissionsManagementPage() {
     const submitCreateLevel = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:3001/admin/commissions/levels', levelForm);
+            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/commissions/levels', levelForm);
             mutateLevels();
             setShowLevelModal(false);
             showToast('Berhasil', 'Level Reseller Baru ditambahkan.');

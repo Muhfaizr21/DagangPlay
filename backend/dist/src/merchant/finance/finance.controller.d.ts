@@ -6,6 +6,7 @@ export declare class FinanceController {
     constructor(financeService: FinanceService, prisma: PrismaService);
     getFinanceOverview(req: any): Promise<{
         balance: number;
+        escrow: number;
         revenue: number;
         profit: number;
         deposits: {
@@ -42,10 +43,10 @@ export declare class FinanceController {
             fee: number;
             receiptImage: string | null;
             rejectedAt: Date | null;
+            netAmount: number;
             bankName: string;
             bankAccountNumber: string;
             bankAccountName: string;
-            netAmount: number;
             processedById: string | null;
         }[];
     }>;

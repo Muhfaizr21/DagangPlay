@@ -33,8 +33,14 @@ const fetcher = (url: string) => {
 };
 export default function MerchantManagementPage() {
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [toastMsg, setToastMsg] = useState<{ title: string, desc: string, type: 'success' | 'error' } | null>(null);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(searchTerm), 400);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
     const [settingsForm, setSettingsForm] = useState({
@@ -48,12 +54,12 @@ export default function MerchantManagementPage() {
     });
 
     const { data: merchants, error, isLoading, mutate } = useSWR(
-        `http://localhost:3001/admin/merchants?search=${searchTerm}&status=${statusFilter}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/merchants?search=${debouncedSearch}&status=${statusFilter}`,
         fetcher
     );
 
     const { data: merchantDetail, error: detailError, isLoading: loadingDetail, mutate: mutateDetail } = useSWR(
-        selectedMerchantId ? `http://localhost:3001/admin/merchants/${selectedMerchantId}` : null,
+        selectedMerchantId ? `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/merchants/${selectedMerchantId}` : null,
         fetcher
     );
 
@@ -81,7 +87,7 @@ export default function MerchantManagementPage() {
     const handleUpdateStatus = async (id: string, newStatus: string, actionName: string) => {
         try {
             if (confirm(`Apakah Anda yakin ingin melakukan aksi "${actionName}" pada toko ini?`)) {
-                await axios.patch(`http://localhost:3001/admin/merchants/${id}/status`,
+                await axios.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/merchants/${id}/status`,
                     { status: newStatus },
                     { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } }
                 );
@@ -98,7 +104,7 @@ export default function MerchantManagementPage() {
         e.preventDefault();
         if (!selectedMerchantId) return;
         try {
-            await axios.patch(`http://localhost:3001/admin/merchants/${selectedMerchantId}/settings`,
+            await axios.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/merchants/${selectedMerchantId}/settings`,
                 settingsForm,
                 { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } }
             );
@@ -112,7 +118,7 @@ export default function MerchantManagementPage() {
     const handleResetPassword = async (id: string) => {
         if (!confirm('Reset password Owner menjadi "DagangPlay123!" ?')) return;
         try {
-            const res = await axios.post(`http://localhost:3001/admin/merchants/${id}/reset-password`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
+            const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/merchants/${id}/reset-password`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             showToast('Berhasil', res.data.message);
         } catch (err: any) {
             showToast('Error', err.response?.data?.message || 'Gagal reset password', 'error');
@@ -479,8 +485,8 @@ export default function MerchantManagementPage() {
 // SUB-COMPONENT: PRICE OVERRIDES
 // ===========================================
 function MerchantPricingOverrides({ merchantId }: { merchantId: string }) {
-    const { data: overrides, mutate } = useSWR(`http://localhost:3001/admin/merchant-overrides/merchant/${merchantId}`, fetcher);
-    const { data: skus } = useSWR('http://localhost:3001/admin/products/skus/pricing', fetcher);
+    const { data: overrides, mutate } = useSWR(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/merchant-overrides/merchant/${merchantId}`, fetcher);
+    const { data: skus } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/products/skus/pricing', fetcher);
 
     const [isAdding, setIsAdding] = useState(false);
     const [form, setForm] = useState({ skuId: '', price: 0, reason: '', expiredAt: '' });
@@ -489,7 +495,7 @@ function MerchantPricingOverrides({ merchantId }: { merchantId: string }) {
         e.preventDefault();
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.post('http://localhost:3001/admin/merchant-overrides', {
+            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/merchant-overrides', {
                 merchantId,
                 productSkuId: form.skuId,
                 customPrice: form.price,
@@ -508,7 +514,7 @@ function MerchantPricingOverrides({ merchantId }: { merchantId: string }) {
     const handleDelete = async (id: string) => {
         if (!confirm('Hapus harga khusus ini?')) return;
         try {
-            await axios.delete(`http://localhost:3001/admin/merchant-overrides/${id}`);
+            await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/merchant-overrides/${id}`);
             mutate();
         } catch (err) {
             alert('Gagal menghapus');

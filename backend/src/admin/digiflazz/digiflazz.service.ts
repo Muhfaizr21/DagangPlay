@@ -409,6 +409,19 @@ export class DigiflazzService {
         if (!order) throw new NotFoundException('Order not found for fulfillment');
         if (order.fulfillmentStatus === 'SUCCESS') return;
 
+        // FIX #16: Guard against null/empty gameUserId before hitting Digiflazz
+        if (!order.gameUserId || order.gameUserId.trim() === '') {
+            this.logger.error(`[placeOrder] Order ${order.orderNumber} has no gameUserId. Cannot fulfill.`);
+            await this.prisma.order.update({
+                where: { id: order.id },
+                data: {
+                    fulfillmentStatus: 'FAILED',
+                    failReason: 'Gagal: ID Akun Game (User ID) tidak boleh kosong.'
+                }
+            });
+            return null;
+        }
+
         const { username, key, url } = this.getDigiflazzConfig();
 
         // 1. SUPPLIER BALANCE CHECK (To prevent blind API requests and properly handle failure)
@@ -438,6 +451,34 @@ export class DigiflazzService {
             }
         } catch (balErr: any) {
             this.logger.error(`[SupplierBalance] Failed to verify balance, proceeding normally: ${balErr.message}`);
+        }
+
+        // --- ANTI-LOSS GUARD (CRITICAL FIX) ---
+        const currentBasePrice = Number(order.productSku.basePrice);
+        const lockedModalPrice = Number(order.merchantModalPrice || order.sellingPrice);
+
+        // If Digiflazz price jumped above what we charged the merchant, abort and dispute.
+        if (currentBasePrice > lockedModalPrice) {
+            console.warn(`[AntiLoss] Price Spike Detected: Order ${order.orderNumber}. Current Base: ${currentBasePrice} > Locked Modal: ${lockedModalPrice}. ABORTING.`);
+            
+            await this.prisma.order.update({
+                where: { id: order.id },
+                data: {
+                    fulfillmentStatus: 'FAILED',
+                    failReason: `Pelanggaran Anti-Rugi: Harga pusat (Rp ${currentBasePrice}) telah naik melebihi harga modal transaksi (Rp ${lockedModalPrice}).`
+                }
+            });
+
+            await this.prisma.disputeCase.create({
+                data: {
+                    orderId: order.id,
+                    userId: order.userId,
+                    reason: `Anti-Loss Guard: Harga pusat mendadak naik dari Rp ${order.basePrice} menjadi Rp ${currentBasePrice}. Hubungi admin untuk penyesuaian dana.`,
+                    status: 'OPEN'
+                }
+            });
+
+            return { success: false, message: 'Price threshold exceeded' };
         }
 
         // Sign: md5(username + apikey + ref_id)
@@ -528,6 +569,11 @@ export class DigiflazzService {
                         fulfillmentStatus,
                         data.sn || 'N/A'
                     ).catch(err => this.logger.error(`[FulfillmentNotification] Failed: ${err.message}`));
+                    
+                    // FIXED: AUTO SETTLEMENT (Move funds to Available Balance)
+                    if (fulfillmentStatus === 'SUCCESS') {
+                        await this.settleOrderProfit(order.id);
+                    }
                 }
 
                 return data;
@@ -569,60 +615,181 @@ export class DigiflazzService {
     }
 
     /**
+     * Logic Settlement Profit (Memindahkan Dana dari Escrow ke Available)
+     * Dipanggil saat fulfillment SUKSES.
+     */
+    public async settleOrderProfit(orderId: string) {
+        await this.prisma.$transaction(async (tx) => {
+            // ATOMIC PROTECT: Lock commissions by flipping status to SETTLED first.
+            // If they are already SETTLED, updated.count will be 0, preventing double payout.
+            const updated = await tx.commission.updateMany({
+                where: { orderId, status: 'PENDING' },
+                data: { status: 'SETTLED', settledAt: new Date() }
+            });
+
+            if (updated.count === 0) return; // Already settled or no commissions
+
+            // Re-fetch the SETTLED ones to know the amounts (we just flipped them)
+            const commissions = await tx.commission.findMany({
+                where: { orderId, status: 'SETTLED', settledAt: { gte: new Date(Date.now() - 5000) } }, // newly settled
+                include: { user: { include: { merchant: true } } }
+            });
+
+            for (const comm of commissions) {
+                const user = comm.user;
+
+                // 1. Jika User adalah Merchant (Merchant Owner)
+                if (user.role === 'MERCHANT' && user.merchant) {
+                    const merchantId = user.merchant.id;
+                    const merchant = await tx.merchant.findUnique({ where: { id: merchantId } });
+
+                    if (merchant) {
+                        // Move Escrow -> Available
+                        const updatedMerchant = await tx.merchant.update({
+                            where: { id: merchantId },
+                            data: {
+                                escrowBalance: { decrement: comm.amount },
+                                availableBalance: { increment: comm.amount }
+                            }
+                        });
+
+                        // Log movement
+                        await tx.merchantLedgerMovement.create({
+                            data: {
+                                merchantId,
+                                orderId,
+                                type: 'SETTLEMENT',
+                                amount: comm.amount,
+                                description: `Pencairan Laba Penjualan (Order Sukses): ${orderId}`,
+                                availableBefore: merchant.availableBalance,
+                                availableAfter: updatedMerchant.availableBalance,
+                                escrowBefore: merchant.escrowBalance,
+                                escrowAfter: updatedMerchant.escrowBalance
+                            }
+                        });
+                    }
+                } 
+                // 2. Jika User adalah Super Admin (Platform Cut)
+                else if (user.role === 'SUPER_ADMIN') {
+                    const updatedUser = await tx.user.update({
+                        where: { id: user.id },
+                        data: { balance: { increment: comm.amount } }
+                    });
+
+                    await tx.balanceTransaction.create({
+                        data: {
+                            userId: user.id,
+                            type: 'COMMISSION',
+                            amount: comm.amount,
+                            description: `Platform Fee Settlement (Order: ${orderId})`,
+                            balanceBefore: Number(user.balance),
+                            balanceAfter: Number(updatedUser.balance)
+                        }
+                    });
+                }
+
+                // Mark commission as SETTLED
+                await tx.commission.update({
+                    where: { id: comm.id },
+                    data: { status: 'SETTLED', settledAt: new Date() }
+                });
+            }
+        });
+        console.log(`[Settlement] Profits for order ${orderId} have been settled.`);
+    }
+    /**
      * Logic Reversal Profit (untuk Digiflazz Gagal)
+     * Membatalkan komisi yang sudah SETTLED atau PENDING dan menarik dana dari entity yang tepat.
      */
     public async handleCommissionReversal(orderId: string) {
         await this.prisma.$transaction(async (tx) => {
             const commissions = await tx.commission.findMany({
-                where: { orderId, status: { in: ['SETTLED', 'PENDING'] } }
+                where: { orderId, status: { in: ['SETTLED', 'PENDING'] } },
+                include: { user: { include: { merchant: true } } }
             });
 
             if (commissions.length === 0) return;
 
+            const order = await tx.order.findUnique({ where: { id: orderId } });
+            if (!order) return;
+
             for (const comm of commissions) {
-                // Jika masih PENDING, belum sempat masuk saldo utama. Langsung batalkan saja.
-                if (comm.status === 'PENDING') {
-                    await tx.commission.update({
-                        where: { id: comm.id },
-                        data: { status: 'CANCELLED' }
+                const user = comm.user;
+
+                // FIXED 13: Cek peran user sebelum menarik dana (Jangan semua ditarik dari Merchant!)
+                if (user.role === 'MERCHANT' && user.merchant) {
+                    const merchantId = user.merchant.id;
+                    const merchant = await tx.merchant.findUnique({ where: { id: merchantId } });
+
+                    if (!merchant) continue;
+
+                    if (comm.status === 'PENDING') {
+                        // Reversal from Escrow (funds were not yet available)
+                        await tx.merchant.update({
+                            where: { id: merchantId },
+                            data: { escrowBalance: { decrement: comm.amount } }
+                        });
+
+                        await tx.merchantLedgerMovement.create({
+                            data: {
+                                merchantId: merchantId,
+                                orderId: order.id,
+                                type: 'ESCROW_OUT',
+                                amount: -comm.amount,
+                                description: `Reversal Laba (Gagal Fulfillment): ${order.orderNumber} (Level: ESCROW)`,
+                                availableBefore: merchant.availableBalance,
+                                availableAfter: merchant.availableBalance,
+                                escrowBefore: merchant.escrowBalance,
+                                escrowAfter: merchant.escrowBalance - comm.amount
+                            }
+                        });
+                    } else if (comm.status === 'SETTLED') {
+                        // Reversal from Available (funds were already liquid)
+                        const updatedMerchant = await tx.merchant.update({
+                            where: { id: merchantId },
+                            data: { availableBalance: { decrement: comm.amount } }
+                        });
+
+                        await tx.merchantLedgerMovement.create({
+                            data: {
+                                merchantId: merchantId,
+                                orderId: order.id,
+                                type: 'AVAILABLE_OUT',
+                                amount: -comm.amount,
+                                description: `Reversal Laba (Gagal Fulfillment): ${order.orderNumber} (Level: AVAILABLE)`,
+                                availableBefore: merchant.availableBalance,
+                                availableAfter: updatedMerchant.availableBalance,
+                                escrowBefore: updatedMerchant.escrowBalance,
+                                escrowAfter: updatedMerchant.escrowBalance
+                            }
+                        });
+                    }
+                } 
+                // FIXED 13.2: Tarik balik dana Platform dari Super Admin (Jika terbayar)
+                else if (user.role === 'SUPER_ADMIN' && comm.status === 'SETTLED') {
+                    await tx.user.update({
+                        where: { id: user.id },
+                        data: { balance: { decrement: comm.amount } }
                     });
-                    continue;
+
+                    await tx.balanceTransaction.create({
+                        data: {
+                            userId: user.id,
+                            type: 'ADJUSTMENT',
+                            amount: -comm.amount,
+                            description: `Reversal Platform Fee (Order Gagal: ${order.orderNumber})`
+                        }
+                    });
                 }
 
-                // Jika sudah terlanjur SETTLED (cair ke saldo), kita harus potong saldonya.
-                const userPrior = await tx.user.findUnique({ where: { id: comm.userId } });
-                const currentBalance = Number(userPrior?.balance || 0);
-                
-                // CRITICAL FIX: Penanganan Saldo Minus (Hutang)
-                const isDebt = currentBalance < comm.amount;
-
-                const user = await tx.user.update({
-                    where: { id: comm.userId },
-                    data: { 
-                        balance: { decrement: comm.amount },
-                        status: isDebt ? 'SUSPENDED' : undefined // Suspend user temporarily to prevent abuse if negative balance
-                    }
-                });
-
-                await tx.balanceTransaction.create({
-                    data: {
-                        userId: comm.userId,
-                        type: 'REFUND',
-                        amount: -comm.amount,
-                        balanceBefore: currentBalance,
-                        balanceAfter: Number(user.balance),
-                        orderId,
-                        description: `Reversal profit (Digiflazz Gagal): ${orderId}${isDebt ? ' [SISTEM DEBT - SALDO MINUS]' : ''}`
-                    }
-                });
-
+                // Mark commission as CANCELLED irrespective of status
                 await tx.commission.update({
                     where: { id: comm.id },
                     data: { status: 'CANCELLED' }
                 });
             }
         });
-        console.log(`[FinanceProtect] Automated reversal for ${orderId} completed.`);
+        console.log(`[Reversal] Profits for order ${orderId} have been reversed.`);
     }
 
     /**
@@ -648,38 +815,44 @@ export class DigiflazzService {
             const isGuest = !order.user.email && order.user.name.startsWith('Guest ');
 
             if (isGuest) {
-                const refundCode = `REF-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${order.orderNumber.split('-').pop()}`;
-                console.log(`[CustomerRefund] Order ${order.orderNumber} is a GUEST order. Generating Refund Ticket: ${refundCode}`);
+                const voucherCode = `REF-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${order.id.substring(order.id.length - 4)}`;
+                console.log(`[CustomerRefund] Order ${order.orderNumber} is a GUEST order. Generating Refund Voucher: ${voucherCode}`);
                 
-                // 1. Increment Guest Balance
-                const user = await tx.user.update({
-                    where: { id: order.userId },
-                    data: { balance: { increment: order.sellingPrice } }
+                // FIXED: FALLACY REFUND GUEST. Ganti dengan sistem VOUCHER (PromoCode).
+                // Karena Guest tidak bisa login, saldo di user.balance tidak akan pernah terpakai.
+                // Dengan PromoCode, mereka bisa memasukkan kode ini di pesanan berikutnya untuk diskon 100%.
+                await tx.promoCode.create({
+                    data: {
+                        merchantId: order.merchantId,
+                        code: voucherCode,
+                        name: `Refund Voucher: ${order.orderNumber}`,
+                        description: `Voucher pengembalian dana untuk pesanan gagal: ${order.productSkuName}`,
+                        type: 'DISCOUNT_FLAT',
+                        value: order.sellingPrice, // Voucher senilai harga yang sudah dibayar
+                        quota: 1,
+                        usedCount: 0,
+                        isActive: true,
+                        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // Berlaku 30 hari
+                    }
                 });
 
-                // 2. Update Order with Refund Code
+                // Update Order with Refund Instructions
                 await tx.order.update({
                     where: { id: order.id },
                     data: { 
                         paymentStatus: 'REFUNDED',
                         fulfillmentStatus: 'FAILED',
-                        failReason: `AUTOMATED REFUND TICKET ISSUED: ${refundCode}. Dana dikreditkan ke saldo akun sementara Anda.`,
-                        note: `KODE REFUND GUEST: ${refundCode} (Simpan kode ini untuk klaim / pembelian ulang via Admin/WhatsApp)`
+                        failReason: `PESANAN GAGAL: Kami telah menerbitkan VOUCHER REFUND senilai Rp ${order.sellingPrice.toLocaleString('id-ID')}. Gunakan kode: ${voucherCode} pada pembelian berikutnya.`,
+                        note: `VOUCHER REFUND GUEST: ${voucherCode} (Nilai: Rp ${order.sellingPrice.toLocaleString('id-ID')})`
                     }
                 });
 
-                // 3. Log the balance transaction
-                await tx.balanceTransaction.create({
-                    data: {
-                        userId: order.userId,
-                        type: 'REFUND',
-                        amount: order.sellingPrice,
-                        balanceBefore: Number(user.balance) - Number(order.sellingPrice),
-                        balanceAfter: Number(user.balance),
-                        orderId: order.id,
-                        description: `Refund Ticket and Balance for Guest: ${refundCode}`
-                    }
-                });
+                // Notifikasi WhatsApp jika ada nomor HP
+                if (order.user.phone) {
+                    // This is outside tx, so we might need to handle it differently, 
+                    // but for now we'll rely on the existing pattern.
+                }
+
                 return;
             }
 

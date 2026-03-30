@@ -13,24 +13,25 @@ export class WithdrawalsService {
             throw new BadRequestException('Minimal penarikan adalah Rp 10.000');
         }
 
-        // 2. Process Withdrawal (Immediate deduction)
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: userId } });
+        if (!merchant) throw new BadRequestException('Merchant data not found for this user');
+
+        // 2. Process Withdrawal (Deduct from Merchant Ledger)
         return this.prisma.$transaction(async (tx) => {
-            // Atomic Balance Check and Deduction using updateMany to prevent double-spending
-            const updateResult = await tx.user.updateMany({
-                where: {
-                    id: userId,
-                    balance: { gte: amount }
-                },
-                data: { balance: { decrement: amount } }
+            const currentMerchant = await tx.merchant.findUnique({ 
+                where: { id: merchant.id },
+                select: { availableBalance: true, escrowBalance: true }
             });
 
-            if (updateResult.count === 0) {
-                throw new BadRequestException('Saldo tidak cukup atau sedang dikunci (Gagal pada sistem).');
+            if (!currentMerchant || currentMerchant.availableBalance < amount) {
+                throw new BadRequestException('Saldo Toko tidak mencukupi untuk penarikan ini.');
             }
 
-            // Fetch the updated user for the balance_transaction record
-            const updatedUser = await tx.user.findUnique({ where: { id: userId } });
-            if (!updatedUser) throw new Error('User not found after deduction');
+            // Atomic Deduction from Merchant
+            const updatedMerchant = await tx.merchant.update({
+                where: { id: merchant.id },
+                data: { availableBalance: { decrement: amount } }
+            });
 
             // Create Withdrawal Request
             const withdrawal = await tx.withdrawal.create({
@@ -45,16 +46,28 @@ export class WithdrawalsService {
                 }
             });
 
-            // Log Balance Transaction
+            // Log Merchant Ledger Movement
+            await tx.merchantLedgerMovement.create({
+                data: {
+                    merchantId: merchant.id,
+                    type: 'AVAILABLE_OUT',
+                    amount: -amount,
+                    description: `Penarikan Dana Toko ke ${bankName} (${accountNumber})`,
+                    availableBefore: currentMerchant.availableBalance,
+                    availableAfter: updatedMerchant.availableBalance,
+                    escrowBefore: updatedMerchant.escrowBalance,
+                    escrowAfter: updatedMerchant.escrowBalance
+                }
+            });
+
+            // Log legacy balanceTransaction for audit log consistency
             await tx.balanceTransaction.create({
                 data: {
                     userId,
                     type: 'WITHDRAWAL',
                     amount: -amount,
-                    balanceBefore: updatedUser.balance + amount,
-                    balanceAfter: updatedUser.balance,
                     withdrawalId: withdrawal.id,
-                    description: `Penarikan saldo ke ${bankName} (${accountNumber})`
+                    description: `Withdrawal dari Toko ${merchant.name}`
                 }
             });
 
@@ -92,6 +105,11 @@ export class WithdrawalsService {
 
     async rejectWithdrawal(withdrawalId: string, adminId: string, reason: string) {
         return this.prisma.$transaction(async (tx) => {
+            const withdrawal = await tx.withdrawal.findUnique({ where: { id: withdrawalId } });
+            if (!withdrawal || withdrawal.status !== 'PENDING') {
+                throw new BadRequestException('Permintaan tidak ditemukan atau sudah diproses.');
+            }
+
             // ATOMIC CHECK: Move inside transaction with updateMany to prevent double execution
             const updateResult = await tx.withdrawal.updateMany({
                 where: { id: withdrawalId, status: 'PENDING' },
@@ -103,33 +121,46 @@ export class WithdrawalsService {
                 }
             });
 
-            if (updateResult.count === 0) {
-                throw new BadRequestException('Permintaan penarikan tidak ditemukan, diproses ganda, atau status bukan PENDING.');
-            }
+            if (updateResult.count === 0) return withdrawal; // Already processed
 
-            const updatedWd = await tx.withdrawal.findUnique({ where: { id: withdrawalId } });
-            if (!updatedWd) throw new Error('Withdrawal not found after atomic update');
+            // Identify merchant of this user
+            const merchant = await tx.merchant.findUnique({ where: { ownerId: withdrawal.userId } });
+            if (!merchant) throw new Error('Merchant not found for refund');
 
-            // Refund balance to user
-            const user = await tx.user.update({
-                where: { id: updatedWd.userId },
-                data: { balance: { increment: updatedWd.amount } }
+            const merchantPrior = await tx.merchant.findUnique({ where: { id: merchant.id } });
+
+            // Refund balance to MERCHANT ledger
+            const updatedMerchant = await tx.merchant.update({
+                where: { id: merchant.id },
+                data: { availableBalance: { increment: withdrawal.amount } }
             });
 
-            // Log Refund Transaction
-            await tx.balanceTransaction.create({
+            // Log Merchant Ledger movement
+            await tx.merchantLedgerMovement.create({
                 data: {
-                    userId: updatedWd.userId,
-                    type: 'REFUND',
-                    amount: updatedWd.amount,
-                    balanceBefore: Number(user.balance) - Number(updatedWd.amount),
-                    balanceAfter: Number(user.balance),
-                    withdrawalId: updatedWd.id,
-                    description: `Refund penarikan saldo ditolak: ${reason}`
+                    merchantId: merchant.id,
+                    type: 'AVAILABLE_IN',
+                    amount: withdrawal.amount,
+                    description: `Refund Penarikan Ditolak: ${reason}`,
+                    availableBefore: merchantPrior?.availableBalance || 0,
+                    availableAfter: updatedMerchant.availableBalance,
+                    escrowBefore: updatedMerchant.escrowBalance,
+                    escrowAfter: updatedMerchant.escrowBalance
                 }
             });
 
-            return updatedWd;
+            // Log legacy transaction for user audit
+            await tx.balanceTransaction.create({
+                data: {
+                    userId: withdrawal.userId,
+                    type: 'REFUND',
+                    amount: withdrawal.amount,
+                    withdrawalId: withdrawal.id,
+                    description: `Refund penarikan ditolak: ${reason}`
+                }
+            });
+
+            return tx.withdrawal.findUnique({ where: { id: withdrawalId } });
         });
     }
 }

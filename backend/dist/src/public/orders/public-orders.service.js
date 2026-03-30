@@ -83,7 +83,7 @@ let PublicOrdersService = PublicOrdersService_1 = class PublicOrdersService {
         return mapping[code] || 'TRIPAY_QRIS';
     }
     async createCheckout(body, host, origin, merchantSlug) {
-        const { skuId, gameId, serverId, whatsapp, paymentMethod } = body;
+        const { skuId, gameId, serverId, whatsapp, paymentMethod, promoCode } = body;
         const sku = await this.prisma.productSku.findUnique({
             where: { id: skuId },
             include: { product: { include: { category: true } } }
@@ -147,7 +147,49 @@ let PublicOrdersService = PublicOrdersService_1 = class PublicOrdersService {
             throw new common_1.BadRequestException('Produk ini tidak tersedia di toko ini atau telah dinonaktifkan oleh pemilik toko');
         }
         const basePrice = Number(sku.basePrice);
-        const sellPrice = merchantOverride ? Number(merchantOverride.customPrice) : Number(sku.priceNormal);
+        let sellPrice = merchantOverride ? Number(merchantOverride.customPrice) : Number(sku.priceNormal);
+        sellPrice = Math.ceil(sellPrice);
+        let promoCodeId = undefined;
+        let discountAmount = 0;
+        if (promoCode) {
+            const now = new Date();
+            const promo = await this.prisma.promoCode.findFirst({
+                where: {
+                    code: promoCode.toUpperCase(),
+                    isActive: true,
+                    OR: [
+                        { merchantId: merchant.id },
+                        { merchantId: null }
+                    ]
+                }
+            });
+            if (!promo) {
+                throw new common_1.BadRequestException('Kode promo tidak valid atau tidak dapat digunakan di toko ini');
+            }
+            if (promo.startDate && now < promo.startDate)
+                throw new common_1.BadRequestException('Kode promo belum dapat digunakan');
+            if (promo.endDate && now > promo.endDate)
+                throw new common_1.BadRequestException('Kode promo telah kadaluarsa');
+            if (promo.quota !== null && promo.usedCount >= promo.quota) {
+                throw new common_1.BadRequestException('Kuota penggunaan kode promo telah habis');
+            }
+            if (promo.minPurchase && sellPrice < promo.minPurchase) {
+                throw new common_1.BadRequestException(`Minimal pembelian untuk promo ini adalah Rp ${promo.minPurchase.toLocaleString('id-ID')}`);
+            }
+            if (promo.type === 'DISCOUNT_FLAT') {
+                discountAmount = promo.value;
+            }
+            else if (promo.type === 'DISCOUNT_PERCENTAGE') {
+                discountAmount = (sellPrice * promo.value) / 100;
+                if (promo.maxDiscount) {
+                    discountAmount = Math.min(discountAmount, promo.maxDiscount);
+                }
+            }
+            discountAmount = Math.ceil(Math.min(discountAmount, sellPrice));
+            sellPrice -= discountAmount;
+            promoCodeId = promo.id;
+        }
+        sellPrice = Math.max(0, Math.ceil(sellPrice));
         let modalPrice = Number(sku.pricePro);
         let tier = 'PRO';
         if (merchantOverride && merchantOverride.customModalPrice) {
@@ -172,6 +214,10 @@ let PublicOrdersService = PublicOrdersService_1 = class PublicOrdersService {
                 tier = 'PRO';
             }
         }
+        if (!paymentMethod)
+            throw new common_1.BadRequestException('Metode pembayaran harus dipilih');
+        if (!whatsapp)
+            throw new common_1.BadRequestException('Nomor WhatsApp diperlukan');
         const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         let guestUser = await this.prisma.user.findFirst({
             where: { phone: whatsapp }
@@ -226,12 +272,25 @@ let PublicOrdersService = PublicOrdersService_1 = class PublicOrdersService {
                 gameUserName: resolvedNickname,
                 gameUserId: gameId,
                 gameUserServerId: serverId,
+                whatsapp,
+                promoCodeId,
+                discountAmount
             }
         });
-        if (!paymentMethod)
-            throw new common_1.BadRequestException('Metode pembayaran harus dipilih');
-        if (!whatsapp)
-            throw new common_1.BadRequestException('Nomor WhatsApp diperlukan');
+        if (promoCodeId) {
+            await this.prisma.promoCode.update({
+                where: { id: promoCodeId },
+                data: { usedCount: { increment: 1 } }
+            });
+            await this.prisma.promoUsage.create({
+                data: {
+                    promoCodeId,
+                    userId: guestUser.id,
+                    orderId: order.id,
+                    discountAmount
+                }
+            });
+        }
         const tripayPayload = {
             method: paymentMethod,
             merchant_ref: order.orderNumber,
@@ -250,7 +309,7 @@ let PublicOrdersService = PublicOrdersService_1 = class PublicOrdersService {
             return_url: `${origin || process.env.FRONTEND_URL || 'http://localhost:3000'}/invoice/${order.orderNumber}`
         };
         this.logger.log(`Initiating Tripay Request: ${order.orderNumber} via ${paymentMethod}`);
-        const tripayRes = await this.tripay.requestTransaction(tripayPayload);
+        const tripayRes = await this.tripay.requestTransaction(tripayPayload, merchantId);
         await this.prisma.payment.create({
             data: {
                 orderId: order.id,
@@ -281,27 +340,55 @@ let PublicOrdersService = PublicOrdersService_1 = class PublicOrdersService {
     async reverseCommission(orderId, tx) {
         const db = tx || this.prisma;
         const commissions = await db.commission.findMany({
-            where: { orderId, status: 'SETTLED' }
+            where: { orderId, status: { in: ['PENDING', 'SETTLED'] } }
         });
         if (commissions.length === 0)
             return;
         const work = async (innerTx) => {
             for (const comm of commissions) {
-                const user = await innerTx.user.update({
-                    where: { id: comm.userId },
-                    data: { balance: { decrement: comm.amount } }
+                const merchant = await innerTx.merchant.findFirst({
+                    where: { ownerId: comm.userId }
                 });
-                await innerTx.balanceTransaction.create({
-                    data: {
-                        userId: comm.userId,
-                        type: 'REFUND',
-                        amount: -comm.amount,
-                        balanceBefore: Number(user.balance) + comm.amount,
-                        balanceAfter: Number(user.balance),
-                        orderId,
-                        description: `Reversal profit (Order Gagal/Cancel): ${orderId}`
+                if (merchant) {
+                    if (comm.status === 'PENDING') {
+                        const updated = await innerTx.merchant.update({
+                            where: { id: merchant.id },
+                            data: { escrowBalance: { decrement: comm.amount } }
+                        });
+                        await innerTx.merchantLedgerMovement.create({
+                            data: {
+                                merchantId: merchant.id,
+                                orderId,
+                                type: 'ESCROW_OUT',
+                                amount: -comm.amount,
+                                description: `Reversal komisi pending (Refund Admin): ${orderId}`,
+                                availableBefore: merchant.availableBalance,
+                                availableAfter: merchant.availableBalance,
+                                escrowBefore: merchant.escrowBalance,
+                                escrowAfter: updated.escrowBalance
+                            }
+                        });
                     }
-                });
+                    else if (comm.status === 'SETTLED') {
+                        const updated = await innerTx.merchant.update({
+                            where: { id: merchant.id },
+                            data: { availableBalance: { decrement: comm.amount } }
+                        });
+                        await innerTx.merchantLedgerMovement.create({
+                            data: {
+                                merchantId: merchant.id,
+                                orderId,
+                                type: 'AVAILABLE_OUT',
+                                amount: -comm.amount,
+                                description: `Clawback profit yang sudah cair (Refund Admin): ${orderId}`,
+                                availableBefore: merchant.availableBalance,
+                                availableAfter: updated.availableBalance,
+                                escrowBefore: updated.escrowBalance,
+                                escrowAfter: updated.escrowBalance
+                            }
+                        });
+                    }
+                }
                 await innerTx.commission.update({
                     where: { id: comm.id },
                     data: { status: 'CANCELLED' }

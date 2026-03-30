@@ -37,7 +37,7 @@ export default function MarketingAdmin() {
         sortOrder: 0
     });
 
-    const { data: guides, mutate } = useSWR(`http://localhost:3001/admin/marketing/guides?search=${searchTerm}`, fetcher);
+    const { data: guides, mutate } = useSWR(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/marketing/guides?search=${searchTerm}`, fetcher);
 
     const handleOpenCreate = () => {
         setEditingGuide(null);
@@ -69,11 +69,11 @@ export default function MarketingAdmin() {
         try {
             const token = localStorage.getItem('admin_token');
             if (editingGuide) {
-                await axios.patch(`http://localhost:3001/admin/marketing/guides/${editingGuide.id}`, form, {
+                await axios.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/marketing/guides/${editingGuide.id}`, form, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
             } else {
-                await axios.post('http://localhost:3001/admin/marketing/guides', form, {
+                await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/marketing/guides', form, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
             }
@@ -88,7 +88,7 @@ export default function MarketingAdmin() {
         if (!confirm('Hapus panduan ini secara permanen?')) return;
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.delete(`http://localhost:3001/admin/marketing/guides/${id}`, {
+            await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/marketing/guides/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             mutate();

@@ -96,8 +96,16 @@ let WorkersService = WorkersService_1 = class WorkersService {
                     });
                     if (newStatus === client_1.OrderFulfillmentStatus.FAILED) {
                         this.logger.warn(`Order ${order.orderNumber} FAILED via Sync. Triggering refund & reversal.`);
-                        await this.digiflazz.handleCommissionReversal(order.id);
-                        await this.digiflazz.handleCustomerRefund(order.id);
+                        const pendingCommission = await this.prisma.commission.findFirst({
+                            where: { orderId: order.id, status: { in: ['PENDING', 'SETTLED'] } }
+                        });
+                        if (pendingCommission) {
+                            await this.digiflazz.handleCommissionReversal(order.id);
+                            await this.digiflazz.handleCustomerRefund(order.id);
+                        }
+                        else {
+                            this.logger.warn(`[SyncCron] Order ${order.orderNumber} FAILED but commissions already reversed. Skipping double-refund.`);
+                        }
                     }
                     this.logger.log(`Order ${order.orderNumber} updated to ${newStatus}`);
                 }

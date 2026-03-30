@@ -32,12 +32,15 @@ export default function InvoicePage() {
     const [openAccordion, setOpenAccordion] = useState<string | null>(null);
     const [syncing, setSyncing] = useState(false);
 
+    const orderRef = React.useRef<any>(null);
+
     const fetchOrder = async (isManual = false) => {
         if (isManual) setSyncing(true);
         const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
         try {
             const res = await axios.get(`${baseUrl}/public/orders/${id}`);
             setOrder(res.data);
+            orderRef.current = res.data;
         } catch (err: any) {
             setError(err.response?.data?.message || 'Gagal memuat pesanan');
         } finally {
@@ -46,18 +49,29 @@ export default function InvoicePage() {
         }
     };
 
+    // FIX FE-2: Sanitize text from external API before rendering as HTML
+    const sanitizeText = (html: string) => {
+        if (!html) return '';
+        return html
+            .replace(/<script[\s\S]*?<\/script>/gi, '')
+            .replace(/on\w+="[^"]*"/gi, '')
+            .replace(/javascript:/gi, '');
+    };
+
     useEffect(() => {
         if (id) fetchOrder();
 
-        // Accelerated Polling (5 seconds) for more real-time feel
+        // FIX FE-4: Use ref to read current order status — prevents multiple interval creation
         const interval = setInterval(() => {
-            if (order && (order.paymentStatus === 'PENDING' || order.paymentStatus === 'PROCESSING')) {
+            const current = orderRef.current;
+            if (current && (current.paymentStatus === 'PENDING' || current.paymentStatus === 'PROCESSING')) {
                 fetchOrder();
             }
         }, 5000);
 
         return () => clearInterval(interval);
-    }, [id, order?.paymentStatus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id]); // Only depends on id, not order.paymentStatus — prevents multiple interval spawning
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
@@ -236,7 +250,9 @@ export default function InvoicePage() {
                                                     {openAccordion === group.title && (
                                                         <ol className="mt-4 space-y-3 list-decimal list-inside border-t border-white/5 pt-4">
                                                             {group.steps.map((step: string, sIdx: number) => (
-                                                                <li key={sIdx} className="text-[10px] text-white/40 font-medium leading-relaxed italic" dangerouslySetInnerHTML={{ __html: step }} />
+                                                                <li key={sIdx} className="text-[10px] text-white/40 font-medium leading-relaxed italic">
+                                                                    <span dangerouslySetInnerHTML={{ __html: sanitizeText(step) }} />
+                                                                </li>
                                                             ))}
                                                         </ol>
                                                     )}

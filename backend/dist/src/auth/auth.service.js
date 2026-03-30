@@ -81,15 +81,8 @@ let AuthService = class AuthService {
             isMatch = await bcrypt.compare(data.password, user.password);
         }
         else {
-            isMatch = user.password === data.password;
-            if (isMatch) {
-                const hashedPassword = await bcrypt.hash(data.password, 10);
-                await this.prisma.user.update({
-                    where: { id: user.id },
-                    data: { password: hashedPassword }
-                });
-                console.log('Result: Migrated plain-text password to hash.');
-            }
+            console.warn(`[AuthAudit] User ${user.email} has non-bcrypt password. Login rejected. Require password reset via admin panel.`);
+            throw new common_1.UnauthorizedException('Akun Anda memiliki format password lama yang tidak aman. Silakan hubungi Super Admin untuk reset password Anda.');
         }
         if (!isMatch) {
             console.log('Result: FAILED - Wrong Password');

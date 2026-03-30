@@ -16,6 +16,8 @@ exports.TripayController = void 0;
 const common_1 = require("@nestjs/common");
 const tripay_service_1 = require("./tripay.service");
 const prisma_service_1 = require("../prisma.service");
+const bullmq_1 = require("@nestjs/bullmq");
+const bullmq_2 = require("bullmq");
 const digiflazz_service_1 = require("../admin/digiflazz/digiflazz.service");
 const whatsapp_service_1 = require("../common/notifications/whatsapp.service");
 let TripayController = class TripayController {
@@ -23,11 +25,13 @@ let TripayController = class TripayController {
     prisma;
     digiflazz;
     whatsappService;
-    constructor(tripayService, prisma, digiflazz, whatsappService) {
+    fulfillmentQueue;
+    constructor(tripayService, prisma, digiflazz, whatsappService, fulfillmentQueue) {
         this.tripayService = tripayService;
         this.prisma = prisma;
         this.digiflazz = digiflazz;
         this.whatsappService = whatsappService;
+        this.fulfillmentQueue = fulfillmentQueue;
     }
     async getPaymentChannels() {
         return this.tripayService.getPaymentChannels();
@@ -41,15 +45,33 @@ let TripayController = class TripayController {
                 console.warn(`[TripayCallback] Blocked unauthorized IP: ${clientIp}`);
                 return res.status(common_1.HttpStatus.FORBIDDEN).json({ success: false, message: 'Unauthorized IP Source' });
             }
-            const rawBody = req.rawBody || JSON.stringify(req.body);
-            const isValid = this.tripayService.verifySignature(signature, rawBody);
-            if (!isValid) {
-                console.warn('[TripayCallback] Invalid signature signature verification failed.');
-                return res.status(common_1.HttpStatus.FORBIDDEN).json({ success: false, message: 'Invalid signature' });
-            }
             const data = req.body;
             const ref = data.merchant_ref;
-            console.log(`[TripayCallback] Received ${data.status} for Ref: ${ref}`);
+            const rawBody = req.rawBody || JSON.stringify(req.body);
+            if (!ref) {
+                console.warn('[TripayCallback] Missing merchant_ref in payload.');
+                return res.status(common_1.HttpStatus.BAD_REQUEST).json({ success: false, message: 'Missing merchant_ref' });
+            }
+            let merchantId;
+            if (ref.startsWith('ORD-')) {
+                const order = await this.prisma.order.findUnique({ where: { orderNumber: ref }, select: { merchantId: true } });
+                merchantId = order?.merchantId;
+            }
+            else if (ref.startsWith('DEP-')) {
+                const depId = ref.replace('DEP-', '');
+                const deposit = await this.prisma.deposit.findUnique({ where: { id: depId }, select: { merchantId: true } });
+                merchantId = deposit?.merchantId;
+            }
+            else if (ref.startsWith('INV-')) {
+                const invoice = await this.prisma.invoice.findUnique({ where: { invoiceNo: ref }, select: { merchantId: true } });
+                merchantId = merchantId || invoice?.merchantId;
+            }
+            const isValid = await this.tripayService.verifySignature(signature, rawBody, merchantId);
+            if (!isValid) {
+                console.warn(`[TripayCallback] Invalid signature for Ref: ${ref} (Merchant: ${merchantId || 'PLATFORM'}). Verification failed.`);
+                return res.status(common_1.HttpStatus.FORBIDDEN).json({ success: false, message: 'Invalid signature' });
+            }
+            console.log(`[TripayCallback] Received ${data.status} for Ref: ${ref} (Merchant: ${merchantId || 'PLATFORM'})`);
             if (data.status === 'PAID') {
                 if (ref.startsWith('ORD-')) {
                     try {
@@ -101,6 +123,23 @@ let TripayController = class TripayController {
                                     const platformFeeAmount = Math.round(netProfit * (platformFeePct / 100));
                                     const merchantNetProfit = netProfit - platformFeeAmount;
                                     if (merchantNetProfit > 0) {
+                                        const updatedMerchantEscrow = await tx.merchant.update({
+                                            where: { id: order.merchantId },
+                                            data: { escrowBalance: { increment: merchantNetProfit } }
+                                        });
+                                        await tx.merchantLedgerMovement.create({
+                                            data: {
+                                                merchantId: order.merchantId,
+                                                orderId: order.id,
+                                                type: 'ESCROW_IN',
+                                                amount: merchantNetProfit,
+                                                description: `Laba Penjualan (Pending): ${order.orderNumber}`,
+                                                availableBefore: updatedMerchantEscrow.availableBalance,
+                                                availableAfter: updatedMerchantEscrow.availableBalance,
+                                                escrowBefore: updatedMerchantEscrow.escrowBalance - merchantNetProfit,
+                                                escrowAfter: updatedMerchantEscrow.escrowBalance
+                                            }
+                                        });
                                         await tx.commission.create({
                                             data: {
                                                 orderId: order.id,
@@ -144,15 +183,14 @@ let TripayController = class TripayController {
                             `Total: Rp ${order.totalPrice.toLocaleString('id-ID')}\n` +
                             `Metode: ${order.paymentMethod}\n` +
                             `Markup SA: Rp ${adminMarkup.toLocaleString('id-ID')}`).catch(() => { });
-                        setTimeout(async () => {
-                            try {
-                                console.log(`[TripayQueue / Background Worker] Triggering fulfillment for order: ${order.orderNumber}`);
-                                await this.digiflazz.placeOrder(order.id);
-                            }
-                            catch (fulfillErr) {
-                                console.error(`[TripayQueue / Background Worker] Fulfillment failed for ${order.orderNumber}:`, fulfillErr.message);
-                            }
-                        }, 0);
+                        await this.fulfillmentQueue.add('process-fulfillment', {
+                            orderId: order.id
+                        }, {
+                            attempts: 5,
+                            backoff: { type: 'exponential', delay: 5000 },
+                            removeOnComplete: true
+                        });
+                        console.log(`[TripayQueue / Persisted] Enqueued fulfillment specifically for order: ${order.orderNumber}`);
                     }
                     catch (err) {
                         if (err.code === 'P2025') {
@@ -166,9 +204,12 @@ let TripayController = class TripayController {
                     try {
                         const depositId = ref.replace('DEP-', '');
                         const deposit = await this.prisma.deposit.findUnique({
-                            where: { id: depositId }
+                            where: { id: depositId },
+                            include: { merchant: true }
                         });
                         if (deposit && deposit.status === 'PENDING') {
+                            const tripayFeeMerchant = Number(data.fee_merchant) || 0;
+                            const netDepositAmount = Math.max(0, Number(data.amount) - tripayFeeMerchant);
                             await this.prisma.$transaction(async (tx) => {
                                 const updatedDeposit = await tx.deposit.update({
                                     where: { id: deposit.id, status: 'PENDING' },
@@ -177,23 +218,36 @@ let TripayController = class TripayController {
                                         tripayResponse: data
                                     }
                                 });
-                                const user = await tx.user.update({
-                                    where: { id: deposit.userId },
-                                    data: { balance: { increment: deposit.amount } }
+                                const merchantPrior = await tx.merchant.findUnique({
+                                    where: { id: deposit.merchantId }
+                                });
+                                const updatedMerchant = await tx.merchant.update({
+                                    where: { id: deposit.merchantId },
+                                    data: { availableBalance: { increment: netDepositAmount } }
+                                });
+                                await tx.merchantLedgerMovement.create({
+                                    data: {
+                                        merchantId: deposit.merchantId,
+                                        type: 'AVAILABLE_IN',
+                                        amount: netDepositAmount,
+                                        description: `Top Up Saldo via Tripay (${data.payment_name}). Dipotong fee gateway: Rp ${tripayFeeMerchant}`,
+                                        availableBefore: merchantPrior?.availableBalance || 0,
+                                        availableAfter: updatedMerchant.availableBalance,
+                                        escrowBefore: updatedMerchant.escrowBalance,
+                                        escrowAfter: updatedMerchant.escrowBalance
+                                    }
                                 });
                                 await tx.balanceTransaction.create({
                                     data: {
                                         userId: deposit.userId,
                                         type: 'DEPOSIT',
-                                        amount: deposit.amount,
-                                        balanceBefore: Number(user.balance) - Number(deposit.amount),
-                                        balanceAfter: Number(user.balance),
+                                        amount: netDepositAmount,
                                         depositId: deposit.id,
-                                        description: `Deposit via Tripay (${data.payment_name})`
+                                        description: `Deposit via Tripay (${data.payment_name}) - Net: ${netDepositAmount}`
                                     }
                                 });
                             });
-                            console.log(`[TripayCallback] Deposit ${depositId} confirmed.`);
+                            console.log(`[TripayCallback] Deposit ${depositId} confirmed for Merchant: ${deposit.merchantId}. Net: ${netDepositAmount}`);
                         }
                     }
                     catch (err) {
@@ -347,9 +401,11 @@ __decorate([
 ], TripayController.prototype, "tripayCallback", null);
 exports.TripayController = TripayController = __decorate([
     (0, common_1.Controller)('tripay'),
+    __param(4, (0, bullmq_1.InjectQueue)('digiflazz-fulfillment')),
     __metadata("design:paramtypes", [tripay_service_1.TripayService,
         prisma_service_1.PrismaService,
         digiflazz_service_1.DigiflazzService,
-        whatsapp_service_1.WhatsappService])
+        whatsapp_service_1.WhatsappService,
+        bullmq_2.Queue])
 ], TripayController);
 //# sourceMappingURL=tripay.controller.js.map

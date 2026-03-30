@@ -28,7 +28,7 @@ export default function DigiflazzPage() {
     error,
     isLoading,
     mutate,
-  } = useSWR("http://localhost:3001/admin/digiflazz/products", fetcher, {
+  } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + "/admin/digiflazz/products", fetcher, {
     revalidateOnFocus: false, // STOP auto refetch on window focus
     revalidateIfStale: false,
     shouldRetryOnError: false
@@ -47,7 +47,13 @@ export default function DigiflazzPage() {
   ).sort() as string[];
 
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedBrand, setSelectedBrand] = useState<string>("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   // Select the first brand when data is loaded
   useEffect(() => {
@@ -60,8 +66,8 @@ export default function DigiflazzPage() {
   const activeItems = gameItems.filter(
     (item: any) =>
       (selectedBrand ? item.brand === selectedBrand : true) &&
-      (item.product_name.toLowerCase().includes(search.toLowerCase()) ||
-        item.buyer_sku_code.toLowerCase().includes(search.toLowerCase())),
+      (item.product_name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        item.buyer_sku_code.toLowerCase().includes(debouncedSearch.toLowerCase())),
   );
 
   // State for inline inputs & toggles
@@ -124,7 +130,7 @@ export default function DigiflazzPage() {
         status: isActive ? "ACTIVE" : "INACTIVE",
       };
 
-      await axios.post("http://localhost:3001/admin/digiflazz/sync", payload, {
+      await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + "/admin/digiflazz/sync", payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

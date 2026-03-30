@@ -147,22 +147,22 @@ export declare class SettingsController {
         success: boolean;
     }>;
     getWebhooks(req: any): Promise<{
-        url: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
         isActive: boolean;
+        url: string;
         secret: string;
         events: import("@prisma/client/runtime/client").JsonValue;
     }[]>;
     updateWebhook(req: any, body: any): Promise<{
-        url: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         merchantId: string;
         isActive: boolean;
+        url: string;
         secret: string;
         events: import("@prisma/client/runtime/client").JsonValue;
     }>;

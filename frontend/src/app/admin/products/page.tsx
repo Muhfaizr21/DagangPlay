@@ -33,8 +33,8 @@ export default function ProductManagementPage() {
     const [toastMsg, setToastMsg] = useState<{ title: string; desc: string; type: 'success' | 'error' } | null>(null);
 
     // Fetch Data
-    const { data: products, error: prodErr, mutate: mutateProd } = useSWR('http://localhost:3001/admin/products', fetcher);
-    const { data: categories, error: catErr, mutate: mutateCat } = useSWR('http://localhost:3001/admin/products/categories', fetcher);
+    const { data: products, error: prodErr, mutate: mutateProd } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/products', fetcher);
+    const { data: categories, error: catErr, mutate: mutateCat } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/products/categories', fetcher);
 
     const filteredProducts = products?.filter((p: any) => {
         const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -51,7 +51,7 @@ export default function ProductManagementPage() {
         setIsSyncing(true);
         try {
             const token = localStorage.getItem('admin_token');
-            const res = await axios.post('http://localhost:3001/admin/products/sync', {}, {
+            const res = await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/products/sync', {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 

@@ -13,14 +13,20 @@ const fetcher = (url: string) => {
 
 export default function MerchantOrdersPage() {
     const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
     const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [refundReason, setRefundReason] = useState('');
 
+    React.useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(search), 400);
+        return () => clearTimeout(timer);
+    }, [search]);
+
     const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
     const { data, error, isLoading, mutate } = useSWR(
-        `${baseUrl}/merchant/orders?search=${search}`,
+        `${baseUrl}/merchant/orders?search=${debouncedSearch}`,
         fetcher,
         { refreshInterval: 10000 } // real-time updates
     );

@@ -1,15 +1,15 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import { OrderFulfillmentStatus, OrderPaymentStatus } from '@prisma/client';
-
-import { DigiflazzService } from '../../admin/digiflazz/digiflazz.service';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { SubscriptionsService } from '../../admin/subscriptions/subscriptions.service';
 
 @Injectable()
 export class OrdersService {
     constructor(
         private prisma: PrismaService,
-        private digiflazz: DigiflazzService,
+        @InjectQueue('digiflazz-fulfillment') private fulfillmentQueue: Queue,
         private subscriptionsService: SubscriptionsService
     ) { }
 
@@ -43,27 +43,41 @@ export class OrdersService {
         if (activeTier === 'LEGEND') modalPrice = Number(sku.priceLegend);
         if (activeTier === 'SUPREME') modalPrice = Number(sku.priceSupreme);
 
-        // 4. Check Balance
-        if (merchant.owner.balance < modalPrice) {
-            throw new BadRequestException('Saldo Anda tidak mencukupi. Silakan top-up terlebih dahulu.');
+        // 4. Check Balance (Use Merchant Ledger)
+        if (merchant.availableBalance < modalPrice) {
+            throw new BadRequestException('Saldo Toko Anda tidak mencukupi untuk pesanan direct ini. Silakan top-up terlebih dahulu.');
         }
 
         // 5. Deduct Balance & Create Order
         const orderNumber = `DIR-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
         return this.prisma.$transaction(async (tx) => {
-            // Deduct from owner atomically (Race Condition Fix)
-            const updatedUsers = await tx.user.updateMany({
+            // Deduct from Merchant Ledger atomically
+            const updatedMerchant = await tx.merchant.update({
                 where: { 
-                    id: merchant.ownerId,
-                    balance: { gte: modalPrice }
+                    id: merchantId,
+                    availableBalance: { gte: modalPrice }
                 },
-                data: { balance: { decrement: modalPrice } }
+                data: { availableBalance: { decrement: modalPrice } }
             });
 
-            if (updatedUsers.count === 0) {
-                throw new BadRequestException('Saldo Anda tidak mencukupi atau sedang dikunci oleh sistem. Silakan top-up terlebih dahulu.');
+            if (!updatedMerchant) {
+                throw new BadRequestException('Saldo Toko tidak mencukupi atau sedang dikunci sistem.');
             }
+
+            // Create Ledger Movement Log
+            await tx.merchantLedgerMovement.create({
+                data: {
+                    merchantId,
+                    type: 'AVAILABLE_OUT',
+                    amount: -modalPrice,
+                    description: `Pembelian Produk (Direct): ${sku.product.name} - ${sku.name} (${orderNumber})`,
+                    availableBefore: merchant.availableBalance,
+                    availableAfter: updatedMerchant.availableBalance,
+                    escrowBefore: updatedMerchant.escrowBalance,
+                    escrowAfter: updatedMerchant.escrowBalance
+                }
+            });
 
             // Create Transaction Log
             await tx.balanceTransaction.create({
@@ -100,20 +114,16 @@ export class OrdersService {
                 }
             });
 
-        // Tautan (Chain) pemenuhan asinkron tapi tetap dimonitor untuk notifikasi
+        // Return order immediately — fulfillment dispatched via persistent BullMQ queue
         return order;
         }).then(async (order) => {
-            try {
-                // Berusaha hit Digiflazz
-                await this.digiflazz.placeOrder(order.id);
-            } catch (err: any) {
-                console.error('[DirectOrder] Ghost timeout saat fulfillment, Order PAID tapi Digiflazz gagal/timeout.', err.message);
-                // Flagging the order explicitly so the merchant knows why it's stuck
-                await this.prisma.order.update({
-                    where: { id: order.id },
-                    data: { failReason: 'Koneksi ke server pusat terputus (Timeout). Silakan lakukan RETRY manual.' }
-                });
-            }
+            // FIX #19: Route through BullMQ instead of direct sync call to prevent Ghost Orders
+            await this.fulfillmentQueue.add('process-fulfillment', { orderId: order.id }, {
+                attempts: 5,
+                backoff: { type: 'exponential', delay: 5000 },
+                removeOnComplete: true
+            });
+            console.log(`[DirectOrder] Enqueued fulfillment for order: ${order.orderNumber}`);
             return order;
         });
     }
@@ -212,66 +222,169 @@ export class OrdersService {
             }
         });
 
-        // CRITICAL FIX: Actually trigger Digiflazz fulfillment!
-        try {
-            await this.digiflazz.placeOrder(orderId);
-        } catch (err) {
-            console.error('[RetryOrder] Retry fulfillment failed:', err);
-            // Don't throw — status already saved, admin can check logs
-        }
+        // FIX #20: Route retry through BullMQ queue instead of sync call
+        await this.fulfillmentQueue.add('process-fulfillment', { orderId }, {
+            attempts: 5,
+            backoff: { type: 'exponential', delay: 5000 },
+            removeOnComplete: true
+        });
+        console.log(`[RetryOrder] Enqueued retry for order: ${orderId}`);
 
         const updated = await this.prisma.order.findUnique({ where: { id: orderId } });
-        return { message: 'Order retry triggered via Digiflazz', order: updated };
+        return { message: 'Order retry triggered via persistent BullMQ queue', order: updated };
     }
 
     async refundOrder(merchantId: string, orderId: string, reason: string) {
         const order = await this.prisma.order.findFirst({
-            where: { id: orderId, merchantId }
+            where: { id: orderId, merchantId },
+            include: { user: true }
         });
 
         if (!order) throw new NotFoundException('Order not found');
         if (order.fulfillmentStatus === 'SUCCESS' || order.paymentStatus === 'REFUNDED') {
-            throw new BadRequestException('Order cannot be refunded (status is ' + order.fulfillmentStatus + ')');
+            throw new BadRequestException(`Order cannot be refunded (status: ${order.fulfillmentStatus}, payment: ${order.paymentStatus})`);
         }
 
+        const isDirectOrder = order.orderNumber.startsWith('DIR-');
+
         return this.prisma.$transaction(async (tx) => {
-            const updated = await tx.order.update({
-                where: { id: orderId },
+            // ATOMIC STATUS LOCK: Check fulfillment and payment status inside the transaction
+            const orderCheck = await tx.order.updateMany({
+                where: { 
+                    id: orderId, 
+                    fulfillmentStatus: { not: 'SUCCESS' },
+                    paymentStatus: { in: ['PAID', 'PENDING'] } // Ensure not already REFUNDED
+                },
                 data: { paymentStatus: 'REFUNDED', fulfillmentStatus: 'FAILED' }
             });
+
+            if (orderCheck.count === 0) {
+                throw new BadRequestException('Order tidak dapat direfund (Mungkin sudah Sukses atau sudah Direfund sebelumnya)');
+            }
 
             await tx.orderStatusHistory.create({
                 data: {
                     orderId,
                     status: 'FAILED',
-                    note: `Refunded manually: ${reason}`,
+                    note: `Refunded manually by Merchant: ${reason}`,
                     changedBy: 'MERCHANT'
                 }
             });
 
-            // CRITICAL FIX: Only refund balance for WALLET orders (direct/internal)
-            if (order.paymentStatus === 'PAID' && order.paymentMethod === 'BALANCE') {
-                const buyerId = order.userId; // The Merchant Owner / Caller
-                const refundAmount = order.merchantModalPrice || order.sellingPrice;
+            if (isDirectOrder) {
+                // FIXED 6.1: Refund Direct Order to Merchant Ledger
+                const refundAmount = order.merchantModalPrice || 0;
+                const merchant = await tx.merchant.findUnique({ where: { id: merchantId } });
                 
-                if (buyerId) {
-                    await tx.user.update({
-                        where: { id: buyerId },
+                if (merchant && refundAmount > 0) {
+                    const updatedMerchant = await tx.merchant.update({
+                        where: { id: merchantId },
+                        data: { availableBalance: { increment: refundAmount } }
+                    });
+
+                    await tx.merchantLedgerMovement.create({
+                        data: {
+                            merchantId,
+                            orderId: order.id,
+                            type: 'AVAILABLE_IN',
+                            amount: refundAmount,
+                            description: `Refund Modal (Direct Order Gagal): ${order.orderNumber}`,
+                            availableBefore: merchant.availableBalance,
+                            availableAfter: updatedMerchant.availableBalance,
+                            escrowBefore: updatedMerchant.escrowBalance,
+                            escrowAfter: updatedMerchant.escrowBalance
+                        }
+                    });
+
+                    await tx.balanceTransaction.create({
+                        data: {
+                            userId: order.userId,
+                            type: 'REFUND',
+                            amount: refundAmount,
+                            description: `Refund Modal Direct Order: ${order.orderNumber}`
+                        }
+                    });
+                }
+            } else {
+                // FIXED 6.2: Refund Store Order (Customer)
+                // 1. Refund sellingPrice to Customer Balance (if applicable)
+                if (order.paymentMethod === 'BALANCE') {
+                    const refundAmount = order.totalPrice;
+                    const user = await tx.user.update({
+                        where: { id: order.userId },
                         data: { balance: { increment: refundAmount } }
                     });
 
                     await tx.balanceTransaction.create({
                         data: {
-                            userId: buyerId,
+                            userId: order.userId,
                             type: 'REFUND',
                             amount: refundAmount,
-                            description: `Refund Modal untuk order langsung ${order.orderNumber}`
+                            description: `Refund Dana Pelanggan (Store Order): ${order.orderNumber}`
                         }
+                    });
+                }
+
+                // 2. CLAW BACK PROFIT from Merchant
+                // Must check BOTH PENDING (in escrow) AND SETTLED (already available) commissions
+                const commissions = await tx.commission.findMany({
+                    where: { orderId: order.id, type: 'MERCHANT_RETAIL_PROFIT', status: { in: ['PENDING', 'SETTLED'] } }
+                });
+
+                for (const commission of commissions) {
+                    const merchant = await tx.merchant.findUnique({ where: { id: merchantId } });
+                    if (!merchant) continue;
+
+                    if (commission.status === 'PENDING') {
+                        // Funds are still in escrow — deduct from escrowBalance
+                        const updatedMerchant = await tx.merchant.update({
+                            where: { id: merchantId },
+                            data: { escrowBalance: { decrement: commission.amount } }
+                        });
+
+                        await tx.merchantLedgerMovement.create({
+                            data: {
+                                merchantId: merchantId,
+                                orderId: order.id,
+                                type: 'ESCROW_OUT',
+                                amount: -commission.amount,
+                                description: `Clawback Laba (Refund Pembeli): ${order.orderNumber}`,
+                                availableBefore: merchant.availableBalance,
+                                availableAfter: merchant.availableBalance,
+                                escrowBefore: merchant.escrowBalance,
+                                escrowAfter: updatedMerchant.escrowBalance
+                            }
+                        });
+                    } else if (commission.status === 'SETTLED') {
+                        // FIX #18: Funds already settled into availableBalance — must deduct from there
+                        const updatedMerchant = await tx.merchant.update({
+                            where: { id: merchantId },
+                            data: { availableBalance: { decrement: commission.amount } }
+                        });
+
+                        await tx.merchantLedgerMovement.create({
+                            data: {
+                                merchantId: merchantId,
+                                orderId: order.id,
+                                type: 'AVAILABLE_OUT',
+                                amount: -commission.amount,
+                                description: `Clawback Laba yang sudah Cair (Refund Pembeli): ${order.orderNumber}`,
+                                availableBefore: merchant.availableBalance,
+                                availableAfter: updatedMerchant.availableBalance,
+                                escrowBefore: updatedMerchant.escrowBalance,
+                                escrowAfter: updatedMerchant.escrowBalance
+                            }
+                        });
+                    }
+
+                    await tx.commission.update({
+                        where: { id: commission.id },
+                        data: { status: 'CANCELLED' }
                     });
                 }
             }
 
-            return updated;
+            return tx.order.findUnique({ where: { id: orderId } });
         });
     }
 }

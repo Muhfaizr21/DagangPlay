@@ -149,7 +149,7 @@ export default function MerchantSettingsPage() {
         try {
             const token = localStorage.getItem('admin_token');
             // Assuming endpoint exists or will exist
-            // await axios.put('http://localhost:3001/merchant/settings/seo', seoForm, { headers: { Authorization: `Bearer ${token}` } });
+            // await axios.put((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/merchant/settings/seo', seoForm, { headers: { Authorization: `Bearer ${token}` } });
             alert('Pengaturan SEO & Pixel berhasil disimpan! (Mockup)');
         } catch (err: any) {
             alert('Gagal menyimpan pengaturan SEO & Pixel');

@@ -2,13 +2,16 @@ import { Injectable, NotFoundException, BadRequestException, InternalServerError
 import { PrismaService } from '../../prisma.service';
 import { OrderPaymentStatus, OrderFulfillmentStatus, FraudRiskLevel } from '@prisma/client';
 import { PublicOrdersService } from '../../public/orders/public-orders.service';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { paginate } from '../../common/utils/pagination';
 
 @Injectable()
 export class TransactionsService {
     constructor(
         private prisma: PrismaService,
-        private publicOrders: PublicOrdersService
+        private publicOrders: PublicOrdersService,
+        @InjectQueue('digiflazz-fulfillment') private fulfillmentQueue: Queue
     ) { }
 
     async getAllTransactions(filters: any) {
@@ -91,7 +94,7 @@ export class TransactionsService {
                 data: {
                     orderId: id,
                     status: 'PROCESSING',
-                    note: `Transasi di-retry manual`,
+                    note: `Transaksi di-retry manual oleh operator`,
                     changedBy: operatorId
                 }
             });
@@ -107,7 +110,14 @@ export class TransactionsService {
             });
         });
 
-        return { success: true, message: 'Transaksi dimasukkan antrian retry' };
+        // FIX A: Actually dispatch to BullMQ persistent queue
+        await this.fulfillmentQueue.add('process-fulfillment', { orderId: id }, {
+            attempts: 5,
+            backoff: { type: 'exponential', delay: 5000 },
+            removeOnComplete: true
+        });
+
+        return { success: true, message: 'Transaksi dimasukkan antrian BullMQ untuk diproses ulang' };
     }
 
     async refundTransaction(id: string, operatorId: string) {
@@ -116,6 +126,8 @@ export class TransactionsService {
 
         if (order.fulfillmentStatus === 'REFUNDED') throw new BadRequestException('Trx sudah direfund');
         if (order.paymentStatus !== 'PAID') throw new BadRequestException('Trx belum dibayar, tidak bisa refund');
+        // FIX B: Prevent refunding an order that was already fulfilled — prevents double benefit
+        if (order.fulfillmentStatus === 'SUCCESS') throw new BadRequestException('Tidak bisa refund: Produk sudah berhasil dikirim ke pelanggan. Hubungi supplier terlebih dahulu untuk pembatalan.');
 
         return this.prisma.$transaction(async (tx) => {
             await tx.order.update({

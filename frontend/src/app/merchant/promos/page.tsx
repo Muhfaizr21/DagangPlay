@@ -12,10 +12,10 @@ const fetcher = (url: string) => {
 };
 
 export default function MerchantPromosPage() {
-    const { data: promos, mutate, error } = useSWR('http://localhost:3001/merchant/promos', fetcher);
+    const { data: promos, mutate, error } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/merchant/promos', fetcher);
     // Tambah untuk Flash Sale Data
-    const { data: flashSales, mutate: mutateFS } = useSWR('http://localhost:3001/merchant/promos/flash-sales', fetcher);
-    const { data: productsData } = useSWR('http://localhost:3001/merchant/products', fetcher);
+    const { data: flashSales, mutate: mutateFS } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/merchant/promos/flash-sales', fetcher);
+    const { data: productsData } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/merchant/products', fetcher);
 
 
     const [activeTab, setActiveTab] = useState('vouchers');
@@ -59,7 +59,7 @@ export default function MerchantPromosPage() {
             const numDiscount = Number(form.discountAmount);
             const numQuota = form.quota ? Number(form.quota) : null;
 
-            await axios.post('http://localhost:3001/merchant/promos', {
+            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/merchant/promos', {
                 ...form,
                 discountAmount: numDiscount,
                 quota: numQuota
@@ -77,7 +77,7 @@ export default function MerchantPromosPage() {
     const handleToggle = async (id: string, currentStatus: boolean) => {
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.put(`http://localhost:3001/merchant/promos/${id}/toggle`, { isActive: !currentStatus }, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/merchant/promos/${id}/toggle`, { isActive: !currentStatus }, { headers: { Authorization: `Bearer ${token}` } });
             mutate();
         } catch (err: any) {
             alert('Gagal ubah status promo');
@@ -88,7 +88,7 @@ export default function MerchantPromosPage() {
         if (!confirm('Hapus promo ini secara permanen?')) return;
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.delete(`http://localhost:3001/merchant/promos/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/merchant/promos/${id}`, { headers: { Authorization: `Bearer ${token}` } });
             mutate();
         } catch (err: any) {
             alert('Gagal menghapus promo');
@@ -103,7 +103,7 @@ export default function MerchantPromosPage() {
             const targetProduct = productsData?.find((p: any) => p.id === fsForm.selectedProduct);
             if (!targetProduct) return alert('Pilih produk dulu');
 
-            await axios.post('http://localhost:3001/merchant/promos/flash-sales', {
+            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/merchant/promos/flash-sales', {
                 name: fsForm.name,
                 startTime: new Date(fsForm.startDate).toISOString(),
                 endTime: new Date(fsForm.endDate).toISOString(),
@@ -127,7 +127,7 @@ export default function MerchantPromosPage() {
     const handleToggleFS = async (id: string, currentStatus: boolean) => {
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.put(`http://localhost:3001/merchant/promos/flash-sales/${id}/toggle`, { isActive: !currentStatus }, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/merchant/promos/flash-sales/${id}/toggle`, { isActive: !currentStatus }, { headers: { Authorization: `Bearer ${token}` } });
             mutateFS();
         } catch (err: any) {
             alert('Gagal ubah status Flash Sale');
@@ -138,7 +138,7 @@ export default function MerchantPromosPage() {
         if (!confirm('Hapus Flash Sale ini?')) return;
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.delete(`http://localhost:3001/merchant/promos/flash-sales/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/merchant/promos/flash-sales/${id}`, { headers: { Authorization: `Bearer ${token}` } });
             mutateFS();
         } catch (err: any) {
             alert('Gagal menghapus Flash Sale');

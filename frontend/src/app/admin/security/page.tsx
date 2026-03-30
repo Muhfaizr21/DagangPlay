@@ -33,15 +33,15 @@ export default function SecurityManagementPage() {
     const [toastMsg, setToastMsg] = useState<{ title: string; desc: string; type: 'success' | 'error' } | null>(null);
 
     // FRAUD State
-    const { data: frauds, isLoading: loadingFrauds, mutate: mutateFrauds } = useSWR('http://localhost:3001/admin/security/fraud', fetcher);
+    const { data: frauds, isLoading: loadingFrauds, mutate: mutateFrauds } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/security/fraud', fetcher);
     // BLACKLIST State
-    const { data: blacklists, isLoading: loadingBlacklists, mutate: mutateBlacklists } = useSWR('http://localhost:3001/admin/security/blacklist', fetcher);
+    const { data: blacklists, isLoading: loadingBlacklists, mutate: mutateBlacklists } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/security/blacklist', fetcher);
     const [showBlacklistModal, setShowBlacklistModal] = useState(false);
     const [blacklistForm, setBlacklistForm] = useState({ ipAddress: '', reason: '' });
     // LOGIN State
-    const { data: logins, isLoading: loadingLogins } = useSWR('http://localhost:3001/admin/security/login-attempts', fetcher);
+    const { data: logins, isLoading: loadingLogins } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/security/login-attempts', fetcher);
     // AUDIT State
-    const { data: audits, isLoading: loadingAudits } = useSWR('http://localhost:3001/admin/security/audit', fetcher);
+    const { data: audits, isLoading: loadingAudits } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/security/audit', fetcher);
 
     const showToast = (title: string, desc: string, type: 'success' | 'error' = 'success') => {
         setToastMsg({ title, desc, type });
@@ -51,7 +51,7 @@ export default function SecurityManagementPage() {
     const handleResolveFraud = async (id: string) => {
         if (!confirm('Tandai investigasi fraud ini telah selesai/resolved?')) return;
         try {
-            await axios.post(`http://localhost:3001/admin/security/fraud/${id}/resolve`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
+            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/security/fraud/${id}/resolve`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             mutateFrauds();
             showToast('Resolved', 'Kasus fraud berhasil ditutup.');
         } catch (err: any) {
@@ -62,7 +62,7 @@ export default function SecurityManagementPage() {
     const handleAddBlacklist = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:3001/admin/security/blacklist', blacklistForm);
+            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/security/blacklist', blacklistForm);
             mutateBlacklists();
             setShowBlacklistModal(false);
             setBlacklistForm({ ipAddress: '', reason: '' });
@@ -75,7 +75,7 @@ export default function SecurityManagementPage() {
     const handleRemoveBlacklist = async (id: string) => {
         if (!confirm('Buka blokir dari IP Address ini?')) return;
         try {
-            await axios.delete(`http://localhost:3001/admin/security/blacklist/${id}`);
+            await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/security/blacklist/${id}`);
             mutateBlacklists();
             showToast('Unblocked', 'IP Address kembali mendapatkan akses.');
         } catch (err: any) {

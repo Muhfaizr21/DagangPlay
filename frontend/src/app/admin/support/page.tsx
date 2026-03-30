@@ -34,10 +34,10 @@ export default function SupportManagementPage() {
     const [toastMsg, setToastMsg] = useState<{ title: string; desc: string; type: 'success' | 'error' } | null>(null);
 
     const { data: tickets, isLoading, mutate } = useSWR(
-        `http://localhost:3001/admin/tickets?status=${statusFilter}&priority=${priorityFilter}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/tickets?status=${statusFilter}&priority=${priorityFilter}`,
         fetcher
     );
-    const { data: stats } = useSWR('http://localhost:3001/admin/tickets/stats', fetcher);
+    const { data: stats } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/tickets/stats', fetcher);
 
     // Selected Ticket State
     const [selectedTicket, setSelectedTicket] = useState<any>(null);
@@ -50,7 +50,7 @@ export default function SupportManagementPage() {
 
     const handleSelectTicket = async (id: string) => {
         try {
-            const res = await axios.get(`http://localhost:3001/admin/tickets/${id}`);
+            const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/tickets/${id}`);
             setSelectedTicket(res.data);
             mutate(); // Refresh the list naturally, maybe state changed
         } catch (err) {
@@ -61,7 +61,7 @@ export default function SupportManagementPage() {
     const handleSendReply = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post(`http://localhost:3001/admin/tickets/${selectedTicket.id}/reply`, {
+            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/tickets/${selectedTicket.id}/reply`, {
                 message: replyText
             });
             setReplyText('');
@@ -74,7 +74,7 @@ export default function SupportManagementPage() {
 
     const handleUpdateStatus = async (newStatus: string) => {
         try {
-            await axios.put(`http://localhost:3001/admin/tickets/${selectedTicket.id}`, { status: newStatus });
+            await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/tickets/${selectedTicket.id}`, { status: newStatus });
             handleSelectTicket(selectedTicket.id);
             mutate();
             showToast('Sukses', `Status tiket diubah menjadi ${newStatus}`);

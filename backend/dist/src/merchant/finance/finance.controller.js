@@ -34,8 +34,11 @@ let FinanceController = class FinanceController {
         return this.financeService.getFinanceOverview(merchant.id, req.user.id);
     }
     async requestWithdrawal(req, body) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant)
+            throw new Error('Merchant not found');
         const isInstant = body.type === 'INSTANT';
-        return this.financeService.requestWithdrawal(req.user.id, body.amount, body.bankName, body.bankAccountName, body.bankAccountNumber, isInstant);
+        return this.financeService.requestWithdrawal(merchant.id, req.user.id, body.amount, body.bankName, body.bankAccountName, body.bankAccountNumber, isInstant);
     }
     async requestDeposit(req, body) {
         const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });

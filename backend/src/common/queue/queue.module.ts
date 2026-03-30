@@ -2,7 +2,8 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { WebhookProcessor } from './webhook.processor';
 import { DigiflazzProcessor } from './digiflazz.processor';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from '../../prisma.service';
+import { DigiflazzModule } from '../../admin/digiflazz/digiflazz.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { PrismaService } from 'src/prisma.service';
     BullModule.registerQueue({
       name: 'digiflazz-fulfillment',
     }),
+    DigiflazzModule,
   ],
   providers: [WebhookProcessor, DigiflazzProcessor, PrismaService],
   exports: [BullModule],

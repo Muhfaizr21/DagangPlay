@@ -89,7 +89,7 @@ const PriceCatalog = () => {
     const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch('http://localhost:3001/public/products/full-catalog')
+        fetch((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/public/products/full-catalog')
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {

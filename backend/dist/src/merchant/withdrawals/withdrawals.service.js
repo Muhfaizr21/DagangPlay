@@ -22,20 +22,21 @@ let WithdrawalsService = class WithdrawalsService {
         if (amount < 10000) {
             throw new common_1.BadRequestException('Minimal penarikan adalah Rp 10.000');
         }
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: userId } });
+        if (!merchant)
+            throw new common_1.BadRequestException('Merchant data not found for this user');
         return this.prisma.$transaction(async (tx) => {
-            const updateResult = await tx.user.updateMany({
-                where: {
-                    id: userId,
-                    balance: { gte: amount }
-                },
-                data: { balance: { decrement: amount } }
+            const currentMerchant = await tx.merchant.findUnique({
+                where: { id: merchant.id },
+                select: { availableBalance: true, escrowBalance: true }
             });
-            if (updateResult.count === 0) {
-                throw new common_1.BadRequestException('Saldo tidak cukup atau sedang dikunci (Gagal pada sistem).');
+            if (!currentMerchant || currentMerchant.availableBalance < amount) {
+                throw new common_1.BadRequestException('Saldo Toko tidak mencukupi untuk penarikan ini.');
             }
-            const updatedUser = await tx.user.findUnique({ where: { id: userId } });
-            if (!updatedUser)
-                throw new Error('User not found after deduction');
+            const updatedMerchant = await tx.merchant.update({
+                where: { id: merchant.id },
+                data: { availableBalance: { decrement: amount } }
+            });
             const withdrawal = await tx.withdrawal.create({
                 data: {
                     userId,
@@ -47,15 +48,25 @@ let WithdrawalsService = class WithdrawalsService {
                     status: 'PENDING'
                 }
             });
+            await tx.merchantLedgerMovement.create({
+                data: {
+                    merchantId: merchant.id,
+                    type: 'AVAILABLE_OUT',
+                    amount: -amount,
+                    description: `Penarikan Dana Toko ke ${bankName} (${accountNumber})`,
+                    availableBefore: currentMerchant.availableBalance,
+                    availableAfter: updatedMerchant.availableBalance,
+                    escrowBefore: updatedMerchant.escrowBalance,
+                    escrowAfter: updatedMerchant.escrowBalance
+                }
+            });
             await tx.balanceTransaction.create({
                 data: {
                     userId,
                     type: 'WITHDRAWAL',
                     amount: -amount,
-                    balanceBefore: updatedUser.balance + amount,
-                    balanceAfter: updatedUser.balance,
                     withdrawalId: withdrawal.id,
-                    description: `Penarikan saldo ke ${bankName} (${accountNumber})`
+                    description: `Withdrawal dari Toko ${merchant.name}`
                 }
             });
             return withdrawal;
@@ -86,6 +97,10 @@ let WithdrawalsService = class WithdrawalsService {
     }
     async rejectWithdrawal(withdrawalId, adminId, reason) {
         return this.prisma.$transaction(async (tx) => {
+            const withdrawal = await tx.withdrawal.findUnique({ where: { id: withdrawalId } });
+            if (!withdrawal || withdrawal.status !== 'PENDING') {
+                throw new common_1.BadRequestException('Permintaan tidak ditemukan atau sudah diproses.');
+            }
             const updateResult = await tx.withdrawal.updateMany({
                 where: { id: withdrawalId, status: 'PENDING' },
                 data: {
@@ -95,28 +110,38 @@ let WithdrawalsService = class WithdrawalsService {
                     note: reason
                 }
             });
-            if (updateResult.count === 0) {
-                throw new common_1.BadRequestException('Permintaan penarikan tidak ditemukan, diproses ganda, atau status bukan PENDING.');
-            }
-            const updatedWd = await tx.withdrawal.findUnique({ where: { id: withdrawalId } });
-            if (!updatedWd)
-                throw new Error('Withdrawal not found after atomic update');
-            const user = await tx.user.update({
-                where: { id: updatedWd.userId },
-                data: { balance: { increment: updatedWd.amount } }
+            if (updateResult.count === 0)
+                return withdrawal;
+            const merchant = await tx.merchant.findUnique({ where: { ownerId: withdrawal.userId } });
+            if (!merchant)
+                throw new Error('Merchant not found for refund');
+            const merchantPrior = await tx.merchant.findUnique({ where: { id: merchant.id } });
+            const updatedMerchant = await tx.merchant.update({
+                where: { id: merchant.id },
+                data: { availableBalance: { increment: withdrawal.amount } }
+            });
+            await tx.merchantLedgerMovement.create({
+                data: {
+                    merchantId: merchant.id,
+                    type: 'AVAILABLE_IN',
+                    amount: withdrawal.amount,
+                    description: `Refund Penarikan Ditolak: ${reason}`,
+                    availableBefore: merchantPrior?.availableBalance || 0,
+                    availableAfter: updatedMerchant.availableBalance,
+                    escrowBefore: updatedMerchant.escrowBalance,
+                    escrowAfter: updatedMerchant.escrowBalance
+                }
             });
             await tx.balanceTransaction.create({
                 data: {
-                    userId: updatedWd.userId,
+                    userId: withdrawal.userId,
                     type: 'REFUND',
-                    amount: updatedWd.amount,
-                    balanceBefore: Number(user.balance) - Number(updatedWd.amount),
-                    balanceAfter: Number(user.balance),
-                    withdrawalId: updatedWd.id,
-                    description: `Refund penarikan saldo ditolak: ${reason}`
+                    amount: withdrawal.amount,
+                    withdrawalId: withdrawal.id,
+                    description: `Refund penarikan ditolak: ${reason}`
                 }
             });
-            return updatedWd;
+            return tx.withdrawal.findUnique({ where: { id: withdrawalId } });
         });
     }
 };

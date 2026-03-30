@@ -13,13 +13,13 @@ const fetcher = (url: string) => {
 };
 
 export default function MerchantSupportPage() {
-    const { data: tickets, mutate } = useSWR('http://localhost:3001/merchant/support', fetcher);
+    const { data: tickets, mutate } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/merchant/support', fetcher);
     const [statusFilter, setStatusFilter] = useState('ALL');
 
     const handleUpdateStatus = async (id: string, newStatus: string) => {
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.put(`http://localhost:3001/merchant/support/${id}`, { status: newStatus }, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/merchant/support/${id}`, { status: newStatus }, { headers: { Authorization: `Bearer ${token}` } });
             mutate();
         } catch (err: any) {
             alert('Gagal update tiket');

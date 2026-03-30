@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -29,9 +29,16 @@ const fetcher = (url: string) => {
 
 export default function TransactionManagementPage() {
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState(''); // FIX FE-5: Debounced search
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [page, setPage] = useState(1);
     const [toastMsg, setToastMsg] = useState<{ title: string; desc: string; type: 'success' | 'error' } | null>(null);
+
+    // FIX FE-5: Debounce search input 400ms to prevent per-keystroke API flood
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(searchTerm), 400);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     // States for Detail Modal
     const [selectedTrxId, setSelectedTrxId] = useState<string | null>(null);
@@ -40,17 +47,17 @@ export default function TransactionManagementPage() {
     const [showFraudModal, setShowFraudModal] = useState(false);
     const [fraudReason, setFraudReason] = useState('');
 
-    // Fetch Data
+    // Fetch Data — use debouncedSearch for API calls
     const { data: fetchResult, error, isLoading, mutate } = useSWR(
-        `http://localhost:3001/admin/transactions?search=${searchTerm}&fulfillmentStatus=${statusFilter}&page=${page}&limit=20`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/transactions?search=${debouncedSearch}&fulfillmentStatus=${statusFilter}&page=${page}&limit=20`,
         fetcher,
-        { refreshInterval: 15000 } // real-time auto-refresh
+        { refreshInterval: 15000 }
     );
     const transactions = fetchResult?.data || [];
     const meta = fetchResult?.meta;
 
     const { data: trxDetail, error: detailError, isLoading: loadingDetail, mutate: mutateDetail } = useSWR(
-        selectedTrxId ? `http://localhost:3001/admin/transactions/${selectedTrxId}` : null,
+        selectedTrxId ? `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/transactions/${selectedTrxId}` : null,
         fetcher
     );
 
@@ -58,7 +65,7 @@ export default function TransactionManagementPage() {
     const handleRetry = async (id: string) => {
         try {
             if (!confirm(`Yakin ingin melakukan RETRY ke Supplier API?`)) return;
-            await axios.post(`http://localhost:3001/admin/transactions/${id}/retry`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
+            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/transactions/${id}/retry`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             mutate();
             if (selectedTrxId === id) mutateDetail();
             setToastMsg({ title: 'Berhasil', desc: `Transaksi dimasukkan antrian retry`, type: 'success' });
@@ -72,7 +79,7 @@ export default function TransactionManagementPage() {
     const handleRefund = async (id: string) => {
         try {
             if (!confirm(`Lakukan REFUND dana kembali ke balance user?`)) return;
-            await axios.post(`http://localhost:3001/admin/transactions/${id}/refund`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
+            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/transactions/${id}/refund`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             mutate();
             if (selectedTrxId === id) mutateDetail();
             setToastMsg({ title: 'Refund Diproses', desc: `Saldo telah dikembalikan ke user`, type: 'success' });
@@ -86,8 +93,14 @@ export default function TransactionManagementPage() {
     const submitFraudMark = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedTrxId || !fraudReason) return;
+        // FIX FE-3: Add Authorization header — was missing, causing 401 on every fraud mark
+        const token = localStorage.getItem('admin_token');
         try {
-            await axios.post(`http://localhost:3001/admin/transactions/${selectedTrxId}/mark-fraud`, { reason: fraudReason });
+            await axios.post(
+                `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/transactions/${selectedTrxId}/mark-fraud`,
+                { reason: fraudReason },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
             mutate();
             mutateDetail();
             setToastMsg({ title: 'Fraud Ditambahkan', desc: `Transaksi diamankan karena indikasi penipuan`, type: 'success' });

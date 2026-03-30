@@ -11,13 +11,19 @@ const common_1 = require("@nestjs/common");
 const tripay_service_1 = require("./tripay.service");
 const tripay_controller_1 = require("./tripay.controller");
 const prisma_service_1 = require("../prisma.service");
+const bullmq_1 = require("@nestjs/bullmq");
 const digiflazz_module_1 = require("../admin/digiflazz/digiflazz.module");
 let TripayModule = class TripayModule {
 };
 exports.TripayModule = TripayModule;
 exports.TripayModule = TripayModule = __decorate([
     (0, common_1.Module)({
-        imports: [digiflazz_module_1.DigiflazzModule],
+        imports: [
+            digiflazz_module_1.DigiflazzModule,
+            bullmq_1.BullModule.registerQueue({
+                name: 'digiflazz-fulfillment',
+            }),
+        ],
         providers: [tripay_service_1.TripayService, prisma_service_1.PrismaService],
         controllers: [tripay_controller_1.TripayController],
         exports: [tripay_service_1.TripayService],

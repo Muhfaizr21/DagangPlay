@@ -42,23 +42,16 @@ export class AuthService {
             throw new UnauthorizedException('Akun admin Anda sedang dinonaktifkan.');
         }
 
-        // Verify Password (Check bcrypt, fallback to plain for migration if needed)
+        // Verify Password — bcrypt only. No plaintext fallback.
         let isMatch = false;
         if (user.password.startsWith('$2')) {
             isMatch = await bcrypt.compare(data.password, user.password);
         } else {
-            // Migration fallback: if db has plain text password
-            isMatch = user.password === data.password;
-
-            // Auto-migrate to hash if successful
-            if (isMatch) {
-                const hashedPassword = await bcrypt.hash(data.password, 10);
-                await this.prisma.user.update({
-                    where: { id: user.id },
-                    data: { password: hashedPassword }
-                });
-                console.log('Result: Migrated plain-text password to hash.');
-            }
+            // FIX F: Account has a legacy non-bcrypt password.
+            // Reject the login and instruct the admin to reset via the Super Admin panel.
+            // This removes the plaintext comparison security vulnerability.
+            console.warn(`[AuthAudit] User ${user.email} has non-bcrypt password. Login rejected. Require password reset via admin panel.`);
+            throw new UnauthorizedException('Akun Anda memiliki format password lama yang tidak aman. Silakan hubungi Super Admin untuk reset password Anda.');
         }
 
         if (!isMatch) {

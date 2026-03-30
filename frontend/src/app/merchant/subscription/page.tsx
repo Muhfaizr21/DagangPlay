@@ -1,5 +1,15 @@
 "use client";
 
+// Security: Sanitize HTML from external sources before rendering
+const sanitizeHtml = (html: string): string => {
+    if (!html) return '';
+    return html
+        .replace(/<script[\s\S]*?<\/script>/gi, '')
+        .replace(/on\w+="[^"]*"/gi, '')
+        .replace(/javascript:/gi, '');
+};
+
+
 import React, { useState } from 'react';
 import MerchantLayout from '../../../components/merchant/MerchantLayout';
 import useSWR from 'swr';
@@ -345,7 +355,7 @@ export default function MerchantSubscriptionPage() {
                                                                                             <p className="text-[11px] font-black text-slate-700 mb-2">{ins.title}</p>
                                                                                             <ul className="space-y-1">
                                                                                                 {ins.steps.slice(0, 5).map((st: string, si: number) => (
-                                                                                                    <li key={si} className="text-[11px] text-slate-500 list-disc list-inside leading-relaxed" dangerouslySetInnerHTML={{ __html: st }} />
+                                                                                                    <li key={si} className="text-[11px] text-slate-500 list-disc list-inside leading-relaxed" dangerouslySetInnerHTML={{ __html: sanitizeHtml(st)}} />
                                                                                                 ))}
                                                                                             </ul>
                                                                                         </div>

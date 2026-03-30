@@ -21,8 +21,10 @@ export class FinanceController {
 
     @Post('withdraw')
     async requestWithdrawal(@Request() req, @Body() body: any) {
+        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
+        if (!merchant) throw new Error('Merchant not found');
         const isInstant = body.type === 'INSTANT';
-        return this.financeService.requestWithdrawal(req.user.id, body.amount, body.bankName, body.bankAccountName, body.bankAccountNumber, isInstant);
+        return this.financeService.requestWithdrawal(merchant.id, req.user.id, body.amount, body.bankName, body.bankAccountName, body.bankAccountNumber, isInstant);
     }
 
     @Post('deposit')

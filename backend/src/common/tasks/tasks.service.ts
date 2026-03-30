@@ -97,17 +97,22 @@ export class TasksService {
             });
             if (expiredOrders.count > 0) this.logger.log(`Cancelled ${expiredOrders.count} expired orders.`);
 
-            // Downgrade expired merchant plans
+            // FIX E: Downgrade expired merchant plans WITH 3-DAY GRACE PERIOD
+            // Prevents mid-transaction plan changes that disrupt active checkouts
+            const gracePeriodCutoff = new Date();
+            gracePeriodCutoff.setDate(gracePeriodCutoff.getDate() - 3);
+
             const expiredPlans = await this.prisma.merchant.updateMany({
                 where: {
                     plan: { not: 'FREE' },
-                    planExpiredAt: { lt: new Date() }
+                    planExpiredAt: { lt: gracePeriodCutoff }
                 },
                 data: {
                     plan: 'FREE'
                 }
             });
-            if (expiredPlans.count > 0) this.logger.log(`Downgraded ${expiredPlans.count} merchants to FREE plan.`);
+            if (expiredPlans.count > 0) this.logger.log(`Downgraded ${expiredPlans.count} merchants to FREE plan (after 3-day grace period).`);
+
         } catch (error) {
             this.logger.error('Error during frequent checks:', error);
         }

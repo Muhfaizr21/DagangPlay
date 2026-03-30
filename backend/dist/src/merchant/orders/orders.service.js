@@ -8,19 +8,23 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrdersService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma.service");
-const digiflazz_service_1 = require("../../admin/digiflazz/digiflazz.service");
+const bullmq_1 = require("@nestjs/bullmq");
+const bullmq_2 = require("bullmq");
 const subscriptions_service_1 = require("../../admin/subscriptions/subscriptions.service");
 let OrdersService = class OrdersService {
     prisma;
-    digiflazz;
+    fulfillmentQueue;
     subscriptionsService;
-    constructor(prisma, digiflazz, subscriptionsService) {
+    constructor(prisma, fulfillmentQueue, subscriptionsService) {
         this.prisma = prisma;
-        this.digiflazz = digiflazz;
+        this.fulfillmentQueue = fulfillmentQueue;
         this.subscriptionsService = subscriptionsService;
     }
     async createDirectOrder(merchantId, userId, body) {
@@ -48,21 +52,33 @@ let OrdersService = class OrdersService {
             modalPrice = Number(sku.priceLegend);
         if (activeTier === 'SUPREME')
             modalPrice = Number(sku.priceSupreme);
-        if (merchant.owner.balance < modalPrice) {
-            throw new common_1.BadRequestException('Saldo Anda tidak mencukupi. Silakan top-up terlebih dahulu.');
+        if (merchant.availableBalance < modalPrice) {
+            throw new common_1.BadRequestException('Saldo Toko Anda tidak mencukupi untuk pesanan direct ini. Silakan top-up terlebih dahulu.');
         }
         const orderNumber = `DIR-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         return this.prisma.$transaction(async (tx) => {
-            const updatedUsers = await tx.user.updateMany({
+            const updatedMerchant = await tx.merchant.update({
                 where: {
-                    id: merchant.ownerId,
-                    balance: { gte: modalPrice }
+                    id: merchantId,
+                    availableBalance: { gte: modalPrice }
                 },
-                data: { balance: { decrement: modalPrice } }
+                data: { availableBalance: { decrement: modalPrice } }
             });
-            if (updatedUsers.count === 0) {
-                throw new common_1.BadRequestException('Saldo Anda tidak mencukupi atau sedang dikunci oleh sistem. Silakan top-up terlebih dahulu.');
+            if (!updatedMerchant) {
+                throw new common_1.BadRequestException('Saldo Toko tidak mencukupi atau sedang dikunci sistem.');
             }
+            await tx.merchantLedgerMovement.create({
+                data: {
+                    merchantId,
+                    type: 'AVAILABLE_OUT',
+                    amount: -modalPrice,
+                    description: `Pembelian Produk (Direct): ${sku.product.name} - ${sku.name} (${orderNumber})`,
+                    availableBefore: merchant.availableBalance,
+                    availableAfter: updatedMerchant.availableBalance,
+                    escrowBefore: updatedMerchant.escrowBalance,
+                    escrowAfter: updatedMerchant.escrowBalance
+                }
+            });
             await tx.balanceTransaction.create({
                 data: {
                     userId: merchant.ownerId,
@@ -96,16 +112,12 @@ let OrdersService = class OrdersService {
             });
             return order;
         }).then(async (order) => {
-            try {
-                await this.digiflazz.placeOrder(order.id);
-            }
-            catch (err) {
-                console.error('[DirectOrder] Ghost timeout saat fulfillment, Order PAID tapi Digiflazz gagal/timeout.', err.message);
-                await this.prisma.order.update({
-                    where: { id: order.id },
-                    data: { failReason: 'Koneksi ke server pusat terputus (Timeout). Silakan lakukan RETRY manual.' }
-                });
-            }
+            await this.fulfillmentQueue.add('process-fulfillment', { orderId: order.id }, {
+                attempts: 5,
+                backoff: { type: 'exponential', delay: 5000 },
+                removeOnComplete: true
+            });
+            console.log(`[DirectOrder] Enqueued fulfillment for order: ${order.orderNumber}`);
             return order;
         });
     }
@@ -190,64 +202,154 @@ let OrdersService = class OrdersService {
                 changedBy: 'MERCHANT'
             }
         });
-        try {
-            await this.digiflazz.placeOrder(orderId);
-        }
-        catch (err) {
-            console.error('[RetryOrder] Retry fulfillment failed:', err);
-        }
+        await this.fulfillmentQueue.add('process-fulfillment', { orderId }, {
+            attempts: 5,
+            backoff: { type: 'exponential', delay: 5000 },
+            removeOnComplete: true
+        });
+        console.log(`[RetryOrder] Enqueued retry for order: ${orderId}`);
         const updated = await this.prisma.order.findUnique({ where: { id: orderId } });
-        return { message: 'Order retry triggered via Digiflazz', order: updated };
+        return { message: 'Order retry triggered via persistent BullMQ queue', order: updated };
     }
     async refundOrder(merchantId, orderId, reason) {
         const order = await this.prisma.order.findFirst({
-            where: { id: orderId, merchantId }
+            where: { id: orderId, merchantId },
+            include: { user: true }
         });
         if (!order)
             throw new common_1.NotFoundException('Order not found');
         if (order.fulfillmentStatus === 'SUCCESS' || order.paymentStatus === 'REFUNDED') {
-            throw new common_1.BadRequestException('Order cannot be refunded (status is ' + order.fulfillmentStatus + ')');
+            throw new common_1.BadRequestException(`Order cannot be refunded (status: ${order.fulfillmentStatus}, payment: ${order.paymentStatus})`);
         }
+        const isDirectOrder = order.orderNumber.startsWith('DIR-');
         return this.prisma.$transaction(async (tx) => {
-            const updated = await tx.order.update({
-                where: { id: orderId },
+            const orderCheck = await tx.order.updateMany({
+                where: {
+                    id: orderId,
+                    fulfillmentStatus: { not: 'SUCCESS' },
+                    paymentStatus: { in: ['PAID', 'PENDING'] }
+                },
                 data: { paymentStatus: 'REFUNDED', fulfillmentStatus: 'FAILED' }
             });
+            if (orderCheck.count === 0) {
+                throw new common_1.BadRequestException('Order tidak dapat direfund (Mungkin sudah Sukses atau sudah Direfund sebelumnya)');
+            }
             await tx.orderStatusHistory.create({
                 data: {
                     orderId,
                     status: 'FAILED',
-                    note: `Refunded manually: ${reason}`,
+                    note: `Refunded manually by Merchant: ${reason}`,
                     changedBy: 'MERCHANT'
                 }
             });
-            if (order.paymentStatus === 'PAID' && order.paymentMethod === 'BALANCE') {
-                const buyerId = order.userId;
-                const refundAmount = order.merchantModalPrice || order.sellingPrice;
-                if (buyerId) {
-                    await tx.user.update({
-                        where: { id: buyerId },
-                        data: { balance: { increment: refundAmount } }
+            if (isDirectOrder) {
+                const refundAmount = order.merchantModalPrice || 0;
+                const merchant = await tx.merchant.findUnique({ where: { id: merchantId } });
+                if (merchant && refundAmount > 0) {
+                    const updatedMerchant = await tx.merchant.update({
+                        where: { id: merchantId },
+                        data: { availableBalance: { increment: refundAmount } }
+                    });
+                    await tx.merchantLedgerMovement.create({
+                        data: {
+                            merchantId,
+                            orderId: order.id,
+                            type: 'AVAILABLE_IN',
+                            amount: refundAmount,
+                            description: `Refund Modal (Direct Order Gagal): ${order.orderNumber}`,
+                            availableBefore: merchant.availableBalance,
+                            availableAfter: updatedMerchant.availableBalance,
+                            escrowBefore: updatedMerchant.escrowBalance,
+                            escrowAfter: updatedMerchant.escrowBalance
+                        }
                     });
                     await tx.balanceTransaction.create({
                         data: {
-                            userId: buyerId,
+                            userId: order.userId,
                             type: 'REFUND',
                             amount: refundAmount,
-                            description: `Refund Modal untuk order langsung ${order.orderNumber}`
+                            description: `Refund Modal Direct Order: ${order.orderNumber}`
                         }
                     });
                 }
             }
-            return updated;
+            else {
+                if (order.paymentMethod === 'BALANCE') {
+                    const refundAmount = order.totalPrice;
+                    const user = await tx.user.update({
+                        where: { id: order.userId },
+                        data: { balance: { increment: refundAmount } }
+                    });
+                    await tx.balanceTransaction.create({
+                        data: {
+                            userId: order.userId,
+                            type: 'REFUND',
+                            amount: refundAmount,
+                            description: `Refund Dana Pelanggan (Store Order): ${order.orderNumber}`
+                        }
+                    });
+                }
+                const commissions = await tx.commission.findMany({
+                    where: { orderId: order.id, type: 'MERCHANT_RETAIL_PROFIT', status: { in: ['PENDING', 'SETTLED'] } }
+                });
+                for (const commission of commissions) {
+                    const merchant = await tx.merchant.findUnique({ where: { id: merchantId } });
+                    if (!merchant)
+                        continue;
+                    if (commission.status === 'PENDING') {
+                        const updatedMerchant = await tx.merchant.update({
+                            where: { id: merchantId },
+                            data: { escrowBalance: { decrement: commission.amount } }
+                        });
+                        await tx.merchantLedgerMovement.create({
+                            data: {
+                                merchantId: merchantId,
+                                orderId: order.id,
+                                type: 'ESCROW_OUT',
+                                amount: -commission.amount,
+                                description: `Clawback Laba (Refund Pembeli): ${order.orderNumber}`,
+                                availableBefore: merchant.availableBalance,
+                                availableAfter: merchant.availableBalance,
+                                escrowBefore: merchant.escrowBalance,
+                                escrowAfter: updatedMerchant.escrowBalance
+                            }
+                        });
+                    }
+                    else if (commission.status === 'SETTLED') {
+                        const updatedMerchant = await tx.merchant.update({
+                            where: { id: merchantId },
+                            data: { availableBalance: { decrement: commission.amount } }
+                        });
+                        await tx.merchantLedgerMovement.create({
+                            data: {
+                                merchantId: merchantId,
+                                orderId: order.id,
+                                type: 'AVAILABLE_OUT',
+                                amount: -commission.amount,
+                                description: `Clawback Laba yang sudah Cair (Refund Pembeli): ${order.orderNumber}`,
+                                availableBefore: merchant.availableBalance,
+                                availableAfter: updatedMerchant.availableBalance,
+                                escrowBefore: updatedMerchant.escrowBalance,
+                                escrowAfter: updatedMerchant.escrowBalance
+                            }
+                        });
+                    }
+                    await tx.commission.update({
+                        where: { id: commission.id },
+                        data: { status: 'CANCELLED' }
+                    });
+                }
+            }
+            return tx.order.findUnique({ where: { id: orderId } });
         });
     }
 };
 exports.OrdersService = OrdersService;
 exports.OrdersService = OrdersService = __decorate([
     (0, common_1.Injectable)(),
+    __param(1, (0, bullmq_1.InjectQueue)('digiflazz-fulfillment')),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        digiflazz_service_1.DigiflazzService,
+        bullmq_2.Queue,
         subscriptions_service_1.SubscriptionsService])
 ], OrdersService);
 //# sourceMappingURL=orders.service.js.map

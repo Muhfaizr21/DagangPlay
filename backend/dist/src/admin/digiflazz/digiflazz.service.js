@@ -363,6 +363,17 @@ let DigiflazzService = DigiflazzService_1 = class DigiflazzService {
             throw new common_1.NotFoundException('Order not found for fulfillment');
         if (order.fulfillmentStatus === 'SUCCESS')
             return;
+        if (!order.gameUserId || order.gameUserId.trim() === '') {
+            this.logger.error(`[placeOrder] Order ${order.orderNumber} has no gameUserId. Cannot fulfill.`);
+            await this.prisma.order.update({
+                where: { id: order.id },
+                data: {
+                    fulfillmentStatus: 'FAILED',
+                    failReason: 'Gagal: ID Akun Game (User ID) tidak boleh kosong.'
+                }
+            });
+            return null;
+        }
         const { username, key, url } = this.getDigiflazzConfig();
         try {
             const currentBalance = await this.checkBalance();
@@ -384,6 +395,27 @@ let DigiflazzService = DigiflazzService_1 = class DigiflazzService {
         }
         catch (balErr) {
             this.logger.error(`[SupplierBalance] Failed to verify balance, proceeding normally: ${balErr.message}`);
+        }
+        const currentBasePrice = Number(order.productSku.basePrice);
+        const lockedModalPrice = Number(order.merchantModalPrice || order.sellingPrice);
+        if (currentBasePrice > lockedModalPrice) {
+            console.warn(`[AntiLoss] Price Spike Detected: Order ${order.orderNumber}. Current Base: ${currentBasePrice} > Locked Modal: ${lockedModalPrice}. ABORTING.`);
+            await this.prisma.order.update({
+                where: { id: order.id },
+                data: {
+                    fulfillmentStatus: 'FAILED',
+                    failReason: `Pelanggaran Anti-Rugi: Harga pusat (Rp ${currentBasePrice}) telah naik melebihi harga modal transaksi (Rp ${lockedModalPrice}).`
+                }
+            });
+            await this.prisma.disputeCase.create({
+                data: {
+                    orderId: order.id,
+                    userId: order.userId,
+                    reason: `Anti-Loss Guard: Harga pusat mendadak naik dari Rp ${order.basePrice} menjadi Rp ${currentBasePrice}. Hubungi admin untuk penyesuaian dana.`,
+                    status: 'OPEN'
+                }
+            });
+            return { success: false, message: 'Price threshold exceeded' };
         }
         const sign = crypto.createHash('md5').update(username + key + order.orderNumber).digest('hex');
         const customerNo = order.gameUserServerId ? `${order.gameUserId}${order.gameUserServerId}` : order.gameUserId;
@@ -450,6 +482,9 @@ let DigiflazzService = DigiflazzService_1 = class DigiflazzService {
                 }
                 if (fulfillmentStatus === 'SUCCESS' || fulfillmentStatus === 'FAILED') {
                     this.whatsappService.sendFulfillmentNotification(order.user.phone || '', order.orderNumber, `${order.productName} - ${order.productSkuName}`, fulfillmentStatus, data.sn || 'N/A').catch(err => this.logger.error(`[FulfillmentNotification] Failed: ${err.message}`));
+                    if (fulfillmentStatus === 'SUCCESS') {
+                        await this.settleOrderProfit(order.id);
+                    }
                 }
                 return data;
             }
@@ -484,49 +519,148 @@ let DigiflazzService = DigiflazzService_1 = class DigiflazzService {
             throw err;
         }
     }
+    async settleOrderProfit(orderId) {
+        await this.prisma.$transaction(async (tx) => {
+            const updated = await tx.commission.updateMany({
+                where: { orderId, status: 'PENDING' },
+                data: { status: 'SETTLED', settledAt: new Date() }
+            });
+            if (updated.count === 0)
+                return;
+            const commissions = await tx.commission.findMany({
+                where: { orderId, status: 'SETTLED', settledAt: { gte: new Date(Date.now() - 5000) } },
+                include: { user: { include: { merchant: true } } }
+            });
+            for (const comm of commissions) {
+                const user = comm.user;
+                if (user.role === 'MERCHANT' && user.merchant) {
+                    const merchantId = user.merchant.id;
+                    const merchant = await tx.merchant.findUnique({ where: { id: merchantId } });
+                    if (merchant) {
+                        const updatedMerchant = await tx.merchant.update({
+                            where: { id: merchantId },
+                            data: {
+                                escrowBalance: { decrement: comm.amount },
+                                availableBalance: { increment: comm.amount }
+                            }
+                        });
+                        await tx.merchantLedgerMovement.create({
+                            data: {
+                                merchantId,
+                                orderId,
+                                type: 'SETTLEMENT',
+                                amount: comm.amount,
+                                description: `Pencairan Laba Penjualan (Order Sukses): ${orderId}`,
+                                availableBefore: merchant.availableBalance,
+                                availableAfter: updatedMerchant.availableBalance,
+                                escrowBefore: merchant.escrowBalance,
+                                escrowAfter: updatedMerchant.escrowBalance
+                            }
+                        });
+                    }
+                }
+                else if (user.role === 'SUPER_ADMIN') {
+                    const updatedUser = await tx.user.update({
+                        where: { id: user.id },
+                        data: { balance: { increment: comm.amount } }
+                    });
+                    await tx.balanceTransaction.create({
+                        data: {
+                            userId: user.id,
+                            type: 'COMMISSION',
+                            amount: comm.amount,
+                            description: `Platform Fee Settlement (Order: ${orderId})`,
+                            balanceBefore: Number(user.balance),
+                            balanceAfter: Number(updatedUser.balance)
+                        }
+                    });
+                }
+                await tx.commission.update({
+                    where: { id: comm.id },
+                    data: { status: 'SETTLED', settledAt: new Date() }
+                });
+            }
+        });
+        console.log(`[Settlement] Profits for order ${orderId} have been settled.`);
+    }
     async handleCommissionReversal(orderId) {
         await this.prisma.$transaction(async (tx) => {
             const commissions = await tx.commission.findMany({
-                where: { orderId, status: { in: ['SETTLED', 'PENDING'] } }
+                where: { orderId, status: { in: ['SETTLED', 'PENDING'] } },
+                include: { user: { include: { merchant: true } } }
             });
             if (commissions.length === 0)
                 return;
+            const order = await tx.order.findUnique({ where: { id: orderId } });
+            if (!order)
+                return;
             for (const comm of commissions) {
-                if (comm.status === 'PENDING') {
-                    await tx.commission.update({
-                        where: { id: comm.id },
-                        data: { status: 'CANCELLED' }
-                    });
-                    continue;
+                const user = comm.user;
+                if (user.role === 'MERCHANT' && user.merchant) {
+                    const merchantId = user.merchant.id;
+                    const merchant = await tx.merchant.findUnique({ where: { id: merchantId } });
+                    if (!merchant)
+                        continue;
+                    if (comm.status === 'PENDING') {
+                        await tx.merchant.update({
+                            where: { id: merchantId },
+                            data: { escrowBalance: { decrement: comm.amount } }
+                        });
+                        await tx.merchantLedgerMovement.create({
+                            data: {
+                                merchantId: merchantId,
+                                orderId: order.id,
+                                type: 'ESCROW_OUT',
+                                amount: -comm.amount,
+                                description: `Reversal Laba (Gagal Fulfillment): ${order.orderNumber} (Level: ESCROW)`,
+                                availableBefore: merchant.availableBalance,
+                                availableAfter: merchant.availableBalance,
+                                escrowBefore: merchant.escrowBalance,
+                                escrowAfter: merchant.escrowBalance - comm.amount
+                            }
+                        });
+                    }
+                    else if (comm.status === 'SETTLED') {
+                        const updatedMerchant = await tx.merchant.update({
+                            where: { id: merchantId },
+                            data: { availableBalance: { decrement: comm.amount } }
+                        });
+                        await tx.merchantLedgerMovement.create({
+                            data: {
+                                merchantId: merchantId,
+                                orderId: order.id,
+                                type: 'AVAILABLE_OUT',
+                                amount: -comm.amount,
+                                description: `Reversal Laba (Gagal Fulfillment): ${order.orderNumber} (Level: AVAILABLE)`,
+                                availableBefore: merchant.availableBalance,
+                                availableAfter: updatedMerchant.availableBalance,
+                                escrowBefore: updatedMerchant.escrowBalance,
+                                escrowAfter: updatedMerchant.escrowBalance
+                            }
+                        });
+                    }
                 }
-                const userPrior = await tx.user.findUnique({ where: { id: comm.userId } });
-                const currentBalance = Number(userPrior?.balance || 0);
-                const isDebt = currentBalance < comm.amount;
-                const user = await tx.user.update({
-                    where: { id: comm.userId },
-                    data: {
-                        balance: { decrement: comm.amount },
-                        status: isDebt ? 'SUSPENDED' : undefined
-                    }
-                });
-                await tx.balanceTransaction.create({
-                    data: {
-                        userId: comm.userId,
-                        type: 'REFUND',
-                        amount: -comm.amount,
-                        balanceBefore: currentBalance,
-                        balanceAfter: Number(user.balance),
-                        orderId,
-                        description: `Reversal profit (Digiflazz Gagal): ${orderId}${isDebt ? ' [SISTEM DEBT - SALDO MINUS]' : ''}`
-                    }
-                });
+                else if (user.role === 'SUPER_ADMIN' && comm.status === 'SETTLED') {
+                    await tx.user.update({
+                        where: { id: user.id },
+                        data: { balance: { decrement: comm.amount } }
+                    });
+                    await tx.balanceTransaction.create({
+                        data: {
+                            userId: user.id,
+                            type: 'ADJUSTMENT',
+                            amount: -comm.amount,
+                            description: `Reversal Platform Fee (Order Gagal: ${order.orderNumber})`
+                        }
+                    });
+                }
                 await tx.commission.update({
                     where: { id: comm.id },
                     data: { status: 'CANCELLED' }
                 });
             }
         });
-        console.log(`[FinanceProtect] Automated reversal for ${orderId} completed.`);
+        console.log(`[Reversal] Profits for order ${orderId} have been reversed.`);
     }
     async handleCustomerRefund(orderId) {
         await this.prisma.$transaction(async (tx) => {
@@ -543,32 +677,33 @@ let DigiflazzService = DigiflazzService_1 = class DigiflazzService {
                 return;
             const isGuest = !order.user.email && order.user.name.startsWith('Guest ');
             if (isGuest) {
-                const refundCode = `REF-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${order.orderNumber.split('-').pop()}`;
-                console.log(`[CustomerRefund] Order ${order.orderNumber} is a GUEST order. Generating Refund Ticket: ${refundCode}`);
-                const user = await tx.user.update({
-                    where: { id: order.userId },
-                    data: { balance: { increment: order.sellingPrice } }
+                const voucherCode = `REF-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${order.id.substring(order.id.length - 4)}`;
+                console.log(`[CustomerRefund] Order ${order.orderNumber} is a GUEST order. Generating Refund Voucher: ${voucherCode}`);
+                await tx.promoCode.create({
+                    data: {
+                        merchantId: order.merchantId,
+                        code: voucherCode,
+                        name: `Refund Voucher: ${order.orderNumber}`,
+                        description: `Voucher pengembalian dana untuk pesanan gagal: ${order.productSkuName}`,
+                        type: 'DISCOUNT_FLAT',
+                        value: order.sellingPrice,
+                        quota: 1,
+                        usedCount: 0,
+                        isActive: true,
+                        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                    }
                 });
                 await tx.order.update({
                     where: { id: order.id },
                     data: {
                         paymentStatus: 'REFUNDED',
                         fulfillmentStatus: 'FAILED',
-                        failReason: `AUTOMATED REFUND TICKET ISSUED: ${refundCode}. Dana dikreditkan ke saldo akun sementara Anda.`,
-                        note: `KODE REFUND GUEST: ${refundCode} (Simpan kode ini untuk klaim / pembelian ulang via Admin/WhatsApp)`
+                        failReason: `PESANAN GAGAL: Kami telah menerbitkan VOUCHER REFUND senilai Rp ${order.sellingPrice.toLocaleString('id-ID')}. Gunakan kode: ${voucherCode} pada pembelian berikutnya.`,
+                        note: `VOUCHER REFUND GUEST: ${voucherCode} (Nilai: Rp ${order.sellingPrice.toLocaleString('id-ID')})`
                     }
                 });
-                await tx.balanceTransaction.create({
-                    data: {
-                        userId: order.userId,
-                        type: 'REFUND',
-                        amount: order.sellingPrice,
-                        balanceBefore: Number(user.balance) - Number(order.sellingPrice),
-                        balanceAfter: Number(user.balance),
-                        orderId: order.id,
-                        description: `Refund Ticket and Balance for Guest: ${refundCode}`
-                    }
-                });
+                if (order.user.phone) {
+                }
                 return;
             }
             const user = await tx.user.update({

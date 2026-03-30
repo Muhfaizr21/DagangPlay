@@ -2,7 +2,8 @@ import { Controller, Get, Post, Body, Headers, Req, Res, HttpStatus } from '@nes
 import { TripayService } from './tripay.service';
 import type { Request, Response } from 'express';
 import { PrismaService } from '../prisma.service';
-
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { DigiflazzService } from '../admin/digiflazz/digiflazz.service';
 import { WhatsappService } from '../common/notifications/whatsapp.service';
 
@@ -12,7 +13,8 @@ export class TripayController {
         private readonly tripayService: TripayService,
         private prisma: PrismaService,
         private digiflazz: DigiflazzService,
-        private whatsappService: WhatsappService
+        private whatsappService: WhatsappService,
+        @InjectQueue('digiflazz-fulfillment') private fulfillmentQueue: Queue
     ) { }
 
     /**
@@ -46,21 +48,40 @@ export class TripayController {
                 return res.status(HttpStatus.FORBIDDEN).json({ success: false, message: 'Unauthorized IP Source' });
             }
 
-            // 2. RAW BODY SIGNATURE VERIFICATION
-            // rawBody is attached by NestJS because of 'rawBody: true' in main.ts
+            // Deferred Signature Verification
+            const data = req.body;
+            const ref = data.merchant_ref;
             const rawBody = (req as any).rawBody || JSON.stringify(req.body);
 
-            const isValid = this.tripayService.verifySignature(signature, rawBody);
+            if (!ref) {
+                console.warn('[TripayCallback] Missing merchant_ref in payload.');
+                return res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: 'Missing merchant_ref' });
+            }
+
+            // FIND MERCHANT ID based on Reference
+            let merchantId: string | undefined;
+
+            if (ref.startsWith('ORD-')) {
+                const order = await this.prisma.order.findUnique({ where: { orderNumber: ref }, select: { merchantId: true } });
+                merchantId = order?.merchantId;
+            } else if (ref.startsWith('DEP-')) {
+                const depId = ref.replace('DEP-', '');
+                const deposit = await this.prisma.deposit.findUnique({ where: { id: depId }, select: { merchantId: true } });
+                merchantId = deposit?.merchantId;
+            } else if (ref.startsWith('INV-')) {
+                const invoice = await this.prisma.invoice.findUnique({ where: { invoiceNo: ref }, select: { merchantId: true } });
+                merchantId = merchantId || invoice?.merchantId;
+            }
+
+            // VERIFY SIGNATURE with correct Tenant Context
+            const isValid = await this.tripayService.verifySignature(signature, rawBody, merchantId);
 
             if (!isValid) {
-                console.warn('[TripayCallback] Invalid signature signature verification failed.');
+                console.warn(`[TripayCallback] Invalid signature for Ref: ${ref} (Merchant: ${merchantId || 'PLATFORM'}). Verification failed.`);
                 return res.status(HttpStatus.FORBIDDEN).json({ success: false, message: 'Invalid signature' });
             }
 
-            const data = req.body;
-            const ref = data.merchant_ref;
-
-            console.log(`[TripayCallback] Received ${data.status} for Ref: ${ref}`);
+            console.log(`[TripayCallback] Received ${data.status} for Ref: ${ref} (Merchant: ${merchantId || 'PLATFORM'})`);
 
             if (data.status === 'PAID') {
                 // 1. Check if it's an ORDER (Ref: ORD-...)
@@ -131,8 +152,28 @@ export class TripayController {
                                     const merchantNetProfit = netProfit - platformFeeAmount;
 
                                     if (merchantNetProfit > 0) {
-                                        // FIXED 1 (Lapis 1): TWO-LEDGER SYSTEM (PENDING BALANCE)
-                                        // Saldo DITAHAN (PENDING). Tidak langsung disuntikkan ke saldo utama agar Admin tidak nombok.
+                                        // FIXED: TWO-LEDGER SYSTEM (PENDING BALANCE)
+                                        // Masukkan laba bersih (setelah platform fee) ke Escrow Merchant.
+                                        const updatedMerchantEscrow = await tx.merchant.update({
+                                            where: { id: order.merchantId },
+                                            data: { escrowBalance: { increment: merchantNetProfit } }
+                                        });
+
+                                        // Log the movement in Merchant Ledger
+                                        await tx.merchantLedgerMovement.create({
+                                            data: {
+                                                merchantId: order.merchantId,
+                                                orderId: order.id,
+                                                type: 'ESCROW_IN',
+                                                amount: merchantNetProfit,
+                                                description: `Laba Penjualan (Pending): ${order.orderNumber}`,
+                                                availableBefore: updatedMerchantEscrow.availableBalance,
+                                                availableAfter: updatedMerchantEscrow.availableBalance,
+                                                escrowBefore: updatedMerchantEscrow.escrowBalance - merchantNetProfit,
+                                                escrowAfter: updatedMerchantEscrow.escrowBalance
+                                            }
+                                        });
+
                                         await tx.commission.create({
                                             data: {
                                                 orderId: order.id,
@@ -140,8 +181,6 @@ export class TripayController {
                                                 type: 'MERCHANT_RETAIL_PROFIT',
                                                 amount: merchantNetProfit,
                                                 status: 'PENDING'
-                                                // Catatan: settledAt dan record balanceTransaction diabaikan 
-                                                // sampai komisi resmi Cair (SETTLED) oleh Cronjob 24-jam / Admin.
                                             }
                                         });
                                     }
@@ -195,18 +234,17 @@ export class TripayController {
                             `Markup SA: Rp ${adminMarkup.toLocaleString('id-ID')}`
                         ).catch(() => {});
 
-                        // FIXED 2: BOTTLENECK WEBHOOK TRIPAY (MEMISAHKAN JALUR API DIGIFLAZZ)
-                        // Membuang request API Digiflazz ke Task/Message Queue tiruan (Event Loop Background).
-                        // Dengan setTimeout 0ms, Webhook Tripay langsung dijawab "OK 200" di detik yang sama,
-                        // Mencegah freeze database dan Timeout RTO saat transaksi sedang menumpuk ekstrim (Flash Sale).
-                        setTimeout(async () => {
-                            try {
-                                console.log(`[TripayQueue / Background Worker] Triggering fulfillment for order: ${order.orderNumber}`);
-                                await this.digiflazz.placeOrder(order.id);
-                            } catch (fulfillErr: any) {
-                                console.error(`[TripayQueue / Background Worker] Fulfillment failed for ${order.orderNumber}:`, fulfillErr.message);
-                            }
-                        }, 0);
+                        // FIXED 2: GHOST ORDER PROTECTION (BULLMQ)
+                        // Menggunakan Message Queue yang persisten (Redis).
+                        // Jika server mati pun, antrean ini akan diproses ulang saat menyala.
+                        await this.fulfillmentQueue.add('process-fulfillment', { 
+                            orderId: order.id 
+                        }, {
+                            attempts: 5,
+                            backoff: { type: 'exponential', delay: 5000 },
+                            removeOnComplete: true
+                        });
+                        console.log(`[TripayQueue / Persisted] Enqueued fulfillment specifically for order: ${order.orderNumber}`);
                     } catch (err: any) {
                         if (err.code === 'P2025') {
                             console.log(`[TripayCallback] Race condition prevented for order ${ref}. Already processed.`);
@@ -221,10 +259,16 @@ export class TripayController {
                     try {
                         const depositId = ref.replace('DEP-', '');
                         const deposit = await this.prisma.deposit.findUnique({
-                            where: { id: depositId }
+                            where: { id: depositId },
+                            include: { merchant: true }
                         });
 
                         if (deposit && deposit.status === 'PENDING') {
+                            // FIXED: Penanganan Biaya (Fee) Tripay pada Deposit
+                            // Platform tidak boleh nombok. Saldo yang masuk adalah NET (Setelah potong fee merchant).
+                            const tripayFeeMerchant = Number(data.fee_merchant) || 0;
+                            const netDepositAmount = Math.max(0, Number(data.amount) - tripayFeeMerchant);
+
                             await this.prisma.$transaction(async (tx) => {
                                 // IDEMPOTENCY: Atomic status update
                                 const updatedDeposit = await tx.deposit.update({
@@ -235,31 +279,42 @@ export class TripayController {
                                     }
                                 });
 
-                                // Add balance to merchant
-                                const user = await tx.user.update({
-                                    where: { id: deposit.userId },
-                                    data: { balance: { increment: deposit.amount } }
+                                // FIXED: Gunakan Merchant Ledger (availableBalance)
+                                const merchantPrior = await tx.merchant.findUnique({
+                                    where: { id: deposit.merchantId }
                                 });
 
-                                // Create Balance Transaction Record
+                                const updatedMerchant = await tx.merchant.update({
+                                    where: { id: deposit.merchantId },
+                                    data: { availableBalance: { increment: netDepositAmount } }
+                                });
+
+                                // Log the movement in Merchant Ledger
+                                await tx.merchantLedgerMovement.create({
+                                    data: {
+                                        merchantId: deposit.merchantId,
+                                        type: 'AVAILABLE_IN',
+                                        amount: netDepositAmount,
+                                        description: `Top Up Saldo via Tripay (${data.payment_name}). Dipotong fee gateway: Rp ${tripayFeeMerchant}`,
+                                        availableBefore: merchantPrior?.availableBalance || 0,
+                                        availableAfter: updatedMerchant.availableBalance,
+                                        escrowBefore: updatedMerchant.escrowBalance,
+                                        escrowAfter: updatedMerchant.escrowBalance
+                                    }
+                                });
+
+                                // Also log to traditional balanceTransaction for compatibility
                                 await tx.balanceTransaction.create({
                                     data: {
                                         userId: deposit.userId,
                                         type: 'DEPOSIT',
-                                        amount: deposit.amount,
-                                        balanceBefore: Number(user.balance) - Number(deposit.amount),
-                                        balanceAfter: Number(user.balance),
+                                        amount: netDepositAmount,
                                         depositId: deposit.id,
-                                        description: `Deposit via Tripay (${data.payment_name})`
+                                        description: `Deposit via Tripay (${data.payment_name}) - Net: ${netDepositAmount}`
                                     }
                                 });
-
-                                // NOTE: Super Admin balance tidak dikurangi di sini.
-                                // Dalam model bisnis ini, SA menerima platform fee dari order profit (sudah ada di callback ORD-).
-                                // Deposit merchant adalah top-up dari luar (via Tripay), bukan dari SA balance.
-                                // SA balance hanya mencatat revenue dari platform fee, bukan modal deposit merchant.
                             });
-                            console.log(`[TripayCallback] Deposit ${depositId} confirmed.`);
+                            console.log(`[TripayCallback] Deposit ${depositId} confirmed for Merchant: ${deposit.merchantId}. Net: ${netDepositAmount}`);
                         }
                     } catch (err: any) {
                         if (err.code === 'P2025') return res.status(HttpStatus.OK).json({ success: true });

@@ -29,7 +29,7 @@ let FinanceService = class FinanceService {
         const totalRevenue = orders.reduce((sum, order) => sum + Number(order.totalPrice), 0);
         const totalProfit = orders.reduce((sum, order) => sum + (Number(order.totalPrice) - Number(order.merchantModalPrice || order.totalPrice)), 0);
         const deposits = await this.prisma.deposit.findMany({
-            where: { userId: ownerId },
+            where: { merchantId },
             orderBy: { createdAt: 'desc' },
             take: 5
         });
@@ -38,19 +38,20 @@ let FinanceService = class FinanceService {
             orderBy: { createdAt: 'desc' },
             take: 5
         });
-        const user = await this.prisma.user.findUnique({
-            where: { id: ownerId },
-            select: { balance: true }
+        const merchant = await this.prisma.merchant.findUnique({
+            where: { id: merchantId },
+            select: { availableBalance: true, escrowBalance: true }
         });
         return {
-            balance: user?.balance || 0,
+            balance: merchant?.availableBalance || 0,
+            escrow: merchant?.escrowBalance || 0,
             revenue: totalRevenue,
             profit: totalProfit,
             deposits,
             withdrawals
         };
     }
-    async requestWithdrawal(ownerId, amount, bankName, bankAccountName, bankAccountNumber, isInstant) {
+    async requestWithdrawal(merchantId, ownerId, amount, bankName, bankAccountName, bankAccountNumber, isInstant) {
         if (amount <= 0)
             throw new common_1.BadRequestException('Amount must be greater than 0');
         const fee = isInstant ? 5000 : 0;
@@ -58,20 +59,38 @@ let FinanceService = class FinanceService {
         if (netAmount <= 0)
             throw new common_1.BadRequestException('Amount tidak mencukupi setelah dikurangi fee');
         return this.prisma.$transaction(async (tx) => {
-            const balanceUser = await tx.user.findUnique({ where: { id: ownerId } });
-            if (!balanceUser || balanceUser.balance < amount) {
-                throw new common_1.BadRequestException('Saldo tidak mencukupi untuk penarikan ini');
+            const merchant = await tx.merchant.findUnique({
+                where: { id: merchantId },
+                select: { id: true, availableBalance: true, ownerId: true }
+            });
+            if (!merchant || merchant.ownerId !== ownerId) {
+                throw new common_1.BadRequestException('Anda tidak berwenang melakukan penarikan untuk toko ini');
             }
-            await tx.user.update({
-                where: { id: ownerId },
-                data: { balance: { decrement: amount } }
+            if (merchant.availableBalance < amount) {
+                throw new common_1.BadRequestException('Saldo tersedia tidak mencukupi untuk penarikan ini');
+            }
+            const updatedMerchant = await tx.merchant.update({
+                where: { id: merchantId },
+                data: { availableBalance: { decrement: amount } }
+            });
+            await tx.merchantLedgerMovement.create({
+                data: {
+                    merchantId,
+                    type: 'AVAILABLE_OUT',
+                    amount: -amount,
+                    description: `Penarikan saldo ${isInstant ? 'instant' : 'manual'} ke ${bankName} - ${bankAccountNumber}`,
+                    availableBefore: merchant.availableBalance,
+                    availableAfter: updatedMerchant.availableBalance,
+                    escrowBefore: updatedMerchant.escrowBalance,
+                    escrowAfter: updatedMerchant.escrowBalance
+                }
             });
             await tx.balanceTransaction.create({
                 data: {
                     userId: ownerId,
                     type: 'WITHDRAWAL',
                     amount: -amount,
-                    description: `Penarikan saldo ${isInstant ? 'instant' : 'manual'} ke ${bankName} - ${bankAccountNumber}`
+                    description: `Withdrawal dari toko ${merchantId}`
                 }
             });
             return tx.withdrawal.create({
@@ -83,8 +102,8 @@ let FinanceService = class FinanceService {
                     bankName,
                     bankAccountName,
                     bankAccountNumber,
-                    status: isInstant ? 'COMPLETED' : 'PENDING',
-                    note: isInstant ? 'Dicarikan instan otomatis oleh sistem' : undefined
+                    status: isInstant ? 'PROCESSING' : 'PENDING',
+                    note: isInstant ? 'Diterima sebagai penarikan INSTAN (Sedang diproses sistem payout/admin)' : undefined
                 }
             });
         });
@@ -134,7 +153,7 @@ let FinanceService = class FinanceService {
             return_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/merchant/finance`
         };
         try {
-            const tripayRes = await this.tripay.requestTransaction(tripayPayload);
+            const tripayRes = await this.tripay.requestTransaction(tripayPayload, merchantId);
             await this.prisma.deposit.update({
                 where: { id: deposit.id },
                 data: {

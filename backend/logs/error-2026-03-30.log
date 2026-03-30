@@ -1,0 +1,85 @@
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T02:35:00.423Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T02:35:02.004Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T02:35:02.009Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T02:35:02.043Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T02:35:02.238Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T02:35:02.242Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T02:36:00.176Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T02:38:00.150Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: getaddrinfo ENOTFOUND api.digiflazz.com","stack":[null],"timestamp":"2026-03-30T02:40:00.028Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T02:42:00.290Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T02:44:00.126Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T02:45:05.336Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T02:45:05.337Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T02:45:05.339Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T02:45:05.955Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T02:45:05.956Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T02:45:05.974Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T02:48:00.203Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync supplier balance: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:00:02.929Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:00:02.932Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:00:03.070Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:00:04.315Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:00:04.962Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:00:05.043Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:00:05.057Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:00:10.157Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:02:00.117Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:04:00.121Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:06:03.184Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:08:00.123Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: getaddrinfo ENOTFOUND api.digiflazz.com","stack":[null],"timestamp":"2026-03-30T03:10:00.047Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: getaddrinfo ENOTFOUND api.digiflazz.com","stack":[null],"timestamp":"2026-03-30T03:10:00.055Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: getaddrinfo ENOTFOUND api.digiflazz.com","stack":[null],"timestamp":"2026-03-30T03:10:00.060Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: getaddrinfo ENOTFOUND api.digiflazz.com","stack":[null],"timestamp":"2026-03-30T03:10:00.064Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: getaddrinfo ENOTFOUND api.digiflazz.com","stack":[null],"timestamp":"2026-03-30T03:10:00.068Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: getaddrinfo ENOTFOUND api.digiflazz.com","stack":[null],"timestamp":"2026-03-30T03:10:00.070Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: getaddrinfo ENOTFOUND api.digiflazz.com","stack":[null],"timestamp":"2026-03-30T03:10:00.071Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:12:03.946Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:14:00.143Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:16:05.802Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:18:00.142Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:20:00.169Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:20:00.177Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:20:00.181Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:20:00.230Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:20:00.244Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:20:00.257Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:20:00.356Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:22:00.111Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:24:00.282Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:26:00.344Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:28:00.137Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:30:00.233Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:30:00.271Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:30:00.284Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:30:00.286Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:30:00.498Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:30:00.522Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:30:00.624Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:32:00.260Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:34:00.147Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:36:00.127Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:38:04.054Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:40:00.145Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:40:00.153Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:40:00.178Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:40:00.228Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:40:00.250Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:40:00.568Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:40:00.604Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:42:00.130Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:44:01.436Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:46:00.129Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:48:00.139Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:50:00.178Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:50:00.182Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:50:00.197Z"}
+{"context":"DigiflazzService","level":"error","message":"[SupplierBalance] Failed to verify balance, proceeding normally: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:50:00.200Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:50:00.252Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:50:00.253Z"}
+{"context":"DigiflazzService","level":"error","message":"[Cron] Failed to retry order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:50:00.254Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:52:03.943Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:54:00.170Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:56:00.125Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync order ORD-1773519045225-140: Request failed with status code 400","stack":[null],"timestamp":"2026-03-30T03:58:00.288Z"}

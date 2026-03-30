@@ -44,7 +44,7 @@ export default function SettingsManagementPage() {
     // ===================================
     // GLOBAL SETTINGS STATE
     // ===================================
-    const { data: initialSettings, isLoading: loadingSettings, mutate: mutateSettings } = useSWR('http://localhost:3001/admin/settings/global', fetcher);
+    const { data: initialSettings, isLoading: loadingSettings, mutate: mutateSettings } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/settings/global', fetcher);
     const [settings, setSettings] = useState<Record<string, string>>({});
     const [isSavingSettings, setIsSavingSettings] = useState(false);
 
@@ -55,7 +55,7 @@ export default function SettingsManagementPage() {
     // ===================================
     // ADMIN STAFF STATE
     // ===================================
-    const { data: staffList, isLoading: loadingStaff, mutate: mutateStaff } = useSWR('http://localhost:3001/admin/settings/staff', fetcher);
+    const { data: staffList, isLoading: loadingStaff, mutate: mutateStaff } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/settings/staff', fetcher);
     const [showStaffModal, setShowStaffModal] = useState(false);
     const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
     const [staffForm, setStaffForm] = useState({ name: '', email: '', password: '', status: 'ACTIVE', permissions: [] as string[] });
@@ -75,7 +75,7 @@ export default function SettingsManagementPage() {
     // JOB QUEUE STATE
     // ===================================
     const [jobStatusFilter, setJobStatusFilter] = useState('');
-    const { data: jobQueues, isLoading: loadingJobs, mutate: mutateJobs } = useSWR(`http://localhost:3001/admin/settings/jobs?status=${jobStatusFilter}`, fetcher);
+    const { data: jobQueues, isLoading: loadingJobs, mutate: mutateJobs } = useSWR(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/settings/jobs?status=${jobStatusFilter}`, fetcher);
 
     // ===================================
     // HANDLERS
@@ -92,7 +92,7 @@ export default function SettingsManagementPage() {
     const handleSaveGlobalSettings = async () => {
         setIsSavingSettings(true);
         try {
-            await axios.put('http://localhost:3001/admin/settings/global', settings);
+            await axios.put((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/settings/global', settings);
             mutateSettings();
             showToast('Tersimpan', 'Pengaturan global berhasil diperbarui.');
         } catch (err: any) {
@@ -106,10 +106,10 @@ export default function SettingsManagementPage() {
         e.preventDefault();
         try {
             if (editingStaffId) {
-                await axios.put(`http://localhost:3001/admin/settings/staff/${editingStaffId}`, staffForm);
+                await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/settings/staff/${editingStaffId}`, staffForm);
                 showToast('Sukses', 'Data admin staff diperbarui');
             } else {
-                await axios.post('http://localhost:3001/admin/settings/staff', staffForm);
+                await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/settings/staff', staffForm);
                 showToast('Sukses', 'Admin staff baru ditambahkan');
             }
             mutateStaff();
@@ -124,7 +124,7 @@ export default function SettingsManagementPage() {
     const handleDeleteStaff = async (id: string, name: string) => {
         if (!confirm(`Hapus permanen akses staff ${name}?`)) return;
         try {
-            await axios.delete(`http://localhost:3001/admin/settings/staff/${id}`);
+            await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/settings/staff/${id}`);
             mutateStaff();
             showToast('Terhapus', 'Akses staff telah dicabut.');
         } catch (err) {
@@ -134,7 +134,7 @@ export default function SettingsManagementPage() {
 
     const handleRetryJob = async (id: string) => {
         try {
-            await axios.post(`http://localhost:3001/admin/settings/jobs/${id}/retry`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
+            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/settings/jobs/${id}/retry`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             mutateJobs();
             showToast('Diproses', 'Job background telah dijadwalkan ulang.');
         } catch (err) {
@@ -145,12 +145,12 @@ export default function SettingsManagementPage() {
     // ===================================
     // PLAN MAPPING STATE
     // ===================================
-    const { data: planMappings, mutate: mutatePlans } = useSWR('http://localhost:3001/admin/plan-tier-mappings', fetcher);
+    const { data: planMappings, mutate: mutatePlans } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/plan-tier-mappings', fetcher);
 
     const handleUpdatePlanMapping = async (plan: string, tier: string) => {
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.post('http://localhost:3001/admin/plan-tier-mappings', { plan, tier }, {
+            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/plan-tier-mappings', { plan, tier }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             mutatePlans();
@@ -207,7 +207,7 @@ export default function SettingsManagementPage() {
                             <button
                                 onClick={async () => {
                                     const token = localStorage.getItem('admin_token');
-                                    await axios.post('http://localhost:3001/admin/plan-tier-mappings/sync', {}, { headers: { Authorization: `Bearer ${token}` } });
+                                    await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/plan-tier-mappings/sync', {}, { headers: { Authorization: `Bearer ${token}` } });
                                     mutatePlans();
                                     showToast('Selesai', 'Mapping default telah dipulihkan.');
                                 }}

@@ -31,10 +31,16 @@ const fetcher = (url: string) => {
 
 export default function UserManagementPage() {
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [roleFilter, setRoleFilter] = useState('ALL');
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [page, setPage] = useState(1);
     const [toastMsg, setToastMsg] = useState<{ title: string; desc: string; type: 'success' | 'error' } | null>(null);
+
+    React.useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(searchTerm), 400);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     // States for Balance Modal
     const [showBalanceModal, setShowBalanceModal] = useState(false);
@@ -45,7 +51,7 @@ export default function UserManagementPage() {
 
     // Fetch Data
     const { data: fetchResult, error, isLoading, mutate } = useSWR(
-        `http://localhost:3001/admin/users?search=${searchTerm}&role=${roleFilter}&status=${statusFilter}&page=${page}&limit=20`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/users?search=${debouncedSearch}&role=${roleFilter}&status=${statusFilter}&page=${page}&limit=20`,
         fetcher
     );
     const users = fetchResult?.data || [];
@@ -54,7 +60,7 @@ export default function UserManagementPage() {
     const handleUpdateStatus = async (id: string, newStatus: string) => {
         try {
             if (!confirm(`Ubah status user menjadi ${newStatus}?`)) return;
-            await axios.patch(`http://localhost:3001/admin/users/${id}/status`, { status: newStatus });
+            await axios.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/users/${id}/status`, { status: newStatus });
             mutate();
             setToastMsg({ title: 'Berhasil', desc: `Status diubah menjadi ${newStatus}`, type: 'success' });
         } catch (err: any) {
@@ -67,7 +73,7 @@ export default function UserManagementPage() {
     const handleForceLogout = async (id: string) => {
         try {
             if (!confirm(`Paksa logout semua sesi aktif user ini?`)) return;
-            const res = await axios.post(`http://localhost:3001/admin/users/${id}/sessions/force-logout`, {}, { headers: { Authorization: `Bearer \${localStorage.getItem('admin_token')}` } });
+            const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/users/${id}/sessions/force-logout`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             setToastMsg({ title: 'Berhasil Logout', desc: `${res.data.revoked} Sesi aktif dihapus`, type: 'success' });
         } catch (err: any) {
             setToastMsg({ title: 'Error', desc: err.response?.data?.message || 'Gagal force logout', type: 'error' });
@@ -81,7 +87,7 @@ export default function UserManagementPage() {
         if (!selectedUserId || !balanceAmount || !balanceNote) return;
 
         try {
-            await axios.post(`http://localhost:3001/admin/users/${selectedUserId}/balance/adjust`, {
+            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/users/${selectedUserId}/balance/adjust`, {
                 type: balanceType,
                 amount: Number(balanceAmount),
                 note: balanceNote

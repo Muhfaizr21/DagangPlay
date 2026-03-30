@@ -12,6 +12,7 @@ const bullmq_1 = require("@nestjs/bullmq");
 const webhook_processor_1 = require("./webhook.processor");
 const digiflazz_processor_1 = require("./digiflazz.processor");
 const prisma_service_1 = require("../../prisma.service");
+const digiflazz_module_1 = require("../../admin/digiflazz/digiflazz.module");
 let QueueConfigModule = class QueueConfigModule {
 };
 exports.QueueConfigModule = QueueConfigModule;
@@ -33,6 +34,7 @@ exports.QueueConfigModule = QueueConfigModule = __decorate([
             bullmq_1.BullModule.registerQueue({
                 name: 'digiflazz-fulfillment',
             }),
+            digiflazz_module_1.DigiflazzModule,
         ],
         providers: [webhook_processor_1.WebhookProcessor, digiflazz_processor_1.DigiflazzProcessor, prisma_service_1.PrismaService],
         exports: [bullmq_1.BullModule],

@@ -537,6 +537,7 @@ model Order {
   gameUserId         String
   gameUserServerId   String?
   gameUserName       String?
+  whatsapp           String?
   quantity           Int                    @default(1)
   promoCodeId        String?
   discountAmount     Float                  @default(0)

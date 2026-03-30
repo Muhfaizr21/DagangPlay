@@ -1,5 +1,15 @@
 "use client";
 
+// Security: Sanitize HTML from external sources before rendering
+const sanitizeHtml = (html: string): string => {
+    if (!html) return '';
+    return html
+        .replace(/<script[\s\S]*?<\/script>/gi, '')
+        .replace(/on\w+="[^"]*"/gi, '')
+        .replace(/javascript:/gi, '');
+};
+
+
 import React, { useState, useEffect } from 'react';
 import MerchantLayout from '../../../components/merchant/MerchantLayout';
 import useSWR from 'swr';
@@ -114,7 +124,7 @@ export default function MerchantFinancePage() {
     };
 
     return (
-        <MerchantLayout title="Keuangan & Saldo">
+        <MerchantLayout>
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-slate-800 tracking-tight">Financial Center</h1>
@@ -264,7 +274,7 @@ export default function MerchantFinancePage() {
                                                                         </p>
                                                                         <ul className="space-y-2">
                                                                             {ins.steps.map((st: string, si: number) => (
-                                                                                <li key={si} className="text-[11px] text-slate-600 list-disc list-inside leading-relaxed" dangerouslySetInnerHTML={{ __html: st }} />
+                                                                                <li key={si} className="text-[11px] text-slate-600 list-disc list-inside leading-relaxed" dangerouslySetInnerHTML={{ __html: sanitizeHtml(st)}} />
                                                                             ))}
                                                                         </ul>
                                                                     </div>
