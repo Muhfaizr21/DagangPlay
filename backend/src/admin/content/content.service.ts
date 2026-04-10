@@ -22,10 +22,10 @@ export class ContentService {
                 title: data.title,
                 image: data.image,
                 linkUrl: data.linkUrl || null,
-                position: data.position as BannerPosition,
-                sortOrder: data.sortOrder ? parseInt(data.sortOrder) : 0,
-                startDate: data.startDate ? new Date(data.startDate) : null,
-                endDate: data.endDate ? new Date(data.endDate) : null,
+                position: (data.position as BannerPosition) || 'HERO',
+                sortOrder: data.sortOrder ? parseInt(data.sortOrder.toString()) : 0,
+                startDate: (data.startDate && data.startDate !== '') ? new Date(data.startDate) : null,
+                endDate: (data.endDate && data.endDate !== '') ? new Date(data.endDate) : null,
                 merchantId: data.merchantId || null,
                 isActive: data.isActive !== undefined ? data.isActive : true
             }
@@ -35,9 +35,9 @@ export class ContentService {
     async updateBanner(id: string, data: any) {
         const updateData: any = { ...data };
         if (data.position) updateData.position = data.position as BannerPosition;
-        if (data.sortOrder !== undefined) updateData.sortOrder = parseInt(data.sortOrder);
-        if (data.startDate) updateData.startDate = new Date(data.startDate);
-        if (data.endDate) updateData.endDate = new Date(data.endDate);
+        if (data.sortOrder !== undefined) updateData.sortOrder = parseInt(data.sortOrder.toString());
+        if (data.startDate && data.startDate !== '') updateData.startDate = new Date(data.startDate);
+        if (data.endDate && data.endDate !== '') updateData.endDate = new Date(data.endDate);
 
         return this.prisma.banner.update({
             where: { id },
@@ -69,28 +69,32 @@ export class ContentService {
     }
 
     async createAnnouncement(data: any) {
+        const isValidDate = (d: any) => d && !isNaN(new Date(d).getTime());
+
         return this.prisma.announcement.create({
             data: {
                 title: data.title,
                 content: data.content,
                 imageUrl: data.imageUrl || null,
                 merchantId: data.merchantId || null,
-                startDate: data.startDate ? new Date(data.startDate) : null,
-                endDate: data.endDate ? new Date(data.endDate) : null,
+                startDate: isValidDate(data.startDate) ? new Date(data.startDate) : null,
+                endDate: isValidDate(data.endDate) ? new Date(data.endDate) : null,
                 isActive: data.isActive !== undefined ? data.isActive : true
             }
         });
     }
 
     async updateAnnouncement(id: string, data: any) {
+        const isValidDate = (d: any) => d && !isNaN(new Date(d).getTime());
+
         return this.prisma.announcement.update({
             where: { id },
             data: {
                 title: data.title,
                 content: data.content,
                 imageUrl: data.imageUrl,
-                startDate: data.startDate ? new Date(data.startDate) : undefined,
-                endDate: data.endDate ? new Date(data.endDate) : undefined
+                startDate: isValidDate(data.startDate) ? new Date(data.startDate) : undefined,
+                endDate: isValidDate(data.endDate) ? new Date(data.endDate) : undefined
             }
         });
     }
@@ -120,14 +124,17 @@ export class ContentService {
 
     async createCampaign(data: any) {
         // Here we simulate the creation of an email blast task
+        // Handle Target Role mapping (ALL -> null)
+        const targetRole = (data.targetRole === 'ALL' || !data.targetRole) ? null : (data.targetRole as Role);
+
         return this.prisma.emailCampaign.create({
             data: {
                 name: data.name,
                 subject: data.subject,
                 body: data.body,
-                targetRole: data.targetRole as Role || null,
+                targetRole: targetRole,
                 merchantId: data.merchantId || null,
-                scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : null,
+                scheduledAt: (data.scheduledAt && data.scheduledAt !== '') ? new Date(data.scheduledAt) : null,
                 isActive: true
             }
         });

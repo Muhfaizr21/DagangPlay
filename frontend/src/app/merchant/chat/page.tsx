@@ -51,7 +51,7 @@ export default function MerchantChatPage() {
 
     return (
         <MerchantLayout>
-            <div className="max-w-4xl mx-auto h-[calc(100vh-160px)] flex flex-col bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
+            <div className="max-w-5xl mx-auto h-[calc(100vh-180px)] mt-4 flex flex-col bg-white rounded-[32px] shadow-2xl border border-slate-100 overflow-hidden">
                 {/* Header */}
                 <div className="p-5 bg-gradient-to-r from-indigo-600 to-purple-700 text-white flex items-center justify-between shadow-lg">
                     <div className="flex items-center gap-4">

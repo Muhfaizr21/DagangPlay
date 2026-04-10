@@ -67,7 +67,8 @@ export default function PricingRulesPage() {
 
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/pricing-rules/apply-category/${rule.categoryId}`, {
+            const targetId = rule.categoryId || 'global';
+            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/pricing-rules/apply-category/${targetId}`, {
                 normal: rule.marginNormal,
                 pro: rule.marginPro,
                 legend: rule.marginLegend,

@@ -527,18 +527,22 @@ export default function SettingsManagementPage() {
                             <button onClick={() => setShowStaffModal(false)}><XCircle className="w-5 h-5 text-indigo-400 hover:text-indigo-900" /></button>
                         </div>
                         <form onSubmit={handleSaveStaff} className="p-6 overflow-y-auto flex-1 space-y-5">
-                            <div className="grid grid-cols-2 gap-4">
+                             <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-500 uppercase">Email Address</label>
+                                    <input required type="email" value={staffForm.email} onChange={e => setStaffForm({ ...staffForm, email: e.target.value })} className="w-full mt-1 p-3 border border-slate-200 rounded-xl text-sm font-bold" placeholder="staff@dagangplay.com" />
+                                </div>
                                 <div>
                                     <label className="block text-[11px] font-bold text-slate-500 uppercase">Nama Lengkap</label>
                                     <input required type="text" value={staffForm.name} onChange={e => setStaffForm({ ...staffForm, name: e.target.value })} className="w-full mt-1 p-3 border border-slate-200 rounded-xl text-sm font-bold" />
                                 </div>
-                                <div>
-                                    <label className="block text-[11px] font-bold text-slate-500 uppercase">Status Aktif</label>
-                                    <select value={staffForm.status} onChange={e => setStaffForm({ ...staffForm, status: e.target.value })} className={`w-full mt-1 p-3 border border-slate-200 rounded-xl text-sm font-bold text-center ${staffForm.status === 'ACTIVE' ? 'text-emerald-700 bg-emerald-50' : 'text-red-700 bg-red-50'}`}>
-                                        <option value="ACTIVE">ACTIVE (Akses Dibuka)</option>
-                                        <option value="SUSPENDED">SUSPEND (Cabut Sementara)</option>
-                                    </select>
-                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-[11px] font-bold text-slate-500 uppercase">Status Aktif</label>
+                                <select value={staffForm.status} onChange={e => setStaffForm({ ...staffForm, status: e.target.value })} className={`w-full mt-1 p-3 border border-slate-200 rounded-xl text-sm font-bold text-center ${staffForm.status === 'ACTIVE' ? 'text-emerald-700 bg-emerald-50' : 'text-red-700 bg-red-50'}`}>
+                                    <option value="ACTIVE">ACTIVE (Akses Dibuka)</option>
+                                    <option value="SUSPENDED">SUSPEND (Cabut Sementara)</option>
+                                </select>
                             </div>
                             <div>
                                 <label className="block text-[11px] font-bold text-slate-500 uppercase">Buku Sandi (Password) {!editingStaffId ? '(Wajib)' : '(Kosongkan jika tidak diganti)'}</label>

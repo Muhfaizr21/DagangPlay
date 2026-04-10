@@ -123,13 +123,15 @@ export default function SaaSManagementPage() {
     const handleCreateInvoice = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/subscriptions/invoices/manual', createInvoiceForm, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
+            const token = localStorage.getItem('admin_token');
+            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/subscriptions/invoices/manual`, createInvoiceForm, { headers: { Authorization: `Bearer ${token}` } });
             mutate();
             setShowCreateInvoiceModal(false);
             setCreateInvoiceForm({ merchantId: '', plan: 'PRO', amount: 0, dueDate: '' });
             showToast('Sukses', 'Invoice langganan berhasil dibuat secara manual.');
         } catch (err: any) {
-            showToast('Gagal', err.response?.data?.message || 'Error', 'error');
+            console.error("Manual Invoice Error:", err.response?.data);
+            showToast('Gagal', err.response?.data?.message || 'Gagal menerbitkan invoice', 'error');
         }
     };
 
@@ -157,20 +159,23 @@ export default function SaaSManagementPage() {
 
     const exportToCSV = () => {
         if (!invoices || invoices.length === 0) return showToast('Error', 'Tidak ada data untuk diexport', 'error');
+        
         const headers = ["Invoice No", "Merchant", "Plan", "Amount", "Status", "Created At", "Due Date"];
         const rows = invoices.map((inv: any) => [
-            inv.invoiceNo,
-            inv.merchant?.name || '-',
-            inv.plan,
+            `"${inv.invoiceNo}"`,
+            `"${inv.merchant?.name?.replace(/"/g, '""') || '-'}"`,
+            `"${inv.plan}"`,
             inv.totalAmount,
-            inv.status,
-            new Date(inv.createdAt).toISOString(),
-            new Date(inv.dueDate).toISOString()
+            `"${inv.status}"`,
+            `"${new Date(inv.createdAt).toISOString()}"`,
+            `"${new Date(inv.dueDate).toISOString()}"`
         ]);
-        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e: any[]) => e.join(","))].join("\n");
-        const encodedUri = encodeURI(csvContent);
+
+        const csvContent = [headers.join(","), ...rows.map((e: any[]) => e.join(","))].join("\n");
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
+        link.setAttribute("href", url);
         link.setAttribute("download", `invoices_export_${Date.now()}.csv`);
         document.body.appendChild(link);
         link.click();
@@ -401,8 +406,8 @@ export default function SaaSManagementPage() {
                     {!plansConfig ? (
                         <div className="flex items-center gap-2 text-slate-400 py-10 justify-center"><Loader2 className="w-5 h-5 animate-spin" /> Loading Config...</div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {['PRO', 'LEGEND', 'SUPREME'].map((planKey) => (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {['FREE', 'PRO', 'LEGEND', 'SUPREME'].map((planKey) => (
                                 <div key={planKey} className="border border-slate-200 rounded-2xl p-6 bg-slate-50">
                                     <div className="text-center mb-6">
                                         <span className={`inline-block px-3 py-1 text-xs font-black uppercase rounded-full mb-2 ${planKey === 'SUPREME' ? 'bg-orange-100 text-orange-700' :

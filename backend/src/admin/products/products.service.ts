@@ -289,8 +289,12 @@ export class ProductsService {
 
     // 6. Bulk Apply Formula to Category
     async applyCategoryFormula(categoryId: string, margins: any) {
+        const where = (categoryId === 'global' || categoryId === 'all') 
+            ? {} 
+            : { product: { categoryId } };
+
         const skus = await this.prisma.productSku.findMany({
-            where: { product: { categoryId } }
+            where: where
         });
 
         const updates = skus.map(async (sku) => {

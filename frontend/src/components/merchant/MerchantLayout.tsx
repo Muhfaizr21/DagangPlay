@@ -173,11 +173,10 @@ export default function MerchantLayout({ children, demoUser }: { children: React
                 {/* View Store CTA */}
                 <div className="px-4 py-3 border-b border-gray-100 shrink-0">
                     <a
-                        href={demoUser ? '#' : (currentSlug ? `/?merchant=${currentSlug}` : '#')}
-                        onClick={(e) => demoUser && e.preventDefault()}
+                        href={currentSlug ? `/?merchant=${currentSlug}` : '#'}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`flex items-center justify-center gap-2 w-full py-2.5 bg-gray-900 hover:bg-gray-700 text-white text-[12px] font-semibold rounded-xl transition-colors shadow-sm ${demoUser ? 'cursor-not-allowed opacity-80' : ''}`}
+                        className={`flex items-center justify-center gap-2 w-full py-2.5 bg-gray-900 hover:bg-gray-700 text-white text-[12px] font-semibold rounded-xl transition-colors shadow-sm`}
                     >
                         <ExternalLink className="w-3.5 h-3.5" />
                         Lihat Website Toko
@@ -201,11 +200,10 @@ export default function MerchantLayout({ children, demoUser }: { children: React
                                             <button
                                                 key={item.href}
                                                 onClick={() => {
-                                                    if (demoUser) return;
                                                     router.push('/merchant/subscription');
                                                 }}
                                                 title={`Upgrade ke ${item.minPlan} untuk mengakses ${item.label}`}
-                                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-gray-300 hover:bg-amber-50 hover:text-amber-600 transition-all group opacity-70 ${demoUser ? 'cursor-not-allowed pointer-events-none' : ''}`}
+                                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-gray-300 hover:bg-amber-50 hover:text-amber-600 transition-all group opacity-70`}
                                             >
                                                 <Icon className="w-4 h-4 shrink-0 text-gray-300 group-hover:text-amber-500" />
                                                 <span className="flex-1 text-left">{item.label}</span>
@@ -220,18 +218,14 @@ export default function MerchantLayout({ children, demoUser }: { children: React
                                     return (
                                         <button
                                             key={item.href}
-                                            onClick={(e) => {
-                                                if (demoUser) {
-                                                    e.preventDefault();
-                                                    return;
-                                                }
+                                            onClick={() => {
                                                 router.push(item.href);
                                             }}
                                             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] transition-all ${
                                                 isActive
                                                     ? 'bg-gray-900 text-white font-semibold shadow-sm'
                                                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-medium'
-                                            } ${demoUser ? 'cursor-default' : ''}`}
+                                            }`}
                                         >
                                             <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-gray-400'}`} />
                                             <span className="flex-1 text-left">{item.label}</span>

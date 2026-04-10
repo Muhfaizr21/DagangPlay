@@ -43,10 +43,10 @@ export declare class FinanceService {
             fee: number;
             receiptImage: string | null;
             rejectedAt: Date | null;
-            netAmount: number;
             bankName: string;
             bankAccountNumber: string;
             bankAccountName: string;
+            netAmount: number;
             processedById: string | null;
         }[];
     }>;

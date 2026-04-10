@@ -46,6 +46,7 @@ export class SettingsService {
                 id: true,
                 name: true,
                 email: true,
+                status: true,
                 adminPermissions: true,
                 createdAt: true
             }

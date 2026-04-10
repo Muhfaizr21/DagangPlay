@@ -40,19 +40,44 @@ const fetcher = async (url: string) => {
 
 export default function AdminDashboardPage() {
     const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-    const { data, error, isLoading } = useSWR(`${baseUrl}/admin/dashboard/summary`, fetcher, {
+    const [range, setRange] = React.useState('WEEK');
+    const { data, error, isLoading } = useSWR(`${baseUrl}/admin/dashboard/summary?range=${range}`, fetcher, {
         refreshInterval: 30000 // auto-refresh every 30s
     });
+
+    const handleDownloadReport = async () => {
+        try {
+            const token = localStorage.getItem('admin_token');
+            const res = await axios.get(`${baseUrl}/admin/dashboard/export-report`, {
+                headers: { Authorization: `Bearer ${token}` },
+                responseType: 'blob'
+            });
+            const url = window.URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `report_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error("Download error:", err);
+            alert('Gagal mendownload laporan. Pastikan Anda memiliki akses.');
+        }
+    };
 
     return (
         <AdminLayout>
             <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800 tracking-tight">DagangPlay - <span className="text-emerald-600">SINKRONISASI AKTIF</span></h1>
-                    <p className="text-[14px] text-slate-500 mt-1">Performa platform DagangPlay (Real-Data Mode).</p>
+                    <p className="text-[14px] text-slate-500 mt-1">Performa platform DagangPlay (Real-Data Mode - {range}).</p>
                 </div>
                 <div className="hidden md:flex gap-3">
-                    <button className="h-[38px] px-4 inline-flex items-center justify-center gap-2 text-[13px] font-semibold rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm cursor-pointer">
+                    <button 
+                        onClick={handleDownloadReport}
+                        className="h-[38px] px-4 inline-flex items-center justify-center gap-2 text-[13px] font-semibold rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm cursor-pointer"
+                    >
                         <Download className="w-4 h-4" />
                         Download Laporan
                     </button>
@@ -256,26 +281,61 @@ export default function AdminDashboardPage() {
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="font-semibold text-lg text-slate-800">Analisa Pendapatan</h3>
                                 <div className="relative">
-                                    <select className="appearance-none bg-white border border-slate-200 text-sm font-medium text-slate-600 rounded-lg pl-3 pr-8 py-2 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 cursor-pointer transition-colors">
-                                        <option>Minggu Ini</option>
-                                        <option>Bulan Ini</option>
-                                        <option>Tahun Ini</option>
+                                    <select 
+                                        value={range}
+                                        onChange={(e) => setRange(e.target.value)}
+                                        className="appearance-none bg-white border border-slate-200 text-sm font-medium text-slate-600 rounded-lg pl-3 pr-8 py-2 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 cursor-pointer transition-colors"
+                                    >
+                                        <option value="WEEK">Minggu Ini</option>
+                                        <option value="MONTH">Bulan Ini</option>
+                                        <option value="YEAR">Tahun Ini</option>
                                     </select>
                                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                                 </div>
                             </div>
-                            <div className="h-[280px] flex items-end gap-[10%] justify-between mt-8 border-b border-slate-100 pb-6 pt-2">
-                                {data.weeklyChart.map((item: any, i: number) => (
-                                    <div key={i} className="flex-1 w-full max-w-[48px] flex flex-col justify-end group cursor-pointer relative h-full">
-                                        <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[11px] font-medium px-2.5 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg z-20">
-                                            Rp {item.value} JT
+                            <div className="h-[300px] flex items-end gap-1 sm:gap-2 justify-between mt-10 border-b border-slate-100 pb-8 pt-4 overflow-x-auto scrollbar-none">
+                                {(data.chartData || []).map((item: any, i: number) => {
+                                    const maxValue = Math.max(...data.chartData.map((d: any) => d.value), 1);
+                                    const height = (item.value / maxValue) * 100;
+                                    const isMonth = range === 'MONTH';
+                                    
+                                    return (
+                                        <div key={i} className="flex-1 flex flex-col justify-end group cursor-pointer relative h-full min-w-[12px] md:min-w-[0]">
+                                            {/* Tooltip */}
+                                            <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] sm:text-[11px] font-bold px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap shadow-xl z-30 pointer-events-none mb-2 border border-slate-700">
+                                                <div className="flex flex-col items-center">
+                                                    <span className="text-slate-400 mb-1">{item.label}</span>
+                                                    <div className="flex flex-col items-start gap-0.5">
+                                                        <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-indigo-400"></div> Rev: Rp {item.value.toLocaleString()} {range === 'YEAR' ? 'JT' : 'RB'}</span>
+                                                        <span className="flex items-center gap-1.5 font-black text-emerald-400"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div> Net: Rp {item.profit.toLocaleString()} {range === 'YEAR' ? 'JT' : 'RB'}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="absolute bottom-[-4px] left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 rotate-45 border-r border-b border-slate-700"></div>
+                                            </div>
+
+                                            {/* Bar */}
+                                            <div 
+                                                className={`w-full rounded-t-lg transition-all duration-500 ease-out relative z-10 
+                                                    ${item.value === maxValue ? 'bg-indigo-600 shadow-[0_0_15px_rgba(79,70,229,0.3)]' : 'bg-indigo-100 group-hover:bg-indigo-400'}`}
+                                                style={{ 
+                                                    height: `${Math.max(4, height)}%`,
+                                                    transitionDelay: `${i * 30}ms`
+                                                }}
+                                            >
+                                                {item.value === maxValue && (
+                                                    <div className="absolute -top-1 right-0 w-1.5 h-1.5 bg-indigo-400 rounded-full animate-ping"></div>
+                                                )}
+                                            </div>
+
+                                            {/* Label */}
+                                            <span className={`absolute -bottom-7 left-1/2 -translate-x-1/2 text-[9px] font-black tracking-tighter uppercase transition-colors
+                                                ${item.value === maxValue ? 'text-indigo-600' : 'text-slate-400'}
+                                                ${isMonth && i % 4 !== 0 ? 'hidden sm:block opacity-40' : ''}`}>
+                                                {item.label}
+                                            </span>
                                         </div>
-                                        <div className="w-full rounded-t-md bg-indigo-50 group-hover:bg-indigo-500 transition-colors duration-300" style={{ height: `${Math.max(5, item.value)}%` }}></div>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="flex justify-between flex-wrap text-[12px] font-medium text-slate-400 mt-4 px-1">
-                                <span>Senin</span><span>Selasa</span><span>Rabu</span><span>Kamis</span><span>Jumat</span><span>Sabtu</span><span>Minggu</span>
+                                    );
+                                })}
                             </div>
                         </div>
 
@@ -283,9 +343,9 @@ export default function AdminDashboardPage() {
                         <div className="bg-white border border-slate-200/80 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] rounded-2xl p-6 flex flex-col h-full">
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="font-semibold text-lg text-slate-800">Transaksi Terbaru</h3>
-                                <button className="text-indigo-600 font-medium text-[13px] hover:text-indigo-700 hover:underline underline-offset-4 inline-flex items-center gap-1 transition-colors">
+                                <Link href="/admin/transactions" className="text-indigo-600 font-medium text-[13px] hover:text-indigo-700 hover:underline underline-offset-4 inline-flex items-center gap-1 transition-colors">
                                     Semua <ArrowRight className="w-3.5 h-3.5" />
-                                </button>
+                                </Link>
                             </div>
                             <div className="space-y-4 flex-1">
                                 {data.recentTransactions.length === 0 && (

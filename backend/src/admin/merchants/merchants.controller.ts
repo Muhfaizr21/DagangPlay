@@ -1,4 +1,5 @@
-import { UseGuards, Controller, Get, Query, Patch, Param, Body, BadRequestException, Post } from "@nestjs/common";
+import { UseGuards, Controller, Get, Query, Patch, Param, Body, BadRequestException, Post, Res, Header } from "@nestjs/common";
+import { Response } from 'express';
 import { MerchantsService } from './merchants.service';
 import { MerchantStatus } from '@prisma/client';
 
@@ -20,6 +21,14 @@ export class MerchantsController {
     @Get()
     async getMerchants(@Query('search') search?: string, @Query('status') status?: string, @Query('page') page: string = '1', @Query('perPage') perPage: string = '10') {
         return this.merchantsService.getAllMerchants(search, status, Number(page), Number(perPage));
+    }
+
+    @Get('export-csv')
+    @Header('Content-Type', 'text/csv')
+    @Header('Content-Disposition', 'attachment; filename=merchants-list.csv')
+    async exportCsv(@Res() res: Response) {
+        const csv = await this.merchantsService.exportMerchantsCsv();
+        return res.send(csv);
     }
 
     @Patch(':id/status')

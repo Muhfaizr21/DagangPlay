@@ -90,7 +90,7 @@ export default function AdminChatDashboard() {
 
     return (
         <AdminLayout>
-            <div className="flex bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden h-[calc(100vh-140px)] min-h-[600px]">
+            <div className="flex bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden h-[calc(100vh-180px)] min-h-[500px] max-h-[850px] relative">
                 {/* Left Side: Merchant List */}
                 <div className="w-full md:w-80 border-r border-slate-100 flex flex-col bg-slate-50/30">
                     <div className="p-4 bg-white">

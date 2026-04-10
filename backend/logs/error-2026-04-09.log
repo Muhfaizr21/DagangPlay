@@ -1,0 +1,9 @@
+{"context":"WorkersService","level":"error","message":"Failed to sync supplier balance: Request failed with status code 400","stack":[null],"timestamp":"2026-04-09T04:00:00.614Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync supplier balance: Request failed with status code 400","stack":[null],"timestamp":"2026-04-09T05:00:00.492Z"}
+{"context":"DigiflazzService","level":"error","message":"[Digiflazz] Error fetching price list:","stack":["Request failed with status code 400"],"timestamp":"2026-04-09T05:00:04.157Z"}
+{"context":"WorkersService","level":"error","message":"Automated Sync Failed: Digiflazz Connection Error: Request failed with status code 400","stack":[null],"timestamp":"2026-04-09T05:00:04.158Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync supplier balance: Request failed with status code 400","stack":[null],"timestamp":"2026-04-09T06:00:00.337Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync supplier balance: Request failed with status code 400","stack":[null],"timestamp":"2026-04-09T07:00:00.253Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync supplier balance: Request failed with status code 400","stack":[null],"timestamp":"2026-04-09T08:00:05.538Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync supplier balance: Request failed with status code 400","stack":[null],"timestamp":"2026-04-09T09:00:01.384Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync supplier balance: Request failed with status code 400","stack":[null],"timestamp":"2026-04-09T10:00:05.115Z"}

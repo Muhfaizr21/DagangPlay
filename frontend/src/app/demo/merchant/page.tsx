@@ -12,12 +12,14 @@ export default function AdminDemoPage() {
         const loginAsDemo = async () => {
             try {
                 const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-                const response = await axios.post(`${baseUrl}/api/auth/admin/login`, {
+                const response = await axios.post(`${baseUrl}/api/auth/merchant/login`, {
                     email: 'demo@dagangplay.com',
                     password: 'demo123'
                 });
 
                 if (response.data?.access_token) {
+                    localStorage.setItem('merchant_token', response.data.access_token);
+                    localStorage.setItem('merchant_user', JSON.stringify(response.data.user));
                     localStorage.setItem('admin_token', response.data.access_token);
                     localStorage.setItem('admin_user', JSON.stringify(response.data.user));
                     

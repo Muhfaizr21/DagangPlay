@@ -37,11 +37,7 @@ export default function StoreDemoPage() {
     return (
         <div className="relative">
             <main className="relative">
-                {/* Subtle Click Interceptor para demo */}
-                <div
-                    className="absolute inset-x-0 top-0 bottom-0 z-40 bg-transparent cursor-not-allowed"
-                    onClick={() => alert("Ini adalah tampilan Demo Toko Reseller DagangPlay.")}
-                />
+                {/* Mock storefront is now interactive */}
 
                 <MerchantStorefront
                     config={{

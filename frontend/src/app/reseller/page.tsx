@@ -811,7 +811,8 @@ export default function ResellerLandingPage() {
   const [selectedPlan, setSelectedPlan] = useState('PRO');
   const [hargaModal, setHargaModal] = useState(37500);
   const [hargaJual, setHargaJual] = useState(40000);
-  const [jumlahPenjualan, setJumlahPenjualan] = useState(20);
+  const [jumlahPenjualan, setJumlahPenjualan] = useState(100);
+  const [isManualJual, setIsManualJual] = useState(false);
   const [sampleProducts, setSampleProducts] = useState<any[]>([]);
   const [billingCycle, setBillingCycle] = useState<'yearly' | 'quarterly'>('yearly');
   const [plans, setPlans] = useState<any>({
@@ -851,12 +852,17 @@ export default function ResellerLandingPage() {
   );
 
   useEffect(() => {
-    if (sampleProducts.length > 0) {
+    if (sampleProducts.length > 0 && !isManualJual) {
       const f = sampleProducts[0];
       const tierKey = selectedPlan.toLowerCase();
       const m = f[tierKey] || f.normal || 0;
       setHargaModal(m);
       setHargaJual(Math.ceil((m * 1.1) / 500) * 500);
+    } else if (sampleProducts.length > 0) {
+      const f = sampleProducts[0];
+      const tierKey = selectedPlan.toLowerCase();
+      const m = f[tierKey] || f.normal || 0;
+      setHargaModal(m);
     }
   }, [selectedPlan, sampleProducts]);
 
@@ -896,8 +902,10 @@ export default function ResellerLandingPage() {
       }).catch(() => setSampleProducts(fb));
   }, []);
 
-  const profit = (hargaJual - hargaModal) * jumlahPenjualan * 30;
-  const fmt = (n: number) => isMounted ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n) : `Rp ${n}`;
+  const profit = (hargaJual - hargaModal) * jumlahPenjualan;
+
+  const fmt = (n: number) => isMounted ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n).replace(/\s/g, ' ') : `Rp ${n}`;
+  const parseNum = (s: string) => Number(s.replace(/[^0-9]/g, ''));
 
   const Feat = ({ on, text, light, accent }: { on: boolean, text: string, light: boolean, accent?: boolean }) => (
     <div className={`pf${on ? '' : ' off'}`}>
@@ -1130,24 +1138,32 @@ export default function ResellerLandingPage() {
                   <div className="c-label"><span>Harga Jual Kamu</span></div>
                   <div className="c-field">
                     <span className="c-pfx">Rp</span>
-                    <input type="number" value={hargaJual} onChange={e => setHargaJual(Number(e.target.value))} className="c-input" />
+                    <input 
+                      type="text" 
+                      value={hargaJual.toLocaleString('id-ID')} 
+                      onChange={e => {
+                        setIsManualJual(true);
+                        setHargaJual(parseNum(e.target.value));
+                      }} 
+                      className="c-input" 
+                    />
                   </div>
                 </div>
               </div>
               <div>
                 <div className="c-label">
-                  <span>Target Penjualan / Hari</span>
+                  <span>Target Penjualan / Bulan</span>
                   <span className="c-chip">{jumlahPenjualan} Order</span>
                 </div>
-                <input type="range" min="1" max="500" value={jumlahPenjualan} onChange={e => setJumlahPenjualan(Number(e.target.value))} />
-                <div className="range-meta"><span>Santai (1)</span><span>Maksimal (500)</span></div>
+                <input type="range" min="1" max="10000" step="10" value={jumlahPenjualan} onChange={e => setJumlahPenjualan(Number(e.target.value))} />
+                <div className="range-meta"><span>Pemula (1)</span><span>Power Reseller (10.000)</span></div>
               </div>
             </div>
             <div className="result-panel">
               <div>
                 <div className="r-label">Estimasi Profit / Bulan</div>
                 <div className="r-val">{fmt(profit)}</div>
-                <div className="r-note">Estimasi kotor. Belum dikurangi biaya operasional.</div>
+                <div className="r-note" style={{ marginTop: '1rem' }}>Estimasi keuntungan berdasarkan target penjualan Anda.</div>
                 <div className="r-tags">
                   <span className="r-tag">Website Siap Pakai</span>
                   <span className="r-tag">Tanpa Deposit</span>

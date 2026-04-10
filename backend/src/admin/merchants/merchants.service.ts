@@ -203,4 +203,23 @@ export class MerchantsService {
             orderBy: { createdAt: 'desc' }
         });
     }
+
+    async exportMerchantsCsv() {
+        const merchants = await this.prisma.merchant.findMany({
+            include: {
+                owner: { select: { name: true, email: true } },
+                _count: { select: { orders: { where: { paymentStatus: 'PAID' } } } }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        let csv = 'Merchant ID,Nama Merchant,Domain,Plan,Status,Owner,Email Owner,Total Trx PAID,Tgl Daftar\n';
+
+        for (const m of merchants) {
+            const domain = m.domain || `${m.slug || m.id}.dagangplay.com`;
+            csv += `${m.id},"${m.name}",${domain},${m.plan},${m.status},"${m.owner?.name || '-'}","${m.owner?.email || '-'}",${m._count.orders},${m.createdAt.toISOString()}\n`;
+        }
+
+        return csv;
+    }
 }

@@ -76,6 +76,25 @@ export default function MerchantDashboard() {
         { title: 'Transaksi Hari Ini', value: (transactionsToday?.success || 0).toString(), trend: `${transactionsToday?.failed || 0} gagal`, isPositive: (transactionsToday?.failed || 0) === 0, icon: Receipt, accent: 'bg-blue-50 text-blue-600' },
     ];
 
+    const handleDownloadReport = async () => {
+        try {
+            const token = localStorage.getItem('admin_token');
+            const res = await axios.get(`${baseUrl}/merchant/dashboard/export-report`, {
+                headers: { Authorization: `Bearer ${token}` },
+                responseType: 'blob'
+            });
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `report-${merchant.name}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (err) {
+            alert('Gagal mendownload laporan');
+        }
+    };
+
     return (
         <MerchantLayout>
             {/* Page Header */}
@@ -90,7 +109,10 @@ export default function MerchantDashboard() {
                     </div>
                     <p className="text-sm text-gray-400">Pantau kinerja toko <span className="font-semibold text-gray-600">{merchant.name}</span> secara real-time.</p>
                 </div>
-                <button className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-700 transition-colors shadow-sm">
+                <button 
+                    onClick={handleDownloadReport}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-700 transition-colors shadow-sm cursor-pointer"
+                >
                     <Receipt className="w-4 h-4" />
                     Download Laporan
                 </button>

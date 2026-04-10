@@ -1,4 +1,5 @@
-import { UseGuards,  Controller, Get  } from "@nestjs/common";
+import { UseGuards, Controller, Get, Res, Header, Query } from "@nestjs/common";
+import { Response } from 'express';
 import { DashboardService } from './dashboard.service';
 
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
@@ -17,7 +18,15 @@ export class DashboardController {
     constructor(private readonly dashboardService: DashboardService) { }
 
     @Get('summary')
-    async getDashboardSummary() {
-        return this.dashboardService.getDashboardSummary();
+    async getDashboardSummary(@Query('range') range?: string) {
+        return this.dashboardService.getDashboardSummary(range);
+    }
+
+    @Get('export-report')
+    @Header('Content-Type', 'text/csv')
+    @Header('Content-Disposition', 'attachment; filename=dagangplay-dashboard-report.csv')
+    async exportReport(@Res() res: Response) {
+        const csv = await this.dashboardService.getDashboardReport();
+        return res.send(csv);
     }
 }

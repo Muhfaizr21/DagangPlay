@@ -69,7 +69,8 @@ export default function ContentManagementPage() {
     const handleSaveBanner = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/content/banners', bannerForm);
+            const token = localStorage.getItem('admin_token');
+            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/content/banners', bannerForm, { headers: { Authorization: `Bearer ${token}` } });
             mutateBanners();
             setShowBannerModal(false);
             setBannerForm({ title: '', image: '', linkUrl: '', position: 'HERO', sortOrder: 0 });
@@ -90,7 +91,8 @@ export default function ContentManagementPage() {
     const handleDeleteBanner = async (id: string) => {
         if (!confirm('Hapus banner ini permanen?')) return;
         try {
-            await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/content/banners/${id}`);
+            const token = localStorage.getItem('admin_token');
+            await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/content/banners/${id}`, { headers: { Authorization: `Bearer ${token}` } });
             mutateBanners();
             showToast('Sukses', 'Banner berhasil dihapus');
         } catch (err: any) {
@@ -102,7 +104,8 @@ export default function ContentManagementPage() {
     const handleSaveAnnouncement = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/content/announcements', announcementForm);
+            const token = localStorage.getItem('admin_token');
+            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/content/announcements', announcementForm, { headers: { Authorization: `Bearer ${token}` } });
             mutateAnnouncements();
             setShowAnnouncementModal(false);
             setAnnouncementForm({ title: '', content: '' });
@@ -123,7 +126,8 @@ export default function ContentManagementPage() {
     const handleDeleteAnnouncement = async (id: string) => {
         if (!confirm('Hapus pengumuman ini permanen?')) return;
         try {
-            await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/content/announcements/${id}`);
+            const token = localStorage.getItem('admin_token');
+            await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/content/announcements/${id}`, { headers: { Authorization: `Bearer ${token}` } });
             mutateAnnouncements();
             showToast('Sukses', 'Pengumuman dihapus');
         } catch (err: any) {
@@ -135,7 +139,8 @@ export default function ContentManagementPage() {
     const handleSaveTemplate = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/content/templates', templateForm);
+            const token = localStorage.getItem('admin_token');
+            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/content/templates', templateForm, { headers: { Authorization: `Bearer ${token}` } });
             mutateTemplates();
             setShowTemplateModal(false);
             setTemplateForm({ type: 'ORDER', channel: 'EMAIL', subject: '', body: '' });
@@ -149,7 +154,8 @@ export default function ContentManagementPage() {
     const handleCreateBroadcast = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/content/broadcasts', broadcastForm);
+            const token = localStorage.getItem('admin_token');
+            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/content/broadcasts', broadcastForm, { headers: { Authorization: `Bearer ${token}` } });
             mutateBroadcasts();
             setShowBroadcastModal(false);
             setBroadcastForm({ name: '', subject: '', body: '', targetRole: 'ALL' });

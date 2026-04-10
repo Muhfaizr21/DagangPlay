@@ -1,0 +1,1 @@
+const axios = require('axios'); axios.post('http://localhost:3001/api/auth/admin/login', {email: 'superadmin@dagangplay.com', password: 'DagangPlay123!'}).then(r => console.log(r.data)).catch(e => console.log(e.response.data));

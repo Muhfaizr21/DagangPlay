@@ -259,10 +259,14 @@ export default function SupportManagementPage() {
                         </div>
                     </div>
                 ) : (
-                    <div className="flex-1 bg-slate-50/50 flex flex-col items-center justify-center p-10 text-center">
-                        <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 mb-4 animate-pulse"><MessageSquare className="w-10 h-10" /></div>
-                        <h3 className="text-xl font-bold text-slate-700">Pilih Tiket Bantuan</h3>
-                        <p className="text-sm text-slate-500 max-w-sm mt-1">Pilih salah satu keluhan dari daftar di sebelah kiri untuk melihat detail percakapan dan membalas tiket masuk.</p>
+                    <div className="flex-1 bg-slate-50/30 flex flex-col items-center justify-center p-12 text-center h-full min-h-[500px] animate-in fade-in duration-500">
+                        <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center text-slate-200 mb-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
+                            <MessageSquare className="w-10 h-10" />
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-800">Pilih Tiket Bantuan</h3>
+                        <p className="text-sm text-slate-400 max-w-[280px] mt-3 leading-relaxed font-medium">
+                            Pilih salah satu keluhan dari daftar di sebelah kiri untuk melihat detail percakapan dan membalas tiket masuk.
+                        </p>
                     </div>
                 )}
             </div>

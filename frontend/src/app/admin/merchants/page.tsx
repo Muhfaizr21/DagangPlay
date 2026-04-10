@@ -101,11 +101,15 @@ export default function MerchantManagementPage() {
                     { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } }
                 );
                 mutate();
-                if (selectedMerchantId === id) mutateDetail();
-                showToast('Status Diperbarui', `Status merchant menjadi ${newStatus}`);
+                if (selectedMerchantId === id) {
+                    // Try to refresh detail if it's the current one
+                    mutateDetail?.();
+                }
+                showToast('Status Diperbarui', `Status merchant [${id.slice(0, 8)}] menjadi ${newStatus}`);
             }
         } catch (err: any) {
-            alert(err.response?.data?.message || 'Gagal mengubah status');
+            console.error("Update Status Error:", err.response?.data);
+            showToast('Gagal', err.response?.data?.message || 'Gagal mengubah status merchant', 'error');
         }
     };
 
@@ -133,6 +137,25 @@ export default function MerchantManagementPage() {
             showToast('Error', err.response?.data?.message || 'Gagal reset password', 'error');
         }
     }
+
+    const handleExportCsv = async () => {
+        try {
+            const token = localStorage.getItem('admin_token');
+            const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/merchants/export-csv`, {
+                headers: { Authorization: `Bearer ${token}` },
+                responseType: 'blob'
+            });
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'merchants-list.csv');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (err) {
+            alert('Gagal mengekspor data merchant');
+        }
+    };
 
     const getStatusBadge = (status: string) => {
         switch (status) {
@@ -222,9 +245,33 @@ export default function MerchantManagementPage() {
                                                             <p className="text-xs text-slate-500 font-medium mt-0.5">{merchantDetail.owner?.email}</p>
                                                         </div>
                                                     </div>
-                                                    <button onClick={() => handleResetPassword(merchantDetail.id)} className="px-4 py-2 flex items-center gap-2 text-xs font-black text-amber-600 bg-amber-50 border border-amber-100 rounded-xl hover:bg-amber-100 transition-all active:scale-95">
-                                                        <KeyRound className="w-4 h-4" /> Force Reset Pass
-                                                    </button>
+                                                    <div className="flex flex-col gap-2">
+                                                        <button onClick={() => handleResetPassword(merchantDetail.id)} className="px-4 py-2 flex items-center gap-2 text-[10px] font-black text-amber-600 bg-amber-50 border border-amber-100 rounded-xl hover:bg-amber-100 transition-all active:scale-95">
+                                                            <KeyRound className="w-4 h-4" /> Force Reset Pass
+                                                        </button>
+                                                        <div className="flex gap-2">
+                                                            {merchantDetail.status === 'PENDING_REVIEW' && (
+                                                                <button onClick={() => handleUpdateStatus(merchantDetail.id, 'ACTIVE', 'Approve')} className="flex-1 px-3 py-2 text-[10px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-xl hover:bg-emerald-100 transition-all">
+                                                                    Approve
+                                                                </button>
+                                                            )}
+                                                            {merchantDetail.status === 'ACTIVE' && (
+                                                                <button onClick={() => handleUpdateStatus(merchantDetail.id, 'SUSPENDED', 'Suspend')} className="flex-1 px-3 py-2 text-[10px] font-black text-amber-600 bg-amber-50 border border-amber-100 rounded-xl hover:bg-amber-100 transition-all">
+                                                                    Suspend
+                                                                </button>
+                                                            )}
+                                                            {merchantDetail.status !== 'INACTIVE' && !merchantDetail.isOfficial && (
+                                                                <button onClick={() => handleUpdateStatus(merchantDetail.id, 'INACTIVE', 'Ban')} className="flex-1 px-3 py-2 text-[10px] font-black text-rose-600 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-100 transition-all">
+                                                                    Ban
+                                                                </button>
+                                                            )}
+                                                            {merchantDetail.status === 'SUSPENDED' && (
+                                                                <button onClick={() => handleUpdateStatus(merchantDetail.id, 'ACTIVE', 'Reactivate')} className="flex-1 px-3 py-2 text-[10px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-xl hover:bg-emerald-100 transition-all">
+                                                                    Activate
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -370,7 +417,10 @@ export default function MerchantManagementPage() {
                     <p className="text-[14px] text-slate-500 font-medium mt-1">Status pendaftaran, omset, dan integrasi tenant.</p>
                 </div>
                 <div className="flex gap-3">
-                    <button className="h-[40px] px-5 inline-flex items-center justify-center gap-2 text-[13px] font-black rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-all shadow-sm active:scale-95 cursor-pointer">
+                    <button 
+                        onClick={handleExportCsv}
+                        className="h-[40px] px-5 inline-flex items-center justify-center gap-2 text-[13px] font-black rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-all shadow-sm active:scale-95 cursor-pointer"
+                    >
                         <Download className="w-4 h-4" />
                         EXPORT CSV
                     </button>
