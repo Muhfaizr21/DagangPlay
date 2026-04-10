@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -81,7 +82,7 @@ const ResellerRegisterPage = () => {
         setLoading(true);
 
         try {
-            const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+            const baseUrl = getApiUrl();
 
             // In a real implementation, this would point to your NestJS backend
             // For now, we simulate the API request

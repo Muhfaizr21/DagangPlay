@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useState, useEffect, useMemo } from "react";
 import axios from 'axios';
 import { PremiumSlider } from "./HomeComponents";
@@ -44,7 +45,7 @@ const MerchantStorefront = ({ config, contentData, filteredProducts, search, set
         } catch { }
     }, []);
 
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
 
     const handleTrack = async (e: React.FormEvent) => {
         e.preventDefault();

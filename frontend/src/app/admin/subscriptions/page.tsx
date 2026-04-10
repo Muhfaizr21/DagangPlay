@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 
 import React, { useState, useEffect } from 'react';
 import useSWR from 'swr';
@@ -55,17 +56,17 @@ export default function SaaSManagementPage() {
     const [isSavingPlans, setIsSavingPlans] = useState(false);
 
     const { data: invoices, isLoading, mutate } = useSWR(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/subscriptions/invoices?search=${searchTerm}&status=${statusFilter}`,
+        `${getApiUrl()}/admin/subscriptions/invoices?search=${searchTerm}&status=${statusFilter}`,
         fetcher
     );
 
-    const { data: perf } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/subscriptions/performance', fetcher);
-    const { data: merchantsList } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/merchants', fetcher); // Use existing merchants API for dropdown
+    const { data: perf } = useSWR((getApiUrl()) + '/admin/subscriptions/performance', fetcher);
+    const { data: merchantsList } = useSWR((getApiUrl()) + '/admin/merchants', fetcher); // Use existing merchants API for dropdown
 
     // Fetch Plan Features
     useEffect(() => {
         if (activeTab === 'PLANS') {
-            axios.get((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/subscriptions/plans/features', { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } })
+            axios.get((getApiUrl()) + '/admin/subscriptions/plans/features', { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } })
                 .then(res => {
                     setPlansConfig(res.data);
                 })
@@ -83,7 +84,7 @@ export default function SaaSManagementPage() {
     const handleConfirm = async (id: string) => {
         if (!confirm('Konfirmasi pembayaran invoice ini dan perpanjang langganan merchant?')) return;
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/subscriptions/invoices/${id}/confirm`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
+            await axios.post(`${getApiUrl()}/admin/subscriptions/invoices/${id}/confirm`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             mutate();
             setSelectedInvoice(null);
             showToast('Berhasil', 'Invoice telah terbayar & Langganan diperbarui.');
@@ -96,7 +97,7 @@ export default function SaaSManagementPage() {
         const reason = prompt('Alasan penolakan:');
         if (reason === null) return;
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/subscriptions/invoices/${id}/reject`, { notes: reason }, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
+            await axios.post(`${getApiUrl()}/admin/subscriptions/invoices/${id}/reject`, { notes: reason }, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             mutate();
             setSelectedInvoice(null);
             showToast('Ditolak', 'Pembayaran invoice telah ditolak.');
@@ -108,7 +109,7 @@ export default function SaaSManagementPage() {
     const handleAdjust = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/subscriptions/merchants/${adjustForm.merchantId}/adjust`, {
+            await axios.post(`${getApiUrl()}/admin/subscriptions/merchants/${adjustForm.merchantId}/adjust`, {
                 plan: adjustForm.plan,
                 days: adjustForm.days
             }, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
@@ -124,7 +125,7 @@ export default function SaaSManagementPage() {
         e.preventDefault();
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/subscriptions/invoices/manual`, createInvoiceForm, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.post(`${getApiUrl()}/admin/subscriptions/invoices/manual`, createInvoiceForm, { headers: { Authorization: `Bearer ${token}` } });
             mutate();
             setShowCreateInvoiceModal(false);
             setCreateInvoiceForm({ merchantId: '', plan: 'PRO', amount: 0, dueDate: '' });
@@ -138,7 +139,7 @@ export default function SaaSManagementPage() {
     const handleSavePlansConfig = async () => {
         setIsSavingPlans(true);
         try {
-            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/subscriptions/plans/features', plansConfig, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
+            await axios.post((getApiUrl()) + '/admin/subscriptions/plans/features', plansConfig, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             showToast('Tersimpan', 'Konfigurasi limit dan akses fitur per plan telah diperbarui.');
         } catch (err: any) {
             showToast('Gagal', 'Terjadi kesalahan saat menyimpan pengaturan plan.', 'error');

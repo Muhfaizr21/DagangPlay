@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useState } from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
@@ -51,7 +52,7 @@ export default function UserManagementPage() {
 
     // Fetch Data
     const { data: fetchResult, error, isLoading, mutate } = useSWR(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/users?search=${debouncedSearch}&role=${roleFilter}&status=${statusFilter}&page=${page}&limit=20`,
+        `${getApiUrl()}/admin/users?search=${debouncedSearch}&role=${roleFilter}&status=${statusFilter}&page=${page}&limit=20`,
         fetcher
     );
     const users = fetchResult?.data || [];
@@ -60,7 +61,7 @@ export default function UserManagementPage() {
     const handleUpdateStatus = async (id: string, newStatus: string) => {
         try {
             if (!confirm(`Ubah status user menjadi ${newStatus}?`)) return;
-            await axios.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/users/${id}/status`, { status: newStatus });
+            await axios.patch(`${getApiUrl()}/admin/users/${id}/status`, { status: newStatus });
             mutate();
             setToastMsg({ title: 'Berhasil', desc: `Status diubah menjadi ${newStatus}`, type: 'success' });
         } catch (err: any) {
@@ -73,7 +74,7 @@ export default function UserManagementPage() {
     const handleForceLogout = async (id: string) => {
         try {
             if (!confirm(`Paksa logout semua sesi aktif user ini?`)) return;
-            const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/users/${id}/sessions/force-logout`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
+            const res = await axios.post(`${getApiUrl()}/admin/users/${id}/sessions/force-logout`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             setToastMsg({ title: 'Berhasil Logout', desc: `${res.data.revoked} Sesi aktif dihapus`, type: 'success' });
         } catch (err: any) {
             setToastMsg({ title: 'Error', desc: err.response?.data?.message || 'Gagal force logout', type: 'error' });
@@ -87,7 +88,7 @@ export default function UserManagementPage() {
         if (!selectedUserId || !balanceAmount || !balanceNote) return;
 
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/users/${selectedUserId}/balance/adjust`, {
+            await axios.post(`${getApiUrl()}/admin/users/${selectedUserId}/balance/adjust`, {
                 type: balanceType,
                 amount: Number(balanceAmount),
                 note: balanceNote

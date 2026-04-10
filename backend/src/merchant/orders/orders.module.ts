@@ -14,6 +14,6 @@ import { SubscriptionsModule } from '../../admin/subscriptions/subscriptions.mod
     BullModule.registerQueue({ name: 'digiflazz-fulfillment' }),
   ],
   controllers: [OrdersController],
-  providers: [OrdersService, PrismaService]
+  providers: [OrdersService, PrismaService],
 })
-export class OrdersModule { }
+export class OrdersModule {}

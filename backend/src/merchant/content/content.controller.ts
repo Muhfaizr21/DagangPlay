@@ -1,4 +1,18 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, UploadedFile, UseInterceptors, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  Request,
+  UploadedFile,
+  UseInterceptors,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ContentService } from './content.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -14,155 +28,218 @@ import { v4 as uuidv4 } from 'uuid';
 @Roles(Role.MERCHANT, Role.SUPER_ADMIN)
 @Controller('merchant/content')
 export class ContentController {
-    constructor(private readonly contentService: ContentService, private prisma: PrismaService) { }
+  constructor(
+    private readonly contentService: ContentService,
+    private prisma: PrismaService,
+  ) {}
 
-    @Post('upload')
-    @UseInterceptors(FileInterceptor('file'))
-    async uploadImage(@Request() req, @UploadedFile() file: Express.Multer.File) {
-        if (!file) throw new HttpException('File not found', HttpStatus.BAD_REQUEST);
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadImage(@Request() req, @UploadedFile() file: Express.Multer.File) {
+    if (!file)
+      throw new HttpException('File not found', HttpStatus.BAD_REQUEST);
 
-        const uploadDir = join(process.cwd(), 'public', 'uploads');
-        if (!existsSync(uploadDir)) {
-            mkdirSync(uploadDir, { recursive: true });
-        }
-
-        const filename = `${uuidv4()}.webp`;
-        const filePath = join(uploadDir, filename);
-
-        try {
-            await sharp(file.buffer)
-                .webp({ quality: 80 })
-                .toFile(filePath);
-
-            return {
-                message: 'Image uploaded successfully',
-                url: `/uploads/${filename}`
-            };
-        } catch (error) {
-            console.error(error);
-            throw new HttpException('Error processing image', HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    const uploadDir = join(process.cwd(), 'public', 'uploads');
+    if (!existsSync(uploadDir)) {
+      mkdirSync(uploadDir, { recursive: true });
     }
 
-    @Get('banners')
-    async getBanners(@Request() req) {
-        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
-        if (!merchant) throw new Error('Merchant not found');
-        return this.contentService.getBanners(merchant.id);
-    }
+    const filename = `${uuidv4()}.webp`;
+    const filePath = join(uploadDir, filename);
 
-    @Post('banners')
-    async createBanner(@Request() req, @Body() body: any) {
-        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
-        if (!merchant) throw new Error('Merchant not found');
-        return this.contentService.createBanner(merchant.id, body);
-    }
+    try {
+      await sharp(file.buffer).webp({ quality: 80 }).toFile(filePath);
 
-    @Put('banners/:id/toggle')
-    async toggleBanner(@Request() req, @Param('id') id: string, @Body('isActive') isActive: boolean) {
-        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
-        if (!merchant) throw new Error('Merchant not found');
-        return this.contentService.toggleBanner(merchant.id, id, isActive);
+      return {
+        message: 'Image uploaded successfully',
+        url: `/uploads/${filename}`,
+      };
+    } catch (error) {
+      console.error(error);
+      throw new HttpException(
+        'Error processing image',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
+  }
 
-    @Put('banners/:id')
-    async updateBanner(@Request() req, @Param('id') id: string, @Body() body: any) {
-        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
-        if (!merchant) throw new Error('Merchant not found');
-        return this.contentService.updateBanner(merchant.id, id, body);
-    }
+  @Get('banners')
+  async getBanners(@Request() req) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { ownerId: req.user.id },
+    });
+    if (!merchant) throw new Error('Merchant not found');
+    return this.contentService.getBanners(merchant.id);
+  }
 
-    @Delete('banners/:id')
-    async deleteBanner(@Request() req, @Param('id') id: string) {
-        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
-        if (!merchant) throw new Error('Merchant not found');
-        return this.contentService.deleteBanner(merchant.id, id);
-    }
+  @Post('banners')
+  async createBanner(@Request() req, @Body() body: any) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { ownerId: req.user.id },
+    });
+    if (!merchant) throw new Error('Merchant not found');
+    return this.contentService.createBanner(merchant.id, body);
+  }
 
-    // Announcements
-    @Get('announcements')
-    async getAnnouncements(@Request() req) {
-        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
-        if (!merchant) throw new Error('Merchant not found');
-        return this.contentService.getAnnouncements(merchant.id);
-    }
+  @Put('banners/:id/toggle')
+  async toggleBanner(
+    @Request() req,
+    @Param('id') id: string,
+    @Body('isActive') isActive: boolean,
+  ) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { ownerId: req.user.id },
+    });
+    if (!merchant) throw new Error('Merchant not found');
+    return this.contentService.toggleBanner(merchant.id, id, isActive);
+  }
 
-    @Post('announcements')
-    async createAnnouncement(@Request() req, @Body() body: any) {
-        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
-        if (!merchant) throw new Error('Merchant not found');
-        return this.contentService.createAnnouncement(merchant.id, body);
-    }
+  @Put('banners/:id')
+  async updateBanner(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() body: any,
+  ) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { ownerId: req.user.id },
+    });
+    if (!merchant) throw new Error('Merchant not found');
+    return this.contentService.updateBanner(merchant.id, id, body);
+  }
 
-    @Put('announcements/:id/toggle')
-    async toggleAnnouncement(@Request() req, @Param('id') id: string, @Body('isActive') isActive: boolean) {
-        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
-        if (!merchant) throw new Error('Merchant not found');
-        return this.contentService.toggleAnnouncement(merchant.id, id, isActive);
-    }
+  @Delete('banners/:id')
+  async deleteBanner(@Request() req, @Param('id') id: string) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { ownerId: req.user.id },
+    });
+    if (!merchant) throw new Error('Merchant not found');
+    return this.contentService.deleteBanner(merchant.id, id);
+  }
 
-    @Put('announcements/:id')
-    async updateAnnouncement(@Request() req, @Param('id') id: string, @Body() body: any) {
-        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
-        if (!merchant) throw new Error('Merchant not found');
-        return this.contentService.updateAnnouncement(merchant.id, id, body);
-    }
+  // Announcements
+  @Get('announcements')
+  async getAnnouncements(@Request() req) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { ownerId: req.user.id },
+    });
+    if (!merchant) throw new Error('Merchant not found');
+    return this.contentService.getAnnouncements(merchant.id);
+  }
 
-    @Delete('announcements/:id')
-    async deleteAnnouncement(@Request() req, @Param('id') id: string) {
-        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
-        if (!merchant) throw new Error('Merchant not found');
-        return this.contentService.deleteAnnouncement(merchant.id, id);
-    }
+  @Post('announcements')
+  async createAnnouncement(@Request() req, @Body() body: any) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { ownerId: req.user.id },
+    });
+    if (!merchant) throw new Error('Merchant not found');
+    return this.contentService.createAnnouncement(merchant.id, body);
+  }
 
-    // Theme & Design
-    @Put('design')
-    async updateDesign(@Request() req, @Body() body: any) {
-        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
-        if (!merchant) throw new Error('Merchant not found');
-        return this.contentService.updateStoreDesign(merchant.id, body);
-    }
+  @Put('announcements/:id/toggle')
+  async toggleAnnouncement(
+    @Request() req,
+    @Param('id') id: string,
+    @Body('isActive') isActive: boolean,
+  ) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { ownerId: req.user.id },
+    });
+    if (!merchant) throw new Error('Merchant not found');
+    return this.contentService.toggleAnnouncement(merchant.id, id, isActive);
+  }
 
-    @Put('theme')
-    async updateTheme(@Request() req, @Body() body: any) {
-        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
-        if (!merchant) throw new Error('Merchant not found');
-        return this.contentService.updateThemeSettings(merchant.id, body);
-    }
+  @Put('announcements/:id')
+  async updateAnnouncement(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() body: any,
+  ) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { ownerId: req.user.id },
+    });
+    if (!merchant) throw new Error('Merchant not found');
+    return this.contentService.updateAnnouncement(merchant.id, id, body);
+  }
 
-    // Popup Promos
-    @Get('popup-promos')
-    async getPopupPromos(@Request() req) {
-        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
-        if (!merchant) throw new Error('Merchant not found');
-        return this.contentService.getPopupPromos(merchant.id);
-    }
+  @Delete('announcements/:id')
+  async deleteAnnouncement(@Request() req, @Param('id') id: string) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { ownerId: req.user.id },
+    });
+    if (!merchant) throw new Error('Merchant not found');
+    return this.contentService.deleteAnnouncement(merchant.id, id);
+  }
 
-    @Post('popup-promos')
-    async createPopupPromo(@Request() req, @Body() body: any) {
-        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
-        if (!merchant) throw new Error('Merchant not found');
-        return this.contentService.createPopupPromo(merchant.id, body);
-    }
+  // Theme & Design
+  @Put('design')
+  async updateDesign(@Request() req, @Body() body: any) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { ownerId: req.user.id },
+    });
+    if (!merchant) throw new Error('Merchant not found');
+    return this.contentService.updateStoreDesign(merchant.id, body);
+  }
 
-    @Put('popup-promos/:id/toggle')
-    async togglePopupPromo(@Request() req, @Param('id') id: string, @Body('isActive') isActive: boolean) {
-        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
-        if (!merchant) throw new Error('Merchant not found');
-        return this.contentService.togglePopupPromo(merchant.id, id, isActive);
-    }
+  @Put('theme')
+  async updateTheme(@Request() req, @Body() body: any) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { ownerId: req.user.id },
+    });
+    if (!merchant) throw new Error('Merchant not found');
+    return this.contentService.updateThemeSettings(merchant.id, body);
+  }
 
-    @Put('popup-promos/:id')
-    async updatePopupPromo(@Request() req, @Param('id') id: string, @Body() body: any) {
-        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
-        if (!merchant) throw new Error('Merchant not found');
-        return this.contentService.updatePopupPromo(merchant.id, id, body);
-    }
+  // Popup Promos
+  @Get('popup-promos')
+  async getPopupPromos(@Request() req) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { ownerId: req.user.id },
+    });
+    if (!merchant) throw new Error('Merchant not found');
+    return this.contentService.getPopupPromos(merchant.id);
+  }
 
-    @Delete('popup-promos/:id')
-    async deletePopupPromo(@Request() req, @Param('id') id: string) {
-        const merchant = await this.prisma.merchant.findUnique({ where: { ownerId: req.user.id } });
-        if (!merchant) throw new Error('Merchant not found');
-        return this.contentService.deletePopupPromo(merchant.id, id);
-    }
+  @Post('popup-promos')
+  async createPopupPromo(@Request() req, @Body() body: any) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { ownerId: req.user.id },
+    });
+    if (!merchant) throw new Error('Merchant not found');
+    return this.contentService.createPopupPromo(merchant.id, body);
+  }
+
+  @Put('popup-promos/:id/toggle')
+  async togglePopupPromo(
+    @Request() req,
+    @Param('id') id: string,
+    @Body('isActive') isActive: boolean,
+  ) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { ownerId: req.user.id },
+    });
+    if (!merchant) throw new Error('Merchant not found');
+    return this.contentService.togglePopupPromo(merchant.id, id, isActive);
+  }
+
+  @Put('popup-promos/:id')
+  async updatePopupPromo(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() body: any,
+  ) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { ownerId: req.user.id },
+    });
+    if (!merchant) throw new Error('Merchant not found');
+    return this.contentService.updatePopupPromo(merchant.id, id, body);
+  }
+
+  @Delete('popup-promos/:id')
+  async deletePopupPromo(@Request() req, @Param('id') id: string) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { ownerId: req.user.id },
+    });
+    if (!merchant) throw new Error('Merchant not found');
+    return this.contentService.deletePopupPromo(merchant.id, id);
+  }
 }

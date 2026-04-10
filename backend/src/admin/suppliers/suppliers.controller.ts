@@ -1,60 +1,78 @@
-import { UseGuards,  Controller, Get, Patch, Post, Param, Body  } from "@nestjs/common";
+import {
+  UseGuards,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Param,
+  Body,
+} from '@nestjs/common';
 import { SuppliersService } from './suppliers.service';
 import { SupplierStatus } from '@prisma/client';
 
-import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
-import { RolesGuard } from "../../auth/guards/roles.guard";
-import { PermissionsGuard } from "../../auth/guards/permissions.guard";
-import { Permissions } from "../../auth/decorators/permissions.decorator";
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { PermissionsGuard } from '../../auth/guards/permissions.guard';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
 
-import { Roles } from "../../auth/decorators/roles.decorator";
-import { Role } from "@prisma/client";
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { Role } from '@prisma/client';
 
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles(Role.SUPER_ADMIN, Role.ADMIN_STAFF)
 @Permissions('manage_suppliers')
 @Controller('admin/suppliers')
 export class SuppliersController {
-    constructor(private readonly suppliersService: SuppliersService) { }
+  constructor(private readonly suppliersService: SuppliersService) {}
 
-    @Get()
-    async getAllSuppliers() {
-        return this.suppliersService.getAllSuppliers();
-    }
+  @Get()
+  async getAllSuppliers() {
+    return this.suppliersService.getAllSuppliers();
+  }
 
-    @Get(':id')
-    async getSupplierById(@Param('id') id: string) {
-        return this.suppliersService.getSupplierById(id);
-    }
+  @Get(':id')
+  async getSupplierById(@Param('id') id: string) {
+    return this.suppliersService.getSupplierById(id);
+  }
 
-    @Patch(':id')
-    async updateSupplier(
-        @Param('id') id: string,
-        @Body() data: { name?: string; apiUrl?: string; apiKey?: string; apiSecret?: string; status?: SupplierStatus }
-    ) {
-        return this.suppliersService.updateSupplier(id, data);
-    }
+  @Patch(':id')
+  async updateSupplier(
+    @Param('id') id: string,
+    @Body()
+    data: {
+      name?: string;
+      apiUrl?: string;
+      apiKey?: string;
+      apiSecret?: string;
+      status?: SupplierStatus;
+    },
+  ) {
+    return this.suppliersService.updateSupplier(id, data);
+  }
 
-    @Post(':id/test-connection')
-    async testConnection(@Param('id') id: string) {
-        return this.suppliersService.testConnection(id);
-    }
+  @Post(':id/test-connection')
+  async testConnection(@Param('id') id: string) {
+    return this.suppliersService.testConnection(id);
+  }
 
-    @Post(':id/topup')
-    async topupBalance(@Param('id') id: string, @Body() data: { amount: number; note?: string }) {
-        if (!data.amount || data.amount <= 0) {
-            throw new Error('Amount re-topup invalid');
-        }
-        return this.suppliersService.topupBalance(id, data.amount, data.note);
+  @Post(':id/topup')
+  async topupBalance(
+    @Param('id') id: string,
+    @Body() data: { amount: number; note?: string },
+  ) {
+    if (!data.amount || data.amount <= 0) {
+      throw new Error('Amount re-topup invalid');
     }
+    return this.suppliersService.topupBalance(id, data.amount, data.note);
+  }
 
-    @Get(':id/logs')
-    async getLogs(@Param('id') id: string) {
-        return this.suppliersService.getSupplierLogs(id);
-    }
+  @Get(':id/logs')
+  async getLogs(@Param('id') id: string) {
+    return this.suppliersService.getSupplierLogs(id);
+  }
 
-    @Get(':id/balance-history')
-    async getBalanceHistory(@Param('id') id: string) {
-        return this.suppliersService.getSupplierBalanceHistories(id);
-    }
+  @Get(':id/balance-history')
+  async getBalanceHistory(@Param('id') id: string) {
+    return this.suppliersService.getSupplierBalanceHistories(id);
+  }
 }

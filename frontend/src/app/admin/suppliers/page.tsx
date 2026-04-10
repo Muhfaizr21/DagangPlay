@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useState } from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
@@ -36,12 +37,12 @@ export default function SupplierManagementPage() {
     const [topupAmount, setTopupAmount] = useState('');
     const [topupNote, setTopupNote] = useState('');
 
-    const { data: suppliers, error, isLoading, mutate } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/suppliers', fetcher);
+    const { data: suppliers, error, isLoading, mutate } = useSWR((getApiUrl()) + '/admin/suppliers', fetcher);
 
     const testConnection = async (id: string, code: string) => {
         setIsPinging(id);
         try {
-            const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/suppliers/${id}/test-connection`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
+            const res = await axios.post(`${getApiUrl()}/admin/suppliers/${id}/test-connection`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             setToastMsg({
                 title: 'Koneksi API Berhasil',
                 desc: `Saldo API / ${code} saat ini: Rp ${Number(res.data.balance).toLocaleString('id-ID')}`,
@@ -65,7 +66,7 @@ export default function SupplierManagementPage() {
         if (!selectedSupplierId || !topupAmount) return;
 
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/suppliers/${selectedSupplierId}/topup`, {
+            await axios.post(`${getApiUrl()}/admin/suppliers/${selectedSupplierId}/topup`, {
                 amount: Number(topupAmount),
                 note: topupNote
             });

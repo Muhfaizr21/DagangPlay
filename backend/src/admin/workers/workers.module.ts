@@ -4,6 +4,6 @@ import { PrismaService } from '../../prisma.service';
 import { DigiflazzService } from '../digiflazz/digiflazz.service';
 
 @Module({
-  providers: [WorkersService, PrismaService, DigiflazzService]
+  providers: [WorkersService, PrismaService, DigiflazzService],
 })
-export class WorkersModule { }
+export class WorkersModule {}

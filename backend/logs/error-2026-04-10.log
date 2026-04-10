@@ -1,3 +1,8 @@
 {"context":"NestApplication","level":"error","message":"Error: listen EADDRINUSE: address already in use :::3001","stack":[null],"timestamp":"2026-04-10T03:39:43.306Z"}
 {"context":"WorkersService","level":"error","message":"Failed to sync supplier balance: Request failed with status code 400","stack":[null],"timestamp":"2026-04-10T04:00:01.049Z"}
 {"context":"NestApplication","level":"error","message":"Error: listen EADDRINUSE: address already in use :::3001","stack":[null],"timestamp":"2026-04-10T04:19:25.835Z"}
+{"context":"DigiflazzService","level":"error","message":"[Digiflazz] Error fetching price list:","stack":["Request failed with status code 400"],"timestamp":"2026-04-10T05:00:00.636Z"}
+{"context":"WorkersService","level":"error","message":"Automated Sync Failed: Digiflazz Connection Error: Request failed with status code 400","stack":[null],"timestamp":"2026-04-10T05:00:00.638Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync supplier balance: Request failed with status code 400","stack":[null],"timestamp":"2026-04-10T05:00:00.651Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync supplier balance: Request failed with status code 400","stack":[null],"timestamp":"2026-04-10T06:00:01.802Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync supplier balance: Request failed with status code 400","stack":[null],"timestamp":"2026-04-10T07:00:00.497Z"}

@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
@@ -11,7 +12,7 @@ export default function AdminDemoPage() {
     useEffect(() => {
         const loginAsDemo = async () => {
             try {
-                const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+                const baseUrl = getApiUrl();
                 const response = await axios.post(`${baseUrl}/api/auth/merchant/login`, {
                     email: 'demo@dagangplay.com',
                     password: 'demo123'

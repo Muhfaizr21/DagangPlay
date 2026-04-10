@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
@@ -39,7 +40,7 @@ const fetcher = async (url: string) => {
 };
 
 export default function AdminDashboardPage() {
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
     const [range, setRange] = React.useState('WEEK');
     const { data, error, isLoading } = useSWR(`${baseUrl}/admin/dashboard/summary?range=${range}`, fetcher, {
         refreshInterval: 30000 // auto-refresh every 30s

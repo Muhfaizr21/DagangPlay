@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 
 import React, { useState } from 'react';
 import MerchantLayout from '../../../components/merchant/MerchantLayout';
@@ -14,7 +15,7 @@ const fetcher = (url: string) => {
 export default function MerchantContentPage() {
     const [activeTab, setActiveTab] = useState('banners');
 
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
 
     // Data Fetching
     const { data: banners, mutate: mutateBanners } = useSWR(`${baseUrl}/merchant/content/banners`, fetcher);
@@ -242,7 +243,7 @@ export default function MerchantContentPage() {
 
     const handleUpdateTheme = async (newTheme: string) => {
         try {
-            const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+            const baseUrl = getApiUrl();
             const token = localStorage.getItem('admin_token');
             await axios.put(`${baseUrl}/merchant/content/theme`, { active: newTheme }, { headers: { Authorization: `Bearer ${token}` } });
             setActiveTheme(newTheme);

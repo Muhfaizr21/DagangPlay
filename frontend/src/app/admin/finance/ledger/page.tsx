@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import {
@@ -22,7 +23,7 @@ const fetcher = (url: string) => {
 };
 
 export default function LedgerDashboardPage() {
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
     
     const { data: globalLedger, error, isLoading } = useSWR(`${baseUrl}/saas/admin/ledger/escrow`, fetcher);
 

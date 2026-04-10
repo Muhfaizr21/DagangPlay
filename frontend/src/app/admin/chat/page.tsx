@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 
 import React, { useState, useEffect, useRef } from 'react';
 import useSWR from 'swr';
@@ -12,7 +13,7 @@ const fetcher = (url: string) => {
 };
 
 export default function AdminChatDashboard() {
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
     const { data: rooms, error: roomsError, mutate: mutateRooms } = useSWR(`${baseUrl}/chat/admin/rooms`, fetcher, {
         refreshInterval: 10000 // Every 10s for rooms list
     });

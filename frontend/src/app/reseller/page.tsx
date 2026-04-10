@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
@@ -883,7 +884,7 @@ export default function ResellerLandingPage() {
       { name: 'Free Fire 70 Diamonds', normal: 10000, pro: 9500, legend: 9300, supreme: 9000, img: 'https://cdn.unipin.com/images/icon_product_channels/1598282333-icon-ff.png' },
       { name: 'PUBG M 60 UC', normal: 14000, pro: 13500, legend: 13200, supreme: 12800, img: 'https://cdn.unipin.com/images/icon_product_channels/1593414902-icon-pubgm.png' },
     ];
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
     fetch(`${baseUrl}/public/subscriptions/plans/features?t=${Date.now()}`, { cache: 'no-store' })
       .then(r => r.json())
       .then(d => { 

@@ -13,6 +13,19 @@ import { ReportsModule } from './reports/reports.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 
 @Module({
-  imports: [DashboardModule, ProductsModule, MembersModule, OrdersModule, FinanceModule, CommissionsModule, PromosModule, ContentModule, SettingsModule, SupportModule, ReportsModule, SubscriptionModule]
+  imports: [
+    DashboardModule,
+    ProductsModule,
+    MembersModule,
+    OrdersModule,
+    FinanceModule,
+    CommissionsModule,
+    PromosModule,
+    ContentModule,
+    SettingsModule,
+    SupportModule,
+    ReportsModule,
+    SubscriptionModule,
+  ],
 })
 export class MerchantModule {}

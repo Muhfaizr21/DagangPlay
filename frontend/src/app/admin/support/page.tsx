@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 
 import React, { useState } from 'react';
 import useSWR from 'swr';
@@ -34,10 +35,10 @@ export default function SupportManagementPage() {
     const [toastMsg, setToastMsg] = useState<{ title: string; desc: string; type: 'success' | 'error' } | null>(null);
 
     const { data: tickets, isLoading, mutate } = useSWR(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/tickets?status=${statusFilter}&priority=${priorityFilter}`,
+        `${getApiUrl()}/admin/tickets?status=${statusFilter}&priority=${priorityFilter}`,
         fetcher
     );
-    const { data: stats } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/tickets/stats', fetcher);
+    const { data: stats } = useSWR((getApiUrl()) + '/admin/tickets/stats', fetcher);
 
     // Selected Ticket State
     const [selectedTicket, setSelectedTicket] = useState<any>(null);
@@ -51,7 +52,7 @@ export default function SupportManagementPage() {
     const handleSelectTicket = async (id: string) => {
         try {
             const token = localStorage.getItem('admin_token');
-            const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/tickets/${id}`, {
+            const res = await axios.get(`${getApiUrl()}/admin/tickets/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setSelectedTicket(res.data);
@@ -67,7 +68,7 @@ export default function SupportManagementPage() {
         try {
             const token = localStorage.getItem('admin_token');
             await axios.post(
-                `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/tickets/${selectedTicket.id}/reply`,
+                `${getApiUrl()}/admin/tickets/${selectedTicket.id}/reply`,
                 { message: replyText },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -83,7 +84,7 @@ export default function SupportManagementPage() {
         try {
             const token = localStorage.getItem('admin_token');
             await axios.put(
-                `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/tickets/${selectedTicket.id}`,
+                `${getApiUrl()}/admin/tickets/${selectedTicket.id}`,
                 { status: newStatus },
                 { headers: { Authorization: `Bearer ${token}` } }
             );

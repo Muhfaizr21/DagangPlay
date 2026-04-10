@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useState, useEffect, useRef } from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
@@ -49,7 +50,7 @@ export default function TransactionManagementPage() {
 
     // Fetch Data — use debouncedSearch for API calls
     const { data: fetchResult, error, isLoading, mutate } = useSWR(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/transactions?search=${debouncedSearch}&fulfillmentStatus=${statusFilter}&page=${page}&limit=20`,
+        `${getApiUrl()}/admin/transactions?search=${debouncedSearch}&fulfillmentStatus=${statusFilter}&page=${page}&limit=20`,
         fetcher,
         { refreshInterval: 15000 }
     );
@@ -57,7 +58,7 @@ export default function TransactionManagementPage() {
     const meta = fetchResult?.meta;
 
     const { data: trxDetail, error: detailError, isLoading: loadingDetail, mutate: mutateDetail } = useSWR(
-        selectedTrxId ? `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/transactions/${selectedTrxId}` : null,
+        selectedTrxId ? `${getApiUrl()}/admin/transactions/${selectedTrxId}` : null,
         fetcher
     );
 
@@ -65,7 +66,7 @@ export default function TransactionManagementPage() {
     const handleRetry = async (id: string) => {
         try {
             if (!confirm(`Yakin ingin melakukan RETRY ke Supplier API?`)) return;
-            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/transactions/${id}/retry`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
+            await axios.post(`${getApiUrl()}/admin/transactions/${id}/retry`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             mutate();
             if (selectedTrxId === id) mutateDetail();
             setToastMsg({ title: 'Berhasil', desc: `Transaksi dimasukkan antrian retry`, type: 'success' });
@@ -79,7 +80,7 @@ export default function TransactionManagementPage() {
     const handleRefund = async (id: string) => {
         try {
             if (!confirm(`Lakukan REFUND dana kembali ke balance user?`)) return;
-            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/transactions/${id}/refund`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
+            await axios.post(`${getApiUrl()}/admin/transactions/${id}/refund`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             mutate();
             if (selectedTrxId === id) mutateDetail();
             setToastMsg({ title: 'Refund Diproses', desc: `Saldo telah dikembalikan ke user`, type: 'success' });
@@ -97,7 +98,7 @@ export default function TransactionManagementPage() {
         const token = localStorage.getItem('admin_token');
         try {
             await axios.post(
-                `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/transactions/${selectedTrxId}/mark-fraud`,
+                `${getApiUrl()}/admin/transactions/${selectedTrxId}/mark-fraud`,
                 { reason: fraudReason },
                 { headers: { Authorization: `Bearer ${token}` } }
             );

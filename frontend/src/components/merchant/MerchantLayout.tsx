@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import useSWR from 'swr';
@@ -71,7 +72,7 @@ export default function MerchantLayout({ children, demoUser }: { children: React
     const [user, setUser] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
     const { data: chatData } = useSWR(`${baseUrl}/chat/merchant`, fetcher, { refreshInterval: 10000 });
     const { data: merchantSettings } = useSWR(`${baseUrl}/merchant/settings`, fetcher);
     const unreadCount = chatData?.messages?.filter((m: any) => m.isAdmin && !m.isRead).length || 0;

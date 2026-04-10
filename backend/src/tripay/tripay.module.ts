@@ -6,14 +6,14 @@ import { BullModule } from '@nestjs/bullmq';
 import { DigiflazzModule } from '../admin/digiflazz/digiflazz.module';
 
 @Module({
-    imports: [
-        DigiflazzModule,
-        BullModule.registerQueue({
-            name: 'digiflazz-fulfillment',
-        }),
-    ],
-    providers: [TripayService, PrismaService],
-    controllers: [TripayController],
-    exports: [TripayService],
+  imports: [
+    DigiflazzModule,
+    BullModule.registerQueue({
+      name: 'digiflazz-fulfillment',
+    }),
+  ],
+  providers: [TripayService, PrismaService],
+  controllers: [TripayController],
+  exports: [TripayService],
 })
-export class TripayModule { }
+export class TripayModule {}

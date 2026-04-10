@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useState } from 'react';
 import useSWR, { mutate } from 'swr';
 import axios from 'axios';
@@ -20,8 +21,8 @@ const fetcher = (url: string) => {
 };
 
 export default function PricingRulesPage() {
-    const { data: rules, error, isLoading } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/pricing-rules/categories', fetcher);
-    const { data: categories } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/products/categories', fetcher);
+    const { data: rules, error, isLoading } = useSWR((getApiUrl()) + '/admin/pricing-rules/categories', fetcher);
+    const { data: categories } = useSWR((getApiUrl()) + '/admin/products/categories', fetcher);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
@@ -35,10 +36,10 @@ export default function PricingRulesPage() {
     const handleSave = async () => {
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/pricing-rules/categories', formData, {
+            await axios.post((getApiUrl()) + '/admin/pricing-rules/categories', formData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            mutate((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/pricing-rules/categories');
+            mutate((getApiUrl()) + '/admin/pricing-rules/categories');
             setIsModalOpen(false);
         } catch (err) {
             alert('Gagal menyimpan aturan');
@@ -49,10 +50,10 @@ export default function PricingRulesPage() {
         if (!confirm('Hapus aturan ini?')) return;
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/pricing-rules/categories/${id}`, {
+            await axios.delete(`${getApiUrl()}/admin/pricing-rules/categories/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            mutate((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/pricing-rules/categories');
+            mutate((getApiUrl()) + '/admin/pricing-rules/categories');
         } catch (err) {
             alert('Gagal menghapus');
         }
@@ -68,7 +69,7 @@ export default function PricingRulesPage() {
         try {
             const token = localStorage.getItem('admin_token');
             const targetId = rule.categoryId || 'global';
-            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/pricing-rules/apply-category/${targetId}`, {
+            await axios.post(`${getApiUrl()}/admin/pricing-rules/apply-category/${targetId}`, {
                 normal: rule.marginNormal,
                 pro: rule.marginPro,
                 legend: rule.marginLegend,

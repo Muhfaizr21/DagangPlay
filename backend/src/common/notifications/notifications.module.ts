@@ -3,7 +3,7 @@ import { WhatsappService } from './whatsapp.service';
 
 @Global()
 @Module({
-    providers: [WhatsappService],
-    exports: [WhatsappService],
+  providers: [WhatsappService],
+  exports: [WhatsappService],
 })
 export class NotificationsModule {}

@@ -12,6 +12,6 @@ import { PublicOrdersModule } from '../../public/orders/public-orders.module';
     BullModule.registerQueue({ name: 'digiflazz-fulfillment' }),
   ],
   controllers: [TransactionsController],
-  providers: [TransactionsService, PrismaService]
+  providers: [TransactionsService, PrismaService],
 })
-export class TransactionsModule { }
+export class TransactionsModule {}

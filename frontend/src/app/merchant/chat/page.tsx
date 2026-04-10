@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 
 import React, { useState, useEffect, useRef } from 'react';
 import useSWR from 'swr';
@@ -12,7 +13,7 @@ const fetcher = (url: string) => {
 };
 
 export default function MerchantChatPage() {
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
     const { data: chatData, mutate, error } = useSWR(`${baseUrl}/chat/merchant`, fetcher, {
         refreshInterval: 5000 // Poll every 5s for new messages
     });

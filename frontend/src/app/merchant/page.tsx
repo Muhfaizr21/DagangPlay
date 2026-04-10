@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
@@ -42,7 +43,7 @@ function StatCard({ title, value, trend, isPositive, icon: Icon, accent }: any) 
 }
 
 export default function MerchantDashboard() {
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
     const { data: dashboard, error, isLoading } = useSWR(`${baseUrl}/merchant/dashboard`, fetcher, { refreshInterval: 30000 });
 
     if (isLoading) {

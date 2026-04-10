@@ -9,9 +9,9 @@ import { SubscriptionsModule } from '../../admin/subscriptions/subscriptions.mod
 import { PublicOtpService } from './otp.service';
 
 @Module({
-    imports: [TripayModule, DigiflazzModule, SubscriptionsModule],
-    controllers: [PublicOrdersController],
-    providers: [PublicOrdersService, PrismaService, PublicOtpService],
-    exports: [PublicOrdersService]
+  imports: [TripayModule, DigiflazzModule, SubscriptionsModule],
+  controllers: [PublicOrdersController],
+  providers: [PublicOrdersService, PrismaService, PublicOtpService],
+  exports: [PublicOrdersService],
 })
-export class PublicOrdersModule { }
+export class PublicOrdersModule {}

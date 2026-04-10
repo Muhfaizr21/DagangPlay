@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
@@ -36,7 +37,7 @@ export default function InvoicePage() {
 
     const fetchOrder = async (isManual = false) => {
         if (isManual) setSyncing(true);
-        const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+        const baseUrl = getApiUrl();
         try {
             const res = await axios.get(`${baseUrl}/public/orders/${id}`);
             setOrder(res.data);

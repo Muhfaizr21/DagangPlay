@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -8,30 +13,32 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 export class SaasService {
   constructor(
     private prisma: PrismaService,
-    @InjectQueue('webhook') private webhookQueue: Queue
+    @InjectQueue('webhook') private webhookQueue: Queue,
   ) {}
 
   // ====================== BACKGROUND WORKERS ======================
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleDailySettlement() {
-    console.log('[SaasService] Menjalankan cron job Daily Settlement (Escrow -> Available)...');
-    
+    console.log(
+      '[SaasService] Menjalankan cron job Daily Settlement (Escrow -> Available)...',
+    );
+
     // Tarik semua merchant yang escrownya > 0
     const merchants = await this.prisma.merchant.findMany({
-      where: { escrowBalance: { gt: 0 } }
+      where: { escrowBalance: { gt: 0 } },
     });
 
     for (const m of merchants) {
       const amountToSettle = m.escrowBalance;
-      
+
       try {
         await this.prisma.$transaction(async (tx) => {
           const updatedMerchant = await tx.merchant.update({
             where: { id: m.id },
             data: {
               escrowBalance: { decrement: amountToSettle },
-              availableBalance: { increment: amountToSettle }
-            }
+              availableBalance: { increment: amountToSettle },
+            },
           });
 
           await tx.merchantLedgerMovement.create({
@@ -43,13 +50,18 @@ export class SaasService {
               escrowBefore: m.escrowBalance,
               escrowAfter: updatedMerchant.escrowBalance,
               availableBefore: m.availableBalance,
-              availableAfter: updatedMerchant.availableBalance
-            }
+              availableAfter: updatedMerchant.availableBalance,
+            },
           });
         });
-        console.log(`[SaasService] Selesai: Rp ${amountToSettle} dipindahkan untuk merchant ${m.name}`);
+        console.log(
+          `[SaasService] Selesai: Rp ${amountToSettle} dipindahkan untuk merchant ${m.name}`,
+        );
       } catch (e) {
-        console.error(`[SaasService] Gagal memindahkan escrow merchant ${m.name}`, e);
+        console.error(
+          `[SaasService] Gagal memindahkan escrow merchant ${m.name}`,
+          e,
+        );
       }
     }
   }
@@ -62,11 +74,14 @@ export class SaasService {
         name: true,
         escrowBalance: true,
         availableBalance: true,
-      }
+      },
     });
 
     const totalEscrow = merchants.reduce((sum, m) => sum + m.escrowBalance, 0);
-    const totalAvailable = merchants.reduce((sum, m) => sum + m.availableBalance, 0);
+    const totalAvailable = merchants.reduce(
+      (sum, m) => sum + m.availableBalance,
+      0,
+    );
 
     return { totalEscrow, totalAvailable, merchants };
   }
@@ -74,12 +89,14 @@ export class SaasService {
   async getDeadLetterQueue() {
     return this.prisma.deadLetterQueue.findMany({
       where: { isResolved: false },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
   async requeueDLQJob(dlqId: string) {
-    const job = await this.prisma.deadLetterQueue.findUnique({ where: { id: dlqId } });
+    const job = await this.prisma.deadLetterQueue.findUnique({
+      where: { id: dlqId },
+    });
     if (!job) throw new NotFoundException('DLQ Job Not Found');
 
     if (job.queueName === 'webhook') {
@@ -87,7 +104,7 @@ export class SaasService {
     }
     await this.prisma.deadLetterQueue.update({
       where: { id: dlqId },
-      data: { isResolved: true }
+      data: { isResolved: true },
     });
 
     return { success: true, message: 'Job Requeued Successfully.' };
@@ -101,7 +118,7 @@ export class SaasService {
         name: true,
         domain: true,
         forceHttps: true,
-      }
+      },
     });
   }
 
@@ -114,14 +131,14 @@ export class SaasService {
         availableBalance: true,
         autoPayoutEnabled: true,
         autoPayoutSchedule: true,
-        autoPayoutThreshold: true
-      }
+        autoPayoutThreshold: true,
+      },
     });
 
     const recentMovements = await this.prisma.merchantLedgerMovement.findMany({
       where: { merchantId },
       orderBy: { createdAt: 'desc' },
-      take: 10
+      take: 10,
     });
 
     return { ...merchant, movements: recentMovements };
@@ -131,11 +148,11 @@ export class SaasService {
     const { merchantId, enabled, threshold, schedule } = body;
     return this.prisma.merchant.update({
       where: { id: merchantId },
-      data: { 
-        autoPayoutEnabled: enabled, 
-        autoPayoutThreshold: threshold, 
-        autoPayoutSchedule: schedule 
-      }
+      data: {
+        autoPayoutEnabled: enabled,
+        autoPayoutThreshold: threshold,
+        autoPayoutSchedule: schedule,
+      },
     });
   }
 
@@ -143,38 +160,47 @@ export class SaasService {
     return this.prisma.webhookDeliveryLog.findMany({
       where: { merchantId },
       orderBy: { createdAt: 'desc' },
-      take: 25
+      take: 25,
     });
   }
 
   async retryMerchantWebhook(logId: string, merchantId: string) {
     const log = await this.prisma.webhookDeliveryLog.findUnique({
-      where: { id: logId }
+      where: { id: logId },
     });
     if (!log) throw new NotFoundException('Log not found');
-    
+
     // SECURITY: Ensure the log belongs to the requesting merchant
     if (log.merchantId !== merchantId) {
-        throw new ForbiddenException('You do not have permission to retry this webhook');
+      throw new ForbiddenException(
+        'You do not have permission to retry this webhook',
+      );
     }
 
     const merchant = await this.prisma.merchant.findUnique({
-        where: { id: merchantId },
-        include: { apiKeys: { where: { isActive: true }, take: 1 } }
+      where: { id: merchantId },
+      include: { apiKeys: { where: { isActive: true }, take: 1 } },
     });
 
     const activeApiKey = merchant?.apiKeys?.[0];
 
-    await this.webhookQueue.add('ManualRetries', {
-      merchantId: log.merchantId,
-      endpointUrl: log.endpointUrl,
-      event: log.event,
-      payload: log.requestPayload,
-      secretKey: activeApiKey?.secret || 'dummy_secret'
-    }, {
-      priority: 1 // Higher priority for manual trigger
-    });
+    await this.webhookQueue.add(
+      'ManualRetries',
+      {
+        merchantId: log.merchantId,
+        endpointUrl: log.endpointUrl,
+        event: log.event,
+        payload: log.requestPayload,
+        secretKey: activeApiKey?.secret || 'dummy_secret',
+      },
+      {
+        priority: 1, // Higher priority for manual trigger
+      },
+    );
 
-    return { success: true, message: 'Webhook sent to queue for retrying (Priority: High)' };
+    return {
+      success: true,
+      message: 'Webhook sent to queue for retrying (Priority: High)',
+    };
   }
 }

@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 
 import React, { useState, useEffect, Suspense } from "react";
 import useSWR from "swr";
@@ -22,7 +23,7 @@ function Home() {
   const [search, setSearch] = useState("");
   const [mOpen, setMOpen] = useState(false);
 
-  const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+  const baseUrl = getApiUrl();
 
   const searchParams = useSearchParams();
   

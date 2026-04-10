@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useState } from 'react';
 import useSWR, { mutate } from 'swr';
 import axios from 'axios';
@@ -22,7 +23,7 @@ const fetcher = async (url: string) => {
 };
 
 export default function ControlCenterPage() {
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
     const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
 
     // --- State for Forms ---

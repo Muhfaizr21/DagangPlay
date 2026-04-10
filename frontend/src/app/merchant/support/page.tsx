@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 
 import React, { useState } from 'react';
 import MerchantLayout from '../../../components/merchant/MerchantLayout';
@@ -9,7 +10,7 @@ import {
     Clock, User, Loader2, Plus, X
 } from 'lucide-react';
 
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+const BASE = getApiUrl();
 
 const getToken = () => typeof window !== 'undefined' ? (localStorage.getItem('merchant_token') || localStorage.getItem('admin_token')) : null;
 

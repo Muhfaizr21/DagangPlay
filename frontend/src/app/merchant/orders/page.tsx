@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 
 import React, { useState } from 'react';
 import MerchantLayout from '../../../components/merchant/MerchantLayout';
@@ -24,7 +25,7 @@ export default function MerchantOrdersPage() {
         return () => clearTimeout(timer);
     }, [search]);
 
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
     const { data, error, isLoading, mutate } = useSWR(
         `${baseUrl}/merchant/orders?search=${debouncedSearch}`,
         fetcher,

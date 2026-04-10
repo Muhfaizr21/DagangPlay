@@ -9,6 +9,6 @@ import { SubscriptionsModule } from '../../admin/subscriptions/subscriptions.mod
   imports: [SubscriptionsModule],
   controllers: [MembersController],
   providers: [MembersService, PrismaService],
-  exports: [MembersService]
+  exports: [MembersService],
 })
-export class MembersModule { }
+export class MembersModule {}

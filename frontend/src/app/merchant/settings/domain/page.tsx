@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
@@ -19,7 +20,7 @@ const fetcher = (url: string) => axios.get(url, {
 }).then(res => res.data);
 
 export default function MerchantDomainSettingsPage() {
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
     const { data: profile, mutate } = useSWR(`${baseUrl}/merchant/profile`, fetcher);
 
     const [domain, setDomain] = useState('');

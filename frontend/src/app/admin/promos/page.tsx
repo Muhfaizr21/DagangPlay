@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 
 import React, { useState } from 'react';
 import useSWR from 'swr';
@@ -60,11 +61,11 @@ export default function PromoManagementPage() {
     });
 
     const { data: promos, isLoading, mutate } = useSWR(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/promos?search=${searchTerm}`,
+        `${getApiUrl()}/admin/promos?search=${searchTerm}`,
         fetcher
     );
 
-    const { data: report } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/promos/report', fetcher);
+    const { data: report } = useSWR((getApiUrl()) + '/admin/promos/report', fetcher);
 
     const showToast = (title: string, desc: string, type: 'success' | 'error' = 'success') => {
         setToastMsg({ title, desc, type });
@@ -73,7 +74,7 @@ export default function PromoManagementPage() {
 
     const handleToggle = async (id: string) => {
         try {
-            await axios.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/promos/${id}/toggle`);
+            await axios.patch(`${getApiUrl()}/admin/promos/${id}/toggle`);
             mutate();
             showToast('Berhasil', 'Status promo diperbarui');
         } catch (err: any) {
@@ -84,7 +85,7 @@ export default function PromoManagementPage() {
     const handleDelete = async (id: string) => {
         if (!confirm('Hapus promo ini?')) return;
         try {
-            await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/promos/${id}`);
+            await axios.delete(`${getApiUrl()}/admin/promos/${id}`);
             mutate();
             showToast('Terhapus', 'Promo berhasil dihapus');
         } catch (err: any) {
@@ -96,10 +97,10 @@ export default function PromoManagementPage() {
         e.preventDefault();
         try {
             if (editingPromo) {
-                await axios.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/promos/${editingPromo.id}`, formData);
+                await axios.patch(`${getApiUrl()}/admin/promos/${editingPromo.id}`, formData);
                 showToast('Update Sukses', 'Data promo telah diperbarui');
             } else {
-                await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/promos', formData);
+                await axios.post((getApiUrl()) + '/admin/promos', formData);
                 showToast('Berhasil', 'Promo baru telah dibuat');
             }
             setShowModal(false);

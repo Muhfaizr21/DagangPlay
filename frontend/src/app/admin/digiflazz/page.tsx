@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useState, useEffect } from "react";
 import useSWR from "swr";
 import axios from "axios";
@@ -28,7 +29,7 @@ export default function DigiflazzPage() {
     error,
     isLoading,
     mutate,
-  } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + "/admin/digiflazz/products", fetcher, {
+  } = useSWR((getApiUrl()) + "/admin/digiflazz/products", fetcher, {
     revalidateOnFocus: false, // STOP auto refetch on window focus
     revalidateIfStale: false,
     shouldRetryOnError: false
@@ -130,7 +131,7 @@ export default function DigiflazzPage() {
         status: isActive ? "ACTIVE" : "INACTIVE",
       };
 
-      await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + "/admin/digiflazz/sync", payload, {
+      await axios.post((getApiUrl()) + "/admin/digiflazz/sync", payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

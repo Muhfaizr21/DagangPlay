@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -53,7 +54,7 @@ const fetcher = (url: string) => {
 export default function AdminLayout({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
     const [currentUser, setCurrentUser] = useState<{ name: string; email: string; role: string } | null>(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 

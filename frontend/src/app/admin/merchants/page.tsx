@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
@@ -63,12 +64,12 @@ export default function MerchantManagementPage() {
     });
 
     const { data: merchants, error, isLoading, mutate } = useSWR(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/merchants?search=${debouncedSearch}&status=${statusFilter}`,
+        `${getApiUrl()}/admin/merchants?search=${debouncedSearch}&status=${statusFilter}`,
         fetcher
     );
 
     const { data: merchantDetail, error: detailError, isLoading: loadingDetail, mutate: mutateDetail } = useSWR(
-        selectedMerchantId ? `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/merchants/${selectedMerchantId}` : null,
+        selectedMerchantId ? `${getApiUrl()}/admin/merchants/${selectedMerchantId}` : null,
         fetcher
     );
 
@@ -96,7 +97,7 @@ export default function MerchantManagementPage() {
     const handleUpdateStatus = async (id: string, newStatus: string, actionName: string) => {
         try {
             if (confirm(`Apakah Anda yakin ingin melakukan aksi "${actionName}" pada toko ini?`)) {
-                await axios.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/merchants/${id}/status`,
+                await axios.patch(`${getApiUrl()}/admin/merchants/${id}/status`,
                     { status: newStatus },
                     { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } }
                 );
@@ -117,7 +118,7 @@ export default function MerchantManagementPage() {
         e.preventDefault();
         if (!selectedMerchantId) return;
         try {
-            await axios.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/merchants/${selectedMerchantId}/settings`,
+            await axios.patch(`${getApiUrl()}/admin/merchants/${selectedMerchantId}/settings`,
                 settingsForm,
                 { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } }
             );
@@ -131,7 +132,7 @@ export default function MerchantManagementPage() {
     const handleResetPassword = async (id: string) => {
         if (!confirm('Reset password Owner menjadi "DagangPlay123!" ?')) return;
         try {
-            const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/merchants/${id}/reset-password`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
+            const res = await axios.post(`${getApiUrl()}/admin/merchants/${id}/reset-password`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             showToast('Berhasil', res.data.message);
         } catch (err: any) {
             showToast('Error', err.response?.data?.message || 'Gagal reset password', 'error');
@@ -141,7 +142,7 @@ export default function MerchantManagementPage() {
     const handleExportCsv = async () => {
         try {
             const token = localStorage.getItem('admin_token');
-            const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/merchants/export-csv`, {
+            const res = await axios.get(`${getApiUrl()}/admin/merchants/export-csv`, {
                 headers: { Authorization: `Bearer ${token}` },
                 responseType: 'blob'
             });
@@ -551,7 +552,7 @@ export default function MerchantManagementPage() {
 // SUB-COMPONENT: MERCHANT RESELLERS LIST
 // ===========================================
 function MerchantResellersList({ merchantId }: { merchantId: string }) {
-    const { data: users, isLoading } = useSWR(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/merchants/${merchantId}/resellers`, fetcher);
+    const { data: users, isLoading } = useSWR(`${getApiUrl()}/admin/merchants/${merchantId}/resellers`, fetcher);
 
     if (isLoading) return (
         <div className="flex flex-col items-center justify-center py-20 opacity-30">
@@ -612,8 +613,8 @@ function MerchantResellersList({ merchantId }: { merchantId: string }) {
 // SUB-COMPONENT: PRICE OVERRIDES
 // ===========================================
 function MerchantPricingOverrides({ merchantId }: { merchantId: string }) {
-    const { data: overrides, mutate } = useSWR(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/merchant-overrides/merchant/${merchantId}`, fetcher);
-    const { data: skus } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/products/skus/pricing', fetcher);
+    const { data: overrides, mutate } = useSWR(`${getApiUrl()}/admin/merchant-overrides/merchant/${merchantId}`, fetcher);
+    const { data: skus } = useSWR((getApiUrl()) + '/admin/products/skus/pricing', fetcher);
 
     const [isAdding, setIsAdding] = useState(false);
     const [form, setForm] = useState({ skuId: '', price: 0, reason: '', expiredAt: '' });
@@ -622,7 +623,7 @@ function MerchantPricingOverrides({ merchantId }: { merchantId: string }) {
         e.preventDefault();
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/merchant-overrides', {
+            await axios.post((getApiUrl()) + '/admin/merchant-overrides', {
                 merchantId,
                 productSkuId: form.skuId,
                 customPrice: form.price,
@@ -641,7 +642,7 @@ function MerchantPricingOverrides({ merchantId }: { merchantId: string }) {
     const handleDelete = async (id: string) => {
         if (!confirm('Hapus harga khusus ini?')) return;
         try {
-            await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/merchant-overrides/${id}`, {
+            await axios.delete(`${getApiUrl()}/admin/merchant-overrides/${id}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` }
             });
             mutate();

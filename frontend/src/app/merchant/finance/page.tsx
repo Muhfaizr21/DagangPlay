@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 
 // Security: Sanitize HTML from external sources before rendering
 const sanitizeHtml = (html: string): string => {
@@ -22,7 +23,7 @@ const fetcher = (url: string) => {
 };
 
 export default function MerchantFinancePage() {
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
     const { data: financeData, mutate: mutateFinance } = useSWR(`${baseUrl}/merchant/finance`, fetcher, { refreshInterval: 10000 });
 
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);

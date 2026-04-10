@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useState } from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
@@ -50,17 +51,17 @@ export default function FinanceManagementPage() {
 
     // Fetch Data
     const { data: summary, error: summaryErr, isLoading: loadingSummary } = useSWR(
-        (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/finance/summary',
+        (getApiUrl()) + '/admin/finance/summary',
         fetcher
     );
 
     const { data: deposits, error: depErr, isLoading: loadingDep, mutate: mutateDep } = useSWR(
-        activeTab === 'DEPOSIT' ? `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/finance/deposits?status=${statusFilter}&search=${debouncedSearch}` : null,
+        activeTab === 'DEPOSIT' ? `${getApiUrl()}/admin/finance/deposits?status=${statusFilter}&search=${debouncedSearch}` : null,
         fetcher
     );
 
     const { data: withdrawals, error: wdErr, isLoading: loadingWd, mutate: mutateWd } = useSWR(
-        activeTab === 'WITHDRAWAL' ? `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/finance/withdrawals?status=${statusFilter}` : null,
+        activeTab === 'WITHDRAWAL' ? `${getApiUrl()}/admin/finance/withdrawals?status=${statusFilter}` : null,
         fetcher
     );
 
@@ -72,7 +73,7 @@ export default function FinanceManagementPage() {
     const handleConfirmDeposit = async (id: string) => {
         if (!confirm('Pastikan dana sudah benar-benar masuk ke rekening bank instansi. Konfirmasi deposit ini?')) return;
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/finance/deposits/${id}/confirm`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
+            await axios.post(`${getApiUrl()}/admin/finance/deposits/${id}/confirm`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             mutateDep();
             showToast('Deposit Selesai', 'Saldo berhasil ditambahkan ke user.');
         } catch (err: any) {
@@ -83,7 +84,7 @@ export default function FinanceManagementPage() {
     const handleProcessWd = async (id: string) => {
         if (!confirm('Tandai penarikan dana (Withdrawal) ini sebagai SUKSES ditransfer?')) return;
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/finance/withdrawals/${id}/process`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
+            await axios.post(`${getApiUrl()}/admin/finance/withdrawals/${id}/process`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
             mutateWd();
             showToast('Withdrawal Selesai', 'Status penarikan menjadi COMPLETED.');
         } catch (err: any) {
@@ -115,7 +116,7 @@ export default function FinanceManagementPage() {
     const submitApprove = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/finance/withdrawals/${modalActionId}/process`, {
+            await axios.post(`${getApiUrl()}/admin/finance/withdrawals/${modalActionId}/process`, {
                 note: actionReason,
                 receiptImage: actionReceipt
             }, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
@@ -134,11 +135,11 @@ export default function FinanceManagementPage() {
 
         try {
             if (actionType === 'DEPOSIT') {
-                await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/finance/deposits/${modalActionId}/reject`, { reason: actionReason }, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
+                await axios.post(`${getApiUrl()}/admin/finance/deposits/${modalActionId}/reject`, { reason: actionReason }, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
                 mutateDep();
                 showToast('Sukses', 'Deposit telah ditolak.');
             } else {
-                await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/finance/withdrawals/${modalActionId}/reject`, { reason: actionReason }, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
+                await axios.post(`${getApiUrl()}/admin/finance/withdrawals/${modalActionId}/reject`, { reason: actionReason }, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
                 mutateWd();
                 showToast('Sukses', 'Penarikan dana dibatalkan dan uang di-refund.');
             }

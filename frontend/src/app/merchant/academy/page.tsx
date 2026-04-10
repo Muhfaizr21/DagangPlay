@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useState } from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
@@ -20,7 +21,7 @@ import {
 
 const fetcher = (url: string) => {
     const token = localStorage.getItem('admin_token');
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
     return axios.get(url, { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(err => {
         if (err.response?.status === 401) {
             localStorage.clear();
@@ -33,7 +34,7 @@ const fetcher = (url: string) => {
 export default function MerchantAcademy() {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedGuide, setSelectedGuide] = useState<any>(null);
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
 
     // Fetch plan features untuk cek apakah merchant eligible (optional ui enhancement, tapi logic utama ada di 403)
     const { data: planData } = useSWR(`${baseUrl}/merchant/subscription`, fetcher);

@@ -41,10 +41,12 @@ import { SaasModule } from './saas/saas.module';
 
 @Module({
   imports: [
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 20, // Global limit for general usage
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 20, // Global limit for general usage
+      },
+    ]),
     ScheduleModule.forRoot(),
     CacheModule.registerAsync({
       isGlobal: true,
@@ -61,39 +63,42 @@ import { SaasModule } from './saas/saas.module';
           console.log('[Cache] Redis storage connected successfully.');
           return { store };
         } catch (e) {
-          console.warn('[Cache] Could not connect to Redis, falling back to memory storage.', e.message);
+          console.warn(
+            '[Cache] Could not connect to Redis, falling back to memory storage.',
+            e.message,
+          );
           return { ttl: 60000 }; // Fallback to memory
         }
       },
     }),
-    DashboardModule, 
-    MerchantsModule, 
-    ProductsModule, 
-    SuppliersModule, 
-    UsersModule, 
-    TransactionsModule, 
-    FinanceModule, 
-    CommissionsModule, 
-    PromosModule, 
-    SubscriptionsModule, 
-    ContentModule, 
-    SecurityModule, 
-    TicketsModule, 
-    SettingsModule, 
-    AuthModule, 
-    UploadModule, 
-    WorkersModule, 
-    MerchantModule, 
-    DigiflazzModule, 
-    TripayModule, 
-    PublicOrdersModule, 
-    WithdrawalsModule, 
-    MarketingModule, 
-    ChatModule, 
+    DashboardModule,
+    MerchantsModule,
+    ProductsModule,
+    SuppliersModule,
+    UsersModule,
+    TransactionsModule,
+    FinanceModule,
+    CommissionsModule,
+    PromosModule,
+    SubscriptionsModule,
+    ContentModule,
+    SecurityModule,
+    TicketsModule,
+    SettingsModule,
+    AuthModule,
+    UploadModule,
+    WorkersModule,
+    MerchantModule,
+    DigiflazzModule,
+    TripayModule,
+    PublicOrdersModule,
+    WithdrawalsModule,
+    MarketingModule,
+    ChatModule,
     PublicDigiflazzModule,
     NotificationsModule,
     QueueConfigModule,
-    SaasModule
+    SaasModule,
   ],
   controllers: [],
   providers: [
@@ -107,8 +112,6 @@ import { SaasModule } from './saas/saas.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(LoggerMiddleware)
-      .forRoutes('*');
+    consumer.apply(LoggerMiddleware).forRoutes('*');
   }
 }

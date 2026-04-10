@@ -779,3 +779,436 @@
 {"context":"InstanceLoader","level":"info","message":"SaasModule dependencies initialized","timestamp":"2026-04-10T04:19:25.266Z"}
 {"context":"InstanceLoader","level":"info","message":"CacheModule dependencies initialized","timestamp":"2026-04-10T04:19:25.322Z"}
 {"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T04:20:00.031Z"}
+{"context":"NestFactory","level":"info","message":"Starting Nest application...","timestamp":"2026-04-10T04:21:36.689Z"}
+{"context":"InstanceLoader","level":"info","message":"PassportModule dependencies initialized","timestamp":"2026-04-10T04:21:36.754Z"}
+{"context":"InstanceLoader","level":"info","message":"MerchantModule dependencies initialized","timestamp":"2026-04-10T04:21:36.755Z"}
+{"context":"InstanceLoader","level":"info","message":"NotificationsModule dependencies initialized","timestamp":"2026-04-10T04:21:36.756Z"}
+{"context":"InstanceLoader","level":"info","message":"BullModule dependencies initialized","timestamp":"2026-04-10T04:21:36.757Z"}
+{"context":"InstanceLoader","level":"info","message":"ThrottlerModule dependencies initialized","timestamp":"2026-04-10T04:21:36.760Z"}
+{"context":"InstanceLoader","level":"info","message":"JwtModule dependencies initialized","timestamp":"2026-04-10T04:21:36.761Z"}
+{"context":"InstanceLoader","level":"info","message":"DiscoveryModule dependencies initialized","timestamp":"2026-04-10T04:21:36.763Z"}
+{"context":"InstanceLoader","level":"info","message":"ScheduleModule dependencies initialized","timestamp":"2026-04-10T04:21:36.769Z"}
+{"context":"InstanceLoader","level":"info","message":"QueueConfigModule dependencies initialized","timestamp":"2026-04-10T04:21:36.778Z"}
+{"context":"InstanceLoader","level":"info","message":"WorkersModule dependencies initialized","timestamp":"2026-04-10T04:21:36.779Z"}
+{"context":"InstanceLoader","level":"info","message":"BullModule dependencies initialized","timestamp":"2026-04-10T04:21:36.780Z"}
+{"context":"InstanceLoader","level":"info","message":"PublicDigiflazzModule dependencies initialized","timestamp":"2026-04-10T04:21:36.781Z"}
+{"context":"InstanceLoader","level":"info","message":"BullModule dependencies initialized","timestamp":"2026-04-10T04:21:36.783Z"}
+{"context":"InstanceLoader","level":"info","message":"BullModule dependencies initialized","timestamp":"2026-04-10T04:21:36.784Z"}
+{"context":"InstanceLoader","level":"info","message":"BullModule dependencies initialized","timestamp":"2026-04-10T04:21:36.784Z"}
+{"context":"InstanceLoader","level":"info","message":"BullModule dependencies initialized","timestamp":"2026-04-10T04:21:36.785Z"}
+{"context":"InstanceLoader","level":"info","message":"BullModule dependencies initialized","timestamp":"2026-04-10T04:21:36.785Z"}
+{"context":"InstanceLoader","level":"info","message":"AppModule dependencies initialized","timestamp":"2026-04-10T04:21:36.787Z"}
+{"context":"InstanceLoader","level":"info","message":"TripayModule dependencies initialized","timestamp":"2026-04-10T04:21:36.788Z"}
+{"context":"InstanceLoader","level":"info","message":"UploadModule dependencies initialized","timestamp":"2026-04-10T04:21:36.788Z"}
+{"context":"InstanceLoader","level":"info","message":"MerchantsModule dependencies initialized","timestamp":"2026-04-10T04:21:36.791Z"}
+{"context":"InstanceLoader","level":"info","message":"ProductsModule dependencies initialized","timestamp":"2026-04-10T04:21:36.792Z"}
+{"context":"InstanceLoader","level":"info","message":"SuppliersModule dependencies initialized","timestamp":"2026-04-10T04:21:36.793Z"}
+{"context":"InstanceLoader","level":"info","message":"UsersModule dependencies initialized","timestamp":"2026-04-10T04:21:36.793Z"}
+{"context":"InstanceLoader","level":"info","message":"SubscriptionsModule dependencies initialized","timestamp":"2026-04-10T04:21:36.794Z"}
+{"context":"InstanceLoader","level":"info","message":"FinanceModule dependencies initialized","timestamp":"2026-04-10T04:21:36.794Z"}
+{"context":"InstanceLoader","level":"info","message":"CommissionsModule dependencies initialized","timestamp":"2026-04-10T04:21:36.795Z"}
+{"context":"InstanceLoader","level":"info","message":"PromosModule dependencies initialized","timestamp":"2026-04-10T04:21:36.795Z"}
+{"context":"InstanceLoader","level":"info","message":"ContentModule dependencies initialized","timestamp":"2026-04-10T04:21:36.796Z"}
+{"context":"InstanceLoader","level":"info","message":"SecurityModule dependencies initialized","timestamp":"2026-04-10T04:21:36.796Z"}
+{"context":"InstanceLoader","level":"info","message":"TicketsModule dependencies initialized","timestamp":"2026-04-10T04:21:36.797Z"}
+{"context":"InstanceLoader","level":"info","message":"SettingsModule dependencies initialized","timestamp":"2026-04-10T04:21:36.797Z"}
+{"context":"InstanceLoader","level":"info","message":"DashboardModule dependencies initialized","timestamp":"2026-04-10T04:21:36.798Z"}
+{"context":"InstanceLoader","level":"info","message":"CommissionsModule dependencies initialized","timestamp":"2026-04-10T04:21:36.798Z"}
+{"context":"InstanceLoader","level":"info","message":"PromosModule dependencies initialized","timestamp":"2026-04-10T04:21:36.799Z"}
+{"context":"InstanceLoader","level":"info","message":"ContentModule dependencies initialized","timestamp":"2026-04-10T04:21:36.799Z"}
+{"context":"InstanceLoader","level":"info","message":"SupportModule dependencies initialized","timestamp":"2026-04-10T04:21:36.800Z"}
+{"context":"InstanceLoader","level":"info","message":"ReportsModule dependencies initialized","timestamp":"2026-04-10T04:21:36.800Z"}
+{"context":"InstanceLoader","level":"info","message":"WithdrawalsModule dependencies initialized","timestamp":"2026-04-10T04:21:36.801Z"}
+{"context":"InstanceLoader","level":"info","message":"ChatModule dependencies initialized","timestamp":"2026-04-10T04:21:36.801Z"}
+{"context":"InstanceLoader","level":"info","message":"DigiflazzModule dependencies initialized","timestamp":"2026-04-10T04:21:36.803Z"}
+{"context":"InstanceLoader","level":"info","message":"MarketingModule dependencies initialized","timestamp":"2026-04-10T04:21:36.803Z"}
+{"context":"InstanceLoader","level":"info","message":"FinanceModule dependencies initialized","timestamp":"2026-04-10T04:21:36.804Z"}
+{"context":"InstanceLoader","level":"info","message":"SubscriptionModule dependencies initialized","timestamp":"2026-04-10T04:21:36.804Z"}
+{"context":"InstanceLoader","level":"info","message":"ProductsModule dependencies initialized","timestamp":"2026-04-10T04:21:36.805Z"}
+{"context":"InstanceLoader","level":"info","message":"MembersModule dependencies initialized","timestamp":"2026-04-10T04:21:36.805Z"}
+{"context":"InstanceLoader","level":"info","message":"SettingsModule dependencies initialized","timestamp":"2026-04-10T04:21:36.806Z"}
+{"context":"InstanceLoader","level":"info","message":"AuthModule dependencies initialized","timestamp":"2026-04-10T04:21:36.806Z"}
+{"context":"InstanceLoader","level":"info","message":"DashboardModule dependencies initialized","timestamp":"2026-04-10T04:21:36.807Z"}
+{"context":"InstanceLoader","level":"info","message":"TransactionsModule dependencies initialized","timestamp":"2026-04-10T04:21:36.807Z"}
+{"context":"InstanceLoader","level":"info","message":"OrdersModule dependencies initialized","timestamp":"2026-04-10T04:21:36.808Z"}
+{"context":"InstanceLoader","level":"info","message":"SaasModule dependencies initialized","timestamp":"2026-04-10T04:21:36.808Z"}
+{"context":"InstanceLoader","level":"info","message":"CacheModule dependencies initialized","timestamp":"2026-04-10T04:21:36.858Z"}
+{"context":"InstanceLoader","level":"info","message":"PublicOrdersModule dependencies initialized","timestamp":"2026-04-10T04:21:36.860Z"}
+{"context":"RoutesResolver","level":"info","message":"DashboardController {/admin/dashboard}:","timestamp":"2026-04-10T04:21:36.913Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/dashboard/summary, GET} route","timestamp":"2026-04-10T04:21:36.918Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/dashboard/export-report, GET} route","timestamp":"2026-04-10T04:21:36.919Z"}
+{"context":"RoutesResolver","level":"info","message":"DigiflazzController {/admin/digiflazz}:","timestamp":"2026-04-10T04:21:36.921Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/digiflazz/products, GET} route","timestamp":"2026-04-10T04:21:36.924Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/digiflazz/sync, POST} route","timestamp":"2026-04-10T04:21:36.927Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/digiflazz/bulk-sync, POST} route","timestamp":"2026-04-10T04:21:36.929Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/digiflazz/margin-adjust, POST} route","timestamp":"2026-04-10T04:21:36.931Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/digiflazz/balance, GET} route","timestamp":"2026-04-10T04:21:36.935Z"}
+{"context":"RoutesResolver","level":"info","message":"MerchantsController {/admin/merchants}:","timestamp":"2026-04-10T04:21:36.937Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchants, GET} route","timestamp":"2026-04-10T04:21:36.939Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchants/export-csv, GET} route","timestamp":"2026-04-10T04:21:36.940Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchants/:id/status, PATCH} route","timestamp":"2026-04-10T04:21:36.942Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchants/:id, GET} route","timestamp":"2026-04-10T04:21:36.943Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchants/:id/resellers, GET} route","timestamp":"2026-04-10T04:21:36.944Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchants/:id/settings, PATCH} route","timestamp":"2026-04-10T04:21:36.944Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchants/:id/reset-password, POST} route","timestamp":"2026-04-10T04:21:36.945Z"}
+{"context":"RoutesResolver","level":"info","message":"MerchantOverridesController {/admin/merchant-overrides}:","timestamp":"2026-04-10T04:21:36.946Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchant-overrides, GET} route","timestamp":"2026-04-10T04:21:36.947Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchant-overrides/merchant/:merchantId, GET} route","timestamp":"2026-04-10T04:21:36.948Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchant-overrides, POST} route","timestamp":"2026-04-10T04:21:36.949Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/merchant-overrides/:id, DELETE} route","timestamp":"2026-04-10T04:21:36.951Z"}
+{"context":"RoutesResolver","level":"info","message":"ProductsController {/admin/products}:","timestamp":"2026-04-10T04:21:36.952Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/products/categories, GET} route","timestamp":"2026-04-10T04:21:36.954Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/products/categories/:name/image, PATCH} route","timestamp":"2026-04-10T04:21:36.955Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/products, GET} route","timestamp":"2026-04-10T04:21:36.956Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/products/sync, POST} route","timestamp":"2026-04-10T04:21:36.957Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/products/skus/pricing, GET} route","timestamp":"2026-04-10T04:21:36.958Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/products/skus/:id/price, PATCH} route","timestamp":"2026-04-10T04:21:36.958Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/products/skus/bulk-formula, POST} route","timestamp":"2026-04-10T04:21:36.960Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/products/skus/:id/status, PATCH} route","timestamp":"2026-04-10T04:21:36.961Z"}
+{"context":"RoutesResolver","level":"info","message":"PricingRulesController {/admin/pricing-rules}:","timestamp":"2026-04-10T04:21:36.962Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/pricing-rules/categories, GET} route","timestamp":"2026-04-10T04:21:36.962Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/pricing-rules/categories, POST} route","timestamp":"2026-04-10T04:21:36.963Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/pricing-rules/categories/:id, PATCH} route","timestamp":"2026-04-10T04:21:36.964Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/pricing-rules/categories/:id, DELETE} route","timestamp":"2026-04-10T04:21:36.964Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/pricing-rules/apply-category/:categoryId, POST} route","timestamp":"2026-04-10T04:21:36.965Z"}
+{"context":"RoutesResolver","level":"info","message":"PublicProductsController {/public/products}:","timestamp":"2026-04-10T04:21:36.966Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/products/categories, GET} route","timestamp":"2026-04-10T04:21:36.968Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/products/categories/:slug, GET} route","timestamp":"2026-04-10T04:21:36.969Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/products/content, GET} route","timestamp":"2026-04-10T04:21:36.971Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/products/reseller-prices, GET} route","timestamp":"2026-04-10T04:21:36.972Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/products/full-catalog, GET} route","timestamp":"2026-04-10T04:21:36.973Z"}
+{"context":"RoutesResolver","level":"info","message":"SuppliersController {/admin/suppliers}:","timestamp":"2026-04-10T04:21:36.974Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/suppliers, GET} route","timestamp":"2026-04-10T04:21:36.975Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/suppliers/:id, GET} route","timestamp":"2026-04-10T04:21:36.975Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/suppliers/:id, PATCH} route","timestamp":"2026-04-10T04:21:36.977Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/suppliers/:id/test-connection, POST} route","timestamp":"2026-04-10T04:21:36.978Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/suppliers/:id/topup, POST} route","timestamp":"2026-04-10T04:21:36.979Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/suppliers/:id/logs, GET} route","timestamp":"2026-04-10T04:21:36.980Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/suppliers/:id/balance-history, GET} route","timestamp":"2026-04-10T04:21:36.980Z"}
+{"context":"RoutesResolver","level":"info","message":"UsersController {/admin/users}:","timestamp":"2026-04-10T04:21:36.981Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/users, GET} route","timestamp":"2026-04-10T04:21:36.983Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/users/:id, GET} route","timestamp":"2026-04-10T04:21:36.984Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/users/:id/status, PATCH} route","timestamp":"2026-04-10T04:21:36.986Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/users/:id/balance/adjust, POST} route","timestamp":"2026-04-10T04:21:36.987Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/users/:id/balance-history, GET} route","timestamp":"2026-04-10T04:21:36.988Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/users/:id/sessions, GET} route","timestamp":"2026-04-10T04:21:36.989Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/users/:id/sessions/force-logout, POST} route","timestamp":"2026-04-10T04:21:36.990Z"}
+{"context":"RoutesResolver","level":"info","message":"TransactionsController {/admin/transactions}:","timestamp":"2026-04-10T04:21:36.990Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/transactions, GET} route","timestamp":"2026-04-10T04:21:36.991Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/transactions/:id, GET} route","timestamp":"2026-04-10T04:21:36.992Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/transactions/:id/retry, POST} route","timestamp":"2026-04-10T04:21:36.994Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/transactions/:id/refund, POST} route","timestamp":"2026-04-10T04:21:36.994Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/transactions/:id/mark-fraud, POST} route","timestamp":"2026-04-10T04:21:36.995Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/transactions/:id/status/override, PATCH} route","timestamp":"2026-04-10T04:21:36.996Z"}
+{"context":"RoutesResolver","level":"info","message":"PublicOrdersController {/public/orders}:","timestamp":"2026-04-10T04:21:36.997Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/orders/payment-channels, GET} route","timestamp":"2026-04-10T04:21:36.998Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/orders/merchants, GET} route","timestamp":"2026-04-10T04:21:37.000Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/orders/resolve-domain, GET} route","timestamp":"2026-04-10T04:21:37.001Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/orders/config, GET} route","timestamp":"2026-04-10T04:21:37.003Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/orders/status/:phone, GET} route","timestamp":"2026-04-10T04:21:37.004Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/orders/otp/send, POST} route","timestamp":"2026-04-10T04:21:37.005Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/orders/otp/verify, POST} route","timestamp":"2026-04-10T04:21:37.007Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/orders/checkout, POST} route","timestamp":"2026-04-10T04:21:37.008Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/orders/search, GET} route","timestamp":"2026-04-10T04:21:37.009Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/orders/validate-nickname, GET} route","timestamp":"2026-04-10T04:21:37.010Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/orders/:orderNumber, GET} route","timestamp":"2026-04-10T04:21:37.011Z"}
+{"context":"RoutesResolver","level":"info","message":"TripayController {/tripay}:","timestamp":"2026-04-10T04:21:37.011Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/tripay/payment-channels, GET} route","timestamp":"2026-04-10T04:21:37.013Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/tripay/callback, POST} route","timestamp":"2026-04-10T04:21:37.013Z"}
+{"context":"RoutesResolver","level":"info","message":"SubscriptionsController {/admin/subscriptions}:","timestamp":"2026-04-10T04:21:37.015Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/subscriptions/invoices, GET} route","timestamp":"2026-04-10T04:21:37.017Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/subscriptions/invoices/:id/confirm, POST} route","timestamp":"2026-04-10T04:21:37.019Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/subscriptions/invoices/:id/reject, POST} route","timestamp":"2026-04-10T04:21:37.020Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/subscriptions/merchants/:id/adjust, POST} route","timestamp":"2026-04-10T04:21:37.022Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/subscriptions/plans/features, GET} route","timestamp":"2026-04-10T04:21:37.023Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/subscriptions/plans/features, POST} route","timestamp":"2026-04-10T04:21:37.024Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/subscriptions/performance, GET} route","timestamp":"2026-04-10T04:21:37.024Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/subscriptions/invoices/manual, POST} route","timestamp":"2026-04-10T04:21:37.025Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/subscriptions/plans/mappings, GET} route","timestamp":"2026-04-10T04:21:37.041Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/subscriptions/plans/mappings/:id, PATCH} route","timestamp":"2026-04-10T04:21:37.049Z"}
+{"context":"RoutesResolver","level":"info","message":"PublicSubscriptionsController {/public/subscriptions}:","timestamp":"2026-04-10T04:21:37.056Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/subscriptions/plans/features, GET} route","timestamp":"2026-04-10T04:21:37.059Z"}
+{"context":"RoutesResolver","level":"info","message":"FinanceController {/admin/finance}:","timestamp":"2026-04-10T04:21:37.063Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/finance/summary, GET} route","timestamp":"2026-04-10T04:21:37.070Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/finance/deposits, GET} route","timestamp":"2026-04-10T04:21:37.075Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/finance/deposits/:id/confirm, POST} route","timestamp":"2026-04-10T04:21:37.080Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/finance/deposits/:id/reject, POST} route","timestamp":"2026-04-10T04:21:37.087Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/finance/withdrawals, GET} route","timestamp":"2026-04-10T04:21:37.094Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/finance/withdrawals/:id/process, POST} route","timestamp":"2026-04-10T04:21:37.098Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/finance/withdrawals/:id/reject, POST} route","timestamp":"2026-04-10T04:21:37.102Z"}
+{"context":"RoutesResolver","level":"info","message":"CommissionsController {/admin/commissions}:","timestamp":"2026-04-10T04:21:37.106Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/commissions/pending, GET} route","timestamp":"2026-04-10T04:21:37.109Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/commissions/:id/settle, POST} route","timestamp":"2026-04-10T04:21:37.112Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/commissions/bulk-settle, POST} route","timestamp":"2026-04-10T04:21:37.115Z"}
+{"context":"RoutesResolver","level":"info","message":"PromosController {/admin/promos}:","timestamp":"2026-04-10T04:21:37.117Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/promos, GET} route","timestamp":"2026-04-10T04:21:37.122Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/promos/report, GET} route","timestamp":"2026-04-10T04:21:37.124Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/promos/:id, GET} route","timestamp":"2026-04-10T04:21:37.125Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/promos, POST} route","timestamp":"2026-04-10T04:21:37.126Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/promos/:id, PATCH} route","timestamp":"2026-04-10T04:21:37.127Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/promos/:id/toggle, PATCH} route","timestamp":"2026-04-10T04:21:37.128Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/promos/:id, DELETE} route","timestamp":"2026-04-10T04:21:37.129Z"}
+{"context":"RoutesResolver","level":"info","message":"ContentController {/admin/content}:","timestamp":"2026-04-10T04:21:37.130Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/banners, GET} route","timestamp":"2026-04-10T04:21:37.131Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/banners, POST} route","timestamp":"2026-04-10T04:21:37.133Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/banners/:id, PUT} route","timestamp":"2026-04-10T04:21:37.134Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/banners/:id, DELETE} route","timestamp":"2026-04-10T04:21:37.135Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/banners/:id/toggle, POST} route","timestamp":"2026-04-10T04:21:37.136Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/announcements, GET} route","timestamp":"2026-04-10T04:21:37.137Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/announcements, POST} route","timestamp":"2026-04-10T04:21:37.138Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/announcements/:id, PUT} route","timestamp":"2026-04-10T04:21:37.139Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/announcements/:id, DELETE} route","timestamp":"2026-04-10T04:21:37.141Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/announcements/:id/toggle, POST} route","timestamp":"2026-04-10T04:21:37.142Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/templates, GET} route","timestamp":"2026-04-10T04:21:37.143Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/templates, POST} route","timestamp":"2026-04-10T04:21:37.143Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/broadcasts, GET} route","timestamp":"2026-04-10T04:21:37.144Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/content/broadcasts, POST} route","timestamp":"2026-04-10T04:21:37.145Z"}
+{"context":"RoutesResolver","level":"info","message":"SecurityController {/admin/security}:","timestamp":"2026-04-10T04:21:37.146Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/security/fraud, GET} route","timestamp":"2026-04-10T04:21:37.147Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/security/fraud/:id/resolve, POST} route","timestamp":"2026-04-10T04:21:37.148Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/security/blacklist, GET} route","timestamp":"2026-04-10T04:21:37.149Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/security/blacklist, POST} route","timestamp":"2026-04-10T04:21:37.150Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/security/blacklist/:id, DELETE} route","timestamp":"2026-04-10T04:21:37.153Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/security/login-attempts, GET} route","timestamp":"2026-04-10T04:21:37.166Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/security/audit, GET} route","timestamp":"2026-04-10T04:21:37.168Z"}
+{"context":"RoutesResolver","level":"info","message":"TicketsController {/admin/tickets}:","timestamp":"2026-04-10T04:21:37.169Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/tickets, GET} route","timestamp":"2026-04-10T04:21:37.171Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/tickets/stats, GET} route","timestamp":"2026-04-10T04:21:37.172Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/tickets/:id, GET} route","timestamp":"2026-04-10T04:21:37.174Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/tickets/:id, PUT} route","timestamp":"2026-04-10T04:21:37.175Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/tickets/:id/reply, POST} route","timestamp":"2026-04-10T04:21:37.177Z"}
+{"context":"RoutesResolver","level":"info","message":"SettingsController {/admin/settings}:","timestamp":"2026-04-10T04:21:37.178Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/settings/global, GET} route","timestamp":"2026-04-10T04:21:37.179Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/settings/global, PUT} route","timestamp":"2026-04-10T04:21:37.180Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/settings/staff, GET} route","timestamp":"2026-04-10T04:21:37.180Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/settings/staff, POST} route","timestamp":"2026-04-10T04:21:37.181Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/settings/staff/:id, PUT} route","timestamp":"2026-04-10T04:21:37.183Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/settings/staff/:id, DELETE} route","timestamp":"2026-04-10T04:21:37.186Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/settings/jobs, GET} route","timestamp":"2026-04-10T04:21:37.187Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/settings/jobs/:id/retry, POST} route","timestamp":"2026-04-10T04:21:37.188Z"}
+{"context":"RoutesResolver","level":"info","message":"PlanMappingController {/admin/plan-tier-mappings}:","timestamp":"2026-04-10T04:21:37.188Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/plan-tier-mappings, GET} route","timestamp":"2026-04-10T04:21:37.189Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/plan-tier-mappings/sync, POST} route","timestamp":"2026-04-10T04:21:37.191Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/plan-tier-mappings, POST} route","timestamp":"2026-04-10T04:21:37.192Z"}
+{"context":"RoutesResolver","level":"info","message":"AuthController {/api/auth}:","timestamp":"2026-04-10T04:21:37.192Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/api/auth/admin/login, POST} route","timestamp":"2026-04-10T04:21:37.193Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/api/auth/merchant/login, POST} route","timestamp":"2026-04-10T04:21:37.194Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/api/auth/login, POST} route","timestamp":"2026-04-10T04:21:37.195Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/api/auth/logout, POST} route","timestamp":"2026-04-10T04:21:37.196Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/api/auth/verify-email, POST} route","timestamp":"2026-04-10T04:21:37.196Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/api/auth/change-password, POST} route","timestamp":"2026-04-10T04:21:37.197Z"}
+{"context":"RoutesResolver","level":"info","message":"UploadController {/admin/upload}:","timestamp":"2026-04-10T04:21:37.197Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/upload/image, POST} route","timestamp":"2026-04-10T04:21:37.198Z"}
+{"context":"RoutesResolver","level":"info","message":"DashboardController {/merchant/dashboard}:","timestamp":"2026-04-10T04:21:37.199Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/dashboard, GET} route","timestamp":"2026-04-10T04:21:37.199Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/dashboard/export-report, GET} route","timestamp":"2026-04-10T04:21:37.200Z"}
+{"context":"RoutesResolver","level":"info","message":"ProductsController {/merchant/products}:","timestamp":"2026-04-10T04:21:37.200Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/products/categories, GET} route","timestamp":"2026-04-10T04:21:37.201Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/products, GET} route","timestamp":"2026-04-10T04:21:37.202Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/products/:skuId/price, PUT} route","timestamp":"2026-04-10T04:21:37.203Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/products/bulk-update, POST} route","timestamp":"2026-04-10T04:21:37.204Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/products/:productId/metadata, PUT} route","timestamp":"2026-04-10T04:21:37.205Z"}
+{"context":"RoutesResolver","level":"info","message":"MembersController {/merchant/members}:","timestamp":"2026-04-10T04:21:37.205Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/members, GET} route","timestamp":"2026-04-10T04:21:37.207Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/members, POST} route","timestamp":"2026-04-10T04:21:37.207Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/members/:id, PUT} route","timestamp":"2026-04-10T04:21:37.208Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/members/:id/role, PATCH} route","timestamp":"2026-04-10T04:21:37.209Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/members/ranking, GET} route","timestamp":"2026-04-10T04:21:37.209Z"}
+{"context":"RoutesResolver","level":"info","message":"OrdersController {/merchant/orders}:","timestamp":"2026-04-10T04:21:37.210Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/orders/create-direct, POST} route","timestamp":"2026-04-10T04:21:37.210Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/orders, GET} route","timestamp":"2026-04-10T04:21:37.211Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/orders/:id, GET} route","timestamp":"2026-04-10T04:21:37.212Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/orders/:id/retry, POST} route","timestamp":"2026-04-10T04:21:37.212Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/orders/:id/refund, POST} route","timestamp":"2026-04-10T04:21:37.213Z"}
+{"context":"RoutesResolver","level":"info","message":"FinanceController {/merchant/finance}:","timestamp":"2026-04-10T04:21:37.213Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/finance, GET} route","timestamp":"2026-04-10T04:21:37.214Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/finance/withdraw, POST} route","timestamp":"2026-04-10T04:21:37.214Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/finance/deposit, POST} route","timestamp":"2026-04-10T04:21:37.215Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/finance/deposits, GET} route","timestamp":"2026-04-10T04:21:37.216Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/finance/withdrawals, GET} route","timestamp":"2026-04-10T04:21:37.217Z"}
+{"context":"RoutesResolver","level":"info","message":"CommissionsController {/merchant/commissions}:","timestamp":"2026-04-10T04:21:37.217Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/commissions, GET} route","timestamp":"2026-04-10T04:21:37.218Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/commissions/settle, POST} route","timestamp":"2026-04-10T04:21:37.219Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/commissions/settle/:resellerId, POST} route","timestamp":"2026-04-10T04:21:37.220Z"}
+{"context":"RoutesResolver","level":"info","message":"PromosController {/merchant/promos}:","timestamp":"2026-04-10T04:21:37.220Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/promos, GET} route","timestamp":"2026-04-10T04:21:37.221Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/promos, POST} route","timestamp":"2026-04-10T04:21:37.222Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/promos/:id/toggle, PUT} route","timestamp":"2026-04-10T04:21:37.223Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/promos/:id, DELETE} route","timestamp":"2026-04-10T04:21:37.224Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/promos/flash-sales, GET} route","timestamp":"2026-04-10T04:21:37.225Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/promos/flash-sales, POST} route","timestamp":"2026-04-10T04:21:37.226Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/promos/flash-sales/:id/toggle, PUT} route","timestamp":"2026-04-10T04:21:37.226Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/promos/flash-sales/:id, DELETE} route","timestamp":"2026-04-10T04:21:37.228Z"}
+{"context":"RoutesResolver","level":"info","message":"ContentController {/merchant/content}:","timestamp":"2026-04-10T04:21:37.228Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/upload, POST} route","timestamp":"2026-04-10T04:21:37.229Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/banners, GET} route","timestamp":"2026-04-10T04:21:37.230Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/banners, POST} route","timestamp":"2026-04-10T04:21:37.230Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/banners/:id/toggle, PUT} route","timestamp":"2026-04-10T04:21:37.231Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/banners/:id, PUT} route","timestamp":"2026-04-10T04:21:37.232Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/banners/:id, DELETE} route","timestamp":"2026-04-10T04:21:37.233Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/announcements, GET} route","timestamp":"2026-04-10T04:21:37.234Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/announcements, POST} route","timestamp":"2026-04-10T04:21:37.234Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/announcements/:id/toggle, PUT} route","timestamp":"2026-04-10T04:21:37.235Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/announcements/:id, PUT} route","timestamp":"2026-04-10T04:21:37.236Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/announcements/:id, DELETE} route","timestamp":"2026-04-10T04:21:37.237Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/design, PUT} route","timestamp":"2026-04-10T04:21:37.238Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/theme, PUT} route","timestamp":"2026-04-10T04:21:37.238Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/popup-promos, GET} route","timestamp":"2026-04-10T04:21:37.239Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/popup-promos, POST} route","timestamp":"2026-04-10T04:21:37.240Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/popup-promos/:id/toggle, PUT} route","timestamp":"2026-04-10T04:21:37.240Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/popup-promos/:id, PUT} route","timestamp":"2026-04-10T04:21:37.241Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/content/popup-promos/:id, DELETE} route","timestamp":"2026-04-10T04:21:37.242Z"}
+{"context":"RoutesResolver","level":"info","message":"SettingsController {/merchant/settings}:","timestamp":"2026-04-10T04:21:37.242Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/settings, GET} route","timestamp":"2026-04-10T04:21:37.243Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/settings/profile, PUT} route","timestamp":"2026-04-10T04:21:37.244Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/settings/domain, PUT} route","timestamp":"2026-04-10T04:21:37.244Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/settings/payment-channels, GET} route","timestamp":"2026-04-10T04:21:37.245Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/settings/payment-channels/:id/toggle, PUT} route","timestamp":"2026-04-10T04:21:37.245Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/settings/general, GET} route","timestamp":"2026-04-10T04:21:37.246Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/settings/general, PUT} route","timestamp":"2026-04-10T04:21:37.247Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/settings/webhooks, GET} route","timestamp":"2026-04-10T04:21:37.248Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/settings/webhooks, POST} route","timestamp":"2026-04-10T04:21:37.249Z"}
+{"context":"RoutesResolver","level":"info","message":"SupportController {/merchant/support}:","timestamp":"2026-04-10T04:21:37.249Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/support, GET} route","timestamp":"2026-04-10T04:21:37.250Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/support, POST} route","timestamp":"2026-04-10T04:21:37.251Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/support/:id, GET} route","timestamp":"2026-04-10T04:21:37.251Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/support/:id/reply, POST} route","timestamp":"2026-04-10T04:21:37.252Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/support/:id, PUT} route","timestamp":"2026-04-10T04:21:37.253Z"}
+{"context":"RoutesResolver","level":"info","message":"ReportsController {/merchant/reports}:","timestamp":"2026-04-10T04:21:37.254Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/reports/sales, GET} route","timestamp":"2026-04-10T04:21:37.255Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/reports/products, GET} route","timestamp":"2026-04-10T04:21:37.255Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/reports/resellers, GET} route","timestamp":"2026-04-10T04:21:37.256Z"}
+{"context":"RoutesResolver","level":"info","message":"SubscriptionController {/merchant/subscription}:","timestamp":"2026-04-10T04:21:37.257Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/subscription, GET} route","timestamp":"2026-04-10T04:21:37.258Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/subscription/invoices, GET} route","timestamp":"2026-04-10T04:21:37.259Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/subscription/invoices, POST} route","timestamp":"2026-04-10T04:21:37.259Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/subscription/invoices/:id/proof, PUT} route","timestamp":"2026-04-10T04:21:37.260Z"}
+{"context":"RoutesResolver","level":"info","message":"WithdrawalsController {/merchant/withdrawals}:","timestamp":"2026-04-10T04:21:37.261Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/withdrawals/request, POST} route","timestamp":"2026-04-10T04:21:37.261Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/withdrawals/history, GET} route","timestamp":"2026-04-10T04:21:37.262Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/withdrawals/:id/approve, POST} route","timestamp":"2026-04-10T04:21:37.263Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/merchant/withdrawals/:id/reject, POST} route","timestamp":"2026-04-10T04:21:37.264Z"}
+{"context":"RoutesResolver","level":"info","message":"MarketingController {/admin/marketing}:","timestamp":"2026-04-10T04:21:37.264Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/marketing/guides, GET} route","timestamp":"2026-04-10T04:21:37.265Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/marketing/guides, POST} route","timestamp":"2026-04-10T04:21:37.266Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/marketing/guides/:id, PATCH} route","timestamp":"2026-04-10T04:21:37.267Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/marketing/guides/:id, DELETE} route","timestamp":"2026-04-10T04:21:37.267Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/admin/marketing/broadcast, POST} route","timestamp":"2026-04-10T04:21:37.268Z"}
+{"context":"RoutesResolver","level":"info","message":"ChatController {/chat}:","timestamp":"2026-04-10T04:21:37.268Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/chat/merchant, GET} route","timestamp":"2026-04-10T04:21:37.269Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/chat/merchant/send, POST} route","timestamp":"2026-04-10T04:21:37.270Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/chat/admin/rooms, GET} route","timestamp":"2026-04-10T04:21:37.271Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/chat/admin/rooms/:id, GET} route","timestamp":"2026-04-10T04:21:37.272Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/chat/admin/rooms/:id/send, POST} route","timestamp":"2026-04-10T04:21:37.272Z"}
+{"context":"RoutesResolver","level":"info","message":"PublicDigiflazzController {/public/digiflazz}:","timestamp":"2026-04-10T04:21:37.273Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/public/digiflazz/webhook, POST} route","timestamp":"2026-04-10T04:21:37.274Z"}
+{"context":"RoutesResolver","level":"info","message":"SaasController {/saas}:","timestamp":"2026-04-10T04:21:37.274Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/saas/admin/ledger/escrow, GET} route","timestamp":"2026-04-10T04:21:37.275Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/saas/admin/webhooks/dlq, GET} route","timestamp":"2026-04-10T04:21:37.276Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/saas/admin/webhooks/dlq/:id/requeue, POST} route","timestamp":"2026-04-10T04:21:37.277Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/saas/admin/domains/status, GET} route","timestamp":"2026-04-10T04:21:37.277Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/saas/merchant/ledger, GET} route","timestamp":"2026-04-10T04:21:37.278Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/saas/merchant/payout/auto, POST} route","timestamp":"2026-04-10T04:21:37.279Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/saas/merchant/webhooks/logs, GET} route","timestamp":"2026-04-10T04:21:37.280Z"}
+{"context":"RouterExplorer","level":"info","message":"Mapped {/saas/merchant/webhooks/retry, POST} route","timestamp":"2026-04-10T04:21:37.281Z"}
+{"context":"NestApplication","level":"info","message":"Nest application successfully started","timestamp":"2026-04-10T04:21:37.470Z"}
+{"context":"HTTP","level":"info","message":"GET /public/orders/merchants 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [182ms]","timestamp":"2026-04-10T04:22:23.398Z"}
+{"context":"HTTP","level":"info","message":"GET /public/orders/config 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [244ms]","timestamp":"2026-04-10T04:22:23.415Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/content 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [312ms]","timestamp":"2026-04-10T04:22:23.509Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/full-catalog 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [319ms]","timestamp":"2026-04-10T04:22:23.521Z"}
+{"context":"HTTP","level":"info","message":"GET /chat/merchant 401 149 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [28ms]","timestamp":"2026-04-10T04:23:28.810Z"}
+{"context":"HTTP","level":"info","message":"GET /merchant/dashboard 401 154 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [5ms]","timestamp":"2026-04-10T04:23:28.816Z"}
+{"context":"HTTP","level":"info","message":"GET /merchant/settings 401 153 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [6ms]","timestamp":"2026-04-10T04:23:28.826Z"}
+{"context":"HTTP","level":"info","message":"GET /chat/merchant 401 149 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [3ms]","timestamp":"2026-04-10T04:23:32.018Z"}
+{"context":"HTTP","level":"info","message":"GET /merchant/settings 401 153 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [4ms]","timestamp":"2026-04-10T04:23:32.024Z"}
+{"context":"HTTP","level":"info","message":"GET /merchant/dashboard 401 154 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [3ms]","timestamp":"2026-04-10T04:23:32.028Z"}
+{"context":"HTTP","level":"info","message":"GET /public/orders/merchants 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [2ms]","timestamp":"2026-04-10T04:23:34.687Z"}
+{"context":"HTTP","level":"info","message":"GET /public/orders/config 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [121ms]","timestamp":"2026-04-10T04:23:34.792Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/full-catalog 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [163ms]","timestamp":"2026-04-10T04:23:34.843Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/content 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [208ms]","timestamp":"2026-04-10T04:23:34.885Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T04:30:00.053Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T04:40:00.058Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T04:50:00.039Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T05:00:00.029Z"}
+{"context":"CommissionsService","level":"info","message":"[Cashflow Protect] Menjalankan settlement otomatis untuk komisi PENDING >24 jam...","timestamp":"2026-04-10T05:00:00.091Z"}
+{"context":"WorkersService","level":"info","message":"Starting Automated Product & Price Sync from Digiflazz...","timestamp":"2026-04-10T05:00:00.135Z"}
+{"context":"DigiflazzService","level":"error","message":"[Digiflazz] Error fetching price list:","stack":["Request failed with status code 400"],"timestamp":"2026-04-10T05:00:00.636Z"}
+{"context":"WorkersService","level":"error","message":"Automated Sync Failed: Digiflazz Connection Error: Request failed with status code 400","stack":[null],"timestamp":"2026-04-10T05:00:00.638Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync supplier balance: Request failed with status code 400","stack":[null],"timestamp":"2026-04-10T05:00:00.651Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T05:10:00.036Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T05:20:00.022Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T05:30:00.030Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T05:40:00.031Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T05:50:00.052Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T06:00:00.015Z"}
+{"context":"CommissionsService","level":"info","message":"[Cashflow Protect] Menjalankan settlement otomatis untuk komisi PENDING >24 jam...","timestamp":"2026-04-10T06:00:00.136Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync supplier balance: Request failed with status code 400","stack":[null],"timestamp":"2026-04-10T06:00:01.802Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T06:10:00.016Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T06:20:00.026Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T06:30:00.014Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T06:40:00.025Z"}
+{"context":"HTTP","level":"info","message":"GET /public/orders/config 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [204ms]","timestamp":"2026-04-10T06:40:46.661Z"}
+{"context":"HTTP","level":"info","message":"GET /public/orders/merchants 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [165ms]","timestamp":"2026-04-10T06:40:46.698Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/full-catalog 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [186ms]","timestamp":"2026-04-10T06:40:46.717Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/content 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [266ms]","timestamp":"2026-04-10T06:40:46.790Z"}
+{"context":"HTTP","level":"info","message":"GET /public/orders/config 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [4ms]","timestamp":"2026-04-10T06:41:10.773Z"}
+{"context":"HTTP","level":"info","message":"GET /public/orders/merchants 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [2ms]","timestamp":"2026-04-10T06:41:10.782Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/full-catalog 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [106ms]","timestamp":"2026-04-10T06:41:10.884Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/content 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [141ms]","timestamp":"2026-04-10T06:41:10.916Z"}
+{"context":"HTTP","level":"info","message":"GET /public/orders/config 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [3ms]","timestamp":"2026-04-10T06:41:40.958Z"}
+{"context":"HTTP","level":"info","message":"GET /public/orders/merchants 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [3ms]","timestamp":"2026-04-10T06:41:40.974Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/full-catalog 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [121ms]","timestamp":"2026-04-10T06:41:41.086Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/content 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [149ms]","timestamp":"2026-04-10T06:41:41.108Z"}
+{"context":"HTTP","level":"info","message":"GET /public/subscriptions/plans/features?t=1775803314530 200 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [165ms]","timestamp":"2026-04-10T06:41:54.703Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/full-catalog 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [182ms]","timestamp":"2026-04-10T06:41:54.715Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/reseller-prices?t=1775803314531 200 561 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [173ms]","timestamp":"2026-04-10T06:41:54.721Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/reseller-prices?t=1775803794956 200 561 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [134ms]","timestamp":"2026-04-10T06:49:55.212Z"}
+{"context":"HTTP","level":"info","message":"GET /public/subscriptions/plans/features?t=1775803794952 200 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [156ms]","timestamp":"2026-04-10T06:49:55.216Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/full-catalog 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [209ms]","timestamp":"2026-04-10T06:49:55.231Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T06:50:00.010Z"}
+{"context":"HTTP","level":"info","message":"GET /public/orders/merchants 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [9ms]","timestamp":"2026-04-10T06:50:06.296Z"}
+{"context":"HTTP","level":"info","message":"GET /public/orders/config 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [27ms]","timestamp":"2026-04-10T06:50:06.302Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/content 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [29ms]","timestamp":"2026-04-10T06:50:06.309Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/full-catalog 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [60ms]","timestamp":"2026-04-10T06:50:06.341Z"}
+{"context":"HTTP","level":"info","message":"GET /public/subscriptions/plans/features?t=1775803812920 200 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [15ms]","timestamp":"2026-04-10T06:50:12.946Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/reseller-prices?t=1775803812921 200 561 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [23ms]","timestamp":"2026-04-10T06:50:12.957Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/full-catalog 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [42ms]","timestamp":"2026-04-10T06:50:12.967Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T07:00:00.023Z"}
+{"context":"CommissionsService","level":"info","message":"[Cashflow Protect] Menjalankan settlement otomatis untuk komisi PENDING >24 jam...","timestamp":"2026-04-10T07:00:00.044Z"}
+{"context":"WorkersService","level":"error","message":"Failed to sync supplier balance: Request failed with status code 400","stack":[null],"timestamp":"2026-04-10T07:00:00.496Z"}
+{"context":"HTTP","level":"info","message":"GET /public/subscriptions/plans/features?t=1775804781816 200 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [100ms]","timestamp":"2026-04-10T07:06:21.973Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/full-catalog 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [136ms]","timestamp":"2026-04-10T07:06:21.981Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/reseller-prices?t=1775804781817 200 561 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [182ms]","timestamp":"2026-04-10T07:06:22.067Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T07:10:00.021Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T07:20:00.025Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T07:30:00.034Z"}
+{"context":"HTTP","level":"info","message":"GET /public/subscriptions/plans/features?t=1775806760553 200 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [106ms]","timestamp":"2026-04-10T07:39:20.720Z"}
+{"context":"HTTP","level":"info","message":"GET /public/subscriptions/plans/features?t=1775806760559 200 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [95ms]","timestamp":"2026-04-10T07:39:20.722Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/reseller-prices?t=1775806760554 200 561 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [119ms]","timestamp":"2026-04-10T07:39:20.741Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/full-catalog 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [147ms]","timestamp":"2026-04-10T07:39:20.745Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/full-catalog 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [40ms]","timestamp":"2026-04-10T07:39:20.790Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/reseller-prices?t=1775806760559 200 561 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [185ms]","timestamp":"2026-04-10T07:39:20.817Z"}
+{"context":"HTTP","level":"info","message":"GET /public/orders/merchants 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [8ms]","timestamp":"2026-04-10T07:39:22.245Z"}
+{"context":"HTTP","level":"info","message":"GET /public/orders/config 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [24ms]","timestamp":"2026-04-10T07:39:22.254Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/full-catalog 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [36ms]","timestamp":"2026-04-10T07:39:22.269Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/content 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [74ms]","timestamp":"2026-04-10T07:39:22.308Z"}
+{"context":"HTTP","level":"info","message":"GET /public/subscriptions/plans/features?t=1775806764053 200 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [10ms]","timestamp":"2026-04-10T07:39:24.067Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/reseller-prices?t=1775806764053 200 561 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [12ms]","timestamp":"2026-04-10T07:39:24.071Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/full-catalog 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [36ms]","timestamp":"2026-04-10T07:39:24.090Z"}
+{"context":"TasksService","level":"info","message":"Starting frequent checks (Expired Orders & Plans)...","timestamp":"2026-04-10T07:40:00.010Z"}
+{"context":"HTTP","level":"info","message":"GET /public/subscriptions/plans/features?t=1775806919478 200 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [89ms]","timestamp":"2026-04-10T07:41:59.575Z"}
+{"context":"HTTP","level":"info","message":"GET /public/subscriptions/plans/features?t=1775806919483 200 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [80ms]","timestamp":"2026-04-10T07:41:59.584Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/reseller-prices?t=1775806919478 200 561 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [96ms]","timestamp":"2026-04-10T07:41:59.587Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/reseller-prices?t=1775806919484 200 561 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [84ms]","timestamp":"2026-04-10T07:41:59.593Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/full-catalog 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [126ms]","timestamp":"2026-04-10T07:41:59.608Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/full-catalog 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [26ms]","timestamp":"2026-04-10T07:41:59.638Z"}
+{"context":"HTTP","level":"info","message":"GET /public/subscriptions/plans/features?t=1775806939611 200 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [70ms]","timestamp":"2026-04-10T07:42:19.686Z"}
+{"context":"HTTP","level":"info","message":"GET /public/subscriptions/plans/features?t=1775806939614 200 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [80ms]","timestamp":"2026-04-10T07:42:19.707Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/reseller-prices?t=1775806939611 200 561 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [92ms]","timestamp":"2026-04-10T07:42:19.711Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/reseller-prices?t=1775806939615 200 561 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [99ms]","timestamp":"2026-04-10T07:42:19.728Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/full-catalog 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [113ms]","timestamp":"2026-04-10T07:42:19.735Z"}
+{"context":"HTTP","level":"info","message":"GET /public/products/full-catalog 304 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [38ms]","timestamp":"2026-04-10T07:42:19.776Z"}
+{"context":"HTTP","level":"info","message":"POST /api/auth/admin/login 401 153 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [88ms]","timestamp":"2026-04-10T07:42:39.530Z"}
+{"context":"HTTP","level":"info","message":"POST /api/auth/admin/login 201 551 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [205ms]","timestamp":"2026-04-10T07:44:03.222Z"}
+{"context":"HTTP","level":"info","message":"GET /chat/admin/rooms 200 536 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [132ms]","timestamp":"2026-04-10T07:44:03.920Z"}
+{"context":"HTTP","level":"info","message":"GET /admin/dashboard/summary?range=WEEK 200 undefined - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0 ::1 [356ms]","timestamp":"2026-04-10T07:44:04.154Z"}

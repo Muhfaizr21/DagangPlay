@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
@@ -39,7 +40,7 @@ export default function MerchantResellersPage() {
     const [editingUser, setEditingUser] = useState<any>(null);
 
     // Fetching data
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
     const { data: users, mutate, isLoading } = useSWR(
         `${baseUrl}/merchant/members?search=${searchTerm}&role=${roleFilter}`, 
         fetcher

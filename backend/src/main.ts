@@ -19,20 +19,26 @@ async function bootstrap() {
   app.set('trust proxy', 1);
 
   // 1. Security Headers (Helmet)
-  app.use(helmet({
-    crossOriginEmbedderPolicy: false,
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-        fontSrc: ["'self'", "https://fonts.gstatic.com"],
-        imgSrc: ["'self'", "data:", "https://*", "http://*", "blob:"],
-        connectSrc: ["'self'", "https://*", "http://*", "wss://*"],
+  app.use(
+    helmet({
+      crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+          styleSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            'https://fonts.googleapis.com',
+          ],
+          fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+          imgSrc: ["'self'", 'data:', 'https://*', 'http://*', 'blob:'],
+          connectSrc: ["'self'", 'https://*', 'http://*', 'wss://*'],
+        },
       },
-    },
-  }));
+    }),
+  );
 
   // 2. Performance (Gzip Compression)
   app.use(compression());
@@ -41,13 +47,16 @@ async function bootstrap() {
   const whitelist = [
     process.env.FRONTEND_URL,
     'http://localhost:3000',
-    'http://127.0.0.1:3000'
+    'http://127.0.0.1:3000',
   ].filter(Boolean) as string[];
 
   app.enableCors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
-      if (whitelist.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+      if (
+        whitelist.indexOf(origin) !== -1 ||
+        process.env.NODE_ENV !== 'production'
+      ) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
@@ -63,7 +72,13 @@ async function bootstrap() {
   app.useStaticAssets(publicPath);
 
   // 4. Global Pipes & Filters
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
   app.useGlobalFilters(new GlobalExceptionFilter());
 
   await app.listen(process.env.PORT ?? 3001);

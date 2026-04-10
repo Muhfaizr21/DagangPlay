@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useState } from 'react';
 import {
     Search, ShoppingCart, User, Gamepad, Zap, ChevronRight,
@@ -17,7 +18,7 @@ export default function MerchantStorefront({ config }: { config: any }) {
     const [selectedCat, setSelectedCat] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
     const { data: contentData } = useSWR(`${baseUrl}/public/products/content?merchant=${config?.slug}`, fetcher);
     const { data: categories } = useSWR(`${baseUrl}/public/products/categories?merchant=${config?.slug}`, fetcher);
     const { data: catalog } = useSWR(`${baseUrl}/public/products/full-catalog?merchant=${config?.slug}`, fetcher);

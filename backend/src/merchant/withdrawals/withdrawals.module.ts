@@ -4,8 +4,8 @@ import { WithdrawalsService } from './withdrawals.service';
 import { PrismaService } from '../../prisma.service';
 
 @Module({
-    controllers: [WithdrawalsController],
-    providers: [WithdrawalsService, PrismaService],
-    exports: [WithdrawalsService]
+  controllers: [WithdrawalsController],
+  providers: [WithdrawalsService, PrismaService],
+  exports: [WithdrawalsService],
 })
-export class WithdrawalsModule { }
+export class WithdrawalsModule {}

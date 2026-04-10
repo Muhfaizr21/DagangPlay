@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { use } from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
@@ -8,7 +9,7 @@ const fetcher = (url: string) => axios.get(url).then(res => res.data);
 
 export default function MerchantSlugStore({ params: paramsPromise }: { params: Promise<{ slug: string }> }) {
     const params = use(paramsPromise);
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
 
     // Fetch merchant config specifically by slug
     const { data: config, error, isLoading } = useSWR(`${baseUrl}/public/orders/config?slug=${params.slug}`, fetcher);

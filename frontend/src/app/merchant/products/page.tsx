@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useState, useMemo } from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
@@ -28,7 +29,7 @@ export default function MerchantProductsPage() {
     const [customThumbnail, setCustomThumbnail] = useState('');
     const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
 
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
 
     const { data: categories } = useSWR(`${baseUrl}/merchant/products/categories`, fetcher);
 

@@ -8,6 +8,6 @@ import { TripayModule } from '../../tripay/tripay.module';
 @Module({
   imports: [TripayModule],
   controllers: [SubscriptionController],
-  providers: [SubscriptionService, PrismaService]
+  providers: [SubscriptionService, PrismaService],
 })
-export class SubscriptionModule { }
+export class SubscriptionModule {}

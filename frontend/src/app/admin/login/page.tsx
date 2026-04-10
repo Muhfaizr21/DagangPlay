@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
@@ -17,7 +18,7 @@ export default function AdminLoginPage() {
         setError('');
 
         try {
-            const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+            const baseUrl = getApiUrl();
             const res = await axios.post(`${baseUrl}/api/auth/admin/login`, {
                 email,
                 password

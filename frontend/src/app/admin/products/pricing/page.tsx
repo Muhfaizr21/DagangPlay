@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useState } from 'react';
 import Link from 'next/link';
 import useSWR, { mutate } from 'swr';
@@ -26,7 +27,7 @@ const fetcher = (url: string) => {
 };
 
 export default function AdminPricingPage() {
-    const { data: skus, error, isLoading } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/products/skus/pricing', fetcher);
+    const { data: skus, error, isLoading } = useSWR((getApiUrl()) + '/admin/products/skus/pricing', fetcher);
 
     const [searchQuery, setSearchQuery] = useState('');
     const [filterCategory, setFilterCategory] = useState('All');
@@ -61,12 +62,12 @@ export default function AdminPricingPage() {
         try {
             const token = localStorage.getItem('admin_token');
             // Encode the category name to handle special characters correctly, although NextJS might auto handle
-            await axios.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/products/categories/${encodeURIComponent(activeCategoryItem.name)}/image`, {
+            await axios.patch(`${getApiUrl()}/admin/products/categories/${encodeURIComponent(activeCategoryItem.name)}/image`, {
                 imageUrl: imgUrlInput
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            mutate((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/products/skus/pricing');
+            mutate((getApiUrl()) + '/admin/products/skus/pricing');
             setEditingImage(false);
             setImgUrlInput('');
             alert('Gambar kategori berhasil disimpan');
@@ -80,11 +81,11 @@ export default function AdminPricingPage() {
         setSyncing(true);
         try {
             const token = localStorage.getItem('admin_token');
-            const res = await axios.post((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/products/sync', {}, {
+            const res = await axios.post((getApiUrl()) + '/admin/products/sync', {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             alert(res.data.message || 'Sinkronisasi berhasil!');
-            mutate((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/products/skus/pricing');
+            mutate((getApiUrl()) + '/admin/products/skus/pricing');
         } catch (err: any) {
             alert(err.response?.data?.message || 'Gagal sinkronisasi dengan Digiflazz');
         } finally {
@@ -106,10 +107,10 @@ export default function AdminPricingPage() {
         setSaving(true);
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/products/skus/${id}/price`, editValues, {
+            await axios.patch(`${getApiUrl()}/admin/products/skus/${id}/price`, editValues, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            mutate((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/products/skus/pricing');
+            mutate((getApiUrl()) + '/admin/products/skus/pricing');
             setEditingId(null);
         } catch (err) {
             alert('Gagal menyimpan harga');
@@ -122,12 +123,12 @@ export default function AdminPricingPage() {
         const newStatus = sku.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
         try {
             const token = localStorage.getItem('admin_token');
-            await axios.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/products/skus/${sku.id}/status`, {
+            await axios.patch(`${getApiUrl()}/admin/products/skus/${sku.id}/status`, {
                 status: newStatus
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            mutate((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/products/skus/pricing');
+            mutate((getApiUrl()) + '/admin/products/skus/pricing');
         } catch (err) {
             alert('Gagal mengubah status produk');
         }
@@ -190,7 +191,7 @@ export default function AdminPricingPage() {
                         {syncing ? 'Syncing...' : 'Sync Digiflazz'}
                     </button>
                     <button
-                        onClick={() => mutate((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/products/skus/pricing')}
+                        onClick={() => mutate((getApiUrl()) + '/admin/products/skus/pricing')}
                         disabled={isLoading}
                         className="p-2.5 bg-white border border-slate-200 text-slate-500 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-all disabled:opacity-50"
                     >

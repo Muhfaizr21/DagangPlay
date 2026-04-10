@@ -1,4 +1,3 @@
-
 import { PrismaClient } from '@prisma/client';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -10,13 +9,22 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-    const users = await prisma.user.findMany({
-        select: { id: true, email: true, password: true, role: true, name: true, status: true }
-    });
-    console.log(JSON.stringify(users, null, 2));
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      email: true,
+      password: true,
+      role: true,
+      name: true,
+      status: true,
+    },
+  });
+  console.log(JSON.stringify(users, null, 2));
 }
 
-main().catch(console.error).finally(async () => {
+main()
+  .catch(console.error)
+  .finally(async () => {
     await prisma.$disconnect();
     await pool.end();
-});
+  });

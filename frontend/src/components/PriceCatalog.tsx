@@ -1,3 +1,4 @@
+import { getApiUrl } from '@/lib/api';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Download, ChevronRight, LayoutGrid, Gamepad2, CreditCard, Smartphone } from 'lucide-react';
 
@@ -89,7 +90,7 @@ const PriceCatalog = () => {
     const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/public/products/full-catalog')
+        fetch((getApiUrl()) + '/public/products/full-catalog')
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {

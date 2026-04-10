@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useState } from 'react';
 import MerchantLayout from '@/components/merchant/MerchantLayout';
 import {
@@ -30,7 +31,7 @@ const fetcher = (url: string) => {
 };
 
 export default function MerchantFinanceLedgerPage() {
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
     
     // Fetch data using SWR with real-time polling
     const { data: ledger, error, isLoading, mutate } = useSWR(`${baseUrl}/saas/merchant/ledger`, fetcher, {

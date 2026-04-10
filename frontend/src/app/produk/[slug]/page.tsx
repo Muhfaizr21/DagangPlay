@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import { useState, useEffect, useMemo } from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
@@ -37,7 +38,7 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
         }
     }, []);
 
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
 
     const categoryUrl = merchantSlug
         ? `${baseUrl}/public/products/categories/${params.slug}?merchant=${merchantSlug}`

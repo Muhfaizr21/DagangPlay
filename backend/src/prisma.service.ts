@@ -7,106 +7,248 @@ import { Pool } from 'pg';
 let prismaInstance: PrismaClient | null = null;
 
 function createPrismaClient(): PrismaClient {
-    const pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
-    });
-    const adapter = new PrismaPg(pool);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return new (PrismaClient as any)({ adapter });
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+  });
+  const adapter = new PrismaPg(pool);
+
+  return new (PrismaClient as any)({ adapter });
 }
 
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {
-    private client: PrismaClient;
+  private client: PrismaClient;
 
-    constructor() {
-        if (!prismaInstance) {
-            prismaInstance = createPrismaClient();
-        }
-        this.client = prismaInstance;
+  constructor() {
+    if (!prismaInstance) {
+      prismaInstance = createPrismaClient();
     }
+    this.client = prismaInstance;
+  }
 
-    get $transaction() {
-        return this.client.$transaction.bind(this.client);
-    }
+  get $transaction() {
+    return this.client.$transaction.bind(this.client);
+  }
 
-    // Expose all Prisma model accessors
-    get user() { return this.client.user; }
-    get order() { return this.client.order; }
-    get merchant() { return this.client.merchant; }
-    get auditLog() { return this.client.auditLog; }
-    get category() { return this.client.category; }
-    get product() { return this.client.product; }
-    get productSku() { return this.client.productSku; }
-    get supplier() { return this.client.supplier; }
-    get supplierLog() { return this.client.supplierLog; }
-    get supplierBalanceHistory() { return this.client.supplierBalanceHistory; }
-    get userSession() { return this.client.userSession; }
-    get balanceTransaction() { return this.client.balanceTransaction; }
-    get deposit() { return this.client.deposit; }
-    get withdrawal() { return this.client.withdrawal; }
-    get payment() { return this.client.payment; }
-    get orderStatusHistory() { return this.client.orderStatusHistory; }
-    get fraudDetection() { return this.client.fraudDetection; }
-    get commission() { return this.client.commission; }
-    get mLMCommission() { return this.client.mLMCommission; }
-    get downlineTree() { return this.client.downlineTree; }
-    get promoCode() { return this.client.promoCode; }
-    get promoUsage() { return this.client.promoUsage; }
-    get invoice() { return this.client.invoice; }
-    get subscriptionHistory() { return this.client.subscriptionHistory; }
-    get systemSetting() { return this.client.systemSetting; }
-    get banner() { return this.client.banner; }
-    get announcement() { return this.client.announcement; }
-    get emailCampaign() { return this.client.emailCampaign; }
-    get iPBlacklist() { return this.client.iPBlacklist; }
-    get supportTicket() { return this.client.supportTicket; }
-    get supportTicketReply() { return this.client.supportTicketReply; }
-    get loginAttempt() { return this.client.loginAttempt; }
-    get jobQueue() { return this.client.jobQueue; }
-    get notificationTemplate() { return this.client.notificationTemplate; }
-    get merchantProductPrice() { return this.client.merchantProductPrice; }
-    get merchantMember() { return this.client.merchantMember; }
-    get tierPricingRule() { return this.client.tierPricingRule; }
-    get planTierMapping() { return this.client.planTierMapping; }
-    get tierPriceHistory() { return this.client.tierPriceHistory; }
-    get webhookEndpoint() { return this.client.webhookEndpoint; }
-    get paymentChannel() { return this.client.paymentChannel; }
-    get chatRoom() { return this.client.chatRoom; }
-    get chatMessage() { return this.client.chatMessage; }
-    get marketingGuide() { return this.client.marketingGuide; }
-    get merchantProductOverride() { return this.client.merchantProductOverride; }
-    get otpVerification() { return this.client.otpVerification; }
-    get popupPromo() { return this.client.popupPromo; }
-    get webhookLog() { return this.client.webhookLog; }
-    get notification() { return this.client.notification; }
-    get pushNotificationLog() { return this.client.pushNotificationLog; }
-    get emailCampaignLog() { return this.client.emailCampaignLog; }
-    get userActivityLog() { return this.client.userActivityLog; }
-    get productSalesStats() { return this.client.productSalesStats; }
-    get dailySalesSnapshot() { return this.client.dailySalesSnapshot; }
-    get maintenanceSchedule() { return this.client.maintenanceSchedule; }
-    get refundPolicy() { return this.client.refundPolicy; }
-    get disputeCase() { return this.client.disputeCase; }
-    get apiRateLimit() { return this.client.apiRateLimit; }
-    get merchantSetting() { return this.client.merchantSetting; }
-    get gameValidation() { return this.client.gameValidation; }
-    get gameNickname() { return this.client.gameNickname; }
-    get referralReward() { return this.client.referralReward; }
-    get commissionRule() { return this.client.commissionRule; }
-    get deviceTrusted() { return this.client.deviceTrusted; }
-    get userProfile() { return this.client.userProfile; }
-    get apiKey() { return this.client.apiKey; }
-    get webhookDeliveryLog() { return this.client.webhookDeliveryLog; }
-    get deadLetterQueue() { return this.client.deadLetterQueue; }
-    get merchantLedgerMovement() { return this.client.merchantLedgerMovement; }
-    get flashSaleEvent() { return this.client.flashSaleEvent; }
-    get flashSaleItem() { return this.client.flashSaleItem; }
-    async onModuleInit() {
-        await this.client.$connect();
-    }
+  // Expose all Prisma model accessors
+  get user() {
+    return this.client.user;
+  }
+  get order() {
+    return this.client.order;
+  }
+  get merchant() {
+    return this.client.merchant;
+  }
+  get auditLog() {
+    return this.client.auditLog;
+  }
+  get category() {
+    return this.client.category;
+  }
+  get product() {
+    return this.client.product;
+  }
+  get productSku() {
+    return this.client.productSku;
+  }
+  get supplier() {
+    return this.client.supplier;
+  }
+  get supplierLog() {
+    return this.client.supplierLog;
+  }
+  get supplierBalanceHistory() {
+    return this.client.supplierBalanceHistory;
+  }
+  get userSession() {
+    return this.client.userSession;
+  }
+  get balanceTransaction() {
+    return this.client.balanceTransaction;
+  }
+  get deposit() {
+    return this.client.deposit;
+  }
+  get withdrawal() {
+    return this.client.withdrawal;
+  }
+  get payment() {
+    return this.client.payment;
+  }
+  get orderStatusHistory() {
+    return this.client.orderStatusHistory;
+  }
+  get fraudDetection() {
+    return this.client.fraudDetection;
+  }
+  get commission() {
+    return this.client.commission;
+  }
+  get mLMCommission() {
+    return this.client.mLMCommission;
+  }
+  get downlineTree() {
+    return this.client.downlineTree;
+  }
+  get promoCode() {
+    return this.client.promoCode;
+  }
+  get promoUsage() {
+    return this.client.promoUsage;
+  }
+  get invoice() {
+    return this.client.invoice;
+  }
+  get subscriptionHistory() {
+    return this.client.subscriptionHistory;
+  }
+  get systemSetting() {
+    return this.client.systemSetting;
+  }
+  get banner() {
+    return this.client.banner;
+  }
+  get announcement() {
+    return this.client.announcement;
+  }
+  get emailCampaign() {
+    return this.client.emailCampaign;
+  }
+  get iPBlacklist() {
+    return this.client.iPBlacklist;
+  }
+  get supportTicket() {
+    return this.client.supportTicket;
+  }
+  get supportTicketReply() {
+    return this.client.supportTicketReply;
+  }
+  get loginAttempt() {
+    return this.client.loginAttempt;
+  }
+  get jobQueue() {
+    return this.client.jobQueue;
+  }
+  get notificationTemplate() {
+    return this.client.notificationTemplate;
+  }
+  get merchantProductPrice() {
+    return this.client.merchantProductPrice;
+  }
+  get merchantMember() {
+    return this.client.merchantMember;
+  }
+  get tierPricingRule() {
+    return this.client.tierPricingRule;
+  }
+  get planTierMapping() {
+    return this.client.planTierMapping;
+  }
+  get tierPriceHistory() {
+    return this.client.tierPriceHistory;
+  }
+  get webhookEndpoint() {
+    return this.client.webhookEndpoint;
+  }
+  get paymentChannel() {
+    return this.client.paymentChannel;
+  }
+  get chatRoom() {
+    return this.client.chatRoom;
+  }
+  get chatMessage() {
+    return this.client.chatMessage;
+  }
+  get marketingGuide() {
+    return this.client.marketingGuide;
+  }
+  get merchantProductOverride() {
+    return this.client.merchantProductOverride;
+  }
+  get otpVerification() {
+    return this.client.otpVerification;
+  }
+  get popupPromo() {
+    return this.client.popupPromo;
+  }
+  get webhookLog() {
+    return this.client.webhookLog;
+  }
+  get notification() {
+    return this.client.notification;
+  }
+  get pushNotificationLog() {
+    return this.client.pushNotificationLog;
+  }
+  get emailCampaignLog() {
+    return this.client.emailCampaignLog;
+  }
+  get userActivityLog() {
+    return this.client.userActivityLog;
+  }
+  get productSalesStats() {
+    return this.client.productSalesStats;
+  }
+  get dailySalesSnapshot() {
+    return this.client.dailySalesSnapshot;
+  }
+  get maintenanceSchedule() {
+    return this.client.maintenanceSchedule;
+  }
+  get refundPolicy() {
+    return this.client.refundPolicy;
+  }
+  get disputeCase() {
+    return this.client.disputeCase;
+  }
+  get apiRateLimit() {
+    return this.client.apiRateLimit;
+  }
+  get merchantSetting() {
+    return this.client.merchantSetting;
+  }
+  get gameValidation() {
+    return this.client.gameValidation;
+  }
+  get gameNickname() {
+    return this.client.gameNickname;
+  }
+  get referralReward() {
+    return this.client.referralReward;
+  }
+  get commissionRule() {
+    return this.client.commissionRule;
+  }
+  get deviceTrusted() {
+    return this.client.deviceTrusted;
+  }
+  get userProfile() {
+    return this.client.userProfile;
+  }
+  get apiKey() {
+    return this.client.apiKey;
+  }
+  get webhookDeliveryLog() {
+    return this.client.webhookDeliveryLog;
+  }
+  get deadLetterQueue() {
+    return this.client.deadLetterQueue;
+  }
+  get merchantLedgerMovement() {
+    return this.client.merchantLedgerMovement;
+  }
+  get flashSaleEvent() {
+    return this.client.flashSaleEvent;
+  }
+  get flashSaleItem() {
+    return this.client.flashSaleItem;
+  }
+  async onModuleInit() {
+    await this.client.$connect();
+  }
 
-    async onModuleDestroy() {
-        await this.client.$disconnect();
-    }
+  async onModuleDestroy() {
+    await this.client.$disconnect();
+  }
 }

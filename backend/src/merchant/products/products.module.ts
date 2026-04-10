@@ -8,7 +8,6 @@ import { SubscriptionsModule } from '../../admin/subscriptions/subscriptions.mod
 @Module({
   imports: [SubscriptionsModule],
   controllers: [ProductsController],
-  providers: [ProductsService, PrismaService]
+  providers: [ProductsService, PrismaService],
 })
-export class ProductsModule { }
-
+export class ProductsModule {}

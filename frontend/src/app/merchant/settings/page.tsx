@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 
 import React, { useState } from 'react';
 import MerchantLayout from '../../../components/merchant/MerchantLayout';
@@ -98,7 +99,7 @@ function MarkupSettings({ baseUrl }: { baseUrl: string }) {
 export default function MerchantSettingsPage() {
     const [activeTab, setActiveTab] = useState('profile');
 
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const baseUrl = getApiUrl();
     // Data Fetching
     const { data: settings, mutate: mutateSettings } = useSWR(`${baseUrl}/merchant/settings`, fetcher);
     // const { data: channels, mutate: mutateChannels } = useSWR(`${baseUrl}/merchant/settings/payment-channels`, fetcher);
@@ -166,7 +167,7 @@ export default function MerchantSettingsPage() {
         try {
             const token = localStorage.getItem('admin_token');
             // Assuming endpoint exists or will exist
-            // await axios.put((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/merchant/settings/seo', seoForm, { headers: { Authorization: `Bearer ${token}` } });
+            // await axios.put((getApiUrl()) + '/merchant/settings/seo', seoForm, { headers: { Authorization: `Bearer ${token}` } });
             alert('Pengaturan SEO & Pixel berhasil disimpan! (Mockup)');
         } catch (err: any) {
             alert('Gagal menyimpan pengaturan SEO & Pixel');

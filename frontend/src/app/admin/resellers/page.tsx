@@ -1,4 +1,5 @@
 "use client";
+import { getApiUrl } from '@/lib/api';
 import React, { useState } from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
@@ -15,7 +16,7 @@ const fetcher = (url: string) => {
 
 export default function ResellersPage() {
     const [search, setSearch] = useState('');
-    const { data: usersData, error, isLoading, mutate } = useSWR((process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001') + '/admin/users?role=RESELLER&page=1&limit=50', fetcher);
+    const { data: usersData, error, isLoading, mutate } = useSWR((getApiUrl()) + '/admin/users?role=RESELLER&page=1&limit=50', fetcher);
 
     // Status Modal State
     const [showStatusModal, setShowStatusModal] = useState(false);
@@ -45,7 +46,7 @@ export default function ResellersPage() {
 
     const handleUpdateStatus = async () => {
         try {
-            await axios.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/users/${selectedUser.id}/status`,
+            await axios.patch(`${getApiUrl()}/admin/users/${selectedUser.id}/status`,
                 { status: newStatus, reason: statusReason },
                 { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } }
             );
@@ -71,7 +72,7 @@ export default function ResellersPage() {
             return;
         }
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/admin/users/${selectedUser.id}/balance/adjust`,
+            await axios.post(`${getApiUrl()}/admin/users/${selectedUser.id}/balance/adjust`,
                 { type: balanceType, amount: Number(balanceAmount), note: balanceNote },
                 { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } }
             );

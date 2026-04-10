@@ -4,8 +4,8 @@ import { DigiflazzService } from './digiflazz.service';
 import { PrismaService } from '../../prisma.service';
 
 @Module({
-    controllers: [DigiflazzController],
-    providers: [DigiflazzService, PrismaService],
-    exports: [DigiflazzService],
+  controllers: [DigiflazzController],
+  providers: [DigiflazzService, PrismaService],
+  exports: [DigiflazzService],
 })
-export class DigiflazzModule { }
+export class DigiflazzModule {}

@@ -4,7 +4,7 @@ import { ChatController } from './chat.controller';
 import { PrismaService } from '../prisma.service';
 
 @Module({
-    controllers: [ChatController],
-    providers: [ChatService, PrismaService],
+  controllers: [ChatController],
+  providers: [ChatService, PrismaService],
 })
-export class ChatModule { }
+export class ChatModule {}

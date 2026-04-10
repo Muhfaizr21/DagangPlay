@@ -5,7 +5,7 @@ import { MerchantsService } from './merchants.service';
 import { PrismaService } from '../../prisma.service';
 
 @Module({
-    controllers: [MerchantsController, MerchantOverridesController],
-    providers: [MerchantsService, PrismaService],
+  controllers: [MerchantsController, MerchantOverridesController],
+  providers: [MerchantsService, PrismaService],
 })
-export class MerchantsModule { }
+export class MerchantsModule {}

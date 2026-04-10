@@ -7,7 +7,6 @@ import { TripayModule } from '../../tripay/tripay.module';
 @Module({
   imports: [TripayModule],
   controllers: [FinanceController],
-  providers: [FinanceService, PrismaService]
+  providers: [FinanceService, PrismaService],
 })
-export class FinanceModule { }
-
+export class FinanceModule {}
