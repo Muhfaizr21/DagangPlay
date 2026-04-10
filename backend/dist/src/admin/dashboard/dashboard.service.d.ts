@@ -4,7 +4,7 @@ export declare class DashboardService {
     private prisma;
     private digiflazz;
     constructor(prisma: PrismaService, digiflazz: DigiflazzService);
-    getDashboardSummary(): Promise<{
+    getDashboardSummary(range?: string): Promise<{
         stats: {
             label: string;
             value: string;
@@ -41,15 +41,17 @@ export declare class DashboardService {
                 priority: import("@prisma/client").$Enums.TicketPriority;
             }[];
         };
-        weeklyChart: {
-            day: string;
-            value: number;
-        }[];
         recentTransactions: {
             id: string;
             game: string;
             amount: string;
             status: import("@prisma/client").$Enums.OrderFulfillmentStatus;
         }[];
+        chartData: {
+            label: string;
+            value: number;
+            profit: number;
+        }[];
     }>;
+    getDashboardReport(): Promise<string>;
 }

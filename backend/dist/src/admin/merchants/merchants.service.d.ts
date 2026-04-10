@@ -165,4 +165,5 @@ export declare class MerchantsService {
         email: string | null;
         phone: string | null;
     }[]>;
+    exportMerchantsCsv(): Promise<string>;
 }

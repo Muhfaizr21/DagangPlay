@@ -30,6 +30,10 @@ let MerchantsController = class MerchantsController {
     async getMerchants(search, status, page = '1', perPage = '10') {
         return this.merchantsService.getAllMerchants(search, status, Number(page), Number(perPage));
     }
+    async exportCsv(res) {
+        const csv = await this.merchantsService.exportMerchantsCsv();
+        return res.send(csv);
+    }
     async updateStatus(id, status, reason) {
         if (!status)
             throw new common_1.BadRequestException('Status is required');
@@ -59,6 +63,15 @@ __decorate([
     __metadata("design:paramtypes", [String, String, String, String]),
     __metadata("design:returntype", Promise)
 ], MerchantsController.prototype, "getMerchants", null);
+__decorate([
+    (0, common_1.Get)('export-csv'),
+    (0, common_1.Header)('Content-Type', 'text/csv'),
+    (0, common_1.Header)('Content-Disposition', 'attachment; filename=merchants-list.csv'),
+    __param(0, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], MerchantsController.prototype, "exportCsv", null);
 __decorate([
     (0, common_1.Patch)(':id/status'),
     __param(0, (0, common_1.Param)('id')),

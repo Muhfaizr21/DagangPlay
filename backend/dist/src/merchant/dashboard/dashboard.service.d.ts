@@ -57,4 +57,5 @@ export declare class DashboardService {
             profit: number;
         }[];
     }>;
+    getDashboardReport(userId: string): Promise<string>;
 }

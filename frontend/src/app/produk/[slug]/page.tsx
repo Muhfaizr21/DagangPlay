@@ -248,15 +248,15 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
                 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
 
                 :root {
-                    --g-start: #E8B84B;
-                    --g-end: #F77F00;
-                    --bg: #09090F;
-                    --bg-2: #111118;
-                    --bg-3: #16161F;
+                    --g-start: #00D8FF;
+                    --g-end: #7B2CBF;
+                    --bg: #080A10;
+                    --bg-2: #111520;
+                    --bg-3: #111520;
                     --border: rgba(255,255,255,0.06);
-                    --border-hover: rgba(255,255,255,0.12);
-                    --text-dim: rgba(255,255,255,0.35);
-                    --text-mid: rgba(255,255,255,0.6);
+                    --border-hover: rgba(0,216,255,0.4);
+                    --text-dim: #8A94A6;
+                    --text-mid: #F8FAFC;
                     --mono: 'DM Mono', monospace;
                 }
 
@@ -284,29 +284,33 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
                 .card {
                     background: var(--bg-2);
                     border: 1px solid var(--border);
-                    transition: border-color 0.25s;
+                    transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
                 }
-                .card:hover { border-color: var(--border-hover); }
+                .card:hover { 
+                    border-color: var(--border-hover); 
+                    transform: translateY(-2px);
+                    box-shadow: 0 0 20px rgba(0, 216, 255, 0.15);
+                }
 
                 /* ── Input */
                 .field {
                     width: 100%;
                     height: 48px;
                     padding: 0 16px;
-                    background: var(--bg-3);
+                    background: var(--bg);
                     border: 1px solid var(--border);
-                    border-radius: 10px;
+                    border-radius: 12px;
                     font-size: 13px;
-                    font-weight: 500;
+                    font-weight: 700;
                     color: white;
                     outline: none;
-                    transition: border-color 0.2s, background 0.2s;
+                    transition: border-color 0.3s, box-shadow 0.3s;
                     font-family: 'DM Sans', sans-serif;
                 }
-                .field::placeholder { color: rgba(255,255,255,0.2); }
+                .field::placeholder { color: rgba(255,255,255,0.2); font-weight: 500; }
                 .field:focus {
-                    border-color: rgba(232,184,75,0.4);
-                    background: rgba(232,184,75,0.04);
+                    border-color: var(--g-start);
+                    box-shadow: 0 0 15px rgba(0,216,255,0.2);
                 }
 
                 /* ── SKU card */
@@ -315,38 +319,39 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
                     border: 1px solid var(--border);
                     border-radius: 12px;
                     cursor: pointer;
-                    transition: all 0.2s ease;
+                    transition: all 0.3s;
                     text-align: left;
                     padding: 14px 16px;
                 }
                 .sku-card:hover {
-                    border-color: rgba(232,184,75,0.3);
-                    transform: translateY(-1px);
+                    border-color: var(--g-start);
+                    transform: translateY(-2px);
+                    box-shadow: 0 0 15px rgba(0,216,255,0.2);
                 }
                 .sku-card.selected {
-                    background: linear-gradient(135deg, rgba(232,184,75,0.12), rgba(247,127,0,0.1));
-                    border-color: rgba(247,127,0,0.5);
-                    box-shadow: 0 0 0 1px rgba(247,127,0,0.2), 0 8px 24px rgba(232,184,75,0.1);
-                    transform: translateY(-1px);
+                    background: rgba(0, 216, 255, 0.1);
+                    border-color: var(--g-start);
+                    box-shadow: 0 0 0 1px var(--g-start), 0 0 20px rgba(0,216,255,0.3);
+                    transform: translateY(-2px);
                 }
 
                 /* ── Payment card */
                 .pay-card {
                     background: var(--bg-3);
                     border: 1px solid var(--border);
-                    border-radius: 10px;
+                    border-radius: 12px;
                     cursor: pointer;
-                    transition: all 0.2s ease;
+                    transition: all 0.3s;
                     display: flex;
                     align-items: center;
                     gap: 10px;
                     padding: 10px 12px;
                 }
-                .pay-card:hover { border-color: var(--border-hover); }
+                .pay-card:hover { border-color: var(--border-hover); box-shadow: 0 0 15px rgba(0,216,255,0.1); }
                 .pay-card.selected {
-                    background: linear-gradient(135deg, rgba(232,184,75,0.1), rgba(247,127,0,0.08));
-                    border-color: rgba(247,127,0,0.45);
-                    box-shadow: 0 0 0 1px rgba(247,127,0,0.15);
+                    background: rgba(0, 216, 255, 0.1);
+                    border-color: var(--g-start);
+                    box-shadow: 0 0 0 1px var(--g-start);
                 }
 
                 /* ── Step badge */
@@ -354,21 +359,22 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
                     width: 28px;
                     height: 28px;
                     border-radius: 8px;
-                    background: linear-gradient(135deg, rgba(232,184,75,0.15), rgba(247,127,0,0.15));
-                    border: 1px solid rgba(232,184,75,0.2);
+                    background: rgba(0,216,255,0.15);
+                    border: 1px solid rgba(0,216,255,0.4);
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     font-family: 'DM Mono', monospace;
                     font-size: 11px;
-                    font-weight: 500;
-                    color: #E8B84B;
+                    font-weight: 700;
+                    color: var(--g-start);
                     flex-shrink: 0;
+                    box-shadow: 0 0 10px rgba(0,216,255,0.2);
                 }
 
                 /* ── Navbar */
                 .navbar {
-                    background: rgba(9,9,15,0.85);
+                    background: rgba(8, 10, 16, 0.85);
                     backdrop-filter: blur(20px) saturate(150%);
                     -webkit-backdrop-filter: blur(20px) saturate(150%);
                     border-bottom: 1px solid var(--border);
@@ -377,7 +383,7 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
                 /* ── Scrollbar */
                 .thin-scroll::-webkit-scrollbar { width: 4px; }
                 .thin-scroll::-webkit-scrollbar-track { background: transparent; }
-                .thin-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+                .thin-scroll::-webkit-scrollbar-thumb { background: rgba(0,216,255,0.2); border-radius: 4px; }
 
                 /* ── Tag */
                 .tag {
@@ -387,12 +393,12 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
                     padding: 3px 10px;
                     border-radius: 4px;
                     font-size: 9px;
-                    font-weight: 600;
+                    font-weight: 800;
                     letter-spacing: 0.2em;
                     text-transform: uppercase;
-                    background: linear-gradient(135deg, rgba(232,184,75,0.12), rgba(247,127,0,0.1));
-                    border: 1px solid rgba(232,184,75,0.2);
-                    color: #E8B84B;
+                    background: rgba(0,216,255,0.1);
+                    border: 1px solid rgba(0,216,255,0.3);
+                    color: var(--g-start);
                 }
 
                 /* ── Divider with label */
@@ -404,11 +410,12 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
                 }
                 .group-divider span {
                     font-size: 9px;
-                    font-weight: 600;
+                    font-weight: 800;
                     letter-spacing: 0.2em;
                     text-transform: uppercase;
-                    color: rgba(255,255,255,0.15);
+                    color: rgba(255,255,255,0.3);
                     white-space: nowrap;
+                    font-style: italic;
                 }
                 .group-divider::before, .group-divider::after {
                     content: '';
@@ -420,24 +427,25 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
 
                 /* ── Buy button */
                 .buy-btn {
-                    background: linear-gradient(135deg, #E8B84B 0%, #F77F00 100%);
-                    color: #09090F;
-                    font-weight: 700;
-                    font-size: 12px;
-                    letter-spacing: 0.08em;
+                    background: var(--g-start);
+                    color: #080A10;
+                    font-weight: 800;
+                    font-size: 13px;
+                    letter-spacing: 0.1em;
                     text-transform: uppercase;
                     border: none;
                     cursor: pointer;
-                    transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+                    transition: all 0.3s;
                     display: inline-flex;
                     align-items: center;
                     justify-content: center;
                     gap: 8px;
+                    font-style: italic;
                 }
                 .buy-btn:hover:not(:disabled) {
-                    opacity: 0.9;
-                    transform: translateY(-1px);
-                    box-shadow: 0 10px 30px rgba(247,127,0,0.3);
+                    background: #fff;
+                    transform: translateY(-2px);
+                    box-shadow: 0 0 25px rgba(0,216,255,0.6);
                 }
                 .buy-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
@@ -445,8 +453,8 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
                 .img-glow::after {
                     content: '';
                     position: absolute;
-                    inset: -20px;
-                    background: radial-gradient(ellipse at center, rgba(232,184,75,0.12) 0%, transparent 70%);
+                    inset: -30px;
+                    background: radial-gradient(ellipse at center, rgba(123,44,191,0.2) 0%, transparent 60%);
                     pointer-events: none;
                     z-index: 0;
                 }
@@ -454,32 +462,22 @@ export default function ProductTopupPage({ params: paramsPromise }: { params: Pr
                 /* ── Status badge */
                 .status-paid   { background: rgba(52,211,153,0.1); color: #34D399; }
                 .status-pending { background: rgba(232,184,75,0.1); color: #E8B84B; }
-                .status-failed  { background: rgba(239,68,68,0.1);  color: #EF4444; }
-
-                /* ── Subtle noise overlay */
-                .noise-overlay::before {
-                    content: '';
-                    position: fixed;
-                    inset: 0;
-                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-                    pointer-events: none;
-                    z-index: 0;
-                }
+                .status-failed  { background: rgba(255,51,102,0.1);  color: #FF3366; }
             `}</style>
 
             {/* Ambient top glow */}
-            <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[700px] h-[300px] pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse at top, rgba(232,184,75,0.06) 0%, transparent 65%)', zIndex: 0 }} />
+            <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] pointer-events-none"
+                style={{ background: 'radial-gradient(ellipse at top, rgba(0,216,255,0.1) 0%, transparent 65%)', zIndex: 0 }} />
 
             {/* ── NAVBAR */}
             <header className="navbar sticky top-0 z-[100] h-[58px]">
                 <div className="max-w-5xl mx-auto px-5 h-full flex items-center justify-between">
                     <Link href={merchantSlug ? `/?merchant=${merchantSlug}` : "/"} className="flex items-center gap-3 no-underline group">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0"
-                            style={{ background: 'linear-gradient(135deg, rgba(232,184,75,0.15), rgba(247,127,0,0.1))', border: '1px solid rgba(232,184,75,0.2)' }}>
+                        <div className="w-9 h-9 flex items-center justify-center overflow-hidden flex-shrink-0"
+                            style={{ background: 'rgba(0,216,255,0.1)', border: '1px solid rgba(0,216,255,0.3)', borderRadius: '10px' }}>
                             {storeLogo
                                 ? <img src={storeLogo} alt="Logo" className="w-5 h-5 object-contain" />
-                                : <Gamepad className="w-4 h-4" style={{ color: '#E8B84B' }} />}
+                                : <Gamepad className="w-4 h-4 text-[#00D8FF]" />}
                         </div>
                         <div>
                             <span className="text-[14px] font-bold tracking-tight text-white">{storeName.split(' ')[0]}</span>

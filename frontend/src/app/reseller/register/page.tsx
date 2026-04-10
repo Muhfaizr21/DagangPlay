@@ -283,7 +283,7 @@ const ResellerRegisterPage = () => {
                                 <button
                                     type="button"
                                     onClick={nextStep}
-                                    className="w-full mt-8 py-4 bg-[#0A1628] hover:bg-[#132544] text-white font-bold rounded-xl flex flex-row items-center justify-center gap-3 transition-colors uppercase tracking-widest text-[11px] shadow-lg shadow-blue-900/20"
+                                    className="w-full mt-8 py-4 bg-dp-primary hover:bg-[#00B3D6] text-black font-black rounded-xl flex flex-row items-center justify-center gap-3 transition-colors uppercase tracking-widest text-[11px] shadow-lg shadow-dp-primary/20"
                                 >
                                     Lanjut ke Data Toko <ArrowRight size={16} />
                                 </button>
@@ -338,7 +338,7 @@ const ResellerRegisterPage = () => {
                                 <button
                                     type="button"
                                     onClick={nextStep}
-                                    className="w-full mt-8 py-4 bg-[#0A1628] hover:bg-[#132544] text-white font-bold rounded-xl flex flex-row items-center justify-center gap-3 transition-colors uppercase tracking-widest text-[11px] shadow-lg shadow-blue-900/20"
+                                    className="w-full mt-8 py-4 bg-dp-primary hover:bg-[#00B3D6] text-black font-black rounded-xl flex flex-row items-center justify-center gap-3 transition-colors uppercase tracking-widest text-[11px] shadow-lg shadow-dp-primary/20"
                                 >
                                     Lanjut ke Pemilihan Paket <ArrowRight size={16} />
                                 </button>
@@ -353,18 +353,18 @@ const ResellerRegisterPage = () => {
                                 </h3>
 
                                 {/* Billing Toggle */}
-                                <div className="flex bg-slate-100 p-1 rounded-xl mb-6 font-bold text-[11px] uppercase tracking-widest">
+                                <div className="flex bg-dp-bg p-1 rounded-xl mb-6 font-bold text-[11px] uppercase tracking-widest border border-white/5">
                                     <button
                                         type="button"
                                         onClick={() => setFormData(p => ({ ...p, billingCycle: 'yearly' }))}
-                                        className={`flex-1 py-3 rounded-lg transition-all ${formData.billingCycle === 'yearly' ? 'bg-white shadow-sm text-[#0A1628]' : 'text-slate-400 hover:text-slate-600'}`}
+                                        className={`flex-1 py-3 rounded-lg transition-all ${formData.billingCycle === 'yearly' ? 'bg-dp-surface shadow-sm text-white border border-white/10' : 'text-slate-400 hover:text-white'}`}
                                     >
                                         Tahunan (Skon 20%)
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setFormData(p => ({ ...p, billingCycle: 'quarterly' }))}
-                                        className={`flex-1 py-3 rounded-lg transition-all ${formData.billingCycle === 'quarterly' ? 'bg-white shadow-sm text-[#0A1628]' : 'text-slate-400 hover:text-slate-600'}`}
+                                        className={`flex-1 py-3 rounded-lg transition-all ${formData.billingCycle === 'quarterly' ? 'bg-dp-surface shadow-sm text-white border border-white/10' : 'text-slate-400 hover:text-white'}`}
                                     >
                                         3 Bulan
                                     </button>
@@ -431,7 +431,7 @@ const ResellerRegisterPage = () => {
                     </form>
 
                     <div className="mt-10 text-center text-sm font-medium text-slate-500 pb-10 border-b lg:border-none border-slate-100">
-                        Sudah punya akun merchant? <Link href="/admin/login" className="text-[#0A1628] font-bold hover:underline">Masuk</Link>
+                        Sudah punya akun merchant? <Link href="/admin/login" className="text-dp-primary font-bold hover:underline">Masuk</Link>
                     </div>
 
                 </div>

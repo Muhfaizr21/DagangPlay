@@ -106,29 +106,29 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     };
 
     return (
-        <div className="min-h-screen bg-[#fafafa] flex text-slate-800 font-body selection:bg-blue-500/20">
+        <div className="min-h-screen bg-[#09090F] flex text-slate-300 font-body selection:bg-[#00D8FF]/20">
             {/* Sidebar Overlay (Mobile) */}
             {isSidebarOpen && (
                 <div 
-                    className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden transition-all duration-300"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-all duration-300"
                     onClick={() => setIsSidebarOpen(false)}
                 />
             )}
 
             {/* Sidebar */}
-            <aside className={`fixed lg:sticky top-0 left-0 h-screen w-64 border-r border-slate-200/60 bg-white flex flex-col z-50 transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+            <aside className={`fixed lg:sticky top-0 left-0 h-screen w-64 border-r border-white/5 bg-[#09090F] flex flex-col z-50 transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                 }`}>
-                <div className="h-16 flex items-center px-6 border-b border-slate-100">
+                <div className="h-16 flex items-center px-6 border-b border-white/5">
                     <Link href="/admin" className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-lg bg-white border border-slate-200 shadow-sm flex items-center justify-center p-1">
+                        <div className="w-9 h-9 rounded-lg bg-[#16161F] border border-white/10 shadow-sm flex items-center justify-center p-1">
                             <img src="/dagang.png" alt="Logo" className="w-full h-full object-contain" />
                         </div>
-                        <span className="font-heading tracking-[.05em] text-lg font-bold text-slate-900">DAGANGPLAY</span>
+                        <span className="font-heading tracking-[.05em] text-lg font-bold text-white">DAGANGPLAY</span>
                     </Link>
                 </div>
 
                 <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-                    <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Menu Utama</p>
+                    <p className="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Menu Utama</p>
                     {MENU_ITEMS.map((item) => {
                         const isActive = pathname === item.href;
                         const Icon = item.icon;
@@ -138,14 +138,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                 href={item.href}
                                 onClick={() => setIsSidebarOpen(false)}
                                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-[13px] transition-all duration-200 group ${isActive
-                                    ? 'bg-indigo-50/80 text-indigo-700'
-                                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                                    ? 'bg-[#00D8FF]/10 text-[#00D8FF] border border-[#00D8FF]/20'
+                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
                                     }`}
                             >
-                                <Icon strokeWidth={2} className={`w-4 h-4 ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
+                                <Icon strokeWidth={2} className={`w-4 h-4 ${isActive ? 'text-[#00D8FF]' : 'text-slate-500 group-hover:text-slate-300'}`} />
                                 <span className="flex-1">{item.label}</span>
                                 {item.href === '/admin/chat' && totalChatUnread > 0 && (
-                                    <span className="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                                    <span className="bg-[#FF3366] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(255,51,102,0.6)]">
                                         {totalChatUnread}
                                     </span>
                                 )}
@@ -155,21 +155,21 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 </nav>
 
                 {/* Profile Card — Dynamic dari localStorage */}
-                <div className="p-4 border-t border-slate-100">
+                <div className="p-4 border-t border-white/5 bg-[#111118]">
                     <div className="flex items-center gap-3 px-3 py-2">
-                        <div className="w-8 h-8 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center text-indigo-700 font-bold text-xs">
+                        <div className="w-8 h-8 rounded-full bg-[#00D8FF]/10 border border-[#00D8FF]/30 flex items-center justify-center text-[#00D8FF] font-bold text-xs">
                             {currentUser?.name?.charAt(0)?.toUpperCase() || 'A'}
                         </div>
                         <div className="overflow-hidden">
-                            <p className="text-[13px] font-semibold text-slate-800 truncate leading-tight">{currentUser?.name || 'Admin'}</p>
-                            <p className="text-[11px] text-slate-500 truncate mt-0.5">{roleLabel[currentUser?.role || ''] || currentUser?.role}</p>
+                            <p className="text-[13px] font-semibold text-white truncate leading-tight">{currentUser?.name || 'Admin'}</p>
+                            <p className="text-[11px] text-[#00D8FF] truncate mt-0.5">{roleLabel[currentUser?.role || ''] || currentUser?.role}</p>
                         </div>
                     </div>
                     <button
                         onClick={handleLogout}
-                        className="mt-3 w-full px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2 group cursor-pointer"
+                        className="mt-3 w-full px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 hover:text-[#FF3366] hover:bg-[#FF3366]/10 transition-colors flex items-center gap-2 group cursor-pointer border border-transparent hover:border-[#FF3366]/30"
                     >
-                        <LogOut className="w-4 h-4 text-slate-400 group-hover:text-red-500" strokeWidth={2} />
+                        <LogOut className="w-4 h-4 text-slate-500 group-hover:text-[#FF3366]" strokeWidth={2} />
                         Logout Akun
                     </button>
                 </div>
@@ -177,20 +177,20 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-                <header className="h-16 border-b border-slate-200/60 bg-white/80 backdrop-blur-md flex items-center justify-between px-6 lg:px-8 z-10 sticky top-0">
+                <header className="h-16 border-b border-white/5 bg-[#09090F]/80 backdrop-blur-md flex items-center justify-between px-6 lg:px-8 z-10 sticky top-0">
                     <div className="flex items-center gap-4">
                         {/* Mobile Toggle */}
                         <button 
                             onClick={() => setIsSidebarOpen(true)}
-                            className="lg:hidden p-2 -ml-2 text-slate-500 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+                            className="lg:hidden p-2 -ml-2 text-slate-400 hover:text-[#00D8FF] hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
                         >
                             <LayoutDashboard className="w-5 h-5" />
                         </button>
                         
-                        <div className="flex items-center gap-2 text-[10px] uppercase font-bold tracking-[0.1em] text-slate-400">
-                            <Link href="/admin" className="hover:text-indigo-600 transition-colors">Admin</Link>
-                            <span className="text-slate-300">/</span>
-                            <span className="text-slate-800 font-black">
+                        <div className="flex items-center gap-2 text-[10px] uppercase font-bold tracking-[0.1em] text-slate-500">
+                            <Link href="/admin" className="hover:text-[#00D8FF] transition-colors">Admin</Link>
+                            <span className="text-slate-600">/</span>
+                            <span className="text-white font-black italic">
                                 {MENU_ITEMS.find(item => pathname === item.href)?.label || 
                                  MENU_ITEMS.find(item => pathname.startsWith(item.href) && item.href !== '/admin')?.label || 
                                  'Dashboard'}
@@ -201,44 +201,45 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                         {/* Notification Bell with Dropdown */}
                         <div className="relative group/notif">
                             <button 
-                                className="text-slate-400 hover:text-indigo-600 transition-colors relative p-2 bg-slate-50 hover:bg-indigo-50 rounded-full cursor-pointer"
+                                className="text-slate-400 hover:text-[#00D8FF] transition-colors relative p-2 bg-white/5 hover:bg-[#00D8FF]/10 border border-white/5 hover:border-[#00D8FF]/30 rounded-full cursor-pointer shadow-[0_0_10px_rgba(0,216,255,0)] hover:shadow-[0_0_15px_rgba(0,216,255,0.3)]"
                             >
                                 <Bell className="w-4 h-4" strokeWidth={2} />
-                                <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-red-500 border-2 border-white"></span>
+                                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#FF3366] border-2 border-[#09090F] shadow-[0_0_8px_rgba(255,51,102,0.8)]"></span>
                             </button>
 
                             {/* Dropdown Menu */}
-                            <div className="absolute right-0 mt-3 w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl opacity-0 invisible group-hover/notif:opacity-100 group-hover/notif:visible transition-all duration-300 z-[100] transform translate-y-2 group-hover/notif:translate-y-0">
-                                <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-                                    <h3 className="font-bold text-sm text-slate-800 tracking-tight">Pusat Informasi</h3>
-                                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest px-2 py-0.5 bg-indigo-50 rounded-full">System Live</span>
+                            <div className="absolute right-0 mt-3 w-80 bg-[#16161F] border border-white/10 rounded-2xl shadow-2xl opacity-0 invisible group-hover/notif:opacity-100 group-hover/notif:visible transition-all duration-300 z-[100] transform translate-y-2 group-hover/notif:translate-y-0">
+                                <div className="p-4 border-b border-white/5 flex items-center justify-between">
+                                    <h3 className="font-bold text-sm text-white tracking-tight italic">Pusat Informasi</h3>
+                                    <span className="text-[10px] font-black text-[#00D8FF] uppercase tracking-widest px-2 py-0.5 bg-[#00D8FF]/10 border border-[#00D8FF]/30 rounded-full">System Live</span>
                                 </div>
                                 <div className="max-h-[350px] overflow-y-auto py-2">
-                                    <div className="px-4 py-3 hover:bg-slate-50 border-l-4 border-indigo-500 transition-colors">
-                                        <p className="text-[12px] font-bold text-slate-800">Dashboard Stabilized</p>
-                                        <p className="text-[11px] text-slate-500 mt-0.5">Sistem autentikasi reseller dan demo merchant kini telah normal.</p>
-                                        <p className="text-[9px] text-slate-400 font-medium mt-1.5 uppercase tracking-wider">Baru saja</p>
+                                    <div className="px-4 py-3 hover:bg-white/5 border-l-4 border-[#00D8FF] transition-colors">
+                                        <p className="text-[12px] font-bold text-white">Dashboard Stabilized</p>
+                                        <p className="text-[11px] text-slate-400 mt-0.5">Sistem autentikasi reseller dan demo merchant kini telah normal.</p>
+                                        <p className="text-[9px] text-slate-500 font-medium mt-1.5 uppercase tracking-wider">Baru saja</p>
                                     </div>
-                                    <div className="px-4 py-3 hover:bg-slate-50 transition-colors">
-                                        <p className="text-[12px] font-bold text-slate-800">Cek Saldo Digiflazz</p>
-                                        <p className="text-[11px] text-slate-500 mt-0.5">Pantau saldo supplier secara berkala untuk kelancaran transaksi.</p>
-                                        <p className="text-[9px] text-slate-400 font-medium mt-1.5 uppercase tracking-wider">1 jam yang lalu</p>
+                                    <div className="px-4 py-3 hover:bg-white/5 transition-colors">
+                                        <p className="text-[12px] font-bold text-white">Cek Saldo Digiflazz</p>
+                                        <p className="text-[11px] text-slate-400 mt-0.5">Pantau saldo supplier secara berkala untuk kelancaran transaksi.</p>
+                                        <p className="text-[9px] text-slate-500 font-medium mt-1.5 uppercase tracking-wider">1 jam yang lalu</p>
                                     </div>
-                                    <div className="px-4 py-3 hover:bg-slate-50 transition-colors border-t border-slate-50">
-                                        <Link href="/admin/content" className="text-[11px] font-bold text-indigo-600 hover:underline">Kelola Pengumuman &raquo;</Link>
+                                    <div className="px-4 py-3 hover:bg-white/5 transition-colors border-t border-white/5">
+                                        <Link href="/admin/content" className="text-[11px] font-bold text-[#00D8FF] hover:text-white transition-colors">Kelola Pengumuman &raquo;</Link>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <Link href="/admin/settings" className="text-slate-400 hover:text-indigo-600 transition-colors relative p-2 bg-slate-50 hover:bg-indigo-50 rounded-full cursor-pointer">
+                        <Link href="/admin/settings" className="text-slate-400 hover:text-[#00D8FF] transition-colors relative p-2 bg-white/5 hover:bg-[#00D8FF]/10 border border-white/5 hover:border-[#00D8FF]/30 rounded-full cursor-pointer shadow-[0_0_10px_rgba(0,216,255,0)] hover:shadow-[0_0_15px_rgba(0,216,255,0.3)]">
                             <Settings className="w-4 h-4" strokeWidth={2} />
                         </Link>
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-x-hidden overflow-y-auto p-8">
-                    <div className="max-w-7xl mx-auto">
+                <main className="flex-1 overflow-x-hidden overflow-y-auto p-8 relative">
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(0,216,255,0.05)_0%,_transparent_50%)] pointer-events-none" />
+                    <div className="max-w-7xl mx-auto relative z-10">
                         {children}
                     </div>
                 </main>

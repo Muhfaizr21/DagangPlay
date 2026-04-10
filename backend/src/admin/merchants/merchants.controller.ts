@@ -1,5 +1,5 @@
 import { UseGuards, Controller, Get, Query, Patch, Param, Body, BadRequestException, Post, Res, Header } from "@nestjs/common";
-import { Response } from 'express';
+import type { Response } from 'express';
 import { MerchantsService } from './merchants.service';
 import { MerchantStatus } from '@prisma/client';
 

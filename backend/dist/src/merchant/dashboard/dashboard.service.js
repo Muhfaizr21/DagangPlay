@@ -198,6 +198,28 @@ let DashboardService = class DashboardService {
             chartData
         };
     }
+    async getDashboardReport(userId) {
+        const merchant = await this.prisma.merchant.findFirst({
+            where: { OR: [{ ownerId: userId }, { members: { some: { userId } } }] }
+        });
+        if (!merchant)
+            throw new common_1.NotFoundException('Merchant not found');
+        const last30Days = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const orders = await this.prisma.order.findMany({
+            where: { merchantId: merchant.id, createdAt: { gte: last30Days } },
+            include: { user: true },
+            orderBy: { createdAt: 'desc' }
+        });
+        let csv = `--- REPORT MERCHANT: ${merchant.name} ---\n`;
+        csv += `Domain,${merchant.domain}\n`;
+        csv += `Range,30 Hari Terakhir\n`;
+        csv += `Waktu Cetak,${new Date().toISOString()}\n\n`;
+        csv += 'ID Order,Customer,Produk,SKU,Total,Status Bayar,Status Fulfillment,Waktu\n';
+        for (const o of orders) {
+            csv += `${o.orderNumber},${o.user?.name || '-'},${o.productName},${o.productSkuName},${o.totalPrice},${o.paymentStatus},${o.fulfillmentStatus},${o.createdAt.toISOString()}\n`;
+        }
+        return csv;
+    }
 };
 exports.DashboardService = DashboardService;
 exports.DashboardService = DashboardService = __decorate([

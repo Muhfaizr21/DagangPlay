@@ -29,10 +29,10 @@ let ContentService = class ContentService {
                 title: data.title,
                 image: data.image,
                 linkUrl: data.linkUrl || null,
-                position: data.position,
-                sortOrder: data.sortOrder ? parseInt(data.sortOrder) : 0,
-                startDate: data.startDate ? new Date(data.startDate) : null,
-                endDate: data.endDate ? new Date(data.endDate) : null,
+                position: data.position || 'HERO',
+                sortOrder: data.sortOrder ? parseInt(data.sortOrder.toString()) : 0,
+                startDate: (data.startDate && data.startDate !== '') ? new Date(data.startDate) : null,
+                endDate: (data.endDate && data.endDate !== '') ? new Date(data.endDate) : null,
                 merchantId: data.merchantId || null,
                 isActive: data.isActive !== undefined ? data.isActive : true
             }
@@ -43,10 +43,10 @@ let ContentService = class ContentService {
         if (data.position)
             updateData.position = data.position;
         if (data.sortOrder !== undefined)
-            updateData.sortOrder = parseInt(data.sortOrder);
-        if (data.startDate)
+            updateData.sortOrder = parseInt(data.sortOrder.toString());
+        if (data.startDate && data.startDate !== '')
             updateData.startDate = new Date(data.startDate);
-        if (data.endDate)
+        if (data.endDate && data.endDate !== '')
             updateData.endDate = new Date(data.endDate);
         return this.prisma.banner.update({
             where: { id },
@@ -72,27 +72,29 @@ let ContentService = class ContentService {
         });
     }
     async createAnnouncement(data) {
+        const isValidDate = (d) => d && !isNaN(new Date(d).getTime());
         return this.prisma.announcement.create({
             data: {
                 title: data.title,
                 content: data.content,
                 imageUrl: data.imageUrl || null,
                 merchantId: data.merchantId || null,
-                startDate: data.startDate ? new Date(data.startDate) : null,
-                endDate: data.endDate ? new Date(data.endDate) : null,
+                startDate: isValidDate(data.startDate) ? new Date(data.startDate) : null,
+                endDate: isValidDate(data.endDate) ? new Date(data.endDate) : null,
                 isActive: data.isActive !== undefined ? data.isActive : true
             }
         });
     }
     async updateAnnouncement(id, data) {
+        const isValidDate = (d) => d && !isNaN(new Date(d).getTime());
         return this.prisma.announcement.update({
             where: { id },
             data: {
                 title: data.title,
                 content: data.content,
                 imageUrl: data.imageUrl,
-                startDate: data.startDate ? new Date(data.startDate) : undefined,
-                endDate: data.endDate ? new Date(data.endDate) : undefined
+                startDate: isValidDate(data.startDate) ? new Date(data.startDate) : undefined,
+                endDate: isValidDate(data.endDate) ? new Date(data.endDate) : undefined
             }
         });
     }
@@ -115,14 +117,15 @@ let ContentService = class ContentService {
         });
     }
     async createCampaign(data) {
+        const targetRole = (data.targetRole === 'ALL' || !data.targetRole) ? null : data.targetRole;
         return this.prisma.emailCampaign.create({
             data: {
                 name: data.name,
                 subject: data.subject,
                 body: data.body,
-                targetRole: data.targetRole || null,
+                targetRole: targetRole,
                 merchantId: data.merchantId || null,
-                scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : null,
+                scheduledAt: (data.scheduledAt && data.scheduledAt !== '') ? new Date(data.scheduledAt) : null,
                 isActive: true
             }
         });

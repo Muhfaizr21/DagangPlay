@@ -355,23 +355,37 @@ export class DigiflazzService {
      */
     async checkBalance() {
         const { username, key, url } = this.getDigiflazzConfig();
-        // Sign: md5(username + apikey + "depo")
+
+        // 1. Fallback untuk Demo/Development jika kredensial belum diset
+        if (username === 'your_digiflazz_username' || key === 'your_digiflazz_key') {
+            this.logger.warn('[DigiflazzService] INFO: Menggunakan kredensial dummy di .env, mengembalikan mock saldo 0.');
+            return 0; // Kembalikan saldo 0 agar tidak error 400 Bad Request terus
+        }
+
+        // 2. Sign: md5(username + apikey + "depo")
         const sign = crypto.createHash('md5').update(username + key + 'depo').digest('hex');
 
-        const response = await axios.post(`${url}/cek-saldo`, {
-            cmd: 'deposit',
-            username,
-            sign
-        }, {
-            headers: { 'Content-Type': 'application/json' },
-            timeout: 8000
-        });
+        try {
+            const response = await axios.post(`${url}/cek-saldo`, {
+                cmd: 'deposit',
+                username,
+                sign
+            }, {
+                headers: { 'Content-Type': 'application/json' },
+                timeout: 8000
+            });
 
-        const resJson = response.data;
-        if (resJson.data) {
-            return Number(resJson.data.deposit || 0);
+            const resJson = response.data;
+            if (resJson.data) {
+                return Number(resJson.data.deposit || 0);
+            }
+            throw new Error('Gagal ambil saldo: ' + JSON.stringify(resJson));
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                throw new Error(`Digiflazz API Error: ${JSON.stringify(error.response.data)}`);
+            }
+            throw error;
         }
-        throw new Error('Gagal ambil saldo: ' + JSON.stringify(resJson));
     }
 
     /**

@@ -134,49 +134,49 @@ export default function MerchantLayout({ children, demoUser }: { children: React
     const planColor = PLAN_COLORS[user?.plan || 'FREE'];
 
     return (
-        <div className="min-h-screen bg-[#F5F5F7] flex" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif' }}>
+        <div className="min-h-screen bg-[#080A10] flex text-[#F8FAFC]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif' }}>
 
             {/* ─── Sidebar ─── */}
-            <aside className="fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-100 flex flex-col z-30 shadow-[1px_0_0_0_#F0F0F0]">
+            <aside className="fixed inset-y-0 left-0 w-64 bg-[#080A10] border-r border-[#ffffff0f] flex flex-col z-30 shadow-[1px_0_0_0_#ffffff08]">
 
                 {/* Logo */}
-                <div className="h-16 flex items-center px-5 border-b border-gray-100 shrink-0">
+                <div className="h-16 flex items-center px-5 border-b border-[#ffffff0f] shrink-0">
                     <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-gray-900 flex items-center justify-center overflow-hidden">
+                        <div className="w-7 h-7 rounded-lg bg-[#111520] border border-[#ffffff1a] flex items-center justify-center overflow-hidden">
                             <img src="/dagang.png" alt="Logo" className="w-full h-full object-contain p-0.5" onError={(e: any) => e.target.style.display='none'} />
                         </div>
                         <div>
-                            <span className="text-[15px] font-bold text-gray-900 tracking-tight">DagangPlay</span>
-                            <span className="ml-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-widest">OS</span>
+                            <span className="text-[15px] font-bold text-white tracking-tight italic">DagangPlay</span>
+                            <span className="ml-1.5 text-[9px] font-bold text-[#00D8FF] uppercase tracking-widest">OS</span>
                         </div>
                     </div>
                 </div>
 
                 {/* User Card */}
-                <div className="px-4 py-4 border-b border-gray-100 shrink-0">
+                <div className="px-4 py-4 border-b border-[#ffffff0f] shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-gray-900 text-white flex items-center justify-center text-sm font-bold shrink-0">
+                        <div className="w-9 h-9 rounded-xl bg-[#00D8FF]/10 border border-[#00D8FF]/30 text-[#00D8FF] flex items-center justify-center text-sm font-bold shrink-0">
                             {user?.name?.charAt(0)?.toUpperCase() || 'M'}
                         </div>
                         <div className="min-w-0 flex-1">
-                            <p className="text-[13px] font-semibold text-gray-900 truncate">{user?.name}</p>
-                            <p className="text-[11px] text-gray-400 truncate">{user?.email}</p>
+                            <p className="text-[13px] font-semibold text-white truncate">{user?.name}</p>
+                            <p className="text-[11px] text-[#8A94A6] truncate">{user?.email}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 mt-3">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${planColor}`}>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider bg-white/10 text-white border border-white/20`}>
                             {user?.plan || 'FREE'}
                         </span>
                     </div>
                 </div>
 
                 {/* View Store CTA */}
-                <div className="px-4 py-3 border-b border-gray-100 shrink-0">
+                <div className="px-4 py-3 border-b border-[#ffffff0f] shrink-0">
                     <a
                         href={currentSlug ? `/?merchant=${currentSlug}` : '#'}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`flex items-center justify-center gap-2 w-full py-2.5 bg-gray-900 hover:bg-gray-700 text-white text-[12px] font-semibold rounded-xl transition-colors shadow-sm`}
+                        className={`flex items-center justify-center gap-2 w-full py-2.5 bg-[#00D8FF] hover:bg-white text-black text-[12px] font-bold uppercase tracking-widest rounded-xl transition-colors shadow-[0_0_15px_rgba(0,216,255,0.4)]`}
                     >
                         <ExternalLink className="w-3.5 h-3.5" />
                         Lihat Website Toko
@@ -187,7 +187,7 @@ export default function MerchantLayout({ children, demoUser }: { children: React
                 <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-4 scrollbar-hide">
                     {NAV_GROUPS.map(group => (
                         <div key={group.label}>
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 mb-1.5">{group.label}</p>
+                            <p className="text-[10px] font-bold text-[#8A94A6] uppercase tracking-widest px-3 mb-1.5">{group.label}</p>
                             <div className="space-y-0.5">
                                 {group.items.map((item: any) => {
                                     const Icon = item.icon;
@@ -203,11 +203,11 @@ export default function MerchantLayout({ children, demoUser }: { children: React
                                                     router.push('/merchant/subscription');
                                                 }}
                                                 title={`Upgrade ke ${item.minPlan} untuk mengakses ${item.label}`}
-                                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-gray-300 hover:bg-amber-50 hover:text-amber-600 transition-all group opacity-70`}
+                                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-[#8A94A6] hover:bg-[#FF3366]/10 hover:text-[#FF3366] transition-all group opacity-70`}
                                             >
-                                                <Icon className="w-4 h-4 shrink-0 text-gray-300 group-hover:text-amber-500" />
+                                                <Icon className="w-4 h-4 shrink-0 text-[#8A94A6] group-hover:text-[#FF3366]" />
                                                 <span className="flex-1 text-left">{item.label}</span>
-                                                <span className="flex items-center gap-1 bg-amber-50 text-amber-600 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider border border-amber-200">
+                                                <span className="flex items-center gap-1 bg-[#FF3366]/20 text-[#FF3366] text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider border border-[#FF3366]/40">
                                                     <Lock className="w-2.5 h-2.5" />
                                                     {item.minPlan}
                                                 </span>
@@ -223,14 +223,14 @@ export default function MerchantLayout({ children, demoUser }: { children: React
                                             }}
                                             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] transition-all ${
                                                 isActive
-                                                    ? 'bg-gray-900 text-white font-semibold shadow-sm'
-                                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-medium'
+                                                    ? 'bg-[#00D8FF]/10 text-[#00D8FF] border border-[#00D8FF]/30 font-semibold shadow-sm'
+                                                    : 'text-[#8A94A6] hover:bg-white/5 hover:text-white font-medium'
                                             }`}
                                         >
-                                            <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-gray-400'}`} />
+                                            <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#00D8FF]' : 'text-[#8A94A6]'}`} />
                                             <span className="flex-1 text-left">{item.label}</span>
                                             {item.href === '/merchant/chat' && unreadCount > 0 && (
-                                                <span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                                                <span className="bg-[#FF3366] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-[0_0_8px_rgba(255,51,102,0.6)]">
                                                     {unreadCount}
                                                 </span>
                                             )}
@@ -243,58 +243,62 @@ export default function MerchantLayout({ children, demoUser }: { children: React
                 </nav>
 
                 {/* Logout */}
-                <div className="p-3 border-t border-gray-100 shrink-0">
+                <div className="p-3 border-t border-[#ffffff0f] shrink-0">
                     <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors group"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-[#8A94A6] hover:bg-[#FF3366]/10 hover:text-[#FF3366] hover:border hover:border-[#FF3366]/30 border border-transparent transition-colors group"
                     >
-                        <LogOut className="w-4 h-4 text-gray-400 group-hover:text-red-500" />
+                        <LogOut className="w-4 h-4 text-[#8A94A6] group-hover:text-[#FF3366]" />
                         Keluar / Logout
                     </button>
                 </div>
             </aside>
 
             {/* ─── Main ─── */}
-            <main className="flex-1 ml-64 flex flex-col min-h-screen">
+            <main className="flex-1 ml-64 flex flex-col min-h-screen relative overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(123,44,191,0.1)_0%,_transparent_50%)] pointer-events-none" />
 
                 {/* Topbar */}
-                <header className="h-16 bg-white border-b border-gray-100 sticky top-0 z-20 flex items-center justify-between px-6 shrink-0">
-                    <div className="relative hidden md:block">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Cari transaksi, produk, ID..."
-                            className="w-72 pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-[13px] text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:bg-white transition-all"
-                        />
+                <header className="h-16 bg-[#080A10]/90 border-b border-[#ffffff0f] backdrop-blur-md sticky top-0 z-20 flex items-center justify-between px-6 shrink-0">
+                    <div className="relative hidden md:block group">
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-[#00D8FF] to-[#7B2CBF] rounded-xl blur opacity-0 group-hover:opacity-40 transition duration-500" />
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8A94A6]" />
+                            <input
+                                type="text"
+                                placeholder="Cari transaksi, produk, ID..."
+                                className="w-72 pl-9 pr-4 py-2 bg-[#111520] border border-white/10 rounded-xl text-[13px] text-white placeholder-[#8A94A6] focus:outline-none focus:ring-1 focus:ring-[#00D8FF] transition-all"
+                            />
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-3 ml-auto">
                         {/* Notification */}
-                        <button className="relative w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 transition-colors">
+                        <button className="relative w-9 h-9 flex items-center justify-center rounded-xl text-[#8A94A6] hover:bg-white/10 hover:text-white transition-colors">
                             <Bell className="w-4.5 h-4.5" />
                             {unreadCount > 0 && (
-                                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+                                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#FF3366] shadow-[0_0_8px_rgba(255,51,102,0.8)] rounded-full" />
                             )}
                         </button>
 
-                        <div className="w-px h-5 bg-gray-200" />
+                        <div className="w-px h-5 bg-[#ffffff1a]" />
 
                         {/* User pill */}
-                        <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors">
-                            <div className="w-7 h-7 rounded-lg bg-gray-900 text-white text-xs font-bold flex items-center justify-center">
+                        <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-white/10 bg-[#111520] hover:bg-white/10 hover:border-white/30 cursor-pointer transition-colors shadow-[0_4px_10px_rgba(0,0,0,0.3)]">
+                            <div className="w-7 h-7 rounded-lg bg-[#00D8FF]/20 border border-[#00D8FF]/40 text-[#00D8FF] text-xs font-bold flex items-center justify-center shadow-[0_0_8px_rgba(0,216,255,0.3)]">
                                 {user?.name?.charAt(0)?.toUpperCase() || 'M'}
                             </div>
-                            <div className="hidden sm:block">
-                                <p className="text-[12px] font-semibold text-gray-800 leading-tight">{user?.name}</p>
-                                <p className="text-[10px] text-gray-400">Merchant Admin</p>
+                            <div className="hidden sm:block text-left">
+                                <p className="text-[12px] font-bold text-white leading-tight italic">{user?.name}</p>
+                                <p className="text-[10px] text-[#00D8FF] uppercase tracking-widest font-black">Merchant Admin</p>
                             </div>
-                            <ChevronDown className="w-3.5 h-3.5 text-gray-400 hidden sm:block" />
+                            <ChevronDown className="w-3.5 h-3.5 text-[#8A94A6] hidden sm:block" />
                         </div>
                     </div>
                 </header>
 
                 {/* Page Content */}
-                <div className="flex-1 p-6">
+                <div className="flex-1 p-6 relative z-10">
                     {children}
                 </div>
 
@@ -303,11 +307,11 @@ export default function MerchantLayout({ children, demoUser }: { children: React
                     <div className="fixed bottom-8 right-8 z-50 animate-in slide-in-from-bottom-8 duration-500">
                         <button
                             onClick={handleLogout}
-                            className="flex items-center gap-3 px-6 py-4 bg-gray-900 text-white text-[13px] font-bold tracking-wide rounded-2xl shadow-2xl hover:bg-gray-800 hover:-translate-y-1 transition-all outline-none ring-4 ring-gray-900/10"
+                            className="flex items-center gap-3 px-6 py-4 bg-[#FF3366] text-white text-[13px] font-black italic uppercase tracking-wider rounded-2xl shadow-[0_0_20px_rgba(255,51,102,0.4)] hover:bg-white hover:text-[#FF3366] hover:-translate-y-1 transition-all outline-none"
                         >
                             <span className="relative flex h-3 w-3">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
                             </span>
                             AKHIRI DEMO & KEMBALI
                             <LogOut className="w-4 h-4 ml-1 opacity-80" />

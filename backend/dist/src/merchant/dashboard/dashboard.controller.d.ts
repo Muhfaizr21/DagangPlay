@@ -1,3 +1,4 @@
+import type { Response } from 'express';
 import { DashboardService } from './dashboard.service';
 export declare class DashboardController {
     private readonly dashboardService;
@@ -57,4 +58,5 @@ export declare class DashboardController {
             profit: number;
         }[];
     }>;
+    exportReport(req: any, res: Response): Promise<Response<any, Record<string, any>>>;
 }

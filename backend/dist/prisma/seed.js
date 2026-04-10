@@ -76,6 +76,30 @@ async function main() {
             referralCode: 'SUPERADMIN'
         }
     });
+    const demoPassword = await bcrypt.hash('demo123', saltRounds);
+    const demoUser = await prisma.user.create({
+        data: {
+            name: 'Demo Merchant',
+            email: 'demo@dagangplay.com',
+            phone: '081234567890',
+            password: demoPassword,
+            role: client_1.Role.MERCHANT,
+            status: client_1.UserStatus.ACTIVE,
+            referralCode: 'DEMOPLAY'
+        }
+    });
+    await prisma.merchant.create({
+        data: {
+            name: 'Demo DagangPlay Store',
+            slug: 'demo-store',
+            status: client_1.MerchantStatus.ACTIVE,
+            plan: client_1.MerchantPlan.SUPREME,
+            isOfficial: false,
+            ownerId: demoUser.id,
+            escrowBalance: 2500000,
+            domain: 'demo.dagangplay.com'
+        }
+    });
     const merchantsData = [
         { name: 'Fantasi Gamer', email: 'fantasi@m.com', slug: 'fantasi-gamer', domain: 'fantasigamer.com', plan: client_1.MerchantPlan.SUPREME, status: client_1.MerchantStatus.ACTIVE, isOfficial: false },
         { name: 'Arb Store', email: 'arb@m.com', slug: 'arb-store', domain: 'arbstore.id', plan: client_1.MerchantPlan.LEGEND, status: client_1.MerchantStatus.ACTIVE, isOfficial: false },

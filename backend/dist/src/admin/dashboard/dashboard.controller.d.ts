@@ -1,8 +1,9 @@
+import type { Response } from 'express';
 import { DashboardService } from './dashboard.service';
 export declare class DashboardController {
     private readonly dashboardService;
     constructor(dashboardService: DashboardService);
-    getDashboardSummary(): Promise<{
+    getDashboardSummary(range?: string): Promise<{
         stats: {
             label: string;
             value: string;
@@ -39,15 +40,17 @@ export declare class DashboardController {
                 priority: import("@prisma/client").$Enums.TicketPriority;
             }[];
         };
-        weeklyChart: {
-            day: string;
-            value: number;
-        }[];
         recentTransactions: {
             id: string;
             game: string;
             amount: string;
             status: import("@prisma/client").$Enums.OrderFulfillmentStatus;
         }[];
+        chartData: {
+            label: string;
+            value: number;
+            profit: number;
+        }[];
     }>;
+    exportReport(res: Response): Promise<Response<any, Record<string, any>>>;
 }

@@ -1,3 +1,4 @@
+import type { Response } from 'express';
 import { MerchantsService } from './merchants.service';
 import { MerchantStatus } from '@prisma/client';
 export declare class MerchantsController {
@@ -24,6 +25,7 @@ export declare class MerchantsController {
             next: number | null;
         };
     }>;
+    exportCsv(res: Response): Promise<Response<any, Record<string, any>>>;
     updateStatus(id: string, status: MerchantStatus, reason?: string): Promise<{
         id: string;
         name: string;

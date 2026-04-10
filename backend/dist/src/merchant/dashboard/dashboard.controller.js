@@ -27,6 +27,10 @@ let DashboardController = class DashboardController {
     async getDashboardData(req) {
         return this.dashboardService.getDashboardData(req.user.id);
     }
+    async exportReport(req, res) {
+        const csv = await this.dashboardService.getDashboardReport(req.user.id);
+        return res.send(csv);
+    }
 };
 exports.DashboardController = DashboardController;
 __decorate([
@@ -36,6 +40,16 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], DashboardController.prototype, "getDashboardData", null);
+__decorate([
+    (0, common_1.Get)('export-report'),
+    (0, common_1.Header)('Content-Type', 'text/csv'),
+    (0, common_1.Header)('Content-Disposition', 'attachment; filename=merchant-dashboard-report.csv'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], DashboardController.prototype, "exportReport", null);
 exports.DashboardController = DashboardController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.MERCHANT, client_1.Role.SUPER_ADMIN),

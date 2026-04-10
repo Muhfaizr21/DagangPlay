@@ -10,6 +10,7 @@ export declare class SettingsController {
     getAdminStaff(): Promise<{
         id: string;
         name: string;
+        status: import("@prisma/client").$Enums.UserStatus;
         createdAt: Date;
         email: string | null;
         adminPermissions: import("@prisma/client/runtime/client").JsonValue;
